@@ -44,7 +44,9 @@ input{border:1px solid var(--line);background:var(--card);color:var(--ink);borde
 /* вход */
 #login{max-width:380px;margin:12vh auto 0;display:flex;flex-direction:column;gap:16px;align-items:stretch;text-align:center}
 #login p{margin:0;color:var(--muted)}
-#nick{text-align:center;font-size:18px}
+#login input{text-align:center;font-size:18px}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.chatHead button{padding:4px 12px;font-size:13px;flex:none}
 #loginErr{min-height:20px;color:var(--red);font-size:14px}
 
 /* основной экран */
@@ -86,16 +88,18 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
 
 <div id="login">
   <h1>Рулетка</h1>
-  <p>Введи никнейм, чтобы войти</p>
-  <input id="nick" maxlength="20" autocomplete="nickname" placeholder="Твой ник" aria-label="Никнейм">
+  <p>Войди или создай аккаунт</p>
+  <input id="nick" maxlength="15" autocomplete="username" placeholder="Имя" aria-label="Имя">
+  <input id="pass" type="password" maxlength="64" autocomplete="current-password" placeholder="Пароль (от 6 символов)" aria-label="Пароль">
   <div id="loginErr" aria-live="polite"></div>
   <button id="enter">Войти</button>
+  <button id="signup" class="ghost">Создать аккаунт</button>
 </div>
 
 <div id="app" hidden>
   <div class="layout">
     <section class="chat" aria-label="Чат">
-      <div class="chatHead"><b>Чат</b><span id="me"></span></div>
+      <div class="chatHead"><b>Чат</b><span id="me"></span><button id="logout" class="ghost">Выйти</button></div>
       <div id="msgs" aria-live="polite"></div>
       <div id="chatNote"></div>
       <div class="chatForm">
@@ -129,19 +133,103 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   var FILL={green:'#1f7a4d',red:'#b3261e',black:'#1a1a1a'};
   var nick='', uid='';
 
-  /* ---------- вход ---------- */
-  var nickIn=$('nick');
-  try{var saved=localStorage.getItem('roulette_nick'); if(saved) nickIn.value=saved;}catch(e){}
-  function enter(){
-    var v=nickIn.value.replace(/\s+/g,' ').trim();
-    if(v.length<2){$('loginErr').textContent='Ник должен быть не короче 2 символов';return;}
-    nick=v;
-    try{localStorage.setItem('roulette_nick',nick);}catch(e){}
-    $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick;
-    draw(); renderChat();
+  /* ---------- аккаунты (Firebase Authentication через обычные запросы) ---------- */
+  var sess=null;
+  var nickIn=$('nick'), passIn=$('pass'), errEl=$('loginErr');
+  function setErr(t){errEl.textContent=t||'';}
+  function setBusy(v){$('enter').disabled=v; $('signup').disabled=v;}
+  function persist(){try{localStorage.setItem('roulette_sess',JSON.stringify({refreshToken:sess.refreshToken}));}catch(e){}}
+  // Firebase входит по почте, поэтому из имени делаем служебный адрес (имя кодируется в hex)
+  function emailFor(name){
+    var bytes=new TextEncoder().encode(name.toLowerCase()), h='u';
+    bytes.forEach(function(x){h+=('0'+x.toString(16)).slice(-2);});
+    return h+'@roulette.example.com';
   }
-  $('enter').addEventListener('click',enter);
-  nickIn.addEventListener('keydown',function(e){if(e.key==='Enter') enter();});
+  function msgFor(c){
+    if(c.indexOf('EMAIL_EXISTS')>-1) return 'Такое имя уже занято';
+    if(/INVALID_LOGIN_CREDENTIALS|EMAIL_NOT_FOUND|INVALID_PASSWORD/.test(c)) return 'Неверное имя или пароль';
+    if(c.indexOf('WEAK_PASSWORD')>-1) return 'Пароль слишком простой: минимум 6 символов';
+    if(c.indexOf('OPERATION_NOT_ALLOWED')>-1) return 'В Firebase не включён вход по почте и паролю';
+    if(/API_KEY|API key/i.test(c)) return 'Неверный API-ключ в файле';
+    if(c.indexOf('TOO_MANY_ATTEMPTS')>-1) return 'Слишком много попыток, подожди немного';
+    if(c.indexOf('PROFILE_WRITE')>-1) return 'Не удалось сохранить профиль: проверь правила в Firebase';
+    if(c.indexOf('fetch')>-1) return 'Не удалось связаться с сервером';
+    return 'Ошибка: '+c;
+  }
+  function authCall(path,body){
+    return fetch('https://identitytoolkit.googleapis.com/v1/accounts:'+path+'?key='+encodeURIComponent(API_KEY),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){return r.json();});
+  }
+  function refresh(){
+    return fetch('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(API_KEY),
+      {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+       body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(sess.refreshToken)})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.error) throw (d.error.message||'REFRESH');
+        sess.idToken=d.id_token; sess.refreshToken=d.refresh_token; sess.uid=d.user_id;
+        sess.exp=Date.now()+(Number(d.expires_in)||3600)*1000; persist(); return sess.idToken;
+      });
+  }
+  function token(){
+    if(!sess) return Promise.reject('NO_SESSION');
+    if(sess.idToken&&Date.now()<sess.exp-60000) return Promise.resolve(sess.idToken);
+    return refresh();
+  }
+  // имя профиля хранится в базе, так его нельзя подделать в чате (проверяют правила)
+  function ensureProfile(typed){
+    return token().then(function(t){
+      var url=DB_URL+'/users/'+sess.uid;
+      return fetch(url+'/name.json?auth='+encodeURIComponent(t)).then(function(r){return r.json();}).then(function(v){
+        if(typeof v==='string') return v;
+        if(!typed) throw 'NO_PROFILE';
+        return fetch(url+'.json?auth='+encodeURIComponent(t),{method:'PUT',body:JSON.stringify({name:typed})})
+          .then(function(r){ if(!r.ok) throw 'PROFILE_WRITE'; return typed; });
+      });
+    });
+  }
+  function submit(mode){
+    setErr('');
+    if(!configured()){setErr('В файле не заполнены DB_URL и API_KEY');return;}
+    var name=nickIn.value.replace(/\s+/g,' ').trim(), pass=passIn.value;
+    if(name.length<2||name.length>15){setErr('Имя: от 2 до 15 символов');return;}
+    if(pass.length<6){setErr('Пароль: не короче 6 символов');return;}
+    setBusy(true);
+    authCall(mode==='signUp'?'signUp':'signInWithPassword',{email:emailFor(name),password:pass,returnSecureToken:true})
+      .then(function(d){
+        if(d.error) throw (d.error.message||'ERROR');
+        sess={uid:d.localId,idToken:d.idToken,refreshToken:d.refreshToken,exp:Date.now()+(Number(d.expiresIn)||3600)*1000};
+        persist(); return ensureProfile(name);
+      })
+      .then(function(n){ sess.name=n; start(); })
+      .catch(function(e){ sess=null; setErr(msgFor(String(e))); })
+      .then(function(){ setBusy(false); });
+  }
+  function start(){
+    uid=sess.uid; nick=sess.name;
+    $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
+    draw(); lastSig=''; renderChat(); load();
+  }
+  function logout(){
+    sess=null; docs=[]; lastSig='';
+    try{localStorage.removeItem('roulette_sess');}catch(e){}
+    $('app').hidden=true; $('login').hidden=false; setErr('');
+  }
+  function restore(){
+    var s=null; try{s=JSON.parse(localStorage.getItem('roulette_sess')||'null');}catch(e){}
+    if(!s||!s.refreshToken||!configured()) return;
+    sess={refreshToken:s.refreshToken,exp:0}; setBusy(true);
+    refresh().then(function(){return ensureProfile(null);})
+      .then(function(n){ sess.name=n; start(); })
+      .catch(function(){ sess=null; })
+      .then(function(){ setBusy(false); });
+  }
+  $('enter').addEventListener('click',function(){submit('signIn');});
+  $('signup').addEventListener('click',function(){submit('signUp');});
+  $('logout').addEventListener('click',logout);
+  nickIn.addEventListener('keydown',function(e){if(e.key==='Enter') passIn.focus();});
+  passIn.addEventListener('keydown',function(e){if(e.key==='Enter') submit('signIn');});
 
   /* ---------- колесо ---------- */
   var canvas=$('wheel'), ctx=canvas.getContext('2d');
@@ -197,21 +285,21 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
 
   /* ---------- чат (Firebase Realtime Database через обычные запросы) ---------- */
-  // Сюда вставь адрес своей базы из Firebase, без слэша в конце:
+  // Адрес базы (Realtime Database -> Data), без слэша в конце:
   var DB_URL='https://flamer-b1592-default-rtdb.firebaseio.com';
+  // Web API Key (Project settings -> General):
+  var API_KEY='AIzaSyDFbBbjzJOmiqnoJkrfOaNfv63Fq3lld7c';
 
   var msgsEl=$('msgs'), msgIn=$('msgIn'), sendBtn=$('send'), noteEl=$('chatNote');
   var docs=[], lastSig='';
-  function configured(){return DB_URL.indexOf('ВАШ-ПРОЕКТ')===-1;}
+  function configured(){return DB_URL.indexOf('ВАШ-ПРОЕКТ')===-1 && API_KEY.indexOf('ВСТАВЬ')===-1;}
   var chatReady=configured();
-  try{uid=localStorage.getItem('roulette_uid')||'';}catch(e){}
-  if(!uid){uid='u'+Math.random().toString(36).slice(2,10);try{localStorage.setItem('roulette_uid',uid);}catch(e){}}
 
   function renderChat(){
     msgsEl.innerHTML='';
     if(!docs.length){
       var e=document.createElement('div'); e.className='empty';
-      e.textContent=chatReady?'Сообщений пока нет. Напиши первым.':'Чат не настроен: впиши адрес базы Firebase в переменную DB_URL.';
+      e.textContent=chatReady?'Сообщений пока нет. Напиши первым.':'Чат не настроен: впиши DB_URL и API_KEY в файл.';
       msgsEl.appendChild(e); return;
     }
     docs.forEach(function(m){
@@ -233,28 +321,28 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   }
 
   function load(){
-    if(!chatReady||document.hidden) return;
-    fetch(DB_URL+'/chat.json?orderBy=%22%24key%22&limitToLast=100')
-      .then(function(r){return r.json();})
-      .then(function(obj){
-        if(!obj||obj.error){ if(obj&&obj.error){noteEl.textContent='Ошибка базы: '+obj.error;} return; }
-        var keys=Object.keys(obj).sort();
-        var sig=keys.length+':'+keys[keys.length-1];
-        if(sig===lastSig) return;
-        lastSig=sig;
-        docs=keys.map(function(k){return obj[k];});
-        renderChat();
-      })
-      .catch(function(){});
+    if(!chatReady||!sess||!sess.name||document.hidden) return;
+    token().then(function(t){
+      return fetch(DB_URL+'/chat.json?orderBy=%22%24key%22&limitToLast=100&auth='+encodeURIComponent(t));
+    }).then(function(r){return r.json();}).then(function(obj){
+      if(!obj||obj.error){ if(obj&&obj.error){noteEl.textContent='Нет доступа к чату: проверь правила в Firebase';} return; }
+      var keys=Object.keys(obj).sort();
+      var sig=keys.length+':'+keys[keys.length-1];
+      if(sig===lastSig) return;
+      lastSig=sig;
+      docs=keys.map(function(k){return obj[k];});
+      renderChat();
+    }).catch(function(){});
   }
 
   function post(fields){
-    if(!chatReady||!nick) return Promise.resolve();
-    var body={name:nick,uid:uid,t:Date.now()};
+    if(!chatReady||!sess||!sess.name) return Promise.resolve();
+    var body={name:sess.name,uid:sess.uid,t:Date.now()};
     for(var k in fields) body[k]=fields[k];
-    return fetch(DB_URL+'/chat.json',{method:'POST',body:JSON.stringify(body)})
-      .then(function(r){ if(!r.ok) throw new Error('bad'); noteEl.textContent=''; load(); })
-      .catch(function(){noteEl.textContent='Не удалось отправить. Проверь адрес базы и правила в Firebase.';});
+    return token().then(function(t){
+      return fetch(DB_URL+'/chat.json?auth='+encodeURIComponent(t),{method:'POST',body:JSON.stringify(body)});
+    }).then(function(r){ if(!r.ok) throw new Error('bad'); noteEl.textContent=''; load(); })
+      .catch(function(){noteEl.textContent='Не удалось отправить. Проверь правила в Firebase и войди заново.';});
   }
   function sendMsg(){
     var v=msgIn.value.trim(); if(!v||!chatReady) return;
@@ -264,9 +352,9 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   msgIn.addEventListener('keydown',function(e){if(e.key==='Enter') sendMsg();});
 
   renderChat();
-  load();
   setInterval(load,2500);
   document.addEventListener('visibilitychange',load);
+  restore();
 })();
 </script>
 </body>
