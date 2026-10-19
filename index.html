@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Рулетка</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#efe9dc; --felt:#1f5a3f; --ink:#1b1b18; --muted:#6b675c;
+  --card:#fbf8f1; --line:#d8d0bd; --gold:#b8892f; --red:#b3261e; --black:#1a1a1a; --green:#1f7a4d;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10231a; --felt:#0c1a13; --ink:#f1ecde; --muted:#9db3a5;
+    --card:#17301f; --line:#2b4a38; --gold:#e0b550; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10231a; --felt:#0c1a13; --ink:#f1ecde; --muted:#9db3a5;
+  --card:#17301f; --line:#2b4a38; --gold:#e0b550; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+  font-family:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+  padding:28px 16px 40px; gap:22px;
+}
+h1{
+  font-family:'DM Serif Display',Georgia,'Times New Roman',serif;
+  font-weight:400; font-size:clamp(34px,8vw,52px); margin:0; letter-spacing:.01em;
+}
+.stage{position:relative; width:min(88vw,420px); aspect-ratio:1}
+canvas{width:100%; height:100%; display:block; border-radius:50%;
+  box-shadow:0 0 0 10px var(--felt), 0 0 0 12px var(--gold), 0 14px 34px rgba(0,0,0,.28)}
+.pointer{
+  position:absolute; left:50%; top:-16px; width:0; height:0; transform:translateX(-50%);
+  border-left:13px solid transparent; border-right:13px solid transparent;
+  border-top:30px solid var(--gold); filter:drop-shadow(0 2px 2px rgba(0,0,0,.4)); z-index:2;
+}
+.result{
+  display:flex; flex-direction:column; align-items:center; gap:2px; min-height:128px; justify-content:center;
+}
+.num{
+  font-family:'DM Serif Display',Georgia,serif; font-size:clamp(72px,20vw,104px); line-height:1;
+  min-width:2ch; text-align:center; padding:0 .25em; border-radius:18px; color:#fff; background:var(--muted);
+  transition:background .25s;
+}
+.num.red{background:var(--red)} .num.black{background:var(--black)} .num.green{background:var(--green)}
+.label{color:var(--muted); font-size:15px; min-height:22px}
+button{
+  font:inherit; font-weight:700; font-size:18px; cursor:pointer;
+  padding:14px 44px; border-radius:999px; border:0; background:var(--gold); color:#1b1405;
+}
+button:hover:not(:disabled){filter:brightness(1.06)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.55; cursor:default}
+button:focus-visible{outline:3px solid var(--ink); outline-offset:3px}
+.history{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:420px; min-height:34px}
+.chip{
+  min-width:36px; padding:5px 10px; border-radius:10px; text-align:center;
+  font-weight:700; font-size:14px; color:#fff;
+}
+.chip.red{background:var(--red)} .chip.black{background:var(--black)} .chip.green{background:var(--green)}
+.hint{color:var(--muted); font-size:14px}
+</style>
+</head>
+<body>
+<h1>Рулетка</h1>
+
+<div class="stage">
+  <div class="pointer"></div>
+  <canvas id="wheel" aria-label="Колесо рулетки"></canvas>
+</div>
+
+<div class="result" aria-live="polite">
+  <div class="num" id="num">?</div>
+  <div class="label" id="label">Нажми «Крутить»</div>
+</div>
+
+<button id="spin">Крутить</button>
+
+<div class="history" id="history"></div>
+<div class="hint">Числа от 0 до 36, как в европейской рулетке</div>
+
+<script>
+(function(){
+  var ORDER=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  var REDS=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+  var N=ORDER.length, SEG=2*Math.PI/N, TAU=2*Math.PI;
+  var canvas=document.getElementById('wheel'), ctx=canvas.getContext('2d');
+  var numEl=document.getElementById('num'), labelEl=document.getElementById('label');
+  var btn=document.getElementById('spin'), histEl=document.getElementById('history');
+  var rot=0, spinning=false, history=[];
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function color(n){return n===0?'green':(REDS.indexOf(n)>-1?'red':'black');}
+  var FILL={green:'#1f7a4d',red:'#b3261e',black:'#1a1a1a'};
+
+  function draw(){
+    var size=canvas.clientWidth, dpr=window.devicePixelRatio||1;
+    if(canvas.width!==Math.round(size*dpr)){canvas.width=Math.round(size*dpr);canvas.height=Math.round(size*dpr);}
+    var s=canvas.width, r=s/2;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,s,s);
+    ctx.translate(r,r);
+    for(var i=0;i<N;i++){
+      var a=-Math.PI/2+i*SEG+rot;
+      ctx.beginPath(); ctx.moveTo(0,0);
+      ctx.arc(0,0,r,a-SEG/2,a+SEG/2); ctx.closePath();
+      ctx.fillStyle=FILL[color(ORDER[i])]; ctx.fill();
+      ctx.strokeStyle='rgba(224,181,80,.55)'; ctx.lineWidth=Math.max(1,s/400); ctx.stroke();
+      ctx.save();
+      ctx.rotate(a); ctx.translate(r*0.86,0); ctx.rotate(Math.PI/2);
+      ctx.fillStyle='#fff'; ctx.font='700 '+Math.round(s*0.046)+'px Manrope,system-ui,sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(ORDER[i]),0,0);
+      ctx.restore();
+    }
+    // hub
+    ctx.beginPath(); ctx.arc(0,0,r*0.62,0,TAU); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,r*0.5,0,TAU); ctx.fillStyle='#1f5a3f'; ctx.fill();
+    ctx.lineWidth=Math.max(2,s/160); ctx.strokeStyle='#b8892f'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,r*0.09,0,TAU); ctx.fillStyle='#b8892f'; ctx.fill();
+  }
+
+  function ease(t){return 1-Math.pow(1-t,4);}
+
+  function show(n){
+    var c=color(n);
+    numEl.textContent=n;
+    numEl.className='num '+c;
+    labelEl.textContent=c==='green'?'Зеро':(c==='red'?'Красное':'Чёрное');
+    history.unshift(n); history=history.slice(0,10);
+    histEl.innerHTML='';
+    history.forEach(function(v){
+      var d=document.createElement('span'); d.className='chip '+color(v); d.textContent=v; histEl.appendChild(d);
+    });
+  }
+
+  function spin(){
+    if(spinning) return;
+    spinning=true; btn.disabled=true; labelEl.textContent='Крутится…';
+    var k=Math.floor(Math.random()*N);               // выигрышный сектор
+    var jitter=(Math.random()-.5)*SEG*0.7;           // остановка не строго по центру
+    var start=rot;
+    var base=((-k*SEG+jitter)-start)%TAU; if(base<0) base+=TAU;
+    var turns=5+Math.floor(Math.random()*3);
+    var target=start+turns*TAU+base;
+    var dur=reduce?300:5200, t0=performance.now();
+    function frame(now){
+      var t=Math.min(1,(now-t0)/dur);
+      rot=start+(target-start)*ease(t);
+      draw();
+      if(t<1){requestAnimationFrame(frame);}
+      else{rot=target; spinning=false; btn.disabled=false; show(ORDER[k]);}
+    }
+    requestAnimationFrame(frame);
+  }
+
+  btn.addEventListener('click',spin);
+  window.addEventListener('resize',draw);
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(draw);}
+  draw();
+})();
+</script>
+</body>
+</html>
