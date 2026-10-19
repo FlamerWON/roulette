@@ -127,7 +127,7 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   function $(id){return document.getElementById(id);}
   function color(n){return n===0?'green':(REDS.indexOf(n)>-1?'red':'black');}
   var FILL={green:'#1f7a4d',red:'#b3261e',black:'#1a1a1a'};
-  var nick='', uid='', db=null, chatReady=false;
+  var nick='', uid='';
 
   /* ---------- вход ---------- */
   var nickIn=$('nick');
@@ -196,15 +196,22 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   window.addEventListener('resize',draw);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
 
-  /* ---------- чат ---------- */
+  /* ---------- чат (Firebase Realtime Database через обычные запросы) ---------- */
+  // Сюда вставь адрес своей базы из Firebase, без слэша в конце:
+  var DB_URL=https:'//flamer-b1592-default-rtdb.firebaseio.com';
+
   var msgsEl=$('msgs'), msgIn=$('msgIn'), sendBtn=$('send'), noteEl=$('chatNote');
-  var docs=[];
+  var docs=[], lastSig='';
+  function configured(){return DB_URL.indexOf('ВАШ-ПРОЕКТ')===-1;}
+  var chatReady=configured();
+  try{uid=localStorage.getItem('roulette_uid')||'';}catch(e){}
+  if(!uid){uid='u'+Math.random().toString(36).slice(2,10);try{localStorage.setItem('roulette_uid',uid);}catch(e){}}
 
   function renderChat(){
     msgsEl.innerHTML='';
     if(!docs.length){
       var e=document.createElement('div'); e.className='empty';
-      e.textContent=chatReady?'Сообщений пока нет. Напиши первым.':'Чат здесь недоступен: он работает на странице внутри claude.ai.';
+      e.textContent=chatReady?'Сообщений пока нет. Напиши первым.':'Чат не настроен: впиши адрес базы Firebase в переменную DB_URL.';
       msgsEl.appendChild(e); return;
     }
     docs.forEach(function(m){
@@ -225,15 +232,29 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
     msgsEl.scrollTop=msgsEl.scrollHeight;
   }
 
+  function load(){
+    if(!chatReady||document.hidden) return;
+    fetch(DB_URL+'/chat.json?orderBy=%22%24key%22&limitToLast=100')
+      .then(function(r){return r.json();})
+      .then(function(obj){
+        if(!obj||obj.error){ if(obj&&obj.error){noteEl.textContent='Ошибка базы: '+obj.error;} return; }
+        var keys=Object.keys(obj).sort();
+        var sig=keys.length+':'+keys[keys.length-1];
+        if(sig===lastSig) return;
+        lastSig=sig;
+        docs=keys.map(function(k){return obj[k];});
+        renderChat();
+      })
+      .catch(function(){});
+  }
+
   function post(fields){
-    if(!db||!nick) return Promise.resolve();
+    if(!chatReady||!nick) return Promise.resolve();
     var body={name:nick,uid:uid,t:Date.now()};
     for(var k in fields) body[k]=fields[k];
-    return db.collection('chat').add(body).then(function(){noteEl.textContent='';}).catch(function(e){
-      noteEl.textContent=(e&&e.code==='invalid_argument')
-        ?'Писать в чат могут только участники с доступом «Contributor». Попроси владельца изменить доступ.'
-        :'Не удалось отправить. Попробуй ещё раз.';
-    });
+    return fetch(DB_URL+'/chat.json',{method:'POST',body:JSON.stringify(body)})
+      .then(function(r){ if(!r.ok) throw new Error('bad'); noteEl.textContent=''; load(); })
+      .catch(function(){noteEl.textContent='Не удалось отправить. Проверь адрес базы и правила в Firebase.';});
   }
   function sendMsg(){
     var v=msgIn.value.trim(); if(!v||!chatReady) return;
@@ -242,28 +263,10 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   sendBtn.addEventListener('click',sendMsg);
   msgIn.addEventListener('keydown',function(e){if(e.key==='Enter') sendMsg();});
 
-  function initChat(){
-    uid='s'+Math.random().toString(36).slice(2,10);
-    if(!(window.claude&&window.claude.use)){renderChat();return;}
-    Promise.all([window.claude.use('db'),window.claude.use('user')]).then(function(r){
-      db=r[0];
-      var u=r[1];
-      var idP=u&&u.id?Promise.resolve(u.id()).catch(function(){return null;}):Promise.resolve(null);
-      return idP.then(function(id){
-        if(id) uid=String(id);
-        if(!db){renderChat();return;}
-        chatReady=true;
-        db.collection('chat').orderBy('t','desc').limit(100).onSnapshot(function(snap){
-          docs=snap.docs.map(function(d){return d.data();}).reverse();
-          renderChat();
-        },function(){
-          chatReady=false; docs=[]; renderChat();
-        });
-      });
-    }).catch(function(){renderChat();});
-  }
-  sendBtn.disabled=false;
-  initChat();
+  renderChat();
+  load();
+  setInterval(load,2500);
+  document.addEventListener('visibilitychange',load);
 })();
 </script>
 </body>
