@@ -484,7 +484,7 @@ svg.chr{overflow:visible}
         game.fight.on=!!game.fight.on; game.fight.skip=!!game.fight.skip;
         game.inv=Array.isArray(game.inv)?game.inv.filter(function(i){return ITEMS[i];}):[];
         if(!game.eq||typeof game.eq!=='object') game.eq={};
-        if(!game.gm){
+        if(!g.gm){
           // старые игроки: стартовое снаряжение класса кладём в инвентарь и надеваем
           var cg=gearOf(game.cls);
           for(var csl in cg){ if(game.inv.indexOf(cg[csl])<0) game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; }
@@ -977,23 +977,65 @@ svg.chr{overflow:visible}
         +'<path d="M30 84 Q8 108 30 132" fill="none" stroke="#b9854a" stroke-width="3" stroke-linecap="round"/>'
         +'<path d="M30 84 L30 132" stroke="#f5f0e0" stroke-width="1.3"/>'}
   };
-  var NEW_ITEMS={
-    leather_vest:{name:'Кожаный жилет',slot:'body',r:'common',hp:15,atk:0,drop:true,vb:'0 0 40 40',draw:'<path d="M10 8 L16 6 Q20 10 24 6 L30 8 L33 18 L28 20 L28 34 L12 34 L12 20 L7 18Z" fill="#9a6a3a" '+OUT+'/>'},
-    rag_boots:{name:'Рваные сапоги',slot:'legs',r:'common',hp:10,atk:0,drop:true,vb:'0 0 40 40',draw:'<path d="M10 8 H20 V24 H31 V32 H10Z" fill="#7a5a3a" '+OUT+'/>'},
-    chain_mail:{name:'Кольчуга',slot:'body',r:'uncommon',hp:30,atk:0,drop:true,vb:'0 0 40 40',draw:'<path d="M10 8 L16 6 Q20 10 24 6 L30 8 L33 18 L28 20 L28 34 L12 34 L12 20 L7 18Z" fill="#aab3bd" '+OUT+'/><path d="M14 16 H26 M14 22 H26 M14 28 H26" stroke="#6b7580" stroke-width="1.5"/>'},
-    iron_boots:{name:'Железные сапоги',slot:'legs',r:'uncommon',hp:22,atk:1,drop:true,vb:'0 0 40 40',draw:'<path d="M10 8 H20 V24 H31 V32 H10Z" fill="#8a939d" '+OUT+'/>'},
-    knight_helm:{name:'Шлем рыцаря',slot:'head',r:'rare',hp:45,atk:0,drop:true,vb:'0 0 40 40',draw:'<path d="M8 30 C6 4 34 4 32 30Z" fill="#c5ccd4" '+OUT+'/><path d="M11 20 H29" stroke="#2a1f14" stroke-width="3"/>'},
-    steel_sword:{name:'Стальной меч',slot:'arms',r:'rare',hp:0,atk:10,drop:true,vb:'0 0 40 40',draw:'<path d="M20 3 L24 24 H16Z" fill="#dfe6ee" '+OUT+'/><rect x="12" y="24" width="16" height="4" fill="#8c5a2f" '+OUT+'/><rect x="18" y="28" width="4" height="9" fill="#5a3b1d" '+OUT+'/>'},
-    storm_robe:{name:'Мантия грозы',slot:'body',r:'epic',hp:50,atk:6,drop:true,vb:'0 0 40 40',draw:'<path d="M10 8 L16 6 Q20 10 24 6 L30 8 L33 18 L28 20 L28 34 L12 34 L12 20 L7 18Z" fill="#3b5bdb" '+OUT+'/><path d="M21 12 L17 22 H22 L19 30 L26 19 H21Z" fill="#ffe066" stroke="#2a1f14" stroke-width="1"/>'},
-    dragon_crown:{name:'Корона драконьего короля',slot:'head',r:'legendary',hp:70,atk:12,drop:true,vb:'0 0 40 40',draw:'<path d="M5 30 L8 10 L15 20 L20 6 L25 20 L32 10 L35 30Z" fill="#f6c343" '+OUT+'/><circle cx="20" cy="24" r="3" fill="#e63946"/><circle cx="11" cy="25" r="2" fill="#2e86ab"/><circle cx="29" cy="25" r="2" fill="#2e86ab"/>'},
-    dawn_blade:{name:'Меч Рассвета',slot:'arms',r:'legendary',hp:20,atk:28,drop:true,vb:'0 0 40 40',draw:'<path d="M20 2 L25 24 H15Z" fill="#fff3b0" '+OUT+'/><rect x="10" y="24" width="20" height="4" fill="#b8892f" '+OUT+'/><rect x="18" y="28" width="4" height="9" fill="#7a2230" '+OUT+'/>'}
+  // ---- предметы по классам. Поля: id, название, слот, класс, редкость, здоровье, урон, вид, цвет, акцент ----
+  var K={
+    body:function(c,a){return '<path d="M10 8 L16 6 Q20 10 24 6 L30 8 L33 18 L28 20 L28 34 L12 34 L12 20 L7 18Z" fill="'+c+'" '+OUT+'/>'+(a?'<path d="M14 16 H26 M14 22 H26 M14 28 H26" stroke="'+a+'" stroke-width="1.6"/>':'');},
+    boots:function(c){return '<path d="M10 8 H20 V24 H31 V32 H10Z" fill="'+c+'" '+OUT+'/>';},
+    helm:function(c,a){return '<path d="M8 30 C6 4 34 4 32 30Z" fill="'+c+'" '+OUT+'/><path d="M11 20 H29" stroke="'+INK+'" stroke-width="3"/>';},
+    hood:function(c,a){return '<path d="M6 34 C4 6 36 6 34 34 L26 26 Q20 30 14 26Z" fill="'+c+'" '+OUT+'/>';},
+    hat:function(c,a){return '<ellipse cx="20" cy="30" rx="16" ry="4" fill="'+c+'" '+OUT+'/><path d="M11 30 Q18 18 20 4 Q24 18 29 30Z" fill="'+c+'" '+OUT+'/><circle cx="20" cy="22" r="2.2" fill="'+a+'"/>';},
+    crown:function(c,a){return '<path d="M5 30 L8 10 L15 20 L20 6 L25 20 L32 10 L35 30Z" fill="'+c+'" '+OUT+'/><circle cx="20" cy="24" r="3" fill="'+a+'"/>';},
+    sword:function(c,a){return '<path d="M20 3 L24 24 H16Z" fill="'+c+'" '+OUT+'/><rect x="12" y="24" width="16" height="4" fill="'+a+'" '+OUT+'/><rect x="18" y="28" width="4" height="9" fill="#5a3b1d" '+OUT+'/>';},
+    axe:function(c,a){return '<rect x="18" y="4" width="4" height="33" fill="#8c5a2f" '+OUT+'/><path d="M22 6 Q37 8 34 21 Q28 18 22 18Z" fill="'+c+'" '+OUT+'/>';},
+    staff:function(c,a){return '<rect x="18.5" y="8" width="3" height="30" fill="'+a+'" '+OUT+'/><circle cx="20" cy="7" r="5" fill="'+c+'" '+OUT+'/>';},
+    bow:function(c,a){return '<path d="M26 4 Q6 20 26 36" fill="none" stroke="'+INK+'" stroke-width="5" stroke-linecap="round"/><path d="M26 4 Q6 20 26 36" fill="none" stroke="'+c+'" stroke-width="2.6" stroke-linecap="round"/><path d="M26 4 V36" stroke="#f5f0e0" stroke-width="1.2"/>';}
   };
-  for(var nk in NEW_ITEMS) ITEMS[nk]=NEW_ITEMS[nk];
-  // как новые предметы выглядят на персонаже (положение и размер)
-  var AVT={knight_helm:'translate(20 0) scale(1.5)',dragon_crown:'translate(20 0) scale(1.5)',steel_sword:'translate(53 67.6) scale(1.2)',dawn_blade:'translate(53 67.6) scale(1.2)',
-    leather_vest:'translate(30 76)',chain_mail:'translate(30 76)',storm_robe:'translate(30 76)'};
-  for(var ak in AVT) ITEMS[ak].avd='<g transform="'+AVT[ak]+'">'+ITEMS[ak].draw+'</g>';
-  ITEMS.steel_sword.hand='R'; ITEMS.dawn_blade.hand='R';
+  var AVK={helm:'translate(20 0) scale(1.5)',hood:'translate(20 0) scale(1.5)',hat:'translate(20 0) scale(1.5)',crown:'translate(20 0) scale(1.5)',
+    body:'translate(30 76)',sword:'translate(53 67.6) scale(1.2)',axe:'translate(53 67.6) scale(1.2)',staff:'translate(53 67.6) scale(1.2)',bow:'translate(-1 84) scale(1.2)'};
+  var DEFS=[
+    ['apprentice_robe','Ученическая мантия','body','mage','common',12,1,'body','#7b6cd9',''],
+    ['cloth_shoes','Тканевые туфли','legs','mage','common',8,1,'boots','#9a8ae6'],
+    ['star_hat','Шляпа звездочёта','head','mage','uncommon',15,3,'hat','#3b4ccf','#ffe066'],
+    ['oak_staff','Дубовый посох','arms','mage','uncommon',0,7,'staff','#7fd1ff','#a0703a'],
+    ['mystic_robe','Мантия мистика','body','mage','rare',30,5,'body','#4f3aa6','#ffe066'],
+    ['wizard_shoes','Туфли чародея','legs','mage','rare',15,4,'boots','#6a4fc4'],
+    ['storm_robe','Мантия грозы','body','mage','epic',50,6,'body','#3b5bdb','#ffe066'],
+    ['thunder_staff','Посох молний','arms','mage','epic',10,16,'staff','#ffe066','#3b5bdb'],
+    ['arch_crown','Корона архимага','head','mage','legendary',40,18,'crown','#b57cff','#7fd1ff'],
+    ['star_staff','Посох звездопада','arms','mage','legendary',25,30,'staff','#fff3b0','#7e3fc4'],
+    ['padded_armor','Стёганый доспех','body','warrior','common',20,0,'body','#b08a5a'],
+    ['work_boots','Рабочие сапоги','legs','warrior','common',12,0,'boots','#7a5a3a'],
+    ['chain_mail','Кольчуга','body','warrior','uncommon',30,0,'body','#aab3bd','#6b7580'],
+    ['iron_boots','Железные сапоги','legs','warrior','uncommon',22,1,'boots','#8a939d'],
+    ['knight_helm','Шлем рыцаря','head','warrior','rare',45,0,'helm','#c5ccd4'],
+    ['steel_sword','Стальной меч','arms','warrior','rare',0,10,'sword','#dfe6ee','#8c5a2f'],
+    ['plate_armor','Латные доспехи','body','warrior','epic',80,2,'body','#d5dbe2','#8a939d'],
+    ['war_axe','Боевой топор','arms','warrior','epic',10,18,'axe','#c5ccd4'],
+    ['dragon_crown','Корона драконьего короля','head','warrior','legendary',70,12,'crown','#f6c343','#e63946'],
+    ['dawn_blade','Меч Рассвета','arms','warrior','legendary',20,28,'sword','#fff3b0','#b8892f'],
+    ['leather_vest','Кожаный жилет','body','archer','common',15,0,'body','#9a6a3a'],
+    ['rag_boots','Рваные сапоги','legs','archer','common',10,0,'boots','#7a5a3a'],
+    ['hunter_hood','Капюшон охотника','head','archer','uncommon',12,2,'hood','#4c8a3a'],
+    ['short_bow','Короткий лук','arms','archer','uncommon',0,8,'bow','#b9854a'],
+    ['ranger_coat','Плащ следопыта','body','archer','uncommon',25,2,'body','#5f8f4a','#3b5f2c'],
+    ['swift_boots','Сапоги скорохода','legs','archer','rare',14,4,'boots','#3f8f3a'],
+    ['eagle_hood','Капюшон орла','head','archer','rare',20,5,'hood','#2f6f5a'],
+    ['long_bow','Длинный лук','arms','archer','rare',0,12,'bow','#8c5a2f'],
+    ['shadow_cloak','Плащ тени','body','archer','epic',40,8,'body','#2b2f4a','#6a6f9a'],
+    ['wind_bow','Лук Ветров','arms','archer','legendary',15,32,'bow','#7fd1ff']
+  ];
+  DEFS.forEach(function(d){
+    var it={name:d[1],slot:d[2],cls:d[3],r:d[4],hp:d[5],atk:d[6],drop:true,vb:'0 0 40 40',draw:K[d[7]](d[8],d[9])};
+    if(AVK[d[7]]&&d[2]!=='legs') it.avd='<g transform="'+AVK[d[7]]+'">'+it.draw+'</g>';
+    if(d[7]==='sword'||d[7]==='axe'||d[7]==='staff') it.hand='R';
+    if(d[7]==='bow') it.hand='L';
+    ITEMS[d[0]]=it;
+  });
+  // стартовое снаряжение классов: тоже только для своего класса, с монстров не выпадает
+  ['mage_hat','wand'].forEach(function(i){ITEMS[i].cls='mage';});
+  ['war_helm','wood_sword'].forEach(function(i){ITEMS[i].cls='warrior';});
+  ['robin_hat','toy_bow'].forEach(function(i){ITEMS[i].cls='archer';});
+
   var CLASSES={
     mage:{name:'Маг',gear:{head:'mage_hat',arms:'wand'},desc:'Колпак и волшебная палочка'},
     warrior:{name:'Воин',gear:{head:'war_helm',arms:'wood_sword'},desc:'Каска и деревянный меч'},
@@ -1004,7 +1046,7 @@ svg.chr{overflow:visible}
   function gearFromGame(g){
     var out={}, eq=(g&&g.eq)||{}, base=(g&&!g.gm)?gearOf(g.cls):{};
     ['head','body','arms','legs'].forEach(function(sl){
-      var id=(eq[sl]&&ITEMS[eq[sl]]&&ITEMS[eq[sl]].slot===sl)?eq[sl]:base[sl];
+      var id=(eq[sl]&&ITEMS[eq[sl]]&&ITEMS[eq[sl]].slot===sl&&(!ITEMS[eq[sl]].cls||ITEMS[eq[sl]].cls===g.cls))?eq[sl]:base[sl];
       if(id) out[sl]=id;
     });
     return out;
@@ -1029,9 +1071,11 @@ svg.chr{overflow:visible}
     game.inv.forEach(function(id){
       var it=ITEMS[id], b=document.createElement('button'); b.type='button';
       b.className='icell'+(eq[it.slot]===id?' on':''); b.style.borderColor=RARITY[it.r].color;
-      b.title=itemLine(id)+', '+RARITY[it.r].name+'. Нажми, чтобы надеть';
+      var ok=!it.cls||it.cls===game.cls;
+      b.title=itemLine(id)+', '+RARITY[it.r].name+(it.cls?'. Класс: '+CLASSES[it.cls].name:'')+(ok?'. Нажми, чтобы надеть':'. Не твой класс, надеть нельзя');
+      if(!ok){b.disabled=true; b.style.opacity='.45';}
       b.innerHTML=itemIcon(id)+'<span>'+it.name+'</span>';
-      b.addEventListener('click',function(){game.eq[it.slot]=id; saveGame(); renderChar();});
+      b.addEventListener('click',function(){if(it.cls&&it.cls!==game.cls) return; game.eq[it.slot]=id; saveGame(); renderChar();});
       box.appendChild(b);
     });
   }
