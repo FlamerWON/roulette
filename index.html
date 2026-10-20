@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="5">
+<meta name="app-version" content="7">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -335,6 +335,7 @@ svg.chr{overflow:visible}
 
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
+<div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
 <div class="modal" id="umodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Вышла новая версия игры. Страница сейчас обновится.</p><button id="reloadNow">Обновить сейчас</button></div></div>
 
 <script src="config.js"></script>
@@ -424,10 +425,10 @@ svg.chr{overflow:visible}
   function start(){
     uid=sess.uid; nick=sess.name;
     $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
-    game=null; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); loadGame();
+    game=null; gameLoaded=false; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); claimSession().then(loadGame);
   }
   function logout(){
-    sess=null; game=null; docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true;
+    sess=null; game=null; gameLoaded=false; mySid=''; clearTimeout(loadRetry); docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true;
     try{localStorage.removeItem('roulette_sess');}catch(e){}
     $('app').hidden=true; $('login').hidden=false; setErr('');
   }
@@ -472,15 +473,52 @@ svg.chr{overflow:visible}
   function defaultGame(){return {spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   var saving=false, again=false;
+  var gameLoaded=false, loadRetry=0;
+  /* ---------- одна сессия на аккаунт ---------- */
+  // При входе страница записывает в базу свой случайный номер сессии. Каждое сохранение прогресса
+  // несёт этот номер, правила базы принимают его только от последней занявшей сессии.
+  var mySid='', kickedOut=false;
+  function newSid(){
+    var a=new Uint8Array(16); crypto.getRandomValues(a);
+    return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2);}).join('');
+  }
+  function sidUrl(t){return DB_URL+'/users/'+sess.uid+'/sid.json?auth='+encodeURIComponent(t);}
+  function claimSession(){
+    kickedOut=false; mySid='';
+    var sid=newSid();
+    return token().then(function(t){ return fetch(sidUrl(t),{method:'PUT',body:JSON.stringify(sid)}); })
+      .then(function(r){ if(r.ok) mySid=sid; })   // если правила базы ещё без sid, игра работает как раньше
+      .catch(function(){});
+  }
+  function kicked(){
+    if(kickedOut) return; kickedOut=true; gameLoaded=false; clearTimeout(loadRetry);
+    $('kmodal').hidden=false;
+  }
+  function checkSession(){
+    if(!mySid||kickedOut||!sess) return;
+    token().then(function(t){return fetch(sidUrl(t));}).then(function(r){return r.json();}).then(function(v){
+      if(typeof v==='string'&&v!==mySid) kicked();
+    }).catch(function(){});
+  }
+  setInterval(checkSession,10000);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) checkSession(); });
+  $('takeOver').addEventListener('click',function(){ location.reload(); });   // сохранять можно только если прогресс успешно загружен с сервера
+  // загрузка не удалась (ошибка доступа, нет сети): НИЧЕГО не сохраняем, чтобы не затереть прогресс, и пробуем ещё раз
+  function loadFailed(){
+    gameLoaded=false; if(kickedOut) return;
+    if(!game){ game=defaultGame(); renderChar(); renderCoins(); }
+    toast('Не удалось загрузить прогресс. Он не потерян, пробую ещё раз…');
+    clearTimeout(loadRetry); loadRetry=setTimeout(function(){ if(sess&&!gameLoaded) loadGame(); },5000);
+  }
   function saveGame(){
-    if(!game||!sess) return Promise.resolve();
+    if(!game||!sess||!gameLoaded) return Promise.resolve();
     if(saving){again=true; return Promise.resolve();}
     saving=true;
     return token().then(function(t){
-      game.v=APP_V;
+      game.v=APP_V; if(mySid) game.sid=mySid; else delete game.sid;
       return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(game)});
     }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
-    .catch(function(e){ toast('Прогресс не сохранился ('+((e&&e.message)||'нет связи')+').'); })
+    .catch(function(e){ if(!kickedOut) toast('Прогресс не сохранился ('+((e&&e.message)||'нет связи')+').'); checkSession(); })
     .then(function(){ saving=false; if(again){again=false; return saveGame();} });
   }
   function loadGame(){
@@ -506,10 +544,14 @@ svg.chr{overflow:visible}
         }
         game.gm=1; if(added) saveGame();
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
+        gameLoaded=true;
+      }else if(g===null){
+        // в базе правда пусто: новый аккаунт
+        game=defaultGame(); gameLoaded=true; renderChar(); renderCoins(); return saveGame();
       }else{
-        game=defaultGame(); renderChar(); renderCoins(); return saveGame();
+        loadFailed();
       }
-    }).catch(function(){ if(!game){game=defaultGame(); renderChar();} });
+    }).catch(function(){ loadFailed(); });
   }
   var toastTimer=null;
   function toast(text){
@@ -1519,6 +1561,7 @@ svg.chr{overflow:visible}
   function onSpinClick(e){
     if(!e.isTrusted) return;                       // клик, сделанный скриптом
     if(updating) return;
+    if(!gameLoaded){ toast('Прогресс ещё грузится, подожди секунду.'); return; }
     if(spinning){ deadClick(); return; }           // колесо крутится, а на кнопку жмут
     var now=performance.now();
     if(now<guard.blockedUntil){ toast('Подожди ещё '+Math.ceil((guard.blockedUntil-now)/1000)+' с'); return; }
@@ -1608,7 +1651,7 @@ svg.chr{overflow:visible}
   }
 
   function load(){
-    if(!chatReady||!sess||!sess.name||document.hidden||chatBusy) return;
+    if(!chatReady||!sess||!sess.name||document.hidden||chatBusy||kickedOut) return;
     chatBusy=true;
     token().then(function(t){
       // первый раз берём последние 100 сообщений, потом только новые (начиная с ключа последнего)
