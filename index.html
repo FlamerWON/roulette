@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="app-version" content="2">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -316,7 +317,8 @@ svg.chr{overflow:visible}
     </section>
 
     <section class="boardPane" id="boardPane" hidden>
-      <h2 class="bt">Рейтинг по прокрутам</h2>
+      <h2 class="bt" id="boardTitle">Рейтинг по прокрутам</h2>
+      <div class="tabs"><button class="tab on" id="bmSpins">По прокрутам</button><button class="tab" id="bmCoins">По монетам</button></div>
       <div class="board" id="board"></div>
       <button id="boardRefresh" class="ghost">Обновить</button>
     </section>
@@ -333,6 +335,7 @@ svg.chr{overflow:visible}
 
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
+<div class="modal" id="umodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Вышла новая версия игры. Страница сейчас обновится.</p><button id="reloadNow">Обновить сейчас</button></div></div>
 
 <script src="config.js"></script>
 <script>
@@ -474,6 +477,7 @@ svg.chr{overflow:visible}
     if(saving){again=true; return Promise.resolve();}
     saving=true;
     return token().then(function(t){
+      game.v=APP_V;
       return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(game)});
     }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
     .catch(function(e){ toast('Прогресс не сохранился ('+((e&&e.message)||'нет связи')+').'); })
@@ -1032,7 +1036,7 @@ svg.chr{overflow:visible}
     var rc=raceById(x.race)||RACES[0];
     var t1=add('span','raceTag',rc.name+' ('+RARITY[rc.r].name+')'); t1.style.background=RARITY[rc.r].color;
     var t2=add('span','raceTag',(x.cls&&CLASSES[x.cls])?CLASSES[x.cls].name:'Без класса'); t2.style.background='#374151';
-    add('div',null,'Прокруток: '+x.spins+' · Красное: '+x.red+' · Чёрное: '+x.black+' · Зеро: '+x.zero);
+    add('div',null,'Монет: '+x.coins+' · Прокруток: '+x.spins+' · Красное: '+x.red+' · Чёрное: '+x.black+' · Зеро: '+x.zero);
     add('div','pnote','Снаряжение и характеристики других игроков скрыты.');
     var cl=add('button','ghost','Закрыть'); cl.addEventListener('click',closeProfile);
     $('pmodal').hidden=false; cl.focus();
@@ -1040,18 +1044,28 @@ svg.chr{overflow:visible}
   function closeProfile(){$('pmodal').hidden=true;}
   $('pmodal').addEventListener('click',function(e){if(e.target===$('pmodal')) closeProfile();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('pmodal').hidden) closeProfile();});
+  var boardMode='spins';
+  function setBoardMode(m){
+    boardMode=m;
+    $('bmSpins').className='tab'+(m==='spins'?' on':'');
+    $('bmCoins').className='tab'+(m==='coins'?' on':'');
+    $('boardTitle').textContent=m==='coins'?'Рейтинг по монетам':'Рейтинг по прокрутам';
+    loadBoard();
+  }
+  $('bmSpins').addEventListener('click',function(){setBoardMode('spins');});
+  $('bmCoins').addEventListener('click',function(){setBoardMode('coins');});
   function loadBoard(){
     var box=$('board');
     token().then(function(t){
-      return fetch(DB_URL+'/users.json?orderBy=%22game%2Fspins%22&limitToLast=20&auth='+encodeURIComponent(t));
+      return fetch(DB_URL+'/users.json?orderBy=%22game%2F'+boardMode+'%22&limitToLast=20&auth='+encodeURIComponent(t));
     }).then(function(r){return r.json();}).then(function(obj){
-      if(!obj||obj.error){ box.innerHTML=''; var e=document.createElement('div'); e.className='bempty'; e.textContent='Не удалось загрузить рейтинг. Проверь правила в Firebase.'; box.appendChild(e); return; }
+      if(!obj||obj.error){ box.innerHTML=''; var e=document.createElement('div'); e.className='bempty'; e.textContent='Не удалось загрузить рейтинг. Проверь правила в Firebase (в .indexOn должны быть game/spins и game/coins).'; box.appendChild(e); return; }
       var rows=Object.keys(obj).map(function(k){
         var u=obj[k]||{}, g=u.game||{};
-        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,title:g.title,race:g.race,cls:g.cls,gear:gearFromGame(g),cw:Number(g.cowardUntil)||0,red:Number(g.red)||0,black:Number(g.black)||0,zero:Number(g.zero)||0};
-      }).filter(function(x){return x.spins>0;}).sort(function(x,y){return y.spins-x.spins;});
+        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,coins:Number(g.coins)||0,title:g.title,race:g.race,cls:g.cls,gear:gearFromGame(g),cw:Number(g.cowardUntil)||0,red:Number(g.red)||0,black:Number(g.black)||0,zero:Number(g.zero)||0};
+      }).filter(function(x){return x[boardMode]>0;}).sort(function(x,y){return y[boardMode]-x[boardMode];});
       box.innerHTML='';
-      if(!rows.length){var e2=document.createElement('div'); e2.className='bempty'; e2.textContent='Пока никто не крутил колесо.'; box.appendChild(e2); return;}
+      if(!rows.length){var e2=document.createElement('div'); e2.className='bempty'; e2.textContent=boardMode==='coins'?'Пока ни у кого нет монет.':'Пока никто не крутил колесо.'; box.appendChild(e2); return;}
       rows.forEach(function(x,i){
         var row=document.createElement('div'); row.className='brow'+((sess&&x.uid===sess.uid)?' me':'');
         var rk=document.createElement('div'); rk.className='rk'+(i<3?' top':''); rk.textContent=String(i+1);
@@ -1059,8 +1073,8 @@ svg.chr{overflow:visible}
         var nm=document.createElement('div'); nm.className='bn'; nm.textContent=nameOf(x.name,x.cw);
         var tn=titleName(x.title);
         if(tn){var tt=document.createElement('span'); tt.className='tt'; tt.textContent=tn; nm.appendChild(tt);}
-        var sc=document.createElement('div'); sc.className='bs'; sc.appendChild(document.createTextNode(String(x.spins)+' '));
-        var sm=document.createElement('small'); sm.textContent='прокр.'; sc.appendChild(sm);
+        var sc=document.createElement('div'); sc.className='bs'; sc.appendChild(document.createTextNode(String(boardMode==='coins'?x.coins:x.spins)+' '));
+        var sm=document.createElement('small'); sm.textContent=boardMode==='coins'?'монет':'прокр.'; sc.appendChild(sm);
         row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
         row.setAttribute('role','button'); row.tabIndex=0; row.title='Открыть профиль';
         row.addEventListener('click',function(){showProfile(x);});
@@ -1470,6 +1484,29 @@ svg.chr{overflow:visible}
     if(guard.count>=guard.nextAt||looksLikeBot()){ ask(); return; }
     spin();
   }
+  /* ---------- принудительное обновление ---------- */
+  // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
+  var APP_V=Number((document.querySelector('meta[name="app-version"]')||{}).content)||0;
+  var updating=false;
+  function showUpdate(){
+    if(updating) return; updating=true;
+    btn.disabled=true; guard.blockedUntil=Infinity;
+    $('umodal').hidden=false;
+    setTimeout(function(){location.reload();},6000);
+  }
+  function checkUpdate(){
+    if(updating||document.hidden) return;
+    fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'})
+      .then(function(r){return r.text();})
+      .then(function(h){
+        var m=/<meta name="app-version" content="(\d+)"/.exec(h);
+        if(m&&Number(m[1])>APP_V) showUpdate();
+      }).catch(function(){});
+  }
+  $('reloadNow').addEventListener('click',function(){location.reload();});
+  setInterval(checkUpdate,60000);
+  document.addEventListener('visibilitychange',checkUpdate);
+  setTimeout(checkUpdate,3000);
   btn.addEventListener('click',onSpinClick);
   window.addEventListener('resize',draw);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
