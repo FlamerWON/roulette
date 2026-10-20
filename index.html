@@ -85,6 +85,11 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
 .titem .lock{font-size:13px;color:var(--muted);flex:none}
 .tt{font-size:11px;font-weight:700;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--gold);color:#1b1405}
 
+/* элитный монстр */
+.eventBar.live.elite{border-color:#9b5de5;box-shadow:0 0 0 1px #9b5de5,0 0 16px rgba(155,93,229,.5)}
+.fight.elite{border-color:#9b5de5;box-shadow:0 0 0 1px #9b5de5,0 0 18px rgba(155,93,229,.55)}
+.fight.elite .mon{filter:drop-shadow(0 0 7px #b57cff)}
+.fight.elite .bar.m i{background:#9b5de5}
 /* инвентарь, профиль, бегство */
 .icell{aspect-ratio:1;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:2px;font-weight:400;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;line-height:1.1;gap:1px}
 .icell svg{width:30px;height:30px;display:block}
@@ -705,7 +710,7 @@ svg.chr{overflow:visible}
   $('shopBody').style.display='flex'; $('shopBody').style.flexDirection='column'; $('shopBody').style.gap='14px';
 
   /* ---------- событие раз в час и бой с монстром ---------- */
-  var HOUR=3600000, EVENT_MS=15*60000, WIN_MIN=100, WIN_MAX=300, LOSE_SHARE=0.7;
+  var HOUR=30*60000, EVENT_MS=10*60000, WIN_MIN=100, WIN_MAX=300, LOSE_SHARE=0.7;
   var MONSTERS=[
     {id:'goblin',name:'Гоблин',hp:40,dmg:6,rule:'чёрное',hit:function(n){return n>0&&color(n)==='black';}},
     {id:'kobold',name:'Кобольд',hp:35,dmg:5,rule:'красное',hit:function(n){return n>0&&color(n)==='red';}},
@@ -715,6 +720,12 @@ svg.chr{overflow:visible}
     {id:'ogre',name:'Огр',hp:80,dmg:9,rule:'число от 1 до 18',hit:function(n){return n>=1&&n<=18;}}
   ];
   function monsterFor(slot){return MONSTERS[hashStr('m'+slot)%MONSTERS.length];}
+  // элитный монстр: шанс 10%, у каждого игрока свой; вдвое больше здоровья и урона
+  function eliteFor(slot){return !!(sess&&(hashStr('e'+sess.uid+':'+slot)%100)<10);}
+  function foeFor(slot){
+    var b=monsterFor(slot), e=eliteFor(slot), k=e?2:1;
+    return {id:b.id,name:(e?'Элитный ':'')+b.name,hp:b.hp*k,dmg:b.dmg*k,rule:b.rule,hit:b.hit,elite:e};
+  }
   function slotNow(){return Math.floor(Date.now()/HOUR);}
   function fmt(ms){var t=Math.max(0,Math.ceil(ms/1000)), m=Math.floor(t/60), r=t%60; return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;}
   var fightLog='', fightMsg='';
@@ -774,7 +785,7 @@ svg.chr{overflow:visible}
 
   function renderEvent(){
     var bar=$('eventBar'); if(!bar||$('app').hidden) return;
-    var now=Date.now(), slot=Math.floor(now/HOUR), el=now-slot*HOUR, mo=monsterFor(slot);
+    var now=Date.now(), slot=Math.floor(now/HOUR), el=now-slot*HOUR, mo=foeFor(slot);
     var live=el<EVENT_MS, f=game&&game.fight, T, S, btn=false;
     if(live){
       T='Событие: '+mo.name;
@@ -785,17 +796,17 @@ svg.chr{overflow:visible}
       T='Следующий монстр'; S='Появится через '+fmt(HOUR-el);
     }
     $('evT').textContent=T; $('evS').textContent=S; $('evBtn').hidden=!btn;
-    bar.className='eventBar'+(live?' live':'');
+    bar.className='eventBar'+(live?' live':'')+(live&&mo.elite?' elite':'');
   }
   function renderFight(){
-    var box=$('fight');
+    var box=$('fight'); box.className='fight';
     if(!game){box.hidden=true;return;}
     var f=game.fight||{};
     if(f.on){
-      var mo=monsterFor(f.s), st=stats();
+      var mo=foeFor(f.s), st=stats();
       var pm=Math.max(0,Math.min(100,Math.round(f.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(f.p/st.hp*100)));
       box.hidden=false;
-      box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
+      box.className=mo.elite?'fight elite':'fight'; box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
         +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+f.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
         +'<div><div class="hpl"><span>Ты</span><span>'+f.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
         +'<div class="flog">'+fightLog+'</div><button id="fFlee" class="ghost">Сбежать</button>';
@@ -812,7 +823,7 @@ svg.chr{overflow:visible}
     if(!game) return;
     var slot=slotNow(), el=Date.now()-slot*HOUR, f=game.fight;
     if(el>=EVENT_MS||f.on||f.s===slot) return;
-    var mo=monsterFor(slot), st=stats();
+    var mo=foeFor(slot), st=stats();
     game.fight={s:slot,m:mo.hp,p:st.hp,on:true};
     fightLog='Бой начался. Крути колесо!'; fightMsg='';
     saveGame(); renderFight(); renderEvent();
@@ -831,7 +842,7 @@ svg.chr{overflow:visible}
   }
   function fightStrike(n){
     var f=game&&game.fight; if(!f||!f.on) return;
-    var mo=monsterFor(f.s), st=stats();
+    var mo=foeFor(f.s), st=stats();
     if(f.skip){
       f.skip=false; f.p-=mo.dmg; fightLog='Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.';
     }else if(n===0){
@@ -845,7 +856,7 @@ svg.chr{overflow:visible}
     }
     if(f.m<=0){
       f.m=0; f.on=false; f.skip=false;
-      var rew=WIN_MIN+Math.floor(Math.random()*(WIN_MAX-WIN_MIN+1)), id=(Math.random()<0.5)?null:dropItem();
+      var rew=WIN_MIN+Math.floor(Math.random()*(WIN_MAX-WIN_MIN+1)), id=(Math.random()<0.5)?null:dropItem(mo.elite);
       game.coins+=rew; if(id) game.inv.push(id);
       fightMsg=fightLog+' Победа! Награда: '+rew+' монет.'+(id?' Добыча: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':' Предметов не выпало.');
       if(id){toast('Выпал предмет: '+ITEMS[id].name); $('dot').hidden=false;}
@@ -860,8 +871,8 @@ svg.chr{overflow:visible}
     if(f&&f.on&&f.s!==slotNow()){ loseFight('Бой не был закончен, монстр победил.'); saveGame(); renderFight(); renderEvent(); }
   }
   $('evBtn').addEventListener('click',function(){
-    var mo=monsterFor(slotNow());
-    confirmBox('Начать бой с монстром «'+mo.name+'»? Если погибнешь, потеряешь 70% монет. За победу дают от '+WIN_MIN+' до '+WIN_MAX+' монет.','В бой',startFight);
+    var mo=foeFor(slotNow());
+    confirmBox('Начать бой с монстром «'+mo.name+'»? Если погибнешь, потеряешь 70% монет. За победу дают от '+WIN_MIN+' до '+WIN_MAX+' монет.'+(mo.elite?' Этот монстр элитный: у него вдвое больше здоровья и урона, зато редкие предметы падают намного чаще.':''),'В бой',startFight);
   });
   setInterval(function(){
     if(game){
@@ -1058,9 +1069,11 @@ svg.chr{overflow:visible}
   function bonusLine(b){var p=[]; if(b&&b.hp) p.push('здоровье +'+b.hp); if(b&&b.atk) p.push('урон +'+b.atk); return p.length?p.join(', '):'нет';}
   // Шанс предмета с монстра по редкости (в сумме 100)
   var DROP_W=[['common',50],['uncommon',30],['rare',15],['epic',4],['legendary',1]];
-  function dropItem(){
+  var DROP_E=[['common',20],['uncommon',30],['rare',28],['epic',17],['legendary',5]]; // с элитного монстра
+  function dropItem(elite){
     var x=Math.random()*100, acc=0, r='common';
-    for(var i=0;i<DROP_W.length;i++){acc+=DROP_W[i][1]; if(x<acc){r=DROP_W[i][0];break;}}
+    var W=elite?DROP_E:DROP_W;
+    for(var i=0;i<W.length;i++){acc+=W[i][1]; if(x<acc){r=W[i][0];break;}}
     var pool=Object.keys(ITEMS).filter(function(k){return ITEMS[k].drop&&ITEMS[k].r===r;});
     return pool[Math.floor(Math.random()*pool.length)];
   }
