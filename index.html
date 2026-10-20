@@ -72,7 +72,7 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
 .hero{text-align:center}
 .hero .name{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(30px,7vw,40px)}
 .hero .cur{display:inline-block;margin-top:6px;padding:6px 20px;border-radius:999px;background:var(--gold);color:#1b1405;font-weight:700}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
 .stat b{display:block;font-size:22px}
 .stat span{font-size:12px;color:var(--muted)}
@@ -168,6 +168,34 @@ svg.chr{overflow:visible}
 .chr .tail{transform-origin:63px 104px;animation:chrWag 1.2s ease-in-out infinite}
 @keyframes chrWag{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(10deg)}}
 
+/* слоты с предметами */
+.slot{flex-direction:column;gap:2px}
+.slot svg{width:36px;height:36px;display:block}
+.slot .sn{font-size:10px;line-height:1.1;color:var(--ink)}
+
+/* событие и бой */
+.eventBar{width:100%;max-width:520px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px}
+.eventBar.live{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+.evT{font-weight:700}
+.evS{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.eventBar button{padding:6px 18px;font-size:15px;flex:none}
+.fight{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.fhead{display:flex;gap:12px;align-items:center}
+.mon{width:84px;height:84px;flex:none;border-radius:16px;overflow:hidden;background:var(--bg)}
+.mon svg{width:100%;height:100%;display:block}
+.bar{height:12px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px}
+.bar.m i{background:var(--red)}
+.bar.p i{background:var(--green)}
+.hpl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:3px}
+.flog{font-size:14px;min-height:20px}
+
+/* окно подтверждения */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.mbox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:16px}
+.mbox p{margin:0;line-height:1.4}
+.mbtns{display:flex;gap:10px;justify-content:flex-end}
+
 /* чат */
 .chat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:18px;height:min(72vh,600px);overflow:hidden}
 .chatHead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:baseline}
@@ -225,6 +253,10 @@ svg.chr{overflow:visible}
       <button id="tabBoard" class="tab">Лидеры</button>
       <button id="tabShop" class="tab">Магазин</button>
     </div>
+    <div class="eventBar" id="eventBar">
+      <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
+      <button id="evBtn" hidden>Сразиться</button>
+    </div>
     <section class="wheelCol" id="gamePane">
       <h1>Рулетка</h1>
       <div class="stage">
@@ -236,19 +268,20 @@ svg.chr{overflow:visible}
         <div class="label" id="label">Нажми «Крутить»</div>
       </div>
       <div id="toast" aria-live="polite"></div>
+      <div class="fight" id="fight" hidden></div>
       <button id="spin">Крутить</button>
     </section>
 
     <section class="charPane" id="charPane" hidden>
       <div class="equipWrap">
         <div class="eqCol">
-          <div class="slot" aria-label="Голова: пусто">Голова</div>
-          <div class="slot" aria-label="Тело: пусто">Тело</div>
+          <div class="slot" id="slotHead" aria-label="Голова: пусто">Голова</div>
+          <div class="slot" id="slotBody" aria-label="Тело: пусто">Тело</div>
         </div>
-        <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div></div>
+        <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
         <div class="eqCol">
-          <div class="slot" aria-label="Руки: пусто">Руки</div>
-          <div class="slot" aria-label="Ноги: пусто">Ноги</div>
+          <div class="slot" id="slotArms" aria-label="Руки: пусто">Руки</div>
+          <div class="slot" id="slotLegs" aria-label="Ноги: пусто">Ноги</div>
         </div>
       </div>
       <div class="invTitle">Инвентарь</div>
@@ -258,6 +291,8 @@ svg.chr{overflow:visible}
         <div class="stat"><b id="stRed">0</b><span>Красное</span></div>
         <div class="stat"><b id="stBlack">0</b><span>Чёрное</span></div>
         <div class="stat"><b id="stZero">0</b><span>Зеро</span></div>
+        <div class="stat"><b id="stHp">100</b><span>Здоровье</span></div>
+        <div class="stat"><b id="stAtk">5</b><span>Урон</span></div>
       </div>
       <div class="tlist" id="tlist"></div>
     </section>
@@ -271,6 +306,10 @@ svg.chr{overflow:visible}
     <section class="shopPane" id="shopPane" hidden><div id="shopBody"></div></section>
     </div>
   </div>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+  <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
 <script src="config.js"></script>
@@ -360,7 +399,7 @@ svg.chr{overflow:visible}
   function start(){
     uid=sess.uid; nick=sess.name;
     $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
-    game=null; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); draw(); lastSig=''; renderChat(); load(); loadGame();
+    game=null; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; renderChat(); load(); loadGame();
   }
   function logout(){
     sess=null; game=null; docs=[]; lastSig=''; $('coinBox').hidden=true;
@@ -405,7 +444,7 @@ svg.chr{overflow:visible}
     for(var i=0;i<TITLES.length;i++){ if(TITLES[i].id===id) return TITLES[i].name; }
     return '';
   }
-  function defaultGame(){return {spins:0,coins:0,race:'human',races:{human:true},red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function defaultGame(){return {spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   function saveGame(){
     if(!game||!sess) return Promise.resolve();
@@ -421,10 +460,12 @@ svg.chr{overflow:visible}
         if(!game.earned||typeof game.earned!=='object') game.earned={newbie:true};
         game.earned.newbie=true;
         if(typeof game.coins!=='number') game.coins=0;
-        if(!game.races||typeof game.races!=='object') game.races={human:true};
-        game.races.human=true;
-        if(!raceById(game.race)||!game.races[game.race]) game.race='human';
-        renderChar(); renderCoins();
+        delete game.races;
+        if(!raceById(game.race)) game.race='human';
+        if(typeof game.cls!=='string'||!CLASSES[game.cls]) game.cls='';
+        if(!game.fight||typeof game.fight!=='object') game.fight={s:0,m:0,p:0,on:false};
+        game.fight.on=!!game.fight.on;
+        checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
       }else{
         game=defaultGame(); renderChar(); renderCoins(); return saveGame();
       }
@@ -446,6 +487,7 @@ svg.chr{overflow:visible}
     arr.push(n); arr=arr.slice(-3); game.nums=arr.join(',');
     var sn=String(game.seen||''); while(sn.length<37) sn+='0';
     game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
+    fightStrike(n);
     var got=[];
     TITLES.forEach(function(t){
       if(!game.earned[t.id]&&t.check(n,prev,game,arr)){game.earned[t.id]=true; got.push(t.name);}
@@ -454,16 +496,31 @@ svg.chr{overflow:visible}
       toast('Новый титул: '+got.join(', ')); $('dot').hidden=false;
       got.forEach(function(nm){post({kind:'title',tn:nm});});
     }
-    renderCoins();
+    renderCoins(); renderFight(); renderEvent();
     saveGame(); renderChar();
   }
   function renderChar(){
     if(!game) return;
     $('charName').textContent=nick;
-    $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title,game.race);
+    $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title,game.race,game.cls);
     $('charTitle').textContent=titleName(game.title)||'Новичок';
     var rc=raceById(game.race)||RACES[0], rr=RARITY[rc.r];
     var tag=$('charRace'); tag.textContent=rc.name+' ('+rr.name+')'; tag.style.background=rr.color;
+    var ct=$('charClass'); ct.textContent=game.cls?CLASSES[game.cls].name:'Без класса'; ct.style.background=game.cls?'#374151':'#6b7280';
+    var stt=stats(); $('stHp').textContent=stt.hp; $('stAtk').textContent=stt.atk;
+    var gear=gearOf(game.cls);
+    [['slotHead','head','Голова'],['slotBody','body','Тело'],['slotArms','arms','Руки'],['slotLegs','legs','Ноги']].forEach(function(sl){
+      var el=$(sl[0]), id=gear[sl[1]];
+      if(id){
+        var it=ITEMS[id];
+        el.innerHTML=itemIcon(id)+'<span class="sn">'+it.name+'</span>';
+        el.style.borderStyle='solid'; el.style.borderColor=RARITY[it.r].color;
+        el.setAttribute('aria-label',sl[2]+': '+it.name);
+      }else{
+        el.textContent=sl[2]; el.style.borderStyle=''; el.style.borderColor='';
+        el.setAttribute('aria-label',sl[2]+': пусто');
+      }
+    });
     $('stSpins').textContent=game.spins; $('stRed').textContent=game.red;
     $('stBlack').textContent=game.black; $('stZero').textContent=game.zero;
     var list=$('tlist'); list.innerHTML='';
@@ -503,8 +560,18 @@ svg.chr{overflow:visible}
     if(curTab==='shop'&&!opening) renderShop();
   }
 
-  /* ---------- магазин: сундук с расой ---------- */
-  var CHEST_PRICE=500, DUP_REFUND=100;
+  /* ---------- окно подтверждения ---------- */
+  var mCb=null;
+  function confirmBox(text,yes,cb){
+    $('mText').textContent=text; $('mYes').textContent=yes||'Да'; mCb=cb; $('modal').hidden=false; $('mNo').focus();
+  }
+  function closeModal(){$('modal').hidden=true; mCb=null;}
+  $('mNo').addEventListener('click',closeModal);
+  $('mYes').addEventListener('click',function(){var f=mCb; closeModal(); if(f) f();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('modal').hidden) closeModal();});
+
+  /* ---------- магазин: сундук с расой и классы ---------- */
+  var CHEST_PRICE=500, CLASS_PRICE=300;
   var RARITY={
     common:{name:'Обычная',color:'#6b7280'},
     uncommon:{name:'Необычная',color:'#2f8f4e'},
@@ -538,19 +605,30 @@ svg.chr{overflow:visible}
     for(var i=0;i<RACES.length;i++){acc+=RACES[i].w; if(x<acc) return RACES[i];}
     return RACES[0];
   }
+  // раса меняется сразу, выбрать её самому нельзя
   function openChest(){
     if(!game||opening||(Number(game.coins)||0)<CHEST_PRICE) return;
     game.coins-=CHEST_PRICE;
-    var race=rollRace(), dup=!!game.races[race.id];
-    if(dup){ game.coins+=DUP_REFUND; }
-    else{ game.races[race.id]=true; game.race=race.id; }
+    var race=rollRace(), same=(game.race===race.id);
+    game.race=race.id;
     lastDrop=null; opening=true;
     saveGame();
     renderCoins(); renderShop();
     setTimeout(function(){
-      opening=false; lastDrop={race:race,dup:dup};
-      renderShop();
+      opening=false; lastDrop={race:race,same:same};
+      renderShop(); renderChar();
     },reduceMotion?50:1000);
+  }
+  function buyClass(id){
+    if(!game||game.cls||(Number(game.coins)||0)<CLASS_PRICE||!CLASSES[id]) return;
+    game.coins-=CLASS_PRICE; game.cls=id;
+    saveGame(); renderCoins(); renderShop(); renderChar();
+  }
+  function itemLine(id){
+    var it=ITEMS[id], p=[];
+    if(it.hp) p.push('здоровье +'+it.hp);
+    if(it.atk) p.push('урон +'+it.atk);
+    return it.name+' ('+p.join(', ')+')';
   }
   function renderShop(){
     var box=$('shopBody'); if(!game){box.innerHTML='';return;}
@@ -558,36 +636,190 @@ svg.chr{overflow:visible}
     var odds={}, k;
     RACES.forEach(function(r){odds[r.r]=(odds[r.r]||0)+r.w;});
     var h='<div class="card"><h3>Сундук с расой</h3><div class="chestRow"><div class="chest'+(opening?' shake':'')+'">'+chestSvg()+'</div><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">'
-      +'<p>Откроешь и получишь случайную расу. Раса немного меняет внешний вид персонажа.</p>'
+      +'<p>Открой сундук, и раса сменится сразу на случайную. Выбрать её самому нельзя, но можно попробовать ещё раз.</p>'
       +'<span class="price">'+coinSvg()+CHEST_PRICE+'</span>'
       +'<button id="openChest"'+(can?'':' disabled')+'>'+(opening?'Открываем…':(coins>=CHEST_PRICE?'Открыть сундук':'Не хватает '+(CHEST_PRICE-coins)))+'</button></div></div>';
     h+='<div class="odds">';
     for(k in RARITY){ if(odds[k]) h+=rarPill(k).replace('</span>',' '+odds[k]+'%</span>'); }
     h+='</div>';
     if(lastDrop&&!opening){
-      h+='<div class="drop"><div class="charAv">'+avatarBody(sess&&sess.uid,game.title,lastDrop.race.id)+'</div><div><div class="rn">Выпало: '+lastDrop.race.name+'</div>'+rarPill(lastDrop.race.r)
-        +'<p style="margin-top:6px">'+(lastDrop.dup?'Повтор! Возвращаем '+DUP_REFUND+' монет.':'Новая раса, уже надета.')+'</p></div></div>';
+      h+='<div class="drop"><div class="charAv">'+avatarBody(sess&&sess.uid,game.title,lastDrop.race.id,game.cls)+'</div><div><div class="rn">Выпало: '+lastDrop.race.name+'</div>'+rarPill(lastDrop.race.r)
+        +'<p style="margin-top:6px">'+(lastDrop.same?'Та же раса. Попробуй ещё раз.':'Раса изменилась.')+'</p></div></div>';
     }
     h+='</div>';
-    h+='<div class="card"><h3>Мои расы</h3>';
-    RACES.forEach(function(r,i){
-      var has=!!game.races[r.id], worn=game.race===r.id;
-      h+='<div class="rrow'+(has?'':' locked')+'"><div><div class="rn">'+r.name+' '+rarPill(r.r)+'</div><div class="rd">'+r.desc+'</div></div>'
-        +(has?('<button data-race="'+r.id+'"'+(worn?' disabled':'')+'>'+(worn?'Надета':'Надеть')+'</button>'):'<span class="rd">Не открыта</span>')+'</div>';
+    h+='<div class="card"><h3>Какие бывают расы</h3>';
+    RACES.forEach(function(r){
+      var cur=(game.race===r.id);
+      h+='<div class="rrow"><div><div class="rn">'+r.name+' '+rarPill(r.r)+(cur?' <span class="rar" style="background:#1b1b18">Сейчас</span>':'')+'</div><div class="rd">'+r.desc+'</div></div></div>';
     });
     h+='</div>';
-    h+='<div class="card"><h3>Классы</h3><p>Здесь появятся классы, их можно будет купить позже.</p><div class="chips"><span class="chipx">Маг</span><span class="chipx">Воин</span><span class="chipx">Лучник</span></div><p>Скоро</p></div>';
+    h+='<div class="card"><h3>Классы</h3><p>Класс можно купить один раз за всю игру, потом его не поменять. Вместе с ним ты получаешь снаряжение обычного уровня.</p><span class="price">'+coinSvg()+CLASS_PRICE+'</span>';
+    for(var cid in CLASSES){
+      var c=CLASSES[cid], g=c.gear, lab, dis=true;
+      if(game.cls===cid) lab='Выбран';
+      else if(game.cls) lab='Недоступно';
+      else if(coins<CLASS_PRICE) lab='Не хватает '+(CLASS_PRICE-coins);
+      else {lab='Купить'; dis=false;}
+      h+='<div class="rrow'+((game.cls&&game.cls!==cid)?' locked':'')+'"><div><div class="rn">'+c.name+'</div><div class="rd">'+itemLine(g.head)+'; '+itemLine(g.arms)+'</div></div><button data-class="'+cid+'"'+(dis?' disabled':'')+'>'+lab+'</button></div>';
+    }
+    h+='</div>';
     box.innerHTML=h;
     var ob=$('openChest'); if(ob) ob.addEventListener('click',openChest);
-    var btns=box.querySelectorAll('button[data-race]');
+    var btns=box.querySelectorAll('button[data-class]');
     for(var j=0;j<btns.length;j++){
       btns[j].addEventListener('click',function(e){
-        var id=e.currentTarget.getAttribute('data-race');
-        if(game.races[id]){game.race=id; saveGame(); renderShop();}
+        var id=e.currentTarget.getAttribute('data-class');
+        confirmBox('Класс можно купить только один раз за всю игру, поменять его потом нельзя. Купить класс «'+CLASSES[id].name+'» за '+CLASS_PRICE+' монет?','Купить',function(){buyClass(id);});
       });
     }
   }
   $('shopBody').style.display='flex'; $('shopBody').style.flexDirection='column'; $('shopBody').style.gap='14px';
+
+  /* ---------- событие раз в час и бой с монстром ---------- */
+  var HOUR=3600000, EVENT_MS=15*60000, WIN_MIN=100, WIN_MAX=300, LOSE_SHARE=0.7;
+  var MONSTERS=[
+    {id:'goblin',name:'Гоблин',hp:40,dmg:6,rule:'чёрное',hit:function(n){return n>0&&color(n)==='black';}},
+    {id:'kobold',name:'Кобольд',hp:35,dmg:5,rule:'красное',hit:function(n){return n>0&&color(n)==='red';}},
+    {id:'slime',name:'Слизень',hp:55,dmg:4,rule:'чётное число',hit:function(n){return n>0&&n%2===0;}},
+    {id:'skeleton',name:'Скелет',hp:50,dmg:7,rule:'нечётное число',hit:function(n){return n%2===1;}},
+    {id:'wolf',name:'Волк',hp:45,dmg:8,rule:'число от 19 до 36',hit:function(n){return n>=19;}},
+    {id:'ogre',name:'Огр',hp:80,dmg:9,rule:'число от 1 до 18',hit:function(n){return n>=1&&n<=18;}}
+  ];
+  function monsterFor(slot){return MONSTERS[hashStr('m'+slot)%MONSTERS.length];}
+  function slotNow(){return Math.floor(Date.now()/HOUR);}
+  function fmt(ms){var t=Math.max(0,Math.ceil(ms/1000)), m=Math.floor(t/60), r=t%60; return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;}
+  var fightLog='', fightMsg='';
+
+  function monsterSvg(id){
+    var o=OUT, i=INK, h='<svg viewBox="0 0 100 100" aria-hidden="true">';
+    if(id==='goblin'){
+      h+='<rect width="100" height="100" fill="#d8ecc0"/><path d="M27 50 L5 36 L26 66Z" fill="#7fbf5a" '+o+'/><path d="M73 50 L95 36 L74 66Z" fill="#7fbf5a" '+o+'/>'
+        +'<ellipse cx="50" cy="58" rx="27" ry="25" fill="#7fbf5a" '+o+'/>'
+        +'<circle cx="39" cy="53" r="6" fill="#ffe066" stroke="'+i+'" stroke-width="2"/><circle cx="61" cy="53" r="6" fill="#ffe066" stroke="'+i+'" stroke-width="2"/>'
+        +'<rect x="38" y="49" width="2.4" height="8" fill="'+i+'"/><rect x="60" y="49" width="2.4" height="8" fill="'+i+'"/>'
+        +'<path d="M31 43 L45 48 M69 43 L55 48" stroke="'+i+'" stroke-width="3" stroke-linecap="round"/>'
+        +'<path d="M50 55 L46 65 L54 65Z" fill="#6aa84a" stroke="'+i+'" stroke-width="1.8" stroke-linejoin="round"/>'
+        +'<path d="M36 70 Q50 83 64 70Z" fill="#7a2230" '+o+'/><path d="M40 71.5 L43 77 L46 72Z" fill="#fff"/><path d="M54 72 L57 77 L60 71.5Z" fill="#fff"/>';
+    }
+    if(id==='kobold'){
+      h+='<rect width="100" height="100" fill="#f6d5c8"/>'
+        +'<path d="M34 40 L38 22 L45 37Z" fill="#8f3a28" '+o+'/><path d="M45 36 L50 16 L55 36Z" fill="#8f3a28" '+o+'/><path d="M55 37 L62 22 L66 40Z" fill="#8f3a28" '+o+'/>'
+        +'<ellipse cx="50" cy="56" rx="25" ry="22" fill="#c8573a" '+o+'/><ellipse cx="50" cy="64" rx="15" ry="10" fill="#de8a6a" '+o+'/>'
+        +'<circle cx="45" cy="62" r="1.7" fill="'+i+'"/><circle cx="55" cy="62" r="1.7" fill="'+i+'"/>'
+        +'<circle cx="38" cy="50" r="5" fill="#ffe066" stroke="'+i+'" stroke-width="2"/><circle cx="62" cy="50" r="5" fill="#ffe066" stroke="'+i+'" stroke-width="2"/>'
+        +'<circle cx="39" cy="51" r="2" fill="'+i+'"/><circle cx="61" cy="51" r="2" fill="'+i+'"/>'
+        +'<path d="M41 70 Q50 75 59 70" fill="none" stroke="'+i+'" stroke-width="2.2" stroke-linecap="round"/><path d="M44 71.5 L46 76 L48 72Z" fill="#fff"/>';
+    }
+    if(id==='slime'){
+      h+='<rect width="100" height="100" fill="#d6f0ee"/><path d="M14 80 C10 42 30 24 50 24 C70 24 90 42 86 80 Q50 94 14 80Z" fill="#6fd3c0" '+o+'/>'
+        +'<ellipse cx="34" cy="38" rx="7" ry="4" transform="rotate(-30 34 38)" fill="#fff" opacity="0.6"/>'
+        +'<circle cx="38" cy="58" r="6.5" fill="#fff" stroke="'+i+'" stroke-width="2"/><circle cx="62" cy="58" r="6.5" fill="#fff" stroke="'+i+'" stroke-width="2"/>'
+        +'<circle cx="39" cy="59" r="3.2" fill="'+i+'"/><circle cx="61" cy="59" r="3.2" fill="'+i+'"/>'
+        +'<path d="M42 72 Q50 78 58 72" fill="none" stroke="'+i+'" stroke-width="2.4" stroke-linecap="round"/>';
+    }
+    if(id==='skeleton'){
+      h+='<rect width="100" height="100" fill="#e2dcee"/><path d="M24 50 C24 20 76 20 76 50 C76 60 70 64 68 70 L32 70 C30 64 24 60 24 50Z" fill="#f4f0e2" '+o+'/>'
+        +'<ellipse cx="39" cy="50" rx="7" ry="8" fill="'+i+'"/><ellipse cx="61" cy="50" rx="7" ry="8" fill="'+i+'"/>'
+        +'<path d="M50 58 L46 66 L54 66Z" fill="'+i+'"/>'
+        +'<rect x="36" y="70" width="28" height="11" rx="3" fill="#f4f0e2" '+o+'/><path d="M43 71 V80 M50 71 V80 M57 71 V80" stroke="'+i+'" stroke-width="1.6"/>';
+    }
+    if(id==='ogre'){
+      h+='<rect width="100" height="100" fill="#e8dcc0"/><circle cx="19" cy="56" r="8" fill="#a98f52" '+o+'/><circle cx="81" cy="56" r="8" fill="#a98f52" '+o+'/>'
+        +'<ellipse cx="50" cy="54" rx="31" ry="29" fill="#b59a5b" '+o+'/>'
+        +'<path d="M26 42 Q38 36 46 47 M74 42 Q62 36 54 47" fill="none" stroke="'+i+'" stroke-width="5" stroke-linecap="round"/>'
+        +'<circle cx="38" cy="51" r="3.6" fill="'+i+'"/><circle cx="62" cy="51" r="3.6" fill="'+i+'"/>'
+        +'<circle cx="50" cy="59" r="7" fill="#a58a4e" stroke="'+i+'" stroke-width="2"/>'
+        +'<path d="M32 71 Q50 81 68 71" fill="none" stroke="'+i+'" stroke-width="3" stroke-linecap="round"/>'
+        +'<path d="M38 73 L41 63 L45 74Z" fill="#fff" stroke="'+i+'" stroke-width="1.6" stroke-linejoin="round"/><path d="M62 73 L59 63 L55 74Z" fill="#fff" stroke="'+i+'" stroke-width="1.6" stroke-linejoin="round"/>';
+    }
+    if(id==='wolf'){
+      h+='<rect width="100" height="100" fill="#dfe6ee"/><path d="M24 46 L26 12 L44 32Z" fill="#8a96a3" '+o+'/><path d="M76 46 L74 12 L56 32Z" fill="#8a96a3" '+o+'/>'
+        +'<ellipse cx="50" cy="54" rx="27" ry="24" fill="#8a96a3" '+o+'/><ellipse cx="50" cy="66" rx="15" ry="11" fill="#cdd5dd" '+o+'/>'
+        +'<ellipse cx="50" cy="60" rx="5" ry="3.5" fill="'+i+'"/>'
+        +'<circle cx="38" cy="48" r="4.6" fill="#ffe066" stroke="'+i+'" stroke-width="2"/><circle cx="62" cy="48" r="4.6" fill="#ffe066" stroke="'+i+'" stroke-width="2"/>'
+        +'<circle cx="39" cy="49" r="1.9" fill="'+i+'"/><circle cx="61" cy="49" r="1.9" fill="'+i+'"/>'
+        +'<path d="M42 72 Q50 78 58 72" fill="none" stroke="'+i+'" stroke-width="2.2" stroke-linecap="round"/><path d="M43 72.5 L45 77 L47 73Z" fill="#fff"/><path d="M57 72.5 L55 77 L53 73Z" fill="#fff"/>';
+    }
+    return h+'</svg>';
+  }
+
+  function renderEvent(){
+    var bar=$('eventBar'); if(!bar||$('app').hidden) return;
+    var now=Date.now(), slot=Math.floor(now/HOUR), el=now-slot*HOUR, mo=monsterFor(slot);
+    var live=el<EVENT_MS, f=game&&game.fight, T, S, btn=false;
+    if(live){
+      T='Событие: '+mo.name;
+      if(f&&f.on&&f.s===slot) S='Бой идёт';
+      else if(f&&f.s===slot) S='Ты уже сразился с этим монстром';
+      else{ S='Монстр уйдёт через '+fmt(EVENT_MS-el); btn=!!game; }
+    }else{
+      T='Следующий монстр'; S='Появится через '+fmt(HOUR-el);
+    }
+    $('evT').textContent=T; $('evS').textContent=S; $('evBtn').hidden=!btn;
+    bar.className='eventBar'+(live?' live':'');
+  }
+  function renderFight(){
+    var box=$('fight');
+    if(!game){box.hidden=true;return;}
+    var f=game.fight||{};
+    if(f.on){
+      var mo=monsterFor(f.s), st=stats();
+      var pm=Math.max(0,Math.min(100,Math.round(f.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(f.p/st.hp*100)));
+      box.hidden=false;
+      box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро и остальное: монстр бьёт тебя.</div></div></div>'
+        +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+f.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
+        +'<div><div class="hpl"><span>Ты</span><span>'+f.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
+        +'<div class="flog">'+fightLog+'</div>';
+    }else if(fightMsg){
+      box.hidden=false;
+      box.innerHTML='<div class="flog">'+fightMsg+'</div><button id="fClose" class="ghost">Закрыть</button>';
+      $('fClose').addEventListener('click',function(){fightMsg=''; renderFight();});
+    }else{
+      box.hidden=true;
+    }
+  }
+  function startFight(){
+    if(!game) return;
+    var slot=slotNow(), el=Date.now()-slot*HOUR, f=game.fight;
+    if(el>=EVENT_MS||f.on||f.s===slot) return;
+    var mo=monsterFor(slot), st=stats();
+    game.fight={s:slot,m:mo.hp,p:st.hp,on:true};
+    fightLog='Бой начался. Крути колесо!'; fightMsg='';
+    saveGame(); renderFight(); renderEvent();
+  }
+  function loseFight(prefix){
+    var lost=Math.floor((Number(game.coins)||0)*LOSE_SHARE);
+    game.coins-=lost; game.fight.on=false;
+    fightMsg=prefix+' Потеряно 70% монет: −'+lost+'.';
+    renderCoins();
+  }
+  function fightStrike(n){
+    var f=game&&game.fight; if(!f||!f.on) return;
+    var mo=monsterFor(f.s), st=stats();
+    if(mo.hit(n)){
+      f.m-=st.atk; fightLog='Выпало '+n+': попал! '+mo.name+' теряет '+st.atk+' HP.';
+    }else{
+      f.p-=mo.dmg; fightLog='Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
+    }
+    if(f.m<=0){
+      f.m=0; f.on=false;
+      var rew=WIN_MIN+Math.floor(Math.random()*(WIN_MAX-WIN_MIN+1));
+      game.coins+=rew; fightMsg=fightLog+' Победа! Награда: '+rew+' монет.';
+      renderCoins();
+    }else if(f.p<=0){
+      f.p=0; loseFight(fightLog+' Ты погиб.');
+    }
+  }
+  // если бой не закончен, а час уже сменился, это считается поражением
+  function checkAbandon(){
+    var f=game&&game.fight;
+    if(f&&f.on&&f.s!==slotNow()){ loseFight('Бой не был закончен, монстр победил.'); saveGame(); renderFight(); renderEvent(); }
+  }
+  $('evBtn').addEventListener('click',function(){
+    var mo=monsterFor(slotNow());
+    confirmBox('Начать бой с монстром «'+mo.name+'»? Если погибнешь, потеряешь 70% монет. За победу дают от '+WIN_MIN+' до '+WIN_MAX+' монет.','В бой',startFight);
+  });
+  setInterval(function(){ if(game){checkAbandon();} renderEvent(); },1000);
 
   /* ---------- лидерборд ---------- */
   var curTab='game';
@@ -599,14 +831,14 @@ svg.chr{overflow:visible}
       if(!obj||obj.error){ box.innerHTML=''; var e=document.createElement('div'); e.className='bempty'; e.textContent='Не удалось загрузить рейтинг. Проверь правила в Firebase.'; box.appendChild(e); return; }
       var rows=Object.keys(obj).map(function(k){
         var u=obj[k]||{}, g=u.game||{};
-        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,title:g.title,race:g.race};
+        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,title:g.title,race:g.race,cls:g.cls};
       }).filter(function(x){return x.spins>0;}).sort(function(x,y){return y.spins-x.spins;});
       box.innerHTML='';
       if(!rows.length){var e2=document.createElement('div'); e2.className='bempty'; e2.textContent='Пока никто не крутил колесо.'; box.appendChild(e2); return;}
       rows.forEach(function(x,i){
         var row=document.createElement('div'); row.className='brow'+((sess&&x.uid===sess.uid)?' me':'');
         var rk=document.createElement('div'); rk.className='rk'+(i<3?' top':''); rk.textContent=String(i+1);
-        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(x.uid,x.title,x.race);
+        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(x.uid,x.title,x.race,x.cls);
         var nm=document.createElement('div'); nm.className='bn'; nm.textContent=x.name;
         var tn=titleName(x.title);
         if(tn){var tt=document.createElement('span'); tt.className='tt'; tt.textContent=tn; nm.appendChild(tt);}
@@ -646,21 +878,65 @@ svg.chr{overflow:visible}
   var BEARD=['#b5651d','#8c5a2f','#c9c9c9','#d98b3a'];
   var INK='#2a1f14';
   var OUT='stroke="'+INK+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
+
+  // Предметы. hp и atk прибавляются к базовым 100 здоровья и 5 урона.
+  // Головные уборы нарисованы в координатах головы, оружие в координатах руки (hand: R правая, L левая).
+  var ITEMS={
+    mage_hat:{name:'Колпак мага',slot:'head',r:'common',hp:10,atk:0,vb:'16 2 68 38',
+      draw:'<ellipse cx="50" cy="31" rx="29" ry="6" fill="#4f3aa6" '+OUT+'/>'
+        +'<path d="M33 31 Q44 20 49 6 Q56 22 67 31Z" fill="#6a4fc4" '+OUT+'/>'
+        +'<path d="M36 27.5 Q50 33 64 27.5" fill="none" stroke="#f6c343" stroke-width="3" stroke-linecap="round"/>'
+        +'<path d="M50 13 l1.6 4 l4 1.6 l-4 1.6 l-1.6 4 l-1.6 -4 l-4 -1.6 l4 -1.6Z" fill="#ffe066"/>'},
+    wand:{name:'Волшебная палочка',slot:'arms',hand:'R',r:'common',hp:0,atk:4,vb:'66 76 34 36',
+      draw:'<path d="M77 106 L87 91" fill="none" stroke="'+INK+'" stroke-width="5" stroke-linecap="round"/>'
+        +'<path d="M77 106 L87 91" fill="none" stroke="#a0703a" stroke-width="2.6" stroke-linecap="round"/>'
+        +'<path d="M88 83 l1.8 4.2 l4.2 1.8 l-4.2 1.8 l-1.8 4.2 l-1.8 -4.2 l-4.2 -1.8 l4.2 -1.8Z" fill="#ffe066" stroke="'+INK+'" stroke-width="1.3" stroke-linejoin="round"/>'},
+    war_helm:{name:'Каска',slot:'head',r:'common',hp:25,atk:0,vb:'14 8 72 42',
+      draw:'<path d="M23 42 C21 12 79 12 77 42Z" fill="#aab3bd" '+OUT+'/>'
+        +'<rect x="20" y="38" width="60" height="7" rx="3.5" fill="#8a939d" '+OUT+'/>'
+        +'<path d="M33 24 Q41 17 52 17" fill="none" stroke="#fff" stroke-width="3" opacity="0.6" stroke-linecap="round"/>'
+        +'<circle cx="50" cy="14" r="3" fill="#e63946" stroke="'+INK+'" stroke-width="1.6"/>'},
+    wood_sword:{name:'Деревянный меч',slot:'arms',hand:'R',r:'common',hp:0,atk:3,vb:'62 68 30 44',
+      draw:'<path d="M74.5 106 L74.5 83 L77 74 L79.5 83 L79.5 106Z" fill="#dcb982" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/>'
+        +'<rect x="71" y="103" width="12" height="3.6" rx="1.5" fill="#8c5a2f" stroke="'+INK+'" stroke-width="1.6"/>'},
+    robin_hat:{name:'Шапка Робин Гуда',slot:'head',r:'common',hp:5,atk:0,vb:'14 2 82 46',
+      draw:'<path d="M24 38 C26 20 48 14 66 20 L86 12 L76 30 C77 34 77 38 76 40 Q50 30 24 42Z" fill="#3f8f3a" '+OUT+'/>'
+        +'<path d="M72 21 Q84 12 90 6" fill="none" stroke="#e63946" stroke-width="3.5" stroke-linecap="round"/>'},
+    toy_bow:{name:'Игрушечный лук',slot:'arms',hand:'L',r:'common',hp:0,atk:5,vb:'0 78 40 62',
+      draw:'<path d="M30 84 Q8 108 30 132" fill="none" stroke="'+INK+'" stroke-width="6" stroke-linecap="round"/>'
+        +'<path d="M30 84 Q8 108 30 132" fill="none" stroke="#b9854a" stroke-width="3" stroke-linecap="round"/>'
+        +'<path d="M30 84 L30 132" stroke="#f5f0e0" stroke-width="1.3"/>'}
+  };
+  var CLASSES={
+    mage:{name:'Маг',gear:{head:'mage_hat',arms:'wand'},desc:'Колпак и волшебная палочка'},
+    warrior:{name:'Воин',gear:{head:'war_helm',arms:'wood_sword'},desc:'Каска и деревянный меч'},
+    archer:{name:'Лучник',gear:{head:'robin_hat',arms:'toy_bow'},desc:'Шапка Робин Гуда и игрушечный лук'}
+  };
+  function gearOf(cls){var c=CLASSES[cls];return c?c.gear:{};}
+  function itemIcon(id){var it=ITEMS[id];return '<svg viewBox="'+it.vb+'" aria-hidden="true">'+it.draw+'</svg>';}
+  function stats(){
+    var hp=100, atk=5, g=gearOf(game&&game.cls);
+    for(var sl in g){var it=ITEMS[g[sl]]; if(it){hp+=it.hp||0; atk+=it.atk||0;}}
+    return {hp:hp,atk:atk};
+  }
+
   function hashStr(str){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
   function pick(r,arr){return arr[Math.floor(r()*arr.length)];}
-  function look(seed,race){
+  function look(seed,race,cls){
     var r=rng(hashStr(String(seed||'x')));
     var L={skin:pick(r,SKIN),hair:pick(r,HAIR),shirt:pick(r,SHIRT),bg:pick(r,BGS)};
     L.hs=Math.floor(r()*5); L.es=Math.floor(r()*3); L.ms=Math.floor(r()*3); L.cheeks=r()<0.5;
     L.pants=pick(r,PANTS); L.shoe=pick(r,SHOES); L.ts=Math.floor(r()*3);
     L.race=race||'human';
     if(L.race==='orc') L.skin='#86b86b';
+    var g=gearOf(cls); L.hat=g.head||''; L.hand=g.arms||'';
     return L;
   }
-  // голова с причёской, лицом, чертами расы и украшением титула (область 100x100)
+  // голова с причёской, лицом, чертами расы, шапкой класса и украшением титула (область 100x100)
   function headParts(L,titleId){
     var s='', hs=L.hs, es=L.es, ms=L.ms, hair=L.hair, skin=L.skin, rc=L.race;
+    if(L.hat) titleId='';
     if(hs===3) s+='<path d="M22 50 C20 18 80 18 78 50 L80 82 L66 80 L34 80 L20 82Z" fill="'+hair+'" '+OUT+'/>';
     if(rc==='elf'){
       s+='<path d="M27 47 L7 35 L25 61Z" fill="'+skin+'" '+OUT+'/><path d="M73 47 L93 35 L75 61Z" fill="'+skin+'" '+OUT+'/>';
@@ -680,6 +956,7 @@ svg.chr{overflow:visible}
     if(rc==='drake'){
       s+='<path d="M33 30 Q21 14 31 5 Q31 18 43 26Z" fill="#f2e3b3" '+OUT+'/><path d="M67 30 Q79 14 69 5 Q69 18 57 26Z" fill="#f2e3b3" '+OUT+'/>';
     }
+    if(L.hat) s+=ITEMS[L.hat].draw;
     if(L.cheeks) s+='<circle cx="32" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/><circle cx="68" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/>';
     if(rc==='beast') s+='<path d="M26 60 L11 57 M26 64 L11 66 M74 60 L89 57 M74 64 L89 66" fill="none" stroke="'+INK+'" stroke-width="1.6" stroke-linecap="round"/>';
     if(rc==='dwarf') s+='<path d="M26 60 C25 94 75 94 74 60 C70 72 60 70 50 70 C40 70 30 72 26 60Z" fill="'+BEARD[(hs+es)%4]+'" '+OUT+'/>';
@@ -719,16 +996,18 @@ svg.chr{overflow:visible}
     return s+'</g>';
   }
   // маленький портрет для чата и рейтинга: голова и плечи
-  function avatar(seed,titleId,race){
-    var L=look(seed,race);
+  function avatar(seed,titleId,race,cls){
+    var L=look(seed,race,cls);
     return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
       +'<rect width="100" height="100" fill="'+L.bg+'"/>'
       +'<path d="M14 100 C16 78 32 74 50 74 C68 74 84 78 86 100Z" fill="'+L.shirt+'" '+OUT+'/>'
       +headParts(L,titleId)+'</svg>';
   }
   // персонаж в полный рост с анимацией
-  function avatarBody(seed,titleId,race){
-    var L=look(seed,race), sk=L.skin, rc=L.race;
+  function avatarBody(seed,titleId,race,cls){
+    var L=look(seed,race,cls), sk=L.skin, rc=L.race;
+    var wp=L.hand?ITEMS[L.hand]:null;
+    var wL=(wp&&wp.hand==='L')?wp.draw:'', wR=(wp&&wp.hand==='R')?wp.draw:'';
     var s='<svg class="chr" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
     s+='<rect width="144" height="144" rx="24" fill="'+L.bg+'" opacity="0.65"/><g transform="translate(22 0)">';
     if(rc==='dwarf') s+='<g transform="translate(50 138) scale(0.84) translate(-50 -138)">';
@@ -745,8 +1024,8 @@ svg.chr{overflow:visible}
     s+='<path d="M36 82 Q50 77 64 82 L65 108 Q50 112 35 108Z" fill="'+L.shirt+'" '+OUT+'/>';
     if(L.ts===1) s+='<path d="M36.5 94 H63.5 M36 101 H64" stroke="#fff" stroke-width="3" opacity="0.55"/>';
     if(L.ts===2) s+='<circle cx="50" cy="96" r="5" fill="#fff" opacity="0.75"/>';
-    s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
-    s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
+    s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+wL+'<circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
+    s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+wR+'<circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
     s+='<g class="chead"><g transform="translate(50 52) scale(1.1) translate(-50 -52)">'+headParts(L,titleId)+'</g></g>';
     s+='</g>';
     if(rc==='dwarf') s+='</g>';
@@ -836,7 +1115,7 @@ svg.chr{overflow:visible}
         var tn=titleName(m.title);
         if(tn){var tt=document.createElement('span'); tt.className='tt'; tt.textContent=tn; w.appendChild(tt);}
         var t=document.createElement('div'); t.textContent=String(m.text||'');
-        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(m.uid,m.title,m.race);
+        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(m.uid,m.title,m.race,m.cls);
         var bd=document.createElement('div'); bd.className='body'; bd.appendChild(w); bd.appendChild(t);
         d.appendChild(av); d.appendChild(bd);
       }
@@ -862,7 +1141,7 @@ svg.chr{overflow:visible}
 
   function post(fields){
     if(!chatReady||!sess||!sess.name) return Promise.resolve();
-    var body={name:sess.name,uid:sess.uid,t:Date.now(),title:(game&&game.title)||'newbie',race:(game&&game.race)||'human'};
+    var body={name:sess.name,uid:sess.uid,t:Date.now(),title:(game&&game.title)||'newbie',race:(game&&game.race)||'human',cls:(game&&game.cls)||''};
     for(var k in fields) body[k]=fields[k];
     return token().then(function(t){
       return fetch(DB_URL+'/chat.json?auth='+encodeURIComponent(t),{method:'POST',body:JSON.stringify(body)});
