@@ -88,8 +88,27 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
 /* аватары */
 .av{display:inline-block;flex:none;width:36px;height:36px;border-radius:10px;overflow:hidden}
 .av svg{display:block;width:100%;height:100%}
-.av.big{width:150px;height:150px;border-radius:30px;box-shadow:0 6px 18px rgba(0,0,0,.2)}
-.hero .av{display:block;margin:0 auto 12px}
+.charAv{width:120px;height:173px;margin:0 auto 6px}
+.charAv svg{display:block;width:100%;height:100%}
+svg.chr{overflow:visible}
+.chr .chrBob{animation:chrBob .9s ease-in-out infinite}
+.chr .armL,.chr .armR{animation:chrArm .9s ease-in-out infinite}
+.chr .armL{transform-origin:37px 86px}
+.chr .armR{transform-origin:63px 86px}
+.chr .legL,.chr .legR{animation:chrStep .9s ease-in-out infinite}
+.chr .legR{animation-delay:-.45s}
+.chr .chead{transform-origin:50px 80px;animation:chrTilt 1.8s ease-in-out infinite}
+.chr .eyes{transform-origin:50px 52px;animation:chrBlink 4s infinite}
+.chr .deco{transform-origin:50px 30px;animation:chrWob 1.8s ease-in-out infinite}
+.chr .sh{transform-origin:50px 138px;animation:chrShadow .9s ease-in-out infinite}
+@keyframes chrBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes chrArm{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-14deg)}}
+@keyframes chrStep{0%,50%,100%{transform:translateY(0)}25%{transform:translateY(-3px)}}
+@keyframes chrTilt{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes chrBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes chrWob{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes chrShadow{0%,100%{transform:scale(1)}50%{transform:scale(.85)}}
+@media (prefers-reduced-motion:reduce){.chr *{animation:none!important}}
 .msg .body{min-width:0}
 
 /* чат */
@@ -160,7 +179,7 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
     </section>
 
     <section class="charPane" id="charPane" hidden>
-      <div class="hero"><div class="av big" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div></div>
+      <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div></div>
       <div class="stats">
         <div class="stat"><b id="stSpins">0</b><span>Прокруток</span></div>
         <div class="stat"><b id="stRed">0</b><span>Красное</span></div>
@@ -336,7 +355,7 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   function renderChar(){
     if(!game) return;
     $('charName').textContent=nick;
-    $('charAv').innerHTML=avatar(sess&&sess.uid,game.title);
+    $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title);
     $('charTitle').textContent=titleName(game.title)||'Новичок';
     $('stSpins').textContent=game.spins; $('stRed').textContent=game.red;
     $('stBlack').textContent=game.black; $('stZero').textContent=game.zero;
@@ -373,57 +392,90 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
   var HAIR=['#2b1d12','#6b3f1d','#c9822b','#e5c15c','#3a3a46','#b5472f'];
   var SHIRT=['#e4572e','#2e86ab','#6bab55','#9b5de5','#f3a712','#e56399'];
   var BGS=['#ffe8a3','#bde0fe','#c7f0d0','#ffcfd8','#e2d4ff','#ffd9b0'];
+  var PANTS=['#2b3a67','#3d405b','#5c8001','#7b2d26','#1d3557','#6d597a'];
+  var SHOES=['#ffffff','#f4f1de','#2a2a2a','#e63946'];
+  var INK='#2a1f14';
+  var OUT='stroke="'+INK+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
   function hashStr(str){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
   function pick(r,arr){return arr[Math.floor(r()*arr.length)];}
-  function avatar(seed,titleId){
+  function look(seed){
     var r=rng(hashStr(String(seed||'x')));
-    var skin=pick(r,SKIN), hair=pick(r,HAIR), shirt=pick(r,SHIRT), bg=pick(r,BGS);
-    var hs=Math.floor(r()*5), es=Math.floor(r()*3), ms=Math.floor(r()*3), cheeks=r()<0.5;
-    var o='stroke="#2a1f14" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
-    var ink='#2a1f14';
-    var s='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
-    s+='<rect width="100" height="100" fill="'+bg+'"/>';
-    if(hs===3) s+='<path d="M22 50 C20 18 80 18 78 50 L80 82 L66 80 L34 80 L20 82Z" fill="'+hair+'" '+o+'/>';
-    s+='<path d="M14 100 C16 78 32 74 50 74 C68 74 84 78 86 100Z" fill="'+shirt+'" '+o+'/>';
-    s+='<circle cx="24.5" cy="54" r="5" fill="'+skin+'" '+o+'/><circle cx="75.5" cy="54" r="5" fill="'+skin+'" '+o+'/>';
-    s+='<ellipse cx="50" cy="52" rx="26" ry="27" fill="'+skin+'" '+o+'/>';
+    var L={skin:pick(r,SKIN),hair:pick(r,HAIR),shirt:pick(r,SHIRT),bg:pick(r,BGS)};
+    L.hs=Math.floor(r()*5); L.es=Math.floor(r()*3); L.ms=Math.floor(r()*3); L.cheeks=r()<0.5;
+    L.pants=pick(r,PANTS); L.shoe=pick(r,SHOES); L.ts=Math.floor(r()*3);
+    return L;
+  }
+  // голова с причёской, лицом и украшением титула (координаты в области 100x100)
+  function headParts(L,titleId){
+    var s='', hs=L.hs, es=L.es, ms=L.ms, hair=L.hair, skin=L.skin;
+    if(hs===3) s+='<path d="M22 50 C20 18 80 18 78 50 L80 82 L66 80 L34 80 L20 82Z" fill="'+hair+'" '+OUT+'/>';
+    s+='<circle cx="24.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/><circle cx="75.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/>';
+    s+='<ellipse cx="50" cy="52" rx="26" ry="27" fill="'+skin+'" '+OUT+'/>';
     if(hs===0) s+='<path d="M50 26 Q44 18 52 14" fill="none" stroke="'+hair+'" stroke-width="3.5" stroke-linecap="round"/>';
-    if(hs===1) s+='<path d="M24 48 C22 26 38 20 50 20 C62 20 78 26 76 48 C70 38 60 34 50 34 C40 34 30 38 24 48Z" fill="'+hair+'" '+o+'/>';
-    if(hs===2) s+='<polygon points="24,46 26,28 34,36 38,20 46,32 52,18 58,32 66,20 68,36 76,28 76,46 66,36 50,33 34,36" fill="'+hair+'" '+o+'/>';
-    if(hs===3) s+='<path d="M26 44 C30 28 70 28 74 44 C64 36 36 36 26 44Z" fill="'+hair+'" '+o+'/>';
-    if(hs===4) s+='<polygon points="42,30 44,12 50,22 56,12 58,30" fill="'+hair+'" '+o+'/>';
-    if(cheeks) s+='<circle cx="32" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/><circle cx="68" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/>';
-    if(es===0) s+='<circle cx="40" cy="52" r="3" fill="'+ink+'"/><circle cx="60" cy="52" r="3" fill="'+ink+'"/>';
-    if(es===1) s+='<circle cx="40" cy="51" r="6" fill="#fff" stroke="'+ink+'" stroke-width="2"/><circle cx="41" cy="52" r="3" fill="'+ink+'"/><circle cx="60" cy="51" r="6" fill="#fff" stroke="'+ink+'" stroke-width="2"/><circle cx="61" cy="52" r="3" fill="'+ink+'"/>';
-    if(es===2) s+='<path d="M34 52 q6 5 12 0 M54 52 q6 5 12 0" fill="none" '+o+'/>';
-    if(ms===0) s+='<path d="M42 64 Q50 73 58 64" fill="none" '+o+'/>';
-    if(ms===1) s+='<path d="M42 63 Q50 77 58 63Z" fill="#8f2d2d" '+o+'/>';
-    if(ms===2) s+='<path d="M43 67 Q50 68 58 62" fill="none" '+o+'/>';
+    if(hs===1) s+='<path d="M24 48 C22 26 38 20 50 20 C62 20 78 26 76 48 C70 38 60 34 50 34 C40 34 30 38 24 48Z" fill="'+hair+'" '+OUT+'/>';
+    if(hs===2) s+='<polygon points="24,46 26,28 34,36 38,20 46,32 52,18 58,32 66,20 68,36 76,28 76,46 66,36 50,33 34,36" fill="'+hair+'" '+OUT+'/>';
+    if(hs===3) s+='<path d="M26 44 C30 28 70 28 74 44 C64 36 36 36 26 44Z" fill="'+hair+'" '+OUT+'/>';
+    if(hs===4) s+='<polygon points="42,30 44,12 50,22 56,12 58,30" fill="'+hair+'" '+OUT+'/>';
+    if(L.cheeks) s+='<circle cx="32" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/><circle cx="68" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/>';
+    s+='<g class="eyes">';
+    if(es===0) s+='<circle cx="40" cy="52" r="3" fill="'+INK+'"/><circle cx="60" cy="52" r="3" fill="'+INK+'"/>';
+    if(es===1) s+='<circle cx="40" cy="51" r="6" fill="#fff" stroke="'+INK+'" stroke-width="2"/><circle cx="41" cy="52" r="3" fill="'+INK+'"/><circle cx="60" cy="51" r="6" fill="#fff" stroke="'+INK+'" stroke-width="2"/><circle cx="61" cy="52" r="3" fill="'+INK+'"/>';
+    if(es===2) s+='<path d="M34 52 q6 5 12 0 M54 52 q6 5 12 0" fill="none" '+OUT+'/>';
+    s+='</g>';
+    if(ms===0) s+='<path d="M42 64 Q50 73 58 64" fill="none" '+OUT+'/>';
+    if(ms===1) s+='<path d="M42 63 Q50 77 58 63Z" fill="#8f2d2d" '+OUT+'/>';
+    if(ms===2) s+='<path d="M43 67 Q50 68 58 62" fill="none" '+OUT+'/>';
+    s+='<g class="deco">';
     if(titleId==='newbie'){
       s+='<path d="M50 27 L50 15" fill="none" stroke="#3b8f3b" stroke-width="3" stroke-linecap="round"/>'
-        +'<ellipse cx="43" cy="13" rx="7" ry="4" transform="rotate(-25 43 13)" fill="#6bbf59" '+o+'/>'
-        +'<ellipse cx="57" cy="13" rx="7" ry="4" transform="rotate(25 57 13)" fill="#6bbf59" '+o+'/>';
+        +'<ellipse cx="43" cy="13" rx="7" ry="4" transform="rotate(-25 43 13)" fill="#6bbf59" '+OUT+'/>'
+        +'<ellipse cx="57" cy="13" rx="7" ry="4" transform="rotate(25 57 13)" fill="#6bbf59" '+OUT+'/>';
     }
     if(titleId==='luck'){
-      s+='<path d="M34 28 L36 12 L43 20 L50 8 L57 20 L64 12 L66 28Z" fill="#f6c343" '+o+'/><circle cx="50" cy="21" r="2.6" fill="#e63946"/>';
+      s+='<path d="M34 28 L36 12 L43 20 L50 8 L57 20 L64 12 L66 28Z" fill="#f6c343" '+OUT+'/><circle cx="50" cy="21" r="2.6" fill="#e63946"/>';
     }
     if(titleId==='unlucky'){
       s+='<g fill="#aab4c0"><ellipse cx="38" cy="15" rx="12" ry="8"/><ellipse cx="52" cy="12" rx="12" ry="9"/><ellipse cx="64" cy="17" rx="9" ry="6"/></g>'
         +'<path d="M40 26 l-2 6 M52 26 l-2 6 M63 26 l-2 6" stroke="#4a90d9" stroke-width="2.6" stroke-linecap="round"/>';
     }
     if(titleId==='bum'){
-      s+='<path d="M25 42 C24 18 76 18 75 42Z" fill="#6e5a46" '+o+'/><path d="M21 42 L80 42" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>'
-        +'<rect x="55" y="25" width="9" height="9" rx="1.5" transform="rotate(12 59 29)" fill="#c58f5a" stroke="'+ink+'" stroke-width="1.5"/>'
-        +'<g fill="'+ink+'" opacity="0.55"><circle cx="40" cy="74" r="1.3"/><circle cx="46" cy="76" r="1.3"/><circle cx="54" cy="76" r="1.3"/><circle cx="60" cy="74" r="1.3"/><circle cx="35" cy="70" r="1.3"/><circle cx="65" cy="70" r="1.3"/></g>';
+      s+='<path d="M25 42 C24 18 76 18 75 42Z" fill="#6e5a46" '+OUT+'/><path d="M21 42 L80 42" stroke="'+INK+'" stroke-width="3" stroke-linecap="round"/>'
+        +'<rect x="55" y="25" width="9" height="9" rx="1.5" transform="rotate(12 59 29)" fill="#c58f5a" stroke="'+INK+'" stroke-width="1.5"/>'
+        +'<g fill="'+INK+'" opacity="0.55"><circle cx="40" cy="74" r="1.3"/><circle cx="46" cy="76" r="1.3"/><circle cx="54" cy="76" r="1.3"/><circle cx="60" cy="74" r="1.3"/><circle cx="35" cy="70" r="1.3"/><circle cx="65" cy="70" r="1.3"/></g>';
     }
     if(titleId==='hen'){
-      s+='<path d="M38 20 q-7 -3 -5 -9 q6 0 9 6Z" fill="#fff" '+o+'/>'
-        +'<ellipse cx="50" cy="22" rx="13" ry="9" fill="#fff" '+o+'/>'
-        +'<path d="M46 14 q1 -8 4 -2 q2 -6 4 2Z" fill="#e63946" '+o+'/>'
-        +'<path d="M62 21 l7 2 l-7 3Z" fill="#f4a300" '+o+'/><circle cx="57" cy="19" r="1.7" fill="'+ink+'"/>';
+      s+='<path d="M38 20 q-7 -3 -5 -9 q6 0 9 6Z" fill="#fff" '+OUT+'/>'
+        +'<ellipse cx="50" cy="22" rx="13" ry="9" fill="#fff" '+OUT+'/>'
+        +'<path d="M46 14 q1 -8 4 -2 q2 -6 4 2Z" fill="#e63946" '+OUT+'/>'
+        +'<path d="M62 21 l7 2 l-7 3Z" fill="#f4a300" '+OUT+'/><circle cx="57" cy="19" r="1.7" fill="'+INK+'"/>';
     }
-    return s+'</svg>';
+    return s+'</g>';
+  }
+  // маленький портрет для чата: голова и плечи
+  function avatar(seed,titleId){
+    var L=look(seed);
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+      +'<rect width="100" height="100" fill="'+L.bg+'"/>'
+      +'<path d="M14 100 C16 78 32 74 50 74 C68 74 84 78 86 100Z" fill="'+L.shirt+'" '+OUT+'/>'
+      +headParts(L,titleId)+'</svg>';
+  }
+  // персонаж в полный рост с анимацией (вкладка «Персонаж»)
+  function avatarBody(seed,titleId){
+    var L=look(seed), sk=L.skin;
+    var s='<svg class="chr" viewBox="0 0 100 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+    s+='<ellipse cx="50" cy="76" rx="46" ry="64" fill="'+L.bg+'" opacity="0.6"/>';
+    s+='<ellipse class="sh" cx="50" cy="138" rx="24" ry="4" fill="#000" opacity="0.18"/>';
+    s+='<g class="chrBob">';
+    s+='<g class="legL"><rect x="37" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="40" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/></g>';
+    s+='<g class="legR"><rect x="53" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="60" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/></g>';
+    s+='<path d="M36 82 Q50 77 64 82 L65 108 Q50 112 35 108Z" fill="'+L.shirt+'" '+OUT+'/>';
+    if(L.ts===1) s+='<path d="M36.5 94 H63.5 M36 101 H64" stroke="#fff" stroke-width="3" opacity="0.55"/>';
+    if(L.ts===2) s+='<circle cx="50" cy="96" r="5" fill="#fff" opacity="0.75"/>';
+    s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
+    s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
+    s+='<g class="chead"><g transform="translate(50 52) scale(1.1) translate(-50 -52)">'+headParts(L,titleId)+'</g></g>';
+    return s+'</g></svg>';
   }
 
   /* ---------- колесо ---------- */
