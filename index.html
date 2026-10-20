@@ -267,6 +267,7 @@ svg.chr{overflow:visible}
       <button id="tabChar" class="tab">Персонаж<span id="dot" class="dot" hidden></span></button>
       <button id="tabBoard" class="tab">Лидеры</button>
       <button id="tabShop" class="tab">Магазин</button>
+      <button id="tabDg" class="tab">Данж</button>
     </div>
     <div class="eventBar" id="eventBar">
       <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
@@ -319,6 +320,7 @@ svg.chr{overflow:visible}
     </section>
 
     <section class="shopPane" id="shopPane" hidden><div id="shopBody"></div></section>
+    <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
     </div>
   </div>
 </div>
@@ -487,6 +489,7 @@ svg.chr{overflow:visible}
         if(typeof game.cls!=='string'||!CLASSES[game.cls]) game.cls='';
         if(!game.fight||typeof game.fight!=='object') game.fight={s:0,m:0,p:0,on:false};
         game.fight.on=!!game.fight.on; game.fight.skip=!!game.fight.skip;
+        if(game.dg&&typeof game.dg==='object'&&game.dg.on&&game.dg.st>=0&&game.dg.st<3){ game.dg.skip=!!game.dg.skip; } else { delete game.dg; }
         game.inv=Array.isArray(game.inv)?game.inv.filter(function(i){return ITEMS[i];}):[];
         if(!game.eq||typeof game.eq!=='object') game.eq={};
         // стартовое снаряжение класса всегда должно лежать в инвентаре; чего нет, то добавляем и надеваем
@@ -517,7 +520,7 @@ svg.chr{overflow:visible}
     arr.push(n); arr=arr.slice(-3); game.nums=arr.join(',');
     var sn=String(game.seen||''); while(sn.length<37) sn+='0';
     game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
-    fightStrike(n);
+    fightStrike(n); dgStrike(n);
     var got=[];
     TITLES.forEach(function(t){
       if(!game.earned[t.id]&&t.check(n,prev,game,arr)){game.earned[t.id]=true; got.push(t.name);}
@@ -590,6 +593,7 @@ svg.chr{overflow:visible}
     shownCoins=v; el.textContent=String(v);
     if(up){box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');}
     if(curTab==='shop'&&!opening) renderShop();
+    if(curTab==='dg') renderDg();
   }
 
   /* ---------- окно подтверждения ---------- */
@@ -728,7 +732,7 @@ svg.chr{overflow:visible}
   }
   function slotNow(){return Math.floor(Date.now()/HOUR);}
   function fmt(ms){var t=Math.max(0,Math.ceil(ms/1000)), m=Math.floor(t/60), r=t%60; return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;}
-  var fightLog='', fightMsg='';
+  var fightLog='', fightMsg='', fightChest=false;
 
   function monsterSvg(id){
     var o=OUT, i=INK, h='<svg viewBox="0 0 100 100" aria-hidden="true">';
@@ -780,6 +784,53 @@ svg.chr{overflow:visible}
         +'<circle cx="39" cy="49" r="1.9" fill="'+i+'"/><circle cx="61" cy="49" r="1.9" fill="'+i+'"/>'
         +'<path d="M42 72 Q50 78 58 72" fill="none" stroke="'+i+'" stroke-width="2.2" stroke-linecap="round"/><path d="M43 72.5 L45 77 L47 73Z" fill="#fff"/><path d="M57 72.5 L55 77 L53 73Z" fill="#fff"/>';
     }
+    if(id==='bat'){
+      h+='<rect width="100" height="100" fill="#e6dcf2"/>'
+        +'<path d="M50 50 L8 30 Q14 52 24 58 Q32 54 38 62 Q44 56 50 62Z" fill="#5b4a7a" '+o+'/><path d="M50 50 L92 30 Q86 52 76 58 Q68 54 62 62 Q56 56 50 62Z" fill="#5b4a7a" '+o+'/>'
+        +'<path d="M38 40 L35 26 L46 36Z M62 40 L65 26 L54 36Z" fill="#3f3358" '+o+'/><ellipse cx="50" cy="52" rx="15" ry="16" fill="#3f3358" '+o+'/>'
+        +'<circle cx="44" cy="50" r="3.4" fill="#ff5b5b"/><circle cx="56" cy="50" r="3.4" fill="#ff5b5b"/>'
+        +'<path d="M45 60 L47 66 L50 60 L53 66 L55 60Z" fill="#fff" stroke="'+i+'" stroke-width="1.5" stroke-linejoin="round"/>';
+    }
+    if(id==='spider'){
+      h+='<rect width="100" height="100" fill="#ead9d0"/>'
+        +'<path d="M30 50 L8 36 L6 58 M30 58 L10 72 M70 50 L92 36 L94 58 M70 58 L90 72 M34 66 L22 88 M66 66 L78 88 M38 42 L26 24 M62 42 L74 24" fill="none" stroke="'+i+'" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+        +'<ellipse cx="50" cy="64" rx="22" ry="18" fill="#4a3a3a" '+o+'/><path d="M46 58 H54 L50 64 L54 70 H46 L50 64Z" fill="#e63946"/>'
+        +'<circle cx="50" cy="40" r="15" fill="#5c4848" '+o+'/>'
+        +'<circle cx="44" cy="38" r="3.8" fill="#ffe066" stroke="'+i+'" stroke-width="1.6"/><circle cx="56" cy="38" r="3.8" fill="#ffe066" stroke="'+i+'" stroke-width="1.6"/>'
+        +'<path d="M45 47 L47 52 L50 47 L53 52 L55 47" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>';
+    }
+    if(id==='mummy'){
+      h+='<rect width="100" height="100" fill="#e8e2d0"/><rect x="26" y="12" width="48" height="68" rx="20" fill="#e9dfc2" '+o+'/>'
+        +'<path d="M27 32 H73 M26 44 H74 M28 56 H72 M31 68 H69" stroke="'+i+'" stroke-width="2.2" stroke-linecap="round"/>'
+        +'<circle cx="41" cy="44" r="6" fill="#fff" stroke="'+i+'" stroke-width="2"/><circle cx="59" cy="44" r="6" fill="#fff" stroke="'+i+'" stroke-width="2"/>'
+        +'<circle cx="42" cy="45" r="2.6" fill="'+i+'"/><circle cx="58" cy="45" r="2.6" fill="'+i+'"/>'
+        +'<path d="M42 62 Q50 67 58 62" fill="none" stroke="'+i+'" stroke-width="2.4" stroke-linecap="round"/>';
+    }
+    if(id==='troll'){
+      h+='<rect width="100" height="100" fill="#d8e6d0"/><circle cx="18" cy="52" r="8" fill="#6f8c50" '+o+'/><circle cx="82" cy="52" r="8" fill="#6f8c50" '+o+'/>'
+        +'<ellipse cx="50" cy="54" rx="32" ry="31" fill="#7c9a5a" '+o+'/>'
+        +'<path d="M24 40 Q38 34 46 44 M76 40 Q62 34 54 44" fill="none" stroke="'+i+'" stroke-width="5" stroke-linecap="round"/>'
+        +'<circle cx="38" cy="49" r="3.4" fill="#ffe066" stroke="'+i+'" stroke-width="1.6"/><circle cx="62" cy="49" r="3.4" fill="#ffe066" stroke="'+i+'" stroke-width="1.6"/>'
+        +'<ellipse cx="50" cy="60" rx="8" ry="6" fill="#6a8749" stroke="'+i+'" stroke-width="2"/>'
+        +'<path d="M30 74 Q50 84 70 74" fill="none" stroke="'+i+'" stroke-width="3" stroke-linecap="round"/><path d="M36 76 L38 66 L43 77Z M64 76 L62 66 L57 77Z" fill="#fff" stroke="'+i+'" stroke-width="1.6" stroke-linejoin="round"/>';
+    }
+    if(id==='knight'){
+      h+='<rect width="100" height="100" fill="#dfe3ea"/>'
+        +'<path d="M50 20 Q62 2 74 12 Q62 14 56 24Z" fill="#b3261e" '+o+'/>'
+        +'<path d="M26 82 L26 42 C26 18 74 18 74 42 L74 82Z" fill="#4b5563" '+o+'/>'
+        +'<rect x="31" y="40" width="38" height="9" rx="3" fill="#111827"/><circle cx="41" cy="44.5" r="2.4" fill="#ff4d4d"/><circle cx="59" cy="44.5" r="2.4" fill="#ff4d4d"/>'
+        +'<path d="M50 49 V76 M40 58 V74 M60 58 V74" stroke="'+i+'" stroke-width="2.4" stroke-linecap="round"/>';
+    }
+    if(id==='lich'){
+      h+='<rect width="100" height="100" fill="#d9d0ec"/>'
+        +'<path d="M18 88 L22 36 C24 12 76 12 78 36 L82 88Z" fill="#3b2d63" '+o+'/>'
+        +'<ellipse cx="50" cy="50" rx="19" ry="21" fill="#efe9d6" '+o+'/>'
+        +'<ellipse cx="42" cy="48" rx="5.5" ry="6.5" fill="'+i+'"/><ellipse cx="58" cy="48" rx="5.5" ry="6.5" fill="'+i+'"/>'
+        +'<circle cx="42" cy="49" r="2" fill="#66ff99"/><circle cx="58" cy="49" r="2" fill="#66ff99"/>'
+        +'<path d="M50 55 L47 62 H53Z" fill="'+i+'"/><path d="M41 68 H59 M45 66 V71 M50 66 V71 M55 66 V71" stroke="'+i+'" stroke-width="2"/>'
+        +'<path d="M34 24 L38 10 L45 20 L50 7 L55 20 L62 10 L66 24Z" fill="#f6c343" '+o+'/>';
+    }
+
     return h+'</svg>';
   }
 
@@ -791,7 +842,7 @@ svg.chr{overflow:visible}
       T='Событие: '+mo.name;
       if(f&&f.on&&f.s===slot) S='Бой идёт';
       else if(f&&f.s===slot) S='Ты уже сразился с этим монстром';
-      else{ S='Монстр уйдёт через '+fmt(EVENT_MS-el); btn=!!game; }
+      else{ S='Монстр уйдёт через '+fmt(EVENT_MS-el); btn=!!game&&!dgOn(); }
     }else{
       T='Следующий монстр'; S='Появится через '+fmt(HOUR-el);
     }
@@ -802,6 +853,7 @@ svg.chr{overflow:visible}
     var box=$('fight'); box.className='fight';
     if(!game){box.hidden=true;return;}
     var f=game.fight||{};
+    if(dgOn()){renderDgFight(box); return;}
     if(f.on){
       var mo=foeFor(f.s), st=stats();
       var pm=Math.max(0,Math.min(100,Math.round(f.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(f.p/st.hp*100)));
@@ -813,8 +865,8 @@ svg.chr{overflow:visible}
       $('fFlee').addEventListener('click',function(){confirmBox('Сбежать из боя? Монеты не потеряются, но 5 минут рядом с ником будет «трус». Этого монстра ты больше не встретишь.','Сбежать',fleeFight);});
     }else if(fightMsg){
       box.hidden=false;
-      box.innerHTML='<div class="flog">'+fightMsg+'</div><button id="fClose" class="ghost">Закрыть</button>';
-      $('fClose').addEventListener('click',function(){fightMsg=''; renderFight();});
+      box.innerHTML=(fightChest?'<div style="width:84px;margin:0 auto">'+chestSvg()+'</div>':'')+'<div class="flog">'+fightMsg+'</div><button id="fClose" class="ghost">Закрыть</button>';
+      $('fClose').addEventListener('click',function(){fightMsg=''; fightChest=false; renderFight();});
     }else{
       box.hidden=true;
     }
@@ -822,7 +874,7 @@ svg.chr{overflow:visible}
   function startFight(){
     if(!game) return;
     var slot=slotNow(), el=Date.now()-slot*HOUR, f=game.fight;
-    if(el>=EVENT_MS||f.on||f.s===slot) return;
+    if(el>=EVENT_MS||f.on||f.s===slot||dgOn()) return;
     var mo=foeFor(slot), st=stats();
     game.fight={s:slot,m:mo.hp,p:st.hp,on:true};
     fightLog='Бой начался. Крути колесо!'; fightMsg='';
@@ -840,20 +892,18 @@ svg.chr{overflow:visible}
     fightMsg='Ты сбежал с поля боя. 5 минут тебя будут звать трусом.';
     saveGame(); renderFight(); renderEvent(); renderChar();
   }
+  // один удар по правилам боя: зеро это крит x2, единица это неудача и пропуск хода
+  function strikeCore(f,mo,st,n){
+    if(f.skip){ f.skip=false; f.p-=mo.dmg; return 'Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.'; }
+    if(n===0){ f.m-=st.atk*2; return 'Зеро! Критический удар: '+mo.name+' теряет '+(st.atk*2)+' HP (x2).'; }
+    if(n===1){ f.p-=mo.dmg; f.skip=true; return 'Единица, критическая неудача! '+mo.name+' бьёт на '+mo.dmg+', а следующий ход ты пропускаешь.'; }
+    if(mo.hit(n)){ f.m-=st.atk; return 'Выпало '+n+': попал! '+mo.name+' теряет '+st.atk+' HP.'; }
+    f.p-=mo.dmg; return 'Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
+  }
   function fightStrike(n){
     var f=game&&game.fight; if(!f||!f.on) return;
     var mo=foeFor(f.s), st=stats();
-    if(f.skip){
-      f.skip=false; f.p-=mo.dmg; fightLog='Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.';
-    }else if(n===0){
-      f.m-=st.atk*2; fightLog='Зеро! Критический удар: '+mo.name+' теряет '+(st.atk*2)+' HP (x2).';
-    }else if(n===1){
-      f.p-=mo.dmg; f.skip=true; fightLog='Единица, критическая неудача! '+mo.name+' бьёт на '+mo.dmg+', а следующий ход ты пропускаешь.';
-    }else if(mo.hit(n)){
-      f.m-=st.atk; fightLog='Выпало '+n+': попал! '+mo.name+' теряет '+st.atk+' HP.';
-    }else{
-      f.p-=mo.dmg; fightLog='Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
-    }
+    fightLog=strikeCore(f,mo,st,n);
     if(f.m<=0){
       f.m=0; f.on=false; f.skip=false;
       var rew=WIN_MIN+Math.floor(Math.random()*(WIN_MAX-WIN_MIN+1)), id=(Math.random()<0.5)?null:dropItem(mo.elite);
@@ -881,6 +931,92 @@ svg.chr{overflow:visible}
     }
     renderEvent();
   },1000);
+
+  /* ---------- данж: платный вход, три монстра подряд, сундук с предметом ---------- */
+  var DG_PRICE=150, DG_STAGES=3;
+  var DG_MONSTERS=[
+    {id:'bat',name:'Летучая мышь',hp:45,dmg:7,rule:'красное чётное или чёрное нечётное',hit:function(n){var c=color(n);return (c==='red'&&n%2===0)||(c==='black'&&n%2===1);}},
+    {id:'spider',name:'Паук-отшельник',hp:65,dmg:8,rule:'число от 1 до 12 или от 25 до 36',hit:function(n){return (n>=1&&n<=12)||n>=25;}},
+    {id:'mummy',name:'Мумия',hp:60,dmg:8,rule:'нечётное число',hit:function(n){return n%2===1;}},
+    {id:'troll',name:'Пещерный тролль',hp:70,dmg:9,rule:'число от 13 до 24',hit:function(n){return n>=13&&n<=24;}},
+    {id:'knight',name:'Тёмный рыцарь',hp:80,dmg:10,rule:'чёрное',hit:function(n){return n>0&&color(n)==='black';}},
+    {id:'lich',name:'Лич',hp:50,dmg:9,rule:'число, кратное трём',hit:function(n){return n>0&&n%3===0;}}
+  ];
+  // предмет из сундука данжа: шансы по редкости, и только для твоего класса
+  var DROP_D=[['common',10],['uncommon',30],['rare',35],['epic',20],['legendary',5]];
+  function dgOn(){return !!(game&&game.dg&&game.dg.on);}
+  function dgList(seed){
+    var r=rng(hashStr('d'+seed)), a=DG_MONSTERS.slice(), o=[];
+    for(var k=0;k<DG_STAGES;k++){ o.push(a.splice(Math.floor(r()*a.length),1)[0]); }
+    return o;
+  }
+  function dgFoe(){var d=game.dg; return dgList(d.seed)[d.st];}
+  function dgChestItem(){
+    var x=Math.random()*100, acc=0, r='common';
+    for(var k=0;k<DROP_D.length;k++){acc+=DROP_D[k][1]; if(x<acc){r=DROP_D[k][0];break;}}
+    var pool=Object.keys(ITEMS).filter(function(id){var it=ITEMS[id]; return it.drop&&it.r===r&&(!game.cls||it.cls===game.cls);});
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  function dgEnter(){
+    if(!game||dgOn()||(game.fight&&game.fight.on)||(Number(game.coins)||0)<DG_PRICE) return;
+    game.coins-=DG_PRICE;
+    game.dg={on:true,st:0,seed:Math.floor(Math.random()*1000000000),m:0,p:stats().hp,skip:false};
+    game.dg.m=dgFoe().hp;
+    fightLog='Ты вошёл в данж. Монстр 1 из '+DG_STAGES+'. Крути колесо!'; fightMsg=''; fightChest=false;
+    saveGame(); renderCoins(); renderFight(); renderEvent(); showTab('game');
+  }
+  function dgLeave(){
+    if(!dgOn()) return;
+    delete game.dg; fightMsg='Ты покинул данж. Вход ('+DG_PRICE+' монет) не вернулся.'; fightChest=false;
+    saveGame(); renderFight(); renderEvent(); renderDg();
+  }
+  function dgStrike(n){
+    var d=game&&game.dg; if(!d||!d.on) return;
+    var mo=dgFoe(), st=stats();
+    fightLog=strikeCore(d,mo,st,n);
+    if(d.m<=0){
+      d.m=0; d.st++;
+      if(d.st>=DG_STAGES){
+        var id=dgChestItem(); game.inv.push(id); delete game.dg;
+        fightMsg=fightLog+' Данж пройден! В сундуке: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').'; fightChest=true;
+        toast('Данж пройден: '+ITEMS[id].name); $('dot').hidden=false;
+      }else{
+        var nx=dgFoe(); d.m=nx.hp; d.p=st.hp; d.skip=false;
+        fightLog+=' Монстр повержен! Дальше: '+nx.name+' ('+(d.st+1)+' из '+DG_STAGES+'). Здоровье восстановлено.';
+      }
+    }else if(d.p<=0){
+      delete game.dg; fightMsg=fightLog+' Ты погиб в данже. Вход потерян.'; fightChest=false;
+    }
+  }
+  function renderDgFight(box){
+    var d=game.dg, mo=dgFoe(), st=stats();
+    var pm=Math.max(0,Math.min(100,Math.round(d.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(d.p/st.hp*100)));
+    box.hidden=false; box.className='fight';
+    box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">Данж: '+mo.name+' ('+(d.st+1)+' из '+DG_STAGES+')</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
+      +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+d.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
+      +'<div><div class="hpl"><span>Ты</span><span>'+d.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
+      +'<div class="flog">'+fightLog+'</div><button id="dgLeave" class="ghost">Покинуть данж</button>';
+    $('dgLeave').addEventListener('click',function(){confirmBox('Покинуть данж? Вход ('+DG_PRICE+' монет) не вернётся, а прогресс пропадёт.','Покинуть',dgLeave);});
+  }
+  function renderDg(){
+    var box=$('dgBody'); if(!game){box.innerHTML='';return;}
+    var coins=Number(game.coins)||0, on=dgOn(), busy=!!(game.fight&&game.fight.on);
+    var h='<div class="card"><h3>Данж</h3><p>Заплати за вход и победи трёх монстров подряд. Правила боя те же, что в событии. Между монстрами здоровье восстанавливается. В конце тебя ждёт сундук с предметом твоего класса. Если погибнешь или уйдёшь, вход не возвращается.</p>'
+      +'<span class="price">'+coinSvg()+DG_PRICE+'</span>';
+    if(on){
+      h+='<p style="margin-top:8px">Ты в данже: монстр '+(game.dg.st+1)+' из '+DG_STAGES+'. Бой идёт на вкладке «Рулетка».</p><button id="dgGo">К бою</button>';
+    }else{
+      var lab=busy?'Сначала закончи бой с монстром':(coins<DG_PRICE?'Не хватает '+(DG_PRICE-coins):'Войти в данж');
+      h+='<button id="dgIn"'+((busy||coins<DG_PRICE)?' disabled':'')+'>'+lab+'</button>';
+    }
+    h+='</div><div class="card"><h3>Что в сундуке</h3><div class="odds">';
+    DROP_D.forEach(function(x){h+=rarPill(x[0]).replace('</span>',' '+x[1]+'%</span>');});
+    h+='</div></div>';
+    box.innerHTML=h;
+    var a=$('dgIn'); if(a) a.addEventListener('click',function(){confirmBox('Войти в данж за '+DG_PRICE+' монет? Нужно победить трёх монстров подряд. Если погибнешь или уйдёшь, вход не вернётся.','Войти',dgEnter);});
+    var g=$('dgGo'); if(g) g.addEventListener('click',function(){showTab('game');});
+  }
+  $('dgBody').style.display='flex'; $('dgBody').style.flexDirection='column'; $('dgBody').style.gap='14px';
 
   /* ---------- лидерборд ---------- */
   var curTab='game';
@@ -933,20 +1069,22 @@ svg.chr{overflow:visible}
   setInterval(function(){ if(curTab==='board'&&!document.hidden) loadBoard(); },15000);
   function showTab(which){
     curTab=which;
-    $('gamePane').hidden=(which!=='game'); $('charPane').hidden=(which!=='char'); $('boardPane').hidden=(which!=='board'); $('shopPane').hidden=(which!=='shop');
+    $('gamePane').hidden=(which!=='game'); $('charPane').hidden=(which!=='char'); $('boardPane').hidden=(which!=='board'); $('shopPane').hidden=(which!=='shop'); $('dgPane').hidden=(which!=='dg');
     $('tabGame').className='tab'+(which==='game'?' on':'');
     $('tabChar').className='tab'+(which==='char'?' on':'');
     $('tabBoard').className='tab'+(which==='board'?' on':'');
-    $('tabShop').className='tab'+(which==='shop'?' on':'');
+    $('tabShop').className='tab'+(which==='shop'?' on':''); $('tabDg').className='tab'+(which==='dg'?' on':'');
     if(which==='game') draw();
     if(which==='char'){$('dot').hidden=true; renderChar();}
     if(which==='board') loadBoard();
     if(which==='shop') renderShop();
+    if(which==='dg') renderDg();
   }
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
   $('tabBoard').addEventListener('click',function(){showTab('board');});
   $('tabShop').addEventListener('click',function(){showTab('shop');});
+  $('tabDg').addEventListener('click',function(){showTab('dg');});
   $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
