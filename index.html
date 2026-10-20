@@ -484,12 +484,12 @@ svg.chr{overflow:visible}
         game.fight.on=!!game.fight.on; game.fight.skip=!!game.fight.skip;
         game.inv=Array.isArray(game.inv)?game.inv.filter(function(i){return ITEMS[i];}):[];
         if(!game.eq||typeof game.eq!=='object') game.eq={};
-        if(!g.gm){
-          // старые игроки: стартовое снаряжение класса кладём в инвентарь и надеваем
-          var cg=gearOf(game.cls);
-          for(var csl in cg){ if(game.inv.indexOf(cg[csl])<0) game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; }
-          game.gm=1; saveGame();
+        // стартовое снаряжение класса всегда должно лежать в инвентаре; чего нет, то добавляем и надеваем
+        var cg=gearOf(game.cls), added=false;
+        for(var csl in cg){
+          if(game.inv.indexOf(cg[csl])<0){ game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; added=true; }
         }
+        game.gm=1; if(added) saveGame();
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
       }else{
         game=defaultGame(); renderChar(); renderCoins(); return saveGame();
@@ -1074,7 +1074,7 @@ svg.chr{overflow:visible}
       var ok=!it.cls||it.cls===game.cls;
       b.title=itemLine(id)+', '+RARITY[it.r].name+(it.cls?'. Класс: '+CLASSES[it.cls].name:'')+(ok?'. Нажми, чтобы надеть':'. Не твой класс, надеть нельзя');
       if(!ok){b.disabled=true; b.style.opacity='.45';}
-      b.innerHTML=itemIcon(id)+'<span>'+it.name+'</span>';
+      b.innerHTML=itemIcon(id)+'<span>'+it.name+'</span>'+(it.cls?'<span style="opacity:.75">'+CLASSES[it.cls].name+'</span>':'');
       b.addEventListener('click',function(){if(it.cls&&it.cls!==game.cls) return; game.eq[it.slot]=id; saveGame(); renderChar();});
       box.appendChild(b);
     });
