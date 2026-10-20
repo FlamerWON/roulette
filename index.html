@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="9">
+<meta name="app-version" content="10">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -794,7 +794,7 @@ svg.chr{overflow:visible}
     for(var k=2;k<=15;k++)if(game.level>=rankLevel(k)||(k<=6&&power>=RANK_POWER[k-1]))r=k;
     return Math.max(r,Math.min(15,Math.floor(Number(game.unlockedRank)||1)));
   }
-  function selectedRank(){return Math.max(1,Math.min(maxRank(),Math.floor(Number(game.rank)||1)));}
+  function selectedRank(){return Math.max(1,Math.min(maxRank(),Math.floor(Number(game&&game.rank)||1)));}
   function healBetween(hp,max){return Math.min(max,hp+Math.round(max*.25));}
   function battleStats(f){return {hp:f.ph,atk:f.pa};}
   function makeMonster(base,rank,elite,boss,dungeon){
@@ -988,6 +988,7 @@ svg.chr{overflow:visible}
 
   function renderEvent(){
  var bar=$('eventBar');if(!bar||$('app').hidden)return;
+ if(!game){$('evT').textContent='Загружаем персонажа…';$('evS').textContent='Подожди, загружаем сохранение.';$('evBtn').hidden=true;return;}
  var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game&&game.fight,mo=foeFor(slot,f&&f.on?f.r:selectedRank());
  var live=el<EVENT_MS,T,S,btn=false;
  if(f&&f.on){T='Бой: '+mo.name;S=rankName(f.r)+' · характеристики зафиксированы';}
