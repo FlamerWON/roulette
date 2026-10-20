@@ -132,6 +132,42 @@ svg.chr{overflow:visible}
 .bs small{font-weight:500;color:var(--muted)}
 .bempty{text-align:center;color:var(--muted);padding:20px 0}
 
+/* монеты */
+#app{padding-top:34px}
+.coinBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:20;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--gold);border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.coinBox svg{width:28px;height:28px;display:block}
+.coinBox.pop{animation:coinPop .35s ease}
+@keyframes coinPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.raceTag{display:inline-block;margin:6px 0 0;padding:2px 12px;border-radius:999px;color:#fff;font-size:13px;font-weight:700}
+.titleLine{align-self:center;font-size:13px;color:var(--muted);text-align:center;padding:2px 8px}
+
+/* магазин */
+.shopPane{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h3{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:24px;margin:0}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.chestRow{display:flex;gap:14px;align-items:center}
+.chest{width:104px;flex:none}
+.chest svg{display:block;width:100%}
+.chest.shake{animation:chrShake .45s ease-in-out infinite}
+@keyframes chrShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+@media (prefers-reduced-motion:reduce){.chest.shake{animation:none}}
+.price{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.price svg{width:22px;height:22px}
+.odds{display:flex;flex-wrap:wrap;gap:6px}
+.rar{display:inline-block;color:#fff;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.drop{display:flex;gap:14px;align-items:center;background:var(--bg);border-radius:14px;padding:10px}
+.drop .charAv{width:100px;height:100px;margin:0;flex:none}
+.rrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.rrow.locked{opacity:.6}
+.rrow button{padding:6px 16px;font-size:14px;flex:none}
+.rn{font-weight:700}
+.rd{font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chipx{border:2px dashed var(--line);border-radius:12px;padding:6px 16px;color:var(--muted);font-weight:700}
+.chr .tail{transform-origin:63px 104px;animation:chrWag 1.2s ease-in-out infinite}
+@keyframes chrWag{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(10deg)}}
+
 /* чат */
 .chat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:18px;height:min(72vh,600px);overflow:hidden}
 .chatHead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:baseline}
@@ -157,6 +193,8 @@ svg.chr{overflow:visible}
 </style>
 </head>
 <body>
+
+<div id="coinBox" class="coinBox" hidden aria-label="Монеты"></div>
 
 <div id="login">
   <h1>Рулетка</h1>
@@ -185,6 +223,7 @@ svg.chr{overflow:visible}
       <button id="tabGame" class="tab on">Рулетка</button>
       <button id="tabChar" class="tab">Персонаж<span id="dot" class="dot" hidden></span></button>
       <button id="tabBoard" class="tab">Лидеры</button>
+      <button id="tabShop" class="tab">Магазин</button>
     </div>
     <section class="wheelCol" id="gamePane">
       <h1>Рулетка</h1>
@@ -206,7 +245,7 @@ svg.chr{overflow:visible}
           <div class="slot" aria-label="Голова: пусто">Голова</div>
           <div class="slot" aria-label="Тело: пусто">Тело</div>
         </div>
-        <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div></div>
+        <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div></div>
         <div class="eqCol">
           <div class="slot" aria-label="Руки: пусто">Руки</div>
           <div class="slot" aria-label="Ноги: пусто">Ноги</div>
@@ -228,6 +267,8 @@ svg.chr{overflow:visible}
       <div class="board" id="board"></div>
       <button id="boardRefresh" class="ghost">Обновить</button>
     </section>
+
+    <section class="shopPane" id="shopPane" hidden><div id="shopBody"></div></section>
     </div>
   </div>
 </div>
@@ -319,10 +360,10 @@ svg.chr{overflow:visible}
   function start(){
     uid=sess.uid; nick=sess.name;
     $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
-    game=null; showTab('game'); draw(); lastSig=''; renderChat(); load(); loadGame();
+    game=null; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); draw(); lastSig=''; renderChat(); load(); loadGame();
   }
   function logout(){
-    sess=null; game=null; docs=[]; lastSig='';
+    sess=null; game=null; docs=[]; lastSig=''; $('coinBox').hidden=true;
     try{localStorage.removeItem('roulette_sess');}catch(e){}
     $('app').hidden=true; $('login').hidden=false; setErr('');
   }
@@ -364,7 +405,7 @@ svg.chr{overflow:visible}
     for(var i=0;i<TITLES.length;i++){ if(TITLES[i].id===id) return TITLES[i].name; }
     return '';
   }
-  function defaultGame(){return {spins:0,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function defaultGame(){return {spins:0,coins:0,race:'human',races:{human:true},red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   function saveGame(){
     if(!game||!sess) return Promise.resolve();
@@ -379,9 +420,13 @@ svg.chr{overflow:visible}
         for(var k in g) game[k]=g[k];
         if(!game.earned||typeof game.earned!=='object') game.earned={newbie:true};
         game.earned.newbie=true;
-        renderChar();
+        if(typeof game.coins!=='number') game.coins=0;
+        if(!game.races||typeof game.races!=='object') game.races={human:true};
+        game.races.human=true;
+        if(!raceById(game.race)||!game.races[game.race]) game.race='human';
+        renderChar(); renderCoins();
       }else{
-        game=defaultGame(); renderChar(); return saveGame();
+        game=defaultGame(); renderChar(); renderCoins(); return saveGame();
       }
     }).catch(function(){ if(!game){game=defaultGame(); renderChar();} });
   }
@@ -393,7 +438,7 @@ svg.chr{overflow:visible}
   function onSpin(n){
     if(!game) return;
     var prev=game.last, c=color(n);
-    game.spins++; game[c==='green'?'zero':c]++;
+    game.spins++; game.coins=(Number(game.coins)||0)+1; game[c==='green'?'zero':c]++;
     game.blackRun=(c==='black')?game.blackRun+1:0;
     game.last=n;
     game.cols=(String(game.cols||'')+(c==='red'?'r':(c==='black'?'b':'g'))).slice(-10);
@@ -405,14 +450,20 @@ svg.chr{overflow:visible}
     TITLES.forEach(function(t){
       if(!game.earned[t.id]&&t.check(n,prev,game,arr)){game.earned[t.id]=true; got.push(t.name);}
     });
-    if(got.length){ toast('Новый титул: '+got.join(', ')); $('dot').hidden=false; }
+    if(got.length){
+      toast('Новый титул: '+got.join(', ')); $('dot').hidden=false;
+      got.forEach(function(nm){post({kind:'title',tn:nm});});
+    }
+    renderCoins();
     saveGame(); renderChar();
   }
   function renderChar(){
     if(!game) return;
     $('charName').textContent=nick;
-    $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title);
+    $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title,game.race);
     $('charTitle').textContent=titleName(game.title)||'Новичок';
+    var rc=raceById(game.race)||RACES[0], rr=RARITY[rc.r];
+    var tag=$('charRace'); tag.textContent=rc.name+' ('+rr.name+')'; tag.style.background=rr.color;
     $('stSpins').textContent=game.spins; $('stRed').textContent=game.red;
     $('stBlack').textContent=game.black; $('stZero').textContent=game.zero;
     var list=$('tlist'); list.innerHTML='';
@@ -435,6 +486,109 @@ svg.chr{overflow:visible}
       list.appendChild(row);
     });
   }
+  /* ---------- монеты ---------- */
+  function coinSvg(){
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#f6c343" stroke="#2a1f14" stroke-width="1.8"/>'
+      +'<circle cx="12" cy="12" r="8" fill="none" stroke="#c98a00" stroke-width="1.2"/>'
+      +'<polygon points="12,6 13.47,9.98 17.71,10.15 14.38,12.77 15.53,16.85 12,14.5 8.47,16.85 9.62,12.77 6.29,10.15 10.53,9.98" fill="#fff3b0" stroke="#8a5a00" stroke-width="0.8" stroke-linejoin="round"/></svg>';
+  }
+  var shownCoins=-1;
+  $('coinBox').innerHTML=coinSvg()+'<span id="coins">0</span>';
+  function renderCoins(){
+    var v=game?(Number(game.coins)||0):0, el=$('coins'), box=$('coinBox');
+    if(v===shownCoins) return;
+    var up=shownCoins>=0&&v>shownCoins;
+    shownCoins=v; el.textContent=String(v);
+    if(up){box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');}
+    if(curTab==='shop'&&!opening) renderShop();
+  }
+
+  /* ---------- магазин: сундук с расой ---------- */
+  var CHEST_PRICE=500, DUP_REFUND=100;
+  var RARITY={
+    common:{name:'Обычная',color:'#6b7280'},
+    uncommon:{name:'Необычная',color:'#2f8f4e'},
+    rare:{name:'Редкая',color:'#2a6fd6'},
+    epic:{name:'Эпическая',color:'#7e3fc4'},
+    legendary:{name:'Легендарная',color:'#b8610a'}
+  };
+  // w — вес выпадения (в сумме 100)
+  var RACES=[
+    {id:'human',name:'Человек',r:'common',w:40,desc:'Обычный вид, ничего не меняется'},
+    {id:'beast',name:'Зверолюд',r:'uncommon',w:22,desc:'Звериные ушки, усы и хвост'},
+    {id:'dwarf',name:'Дворф',r:'rare',w:14,desc:'Низкий и коренастый, с большой бородой'},
+    {id:'orc',name:'Орк',r:'rare',w:10,desc:'Зелёная кожа и клыки'},
+    {id:'elf',name:'Эльф',r:'epic',w:10,desc:'Длинные остроконечные уши'},
+    {id:'drake',name:'Драконорождённый',r:'legendary',w:4,desc:'Рожки и чешуйчатый хвост'}
+  ];
+  function raceById(id){for(var i=0;i<RACES.length;i++){if(RACES[i].id===id) return RACES[i];}return null;}
+  function rarPill(key){var r=RARITY[key];return '<span class="rar" style="background:'+r.color+'">'+r.name+'</span>';}
+  var opening=false, lastDrop=null;
+  var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function chestSvg(){
+    return '<svg viewBox="0 0 120 100" aria-hidden="true">'
+      +'<rect x="14" y="46" width="92" height="46" rx="7" fill="#a8672d" stroke="#2a1f14" stroke-width="3" stroke-linejoin="round"/>'
+      +'<path d="M14 52 Q14 14 60 14 Q106 14 106 52Z" fill="#c98239" stroke="#2a1f14" stroke-width="3" stroke-linejoin="round"/>'
+      +'<rect x="50" y="38" width="20" height="30" rx="4" fill="#f6c343" stroke="#2a1f14" stroke-width="2.5"/>'
+      +'<circle cx="60" cy="54" r="4.5" fill="#2a1f14"/>'
+      +'<path d="M30 20 L30 48 M90 20 L90 48" stroke="#2a1f14" stroke-width="2.5" opacity="0.5"/></svg>';
+  }
+  function rollRace(){
+    var x=Math.random()*100, acc=0;
+    for(var i=0;i<RACES.length;i++){acc+=RACES[i].w; if(x<acc) return RACES[i];}
+    return RACES[0];
+  }
+  function openChest(){
+    if(!game||opening||(Number(game.coins)||0)<CHEST_PRICE) return;
+    game.coins-=CHEST_PRICE;
+    var race=rollRace(), dup=!!game.races[race.id];
+    if(dup){ game.coins+=DUP_REFUND; }
+    else{ game.races[race.id]=true; game.race=race.id; }
+    lastDrop=null; opening=true;
+    saveGame();
+    renderCoins(); renderShop();
+    setTimeout(function(){
+      opening=false; lastDrop={race:race,dup:dup};
+      renderShop();
+    },reduceMotion?50:1000);
+  }
+  function renderShop(){
+    var box=$('shopBody'); if(!game){box.innerHTML='';return;}
+    var coins=Number(game.coins)||0, can=coins>=CHEST_PRICE&&!opening;
+    var odds={}, k;
+    RACES.forEach(function(r){odds[r.r]=(odds[r.r]||0)+r.w;});
+    var h='<div class="card"><h3>Сундук с расой</h3><div class="chestRow"><div class="chest'+(opening?' shake':'')+'">'+chestSvg()+'</div><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">'
+      +'<p>Откроешь и получишь случайную расу. Раса немного меняет внешний вид персонажа.</p>'
+      +'<span class="price">'+coinSvg()+CHEST_PRICE+'</span>'
+      +'<button id="openChest"'+(can?'':' disabled')+'>'+(opening?'Открываем…':(coins>=CHEST_PRICE?'Открыть сундук':'Не хватает '+(CHEST_PRICE-coins)))+'</button></div></div>';
+    h+='<div class="odds">';
+    for(k in RARITY){ if(odds[k]) h+=rarPill(k).replace('</span>',' '+odds[k]+'%</span>'); }
+    h+='</div>';
+    if(lastDrop&&!opening){
+      h+='<div class="drop"><div class="charAv">'+avatarBody(sess&&sess.uid,game.title,lastDrop.race.id)+'</div><div><div class="rn">Выпало: '+lastDrop.race.name+'</div>'+rarPill(lastDrop.race.r)
+        +'<p style="margin-top:6px">'+(lastDrop.dup?'Повтор! Возвращаем '+DUP_REFUND+' монет.':'Новая раса, уже надета.')+'</p></div></div>';
+    }
+    h+='</div>';
+    h+='<div class="card"><h3>Мои расы</h3>';
+    RACES.forEach(function(r,i){
+      var has=!!game.races[r.id], worn=game.race===r.id;
+      h+='<div class="rrow'+(has?'':' locked')+'"><div><div class="rn">'+r.name+' '+rarPill(r.r)+'</div><div class="rd">'+r.desc+'</div></div>'
+        +(has?('<button data-race="'+r.id+'"'+(worn?' disabled':'')+'>'+(worn?'Надета':'Надеть')+'</button>'):'<span class="rd">Не открыта</span>')+'</div>';
+    });
+    h+='</div>';
+    h+='<div class="card"><h3>Классы</h3><p>Здесь появятся классы, их можно будет купить позже.</p><div class="chips"><span class="chipx">Маг</span><span class="chipx">Воин</span><span class="chipx">Лучник</span></div><p>Скоро</p></div>';
+    box.innerHTML=h;
+    var ob=$('openChest'); if(ob) ob.addEventListener('click',openChest);
+    var btns=box.querySelectorAll('button[data-race]');
+    for(var j=0;j<btns.length;j++){
+      btns[j].addEventListener('click',function(e){
+        var id=e.currentTarget.getAttribute('data-race');
+        if(game.races[id]){game.race=id; saveGame(); renderShop();}
+      });
+    }
+  }
+  $('shopBody').style.display='flex'; $('shopBody').style.flexDirection='column'; $('shopBody').style.gap='14px';
+
   /* ---------- лидерборд ---------- */
   var curTab='game';
   function loadBoard(){
@@ -445,14 +599,14 @@ svg.chr{overflow:visible}
       if(!obj||obj.error){ box.innerHTML=''; var e=document.createElement('div'); e.className='bempty'; e.textContent='Не удалось загрузить рейтинг. Проверь правила в Firebase.'; box.appendChild(e); return; }
       var rows=Object.keys(obj).map(function(k){
         var u=obj[k]||{}, g=u.game||{};
-        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,title:g.title};
+        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,title:g.title,race:g.race};
       }).filter(function(x){return x.spins>0;}).sort(function(x,y){return y.spins-x.spins;});
       box.innerHTML='';
       if(!rows.length){var e2=document.createElement('div'); e2.className='bempty'; e2.textContent='Пока никто не крутил колесо.'; box.appendChild(e2); return;}
       rows.forEach(function(x,i){
         var row=document.createElement('div'); row.className='brow'+((sess&&x.uid===sess.uid)?' me':'');
         var rk=document.createElement('div'); rk.className='rk'+(i<3?' top':''); rk.textContent=String(i+1);
-        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(x.uid,x.title);
+        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(x.uid,x.title,x.race);
         var nm=document.createElement('div'); nm.className='bn'; nm.textContent=x.name;
         var tn=titleName(x.title);
         if(tn){var tt=document.createElement('span'); tt.className='tt'; tt.textContent=tn; nm.appendChild(tt);}
@@ -466,17 +620,20 @@ svg.chr{overflow:visible}
   setInterval(function(){ if(curTab==='board'&&!document.hidden) loadBoard(); },15000);
   function showTab(which){
     curTab=which;
-    $('gamePane').hidden=(which!=='game'); $('charPane').hidden=(which!=='char'); $('boardPane').hidden=(which!=='board');
+    $('gamePane').hidden=(which!=='game'); $('charPane').hidden=(which!=='char'); $('boardPane').hidden=(which!=='board'); $('shopPane').hidden=(which!=='shop');
     $('tabGame').className='tab'+(which==='game'?' on':'');
     $('tabChar').className='tab'+(which==='char'?' on':'');
     $('tabBoard').className='tab'+(which==='board'?' on':'');
+    $('tabShop').className='tab'+(which==='shop'?' on':'');
     if(which==='game') draw();
     if(which==='char'){$('dot').hidden=true; renderChar();}
     if(which==='board') loadBoard();
+    if(which==='shop') renderShop();
   }
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
   $('tabBoard').addEventListener('click',function(){showTab('board');});
+  $('tabShop').addEventListener('click',function(){showTab('shop');});
   $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
@@ -486,30 +643,46 @@ svg.chr{overflow:visible}
   var BGS=['#ffe8a3','#bde0fe','#c7f0d0','#ffcfd8','#e2d4ff','#ffd9b0'];
   var PANTS=['#2b3a67','#3d405b','#5c8001','#7b2d26','#1d3557','#6d597a'];
   var SHOES=['#ffffff','#f4f1de','#2a2a2a','#e63946'];
+  var BEARD=['#b5651d','#8c5a2f','#c9c9c9','#d98b3a'];
   var INK='#2a1f14';
   var OUT='stroke="'+INK+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
   function hashStr(str){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
   function pick(r,arr){return arr[Math.floor(r()*arr.length)];}
-  function look(seed){
+  function look(seed,race){
     var r=rng(hashStr(String(seed||'x')));
     var L={skin:pick(r,SKIN),hair:pick(r,HAIR),shirt:pick(r,SHIRT),bg:pick(r,BGS)};
     L.hs=Math.floor(r()*5); L.es=Math.floor(r()*3); L.ms=Math.floor(r()*3); L.cheeks=r()<0.5;
     L.pants=pick(r,PANTS); L.shoe=pick(r,SHOES); L.ts=Math.floor(r()*3);
+    L.race=race||'human';
+    if(L.race==='orc') L.skin='#86b86b';
     return L;
   }
-  // голова с причёской, лицом и украшением титула (координаты в области 100x100)
+  // голова с причёской, лицом, чертами расы и украшением титула (область 100x100)
   function headParts(L,titleId){
-    var s='', hs=L.hs, es=L.es, ms=L.ms, hair=L.hair, skin=L.skin;
+    var s='', hs=L.hs, es=L.es, ms=L.ms, hair=L.hair, skin=L.skin, rc=L.race;
     if(hs===3) s+='<path d="M22 50 C20 18 80 18 78 50 L80 82 L66 80 L34 80 L20 82Z" fill="'+hair+'" '+OUT+'/>';
-    s+='<circle cx="24.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/><circle cx="75.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/>';
+    if(rc==='elf'){
+      s+='<path d="M27 47 L7 35 L25 61Z" fill="'+skin+'" '+OUT+'/><path d="M73 47 L93 35 L75 61Z" fill="'+skin+'" '+OUT+'/>';
+    }else if(rc!=='beast'){
+      s+='<circle cx="24.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/><circle cx="75.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/>';
+    }
     s+='<ellipse cx="50" cy="52" rx="26" ry="27" fill="'+skin+'" '+OUT+'/>';
     if(hs===0) s+='<path d="M50 26 Q44 18 52 14" fill="none" stroke="'+hair+'" stroke-width="3.5" stroke-linecap="round"/>';
     if(hs===1) s+='<path d="M24 48 C22 26 38 20 50 20 C62 20 78 26 76 48 C70 38 60 34 50 34 C40 34 30 38 24 48Z" fill="'+hair+'" '+OUT+'/>';
     if(hs===2) s+='<polygon points="24,46 26,28 34,36 38,20 46,32 52,18 58,32 66,20 68,36 76,28 76,46 66,36 50,33 34,36" fill="'+hair+'" '+OUT+'/>';
     if(hs===3) s+='<path d="M26 44 C30 28 70 28 74 44 C64 36 36 36 26 44Z" fill="'+hair+'" '+OUT+'/>';
     if(hs===4) s+='<polygon points="42,30 44,12 50,22 56,12 58,30" fill="'+hair+'" '+OUT+'/>';
+    if(rc==='beast'){
+      s+='<path d="M27 36 L30 9 L45 26Z" fill="'+hair+'" '+OUT+'/><path d="M31 28 L32 16 L40 25Z" fill="#ff9fb0"/>'
+        +'<path d="M73 36 L70 9 L55 26Z" fill="'+hair+'" '+OUT+'/><path d="M69 28 L68 16 L60 25Z" fill="#ff9fb0"/>';
+    }
+    if(rc==='drake'){
+      s+='<path d="M33 30 Q21 14 31 5 Q31 18 43 26Z" fill="#f2e3b3" '+OUT+'/><path d="M67 30 Q79 14 69 5 Q69 18 57 26Z" fill="#f2e3b3" '+OUT+'/>';
+    }
     if(L.cheeks) s+='<circle cx="32" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/><circle cx="68" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/>';
+    if(rc==='beast') s+='<path d="M26 60 L11 57 M26 64 L11 66 M74 60 L89 57 M74 64 L89 66" fill="none" stroke="'+INK+'" stroke-width="1.6" stroke-linecap="round"/>';
+    if(rc==='dwarf') s+='<path d="M26 60 C25 94 75 94 74 60 C70 72 60 70 50 70 C40 70 30 72 26 60Z" fill="'+BEARD[(hs+es)%4]+'" '+OUT+'/>';
     s+='<g class="eyes">';
     if(es===0) s+='<circle cx="40" cy="52" r="3" fill="'+INK+'"/><circle cx="60" cy="52" r="3" fill="'+INK+'"/>';
     if(es===1) s+='<circle cx="40" cy="51" r="6" fill="#fff" stroke="'+INK+'" stroke-width="2"/><circle cx="41" cy="52" r="3" fill="'+INK+'"/><circle cx="60" cy="51" r="6" fill="#fff" stroke="'+INK+'" stroke-width="2"/><circle cx="61" cy="52" r="3" fill="'+INK+'"/>';
@@ -518,6 +691,7 @@ svg.chr{overflow:visible}
     if(ms===0) s+='<path d="M42 64 Q50 73 58 64" fill="none" '+OUT+'/>';
     if(ms===1) s+='<path d="M42 63 Q50 77 58 63Z" fill="#8f2d2d" '+OUT+'/>';
     if(ms===2) s+='<path d="M43 67 Q50 68 58 62" fill="none" '+OUT+'/>';
+    if(rc==='orc') s+='<path d="M41 70 L43 62 L46 70Z" fill="#fff" stroke="'+INK+'" stroke-width="1.6" stroke-linejoin="round"/><path d="M59 70 L57 62 L54 70Z" fill="#fff" stroke="'+INK+'" stroke-width="1.6" stroke-linejoin="round"/>';
     s+='<g class="deco">';
     if(titleId==='newbie'){
       s+='<path d="M50 27 L50 15" fill="none" stroke="#3b8f3b" stroke-width="3" stroke-linecap="round"/>'
@@ -544,21 +718,28 @@ svg.chr{overflow:visible}
     }
     return s+'</g>';
   }
-  // маленький портрет для чата: голова и плечи
-  function avatar(seed,titleId){
-    var L=look(seed);
+  // маленький портрет для чата и рейтинга: голова и плечи
+  function avatar(seed,titleId,race){
+    var L=look(seed,race);
     return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
       +'<rect width="100" height="100" fill="'+L.bg+'"/>'
       +'<path d="M14 100 C16 78 32 74 50 74 C68 74 84 78 86 100Z" fill="'+L.shirt+'" '+OUT+'/>'
       +headParts(L,titleId)+'</svg>';
   }
-  // персонаж в полный рост с анимацией (вкладка «Персонаж»)
-  function avatarBody(seed,titleId){
-    var L=look(seed), sk=L.skin;
+  // персонаж в полный рост с анимацией
+  function avatarBody(seed,titleId,race){
+    var L=look(seed,race), sk=L.skin, rc=L.race;
     var s='<svg class="chr" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
     s+='<rect width="144" height="144" rx="24" fill="'+L.bg+'" opacity="0.65"/><g transform="translate(22 0)">';
+    if(rc==='dwarf') s+='<g transform="translate(50 138) scale(0.84) translate(-50 -138)">';
     s+='<ellipse class="sh" cx="50" cy="138" rx="24" ry="4" fill="#000" opacity="0.18"/>';
     s+='<g class="chrBob">';
+    if(rc==='beast'||rc==='drake'){
+      var tc=(rc==='beast')?L.hair:'#5aa469';
+      s+='<g class="tail"><path d="M63 104 Q90 104 88 80" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 104 Q90 104 88 80" fill="none" stroke="'+tc+'" stroke-width="5" stroke-linecap="round"/>';
+      if(rc==='drake') s+='<path d="M88 71 L83 82 L93 82Z" fill="#f2c94c" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/>';
+      s+='</g>';
+    }
     s+='<g class="legL"><rect x="37" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="40" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/></g>';
     s+='<g class="legR"><rect x="53" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="60" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/></g>';
     s+='<path d="M36 82 Q50 77 64 82 L65 108 Q50 112 35 108Z" fill="'+L.shirt+'" '+OUT+'/>';
@@ -567,7 +748,9 @@ svg.chr{overflow:visible}
     s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
     s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
     s+='<g class="chead"><g transform="translate(50 52) scale(1.1) translate(-50 -52)">'+headParts(L,titleId)+'</g></g>';
-    return s+'</g></g></svg>';
+    s+='</g>';
+    if(rc==='dwarf') s+='</g>';
+    return s+'</g></svg>';
   }
 
   /* ---------- колесо ---------- */
@@ -603,7 +786,6 @@ svg.chr{overflow:visible}
     numEl.textContent=n; numEl.className='num '+c;
     labelEl.textContent=c==='green'?'Зеро':(c==='red'?'Красное':'Чёрное');
     onSpin(n);
-    post({kind:'spin',n:n});
   }
   function spin(){
     if(spinning) return;
@@ -645,18 +827,16 @@ svg.chr{overflow:visible}
     }
     docs.forEach(function(m){
       var d=document.createElement('div');
-      if(m.kind==='spin'){
-        d.className='spinLine';
-        d.appendChild(document.createTextNode(String(m.name||'Игрок')+' выкрутил'));
-        var c=document.createElement('span'); c.className='chip '+color(Number(m.n)); c.textContent=String(m.n);
-        d.appendChild(c);
+      if(m.kind==='title'){
+        d.className='titleLine';
+        d.appendChild(document.createTextNode(String(m.name||'Игрок')+' получил титул «'+String(m.tn||'')+'»'));
       }else{
         d.className='msg'+(m.uid===uid?' mine':'');
         var w=document.createElement('div'); w.className='who'; w.textContent=String(m.name||'Игрок');
         var tn=titleName(m.title);
         if(tn){var tt=document.createElement('span'); tt.className='tt'; tt.textContent=tn; w.appendChild(tt);}
         var t=document.createElement('div'); t.textContent=String(m.text||'');
-        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(m.uid,m.title);
+        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(m.uid,m.title,m.race);
         var bd=document.createElement('div'); bd.className='body'; bd.appendChild(w); bd.appendChild(t);
         d.appendChild(av); d.appendChild(bd);
       }
@@ -675,14 +855,14 @@ svg.chr{overflow:visible}
       var sig=keys.length+':'+keys[keys.length-1];
       if(sig===lastSig) return;
       lastSig=sig;
-      docs=keys.map(function(k){return obj[k];});
+      docs=keys.map(function(k){return obj[k];}).filter(function(m){return m&&m.kind!=='spin';});
       renderChat();
     }).catch(function(){});
   }
 
   function post(fields){
     if(!chatReady||!sess||!sess.name) return Promise.resolve();
-    var body={name:sess.name,uid:sess.uid,t:Date.now(),title:(game&&game.title)||'newbie'};
+    var body={name:sess.name,uid:sess.uid,t:Date.now(),title:(game&&game.title)||'newbie',race:(game&&game.race)||'human'};
     for(var k in fields) body[k]=fields[k];
     return token().then(function(t){
       return fetch(DB_URL+'/chat.json?auth='+encodeURIComponent(t),{method:'POST',body:JSON.stringify(body)});
