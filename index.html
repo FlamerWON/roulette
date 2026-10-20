@@ -465,8 +465,8 @@ svg.chr{overflow:visible}
     saving=true;
     return token().then(function(t){
       return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(game)});
-    }).then(function(r){ if(!r.ok) throw new Error('bad'); })
-    .catch(function(){ toast('Прогресс не сохранился. Проверь правила Firebase: у game должны быть разрешены поля inv, eq, gm, cowardUntil.'); })
+    }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
+    .catch(function(e){ toast('Прогресс не сохранился ('+((e&&e.message)||'нет связи')+').'); })
     .then(function(){ saving=false; if(again){again=false; return saveGame();} });
   }
   function loadGame(){
