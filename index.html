@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="10">
+<meta name="app-version" content="11">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -243,6 +243,7 @@ svg.chr{overflow:visible}
 .xpBar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:9px 0 12px}.xpBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#477b58,#b8892f);transition:width .3s}
 .rankRow{display:flex;align-items:center;gap:12px}.rankRow label{font-size:13px;color:var(--muted)}.rankRow select{min-width:0;flex:1;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px}
 .progressPanel p{font-size:12px;line-height:1.5;color:var(--muted);margin:8px 0 0}.rankRow select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}@media(prefers-reduced-motion:reduce){.xpBar i{transition:none}}
+#toast:empty{display:none}#toast{width:100%;max-width:520px;min-height:0;font-size:14px;line-height:1.5}#toast.on{border-radius:12px}#merchantBody{display:flex;flex-direction:column;gap:14px}.merchantList{display:flex;flex-direction:column;gap:10px}.merchantItem{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px}.merchantIcon{width:52px;height:52px;border:2px solid var(--line);border-radius:10px;padding:5px}.merchantIcon svg{display:block;width:100%;height:100%}.merchantDetails{display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere;min-width:0}.merchantDetails strong{font-size:14px;line-height:1.35}.merchantDetails span{font-size:12px;line-height:1.4;color:var(--muted)}.merchantActions{display:flex;align-items:center;gap:8px}.merchantActions button{font-size:13px;padding:8px 10px;min-height:44px;border-radius:10px}.merchantActions .favoriteButton{min-width:44px;font-size:22px;padding:4px 8px}.favoriteButton[aria-pressed="true"]{color:var(--gold);border-color:var(--gold)}.sellPrices{display:flex;gap:8px;flex-wrap:wrap}.sellPrices>span{display:inline-flex;align-items:center;gap:4px;font-size:12px}.merchantIntro .merchantNote{font-size:12px;line-height:1.5}.huntNote{font-size:13px;line-height:1.5;color:var(--muted);text-align:center;max-width:420px;margin:0}.charPane>.progressPanel{margin:0} @media(max-width:600px){.merchantItem{grid-template-columns:48px minmax(0,1fr);gap:10px}.merchantIcon{width:48px;height:48px}.merchantActions{grid-column:1/-1;justify-content:flex-end}.merchantActions button[data-sell]{min-width:150px}}
 </style>
 </head>
 <body>
@@ -279,12 +280,7 @@ svg.chr{overflow:visible}
       <button id="tabShop" class="tab">Магазин</button>
       <button id="tabDg" class="tab">Данж</button>
     </div>
-    <section class="progressPanel" aria-label="Прогресс персонажа">
-      <div class="progressTop"><strong id="levelLabel">Уровень 1</strong><span id="xpLabel">0 / 100 XP</span></div>
-      <div class="xpBar" id="xpBar" role="progressbar" aria-label="Опыт до следующего уровня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpFill"></i></div>
-      <div class="rankRow"><label for="rankSelect">Сложность</label><select id="rankSelect"><option value="1">Поход · ранг 1</option></select></div>
-      <p id="rankHint"></p>
-    </section>
+    <div id="toast" role="status" aria-live="polite"></div>
     <div class="eventBar" id="eventBar">
       <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
       <button id="evBtn" hidden>Сразиться</button>
@@ -299,12 +295,18 @@ svg.chr{overflow:visible}
         <div class="num" id="num">?</div>
         <div class="label" id="label">Нажми «Крутить»</div>
       </div>
-      <div id="toast" aria-live="polite"></div>
       <div class="fight" id="fight" hidden></div>
       <button id="spin">Крутить</button>
+      <p class="huntNote">Вне боя и данжа каждая прокрутка даёт 5% шанс нападения. Сложность выбирается в «Персонаже».</p>
     </section>
 
     <section class="charPane" id="charPane" hidden>
+    <section class="progressPanel" aria-label="Прогресс персонажа">
+      <div class="progressTop"><strong id="levelLabel">Уровень 1</strong><span id="xpLabel">0 / 100 XP</span></div>
+      <div class="xpBar" id="xpBar" role="progressbar" aria-label="Опыт до следующего уровня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpFill"></i></div>
+      <div class="rankRow"><label for="rankSelect">Сложность</label><select id="rankSelect"><option value="1">Поход · ранг 1</option></select></div>
+      <p id="rankHint"></p>
+    </section>
       <div class="equipWrap">
         <div class="eqCol">
           <div class="slot" id="slotHead" aria-label="Голова: пусто">Голова</div>
@@ -336,7 +338,7 @@ svg.chr{overflow:visible}
       <button id="boardRefresh" class="ghost">Обновить</button>
     </section>
 
-    <section class="shopPane" id="shopPane" hidden><div id="shopBody"></div></section>
+    <section class="shopPane" id="shopPane" hidden><div id="merchantBody"></div><div id="shopBody"></div></section>
     <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
     </div>
   </div>
@@ -483,7 +485,7 @@ svg.chr{overflow:visible}
     for(var i=0;i<TITLES.length;i++){ if(TITLES[i].id===id) return TITLES[i].name; }
     return '';
   }
-  function defaultGame(){return {balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function defaultGame(){return {favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   var saving=false, again=false;
   var gameLoaded=false, loadRetry=0;
@@ -524,7 +526,7 @@ svg.chr{overflow:visible}
     clearTimeout(loadRetry); loadRetry=setTimeout(function(){ if(sess&&!gameLoaded) loadGame(); },5000);
   }
   function saveGame(){
-    if(!game||!sess||!gameLoaded) return Promise.resolve();
+    if(!game||!sess||!gameLoaded||merchantBusy) return Promise.resolve();
     if(saving){again=true; return Promise.resolve();}
     saving=true;
     return token().then(function(t){
@@ -555,12 +557,12 @@ svg.chr{overflow:visible}
         for(var csl in cg){
           if(game.inv.indexOf(cg[csl])<0){ game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; added=true; }
         }
-        game.gm=1; if(g.balanceV!==9)game.balanceV=0; migrateBalance(game);
+        game.gm=1; if(g.balanceV!==9)game.balanceV=0; migrateBalance(game); if(!Number.isFinite(g.eventSlot))delete game.eventSlot; initV11(game);
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
         gameLoaded=true; renderProgress(); saveGame();
       }else if(g===null){
         // в базе правда пусто: новый аккаунт
-        game=defaultGame(); gameLoaded=true; renderChar(); renderCoins(); return saveGame();
+        game=defaultGame(); initV11(game); gameLoaded=true; renderChar(); renderCoins(); return saveGame();
       }else{
         loadFailed();
       }
@@ -572,7 +574,8 @@ svg.chr{overflow:visible}
     clearTimeout(toastTimer); toastTimer=setTimeout(function(){el.textContent='';el.className='';},7000);
   }
   function onSpin(n){
-    if(!game) return;
+    if(!game||!gameLoaded||merchantBusy) return;
+    var wasInCombat=!!(game.fight&&game.fight.on)||dgOn();
     var prev=game.last, c=color(n);
     game.spins++; game.coins=(Number(game.coins)||0)+1; game[c==='green'?'zero':c]++;
     game.blackRun=(c==='black')?game.blackRun+1:0;
@@ -583,6 +586,7 @@ svg.chr{overflow:visible}
     var sn=String(game.seen||''); while(sn.length<37) sn+='0';
     game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
     fightStrike(n); dgStrike(n);
+    if(!wasInCombat)maybeAmbush();
     var got=[];
     TITLES.forEach(function(t){
       if(!game.earned[t.id]&&t.check(n,prev,game,arr)){game.earned[t.id]=true; got.push(t.name);}
@@ -607,7 +611,7 @@ svg.chr{overflow:visible}
     var gear=equipped();
     [['slotHead','head','Голова'],['slotBody','body','Тело'],['slotArms','arms','Руки'],['slotLegs','legs','Ноги']].forEach(function(sl){
       var el=$(sl[0]), id=gear[sl[1]];
-      el.onclick=(game.eq&&game.eq[sl[1]])?function(){delete game.eq[sl[1]]; saveGame(); renderChar();}:null;
+      el.onclick=(game.eq&&game.eq[sl[1]])?function(){if(merchantBusy||!gameLoaded)return;delete game.eq[sl[1]]; saveGame(); renderChar();}:null;
       el.title=(game.eq&&game.eq[sl[1]])?'Нажми, чтобы снять':'';
       if(id){
         var it=ITEMS[id];
@@ -641,6 +645,127 @@ svg.chr{overflow:visible}
       list.appendChild(row);
     });
   }
+  // v11 additions. Keep balanceV=9: existing levels, XP and item IDs are retained.
+  var merchantBusy=false;
+  var SELL_PRICES={common:8,uncommon:20,rare:55,epic:140,legendary:400};
+  var AMBUSH_CHANCE=.05,AMBUSH_REWARD=.4;
+  function initV11(g){
+    if(!Number.isFinite(g.eventSlot))g.eventSlot=g.fight&&g.fight.kind!=='ambush'?Number(g.fight.s)||0:0;
+    if(!g.favorites||typeof g.favorites!=='object'||Array.isArray(g.favorites))g.favorites={};
+    Object.keys(g.favorites).forEach(function(id){if(!ITEMS[id]||g.favorites[id]!==true)delete g.favorites[id];});
+    var f=g.fight;
+    if(f&&f.on&&f.kind==='ambush'&&(!Number.isInteger(f.mid)||f.mid<0||f.mid>=MONSTERS.length||!Number.isFinite(f.deadline))){f.on=false;f.skip=false;}
+  }
+  function foeOfFight(f){
+    if(f.kind==='ambush')return makeMonster(MONSTERS[f.mid],f.r,!!f.elite,false);
+    return foeFor(f.s,f.r);
+  }
+  function maybeAmbush(){
+    if(!game||!gameLoaded||merchantBusy||(game.fight&&game.fight.on)||dgOn())return false;
+    if(Math.random()>=AMBUSH_CHANCE)return false;
+    var rank=selectedRank(),mid=Math.floor(Math.random()*MONSTERS.length),elite=Math.random()<.1;
+    var mo=makeMonster(MONSTERS[mid],rank,elite,false),st=stats();
+    game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:Date.now()+30*60000,r:rank,m:mo.hp,p:st.hp,ph:st.hp,pa:st.atk,on:true,skip:false};
+    fightLog='Внезапное нападение! '+mo.name+'. Бой начнётся со следующей прокрутки. Можно отступить без штрафа.';
+    fightMsg='';fightChest=false;renderProgress();renderFight();renderEvent();
+    toast('На тебя напал '+mo.name+'! Следующая прокрутка — ход боя.');return true;
+  }
+  function saleCounts(g){var out={};(g.inv||[]).forEach(function(id){if(ITEMS[id])out[id]=(out[id]||0)+1;});return out;}
+  function isStarterItem(id){return Object.keys(CLASSES).some(function(cls){return Object.values(gearOf(cls)).indexOf(id)>=0;});}
+  function saleProtected(g,id){return !!(g.favorites&&g.favorites[id])||!ITEMS[id];}
+  function saleAvailable(g,id){
+    if(saleProtected(g,id))return 0;
+    var n=saleCounts(g)[id]||0,it=ITEMS[id];
+    return Math.max(0,n-((g.eq&&g.eq[it.slot]===id)||isStarterItem(id)?1:0));
+  }
+  function salePlan(g,id,duplicates){
+    var counts=saleCounts(g),remove={},total=0,amount=0;
+    Object.keys(counts).forEach(function(key){
+      if(id&&key!==id)return;
+      var n=duplicates?Math.min(saleAvailable(g,key),Math.max(0,counts[key]-1)):Math.min(1,saleAvailable(g,key));
+      if(n>0){remove[key]=n;amount+=n;total+=n*SELL_PRICES[ITEMS[key].r];}
+    });
+    return {remove:remove,total:total,amount:amount};
+  }
+  function applySale(g,plan){
+    var next=JSON.parse(JSON.stringify(g)),left=Object.assign({},plan.remove);
+    next.inv=next.inv.filter(function(id){if(left[id]>0){left[id]--;return false;}return true;});
+    next.coins+=plan.total;return next;
+  }
+  function canonicalGame(v){
+    function clean(x){
+      if(x===null||typeof x==='undefined')return undefined;
+      if(Array.isArray(x)){var a=x.map(clean);return a.length?a:undefined;}
+      if(typeof x==='object'){var o={};Object.keys(x).sort().forEach(function(k){var c=clean(x[k]);if(typeof c!=='undefined')o[k]=c;});return Object.keys(o).length?o:undefined;}
+      return x;
+    }
+    return JSON.stringify(clean(v));
+  }
+  function canSell(){return !!(game&&gameLoaded&&sess&&mySid&&!merchantBusy&&!saving&&!opening&&!spinning&&!(game.fight&&game.fight.on)&&!dgOn());}
+  function setFavorite(id){
+    if(!game||!gameLoaded||merchantBusy||!ITEMS[id])return;
+    if(game.favorites[id])delete game.favorites[id];else game.favorites[id]=true;
+    saveGame();renderMerchant();renderInv();
+  }
+  async function executeSale(id,duplicates){
+    if(!canSell()){toast('Продажа доступна после загрузки и сохранения прогресса, вне боя и прокрутки.');return false;}
+    var plan=salePlan(game,id,duplicates);if(!plan.amount){toast('Нет подходящих предметов для продажи.');return false;}
+    // Escrow is unnecessary for an NPC sale. A conditional whole-game write atomically
+    // exchanges owned inventory for coins and rejects concurrent writes (HTTP 412).
+    var session=sess,local=JSON.parse(JSON.stringify(game));local.v=APP_V;local.sid=mySid;
+    merchantBusy=true;gameLoaded=false;
+    $('mText').textContent='Сохраняем продажу… Не закрывай страницу.';$('mYes').hidden=true;$('mNo').hidden=true;$('modal').hidden=false;
+    try{
+      var t=await token();if(sess!==session)throw Error('Сессия изменилась');
+      var url=gameUrl(t),read=await fetch(url,{headers:{'X-Firebase-ETag':'true'},cache:'no-store'});
+      if(!read.ok)throw Error('Не удалось проверить инвентарь');
+      var server=await read.json(),etag=read.headers.get('ETag');
+      if(!server||!etag)throw Error('Сервер не подтвердил состояние инвентаря');
+      if(canonicalGame(server)!==canonicalGame(local))throw Error('Прогресс изменился. Загружаем актуальное сохранение');
+      plan=salePlan(server,id,duplicates);if(!plan.amount)throw Error('Предметы уже проданы или защищены');
+      var next=applySale(server,plan);next.v=APP_V;next.sid=mySid;
+      var write=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(next)});
+      if(!write.ok)throw Error(write.status===412?'Инвентарь изменился во время продажи':'Продажа не подтверждена сервером');
+      if(sess!==session)return false;
+      game=next;initV11(game);gameLoaded=true;again=false;
+      merchantBusy=false;renderCoins();renderChar();renderMerchant();renderEvent();
+      toast('Продано '+plan.amount+' шт. Получено '+plan.total+' монет.');return true;
+    }catch(e){
+      // A lost response can mean a committed write. Read back instead of retrying
+      // the sale or restoring an old local inventory over the server.
+      merchantBusy=false;again=false;
+      if(sess===session){gameLoaded=false;await loadGame();toast((e&&e.message?e.message:'Не удалось подтвердить продажу')+'. Проверь обновлённый инвентарь.');}
+      return false;
+    }finally{
+      merchantBusy=false;$('mYes').hidden=false;$('mNo').hidden=false;closeModal();
+    }
+  }
+  function confirmSale(id,duplicates){
+    if(!canSell()){toast('Дождись окончания боя, прокрутки или сохранения.');return;}
+    var p=salePlan(game,id,duplicates);if(!p.amount)return;
+    var label=duplicates?'Продать '+p.amount+' дубликатов, оставив минимум по одному экземпляру каждого типа':('Продать «'+ITEMS[id].name+'» (1 шт.)');
+    confirmBox(label+' за '+p.total+' монет? Продажу нельзя отменить. Надетый и последний стартовый экземпляры, а также избранное защищены.','Продать',function(){executeSale(id,duplicates);});
+  }
+  function renderMerchant(){
+    var box=$('merchantBody');if(!box)return;
+    if(!game){box.textContent='Сначала загрузи персонажа.';return;}
+    var counts=saleCounts(game),ids=Object.keys(counts),plan=salePlan(game,null,true);
+    var blocked=merchantBusy||!gameLoaded||opening||spinning||!!(game.fight&&game.fight.on)||dgOn();
+    var h='<div class="card merchantIntro"><h3>Скупщик</h3><p>Продай лишний лут за монеты. Надетый и последний стартовый экземпляры не продаются. Звезда защищает все экземпляры выбранного предмета.</p><div class="sellPrices">';
+    Object.keys(SELL_PRICES).forEach(function(r){h+='<span>'+rarPill(r)+' '+SELL_PRICES[r]+' мон.</span>';});
+    h+='</div><button id="sellDuplicates"'+(blocked||!plan.amount?' disabled':'')+'>Продать дубликаты'+(plan.amount?' · '+plan.total+' мон.':'')+'</button><p class="merchantNote">Массовая продажа оставляет минимум один экземпляр каждого типа. Все продажи подтверждаются отдельно.</p>'+(blocked?'<p class="merchantNote">Торговля недоступна во время боя, прокрутки, открытия сундука или загрузки.</p>':'')+'</div>';
+    if(!ids.length)h+='<div class="card"><p>Инвентарь пуст. Добыча появится после побед над монстрами.</p></div>';
+    else h+='<div class="merchantList">'+ids.map(function(id){
+      var it=ITEMS[id],fav=!!game.favorites[id],available=saleAvailable(game,id),starter=isStarterItem(id);
+      var status=fav?'Избранное · защищено':starter?'Стартовое · оставляем 1 · можно продать: '+available:'Можно продать: '+available;
+      return '<div class="merchantItem"><div class="merchantIcon" style="border-color:'+RARITY[it.r].color+'">'+itemIcon(id)+'</div><div class="merchantDetails"><strong>'+it.name+'</strong><span>'+RARITY[it.r].name+' · '+counts[id]+' шт.</span><span>'+status+'</span></div><div class="merchantActions"><button class="ghost favoriteButton" data-favorite="'+id+'" aria-pressed="'+fav+'" aria-label="'+(fav?'Убрать из избранного: ':'Защитить: ')+it.name+'"'+(merchantBusy?' disabled':'')+'>'+(fav?'★':'☆')+'</button><button data-sell="'+id+'"'+(blocked||!available?' disabled':'')+'>'+(starter&&!available?'Оставить 1':'Продать · '+SELL_PRICES[it.r])+'</button></div></div>';
+    }).join('')+'</div>';
+    box.innerHTML=h;
+    var bulk=$('sellDuplicates');if(bulk)bulk.addEventListener('click',function(){confirmSale(null,true);});
+    box.querySelectorAll('[data-favorite]').forEach(function(b){b.addEventListener('click',function(){setFavorite(b.getAttribute('data-favorite'));});});
+    box.querySelectorAll('[data-sell]').forEach(function(b){b.addEventListener('click',function(){confirmSale(b.getAttribute('data-sell'),false);});});
+  }
+
   /* ---------- монеты ---------- */
   function coinSvg(){
     return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#f6c343" stroke="#2a1f14" stroke-width="1.8"/>'
@@ -664,7 +789,7 @@ svg.chr{overflow:visible}
   function confirmBox(text,yes,cb){
     $('mText').textContent=text; $('mYes').textContent=yes||'Да'; mCb=cb; $('modal').hidden=false; $('mNo').focus();
   }
-  function closeModal(){$('modal').hidden=true; mCb=null;}
+  function closeModal(){if(merchantBusy)return;$('modal').hidden=true; mCb=null;}
   $('mNo').addEventListener('click',closeModal);
   $('mYes').addEventListener('click',function(){var f=mCb; closeModal(); if(f) f();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('modal').hidden) closeModal();});
@@ -706,7 +831,7 @@ svg.chr{overflow:visible}
   }
   // раса меняется сразу, выбрать её самому нельзя
   function openChest(){
-    if(!game||opening||(Number(game.coins)||0)<CHEST_PRICE) return;
+    if(!game||!gameLoaded||merchantBusy||opening||(Number(game.coins)||0)<CHEST_PRICE) return;
     game.coins-=CHEST_PRICE;
     var race=rollRace(), same=(game.race===race.id);
     game.race=race.id;
@@ -719,7 +844,7 @@ svg.chr{overflow:visible}
     },reduceMotion?50:1000);
   }
   function buyClass(id){
-    if(!game||game.cls||(Number(game.coins)||0)<CLASS_PRICE||!CLASSES[id]) return;
+    if(!game||!gameLoaded||merchantBusy||game.cls||(Number(game.coins)||0)<CLASS_PRICE||!CLASSES[id]) return;
     game.coins-=CLASS_PRICE; game.cls=id;
     var cg=gearOf(id);
     for(var sl in cg){ game.inv.push(cg[sl]); game.eq[sl]=cg[sl]; }
@@ -765,6 +890,7 @@ svg.chr{overflow:visible}
     }
     h+='</div>';
     box.innerHTML=h;
+    renderMerchant();
     var ob=$('openChest'); if(ob) ob.addEventListener('click',openChest);
     var btns=box.querySelectorAll('button[data-class]');
     for(var j=0;j<btns.length;j++){
@@ -868,7 +994,7 @@ svg.chr{overflow:visible}
     g.rank=Math.max(1,Math.min(15,Math.floor(Number(g.rank)||1)));
     g.unlockedRank=Math.max(1,Math.min(15,Math.floor(Number(g.unlockedRank)||1)));
   }
-  $('rankSelect').addEventListener('change',function(){if(!game||(game.fight&&game.fight.on)||dgOn())return;game.rank=Number(this.value);renderProgress();renderEvent();renderDg();saveGame();});
+  $('rankSelect').addEventListener('change',function(){if(!game||!gameLoaded||merchantBusy||(game.fight&&game.fight.on)||dgOn())return;game.rank=Number(this.value);renderProgress();renderEvent();renderDg();saveGame();});
 
   var MONSTERS=[
     {id:'goblin',name:'Гоблин',hp:40,dmg:6,rule:'чёрное',hit:function(n){return n>0&&color(n)==='black';}},
@@ -989,13 +1115,13 @@ svg.chr{overflow:visible}
   function renderEvent(){
  var bar=$('eventBar');if(!bar||$('app').hidden)return;
  if(!game){$('evT').textContent='Загружаем персонажа…';$('evS').textContent='Подожди, загружаем сохранение.';$('evBtn').hidden=true;return;}
- var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game&&game.fight,mo=foeFor(slot,f&&f.on?f.r:selectedRank());
- var live=el<EVENT_MS,T,S,btn=false;
- if(f&&f.on){T='Бой: '+mo.name;S=rankName(f.r)+' · характеристики зафиксированы';}
- else if(live){T=mo.name+' · '+rankName(mo.rank);if(f&&f.s===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=!!game&&gameLoaded&&!dgOn();}}
+ var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game.fight;
+ var live=el<EVENT_MS,mo=f&&f.on?foeOfFight(f):foeFor(slot,selectedRank()),T,S,btn=false;
+ if(f&&f.on){T=(f.kind==='ambush'?'Нападение: ':'Бой: ')+mo.name;S=rankName(f.r)+' · '+(f.kind==='ambush'?'награды 40% от события':'характеристики зафиксированы');}
+ else if(live){T=mo.name+' · '+rankName(mo.rank);if(game.eventSlot===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=gameLoaded&&!dgOn()&&!merchantBusy;}}
  else{T='Следующий монстр';S='Через '+fmt(HOUR-el)+' · '+rankName(selectedRank());}
  $('evT').textContent=T;$('evS').textContent=S;$('evBtn').hidden=!btn;
- bar.className='eventBar'+(live?' live':'')+(live&&mo.elite?' elite':'');
+ bar.className='eventBar'+(live||f&&f.on?' live':'')+(mo.elite?' elite':'');
 }
   function renderFight(){
     var box=$('fight'); box.className='fight';
@@ -1003,14 +1129,14 @@ svg.chr{overflow:visible}
     var f=game.fight||{};
     if(dgOn()){renderDgFight(box); return;}
     if(f.on){
-      var mo=foeFor(f.s,f.r), st=battleStats(f);
+      var mo=foeOfFight(f), st=battleStats(f);
       var pm=Math.max(0,Math.min(100,Math.round(f.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(f.p/st.hp*100)));
       box.hidden=false;
       box.className=mo.elite?'fight elite':'fight'; box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+' · '+rankName(mo.rank)+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
         +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+f.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
         +'<div><div class="hpl"><span>Ты</span><span>'+f.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
         +'<div class="flog">'+fightLog+'</div><button id="fFlee" class="ghost">Сбежать</button>';
-      $('fFlee').addEventListener('click',function(){confirmBox('Сбежать из боя? Монеты не потеряются, но 5 минут рядом с ником будет «трус». Этого монстра ты больше не встретишь.','Сбежать',fleeFight);});
+      $('fFlee').addEventListener('click',function(){confirmBox(f.kind==='ambush'?'Отступить? Монеты и опыт сохранятся. Штрафа нет.':'Сбежать из боя? Монеты сохранятся, но 5 минут рядом с ником будет «трус». Этот бой завершится.','Отступить',fleeFight);});
     }else if(fightMsg){
       box.hidden=false;
       box.innerHTML=(fightChest?'<div style="width:84px;margin:0 auto">'+chestSvg()+'</div>':'')+'<div class="flog">'+fightMsg+'</div><button id="fClose" class="ghost">Закрыть</button>';
@@ -1020,11 +1146,11 @@ svg.chr{overflow:visible}
     }
   }
   function startFight(){
- if(!game||!gameLoaded)return;
+ if(!game||!gameLoaded||merchantBusy)return;
  var slot=slotNow(),el=Date.now()-slot*HOUR,f=game.fight;
- if(el>=EVENT_MS||f.on||f.s===slot||dgOn())return;
+ if(el>=EVENT_MS||f.on||game.eventSlot===slot||dgOn())return;
  var rank=selectedRank(),mo=foeFor(slot,rank),st=stats();
- game.fight={s:slot,m:mo.hp,p:st.hp,on:true,skip:false,r:rank,ph:st.hp,pa:st.atk};
+ game.eventSlot=slot;game.fight={s:slot,kind:'event',m:mo.hp,p:st.hp,on:true,skip:false,r:rank,ph:st.hp,pa:st.atk};
  fightLog='Бой начался. '+rankName(rank)+'. Снаряжение и характеристики зафиксированы до конца боя.';fightMsg='';fightChest=false;
  saveGame();renderProgress();renderFight();renderEvent();
 }
@@ -1035,9 +1161,10 @@ svg.chr{overflow:visible}
  renderCoins();renderProgress();
 }
   function fleeFight(){
- var f=game&&game.fight;if(!f||!f.on)return;
- f.on=false;f.skip=false;game.cowardUntil=Date.now()+5*60000;
- fightMsg='Ты сбежал с поля боя. 5 минут тебя будут звать трусом. Монеты и опыт сохранены.';
+ var f=game&&game.fight;if(!f||!f.on||merchantBusy)return;
+ f.on=false;f.skip=false;
+ if(f.kind==='ambush')fightMsg='Ты избежал нападения. Монеты и опыт сохранены, штрафа за отступление нет.';
+ else{game.cowardUntil=Date.now()+5*60000;fightMsg='Ты сбежал с поля боя. 5 минут тебя будут звать трусом. Монеты и опыт сохранены.';}
  saveGame();renderFight();renderEvent();renderChar();
 }
   // один удар по правилам боя: зеро это крит x2, единица это неудача и пропуск хода
@@ -1050,11 +1177,11 @@ svg.chr{overflow:visible}
   }
   function fightStrike(n){
  var f=game&&game.fight;if(!f||!f.on)return;
- var mo=foeFor(f.s,f.r),st=battleStats(f);fightLog=strikeCore(f,mo,st,n);
+ var mo=foeOfFight(f),st=battleStats(f);fightLog=strikeCore(f,mo,st,n);
  if(f.m<=0){
   f.m=0;f.on=false;f.skip=false;
-  var base=rewardBase(mo),coins=rollReward(base.coins),xp=game.level>=LEVEL_CAP?0:rollReward(base.xp*xpFactor(mo.rank));
-  var id=Math.random()<(mo.elite?.7:.4)?rollLoot(mo.rank,false,mo.elite):null;
+  var base=rewardBase(mo),factor=f.kind==='ambush'?AMBUSH_REWARD:1,coins=rollReward(base.coins*factor),xp=game.level>=LEVEL_CAP?0:rollReward(base.xp*xpFactor(mo.rank)*factor);
+  var chance=f.kind==='ambush'?(mo.elite?.35:.2):(mo.elite?.7:.4);var id=Math.random()<chance?rollLoot(mo.rank,false,mo.elite):null;
   game.coins+=coins;if(id)game.inv.push(id);var up=gainXP(xp);
   fightMsg=fightLog+' Победа! +'+coins+' монет · +'+xp+' XP.'+up+(id?' Добыча: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':' Предметов не выпало.');
   if(id){toast('Выпал предмет: '+ITEMS[id].name);$('dot').hidden=false;}else if(up)toast(up);
@@ -1063,9 +1190,10 @@ svg.chr{overflow:visible}
 }
   // если бой не закончен, а час уже сменился, это считается поражением
   function checkAbandon(){
-    var f=game&&game.fight;
-    if(f&&f.on&&f.s!==slotNow()){ loseFight('Бой не был закончен, монстр победил.'); saveGame(); renderFight(); renderEvent(); }
-  }
+ var f=game&&game.fight;if(!f||!f.on||merchantBusy)return;
+ var expired=f.kind==='ambush'?Date.now()>=f.deadline:f.s!==slotNow();
+ if(expired){loseFight('Бой не был закончен, монстр победил.');saveGame();renderFight();renderEvent();}
+}
   $('evBtn').addEventListener('click',function(){
     if(!game||!gameLoaded)return;var mo=foeFor(slotNow(),selectedRank()),b=rewardBase(mo);
     confirmBox('Начать бой: '+mo.name+' · '+rankName(mo.rank)+'? '+mo.hp+' HP / '+mo.dmg+' урона. Награда: '+Math.round(b.coins*.8)+'–'+Math.round(b.coins*1.2)+' монет и '+Math.round(b.xp*xpFactor(mo.rank)*.8)+'–'+Math.round(b.xp*xpFactor(mo.rank)*1.2)+' XP. При поражении: 10% монет, максимум '+lossCap(mo.rank)+'. Зеро — крит x2, единица — пропуск хода.','В бой',function(){startFight();showTab('game');});
@@ -1143,7 +1271,7 @@ svg.chr{overflow:visible}
   function renderDg(){
  var box=$('dgBody');if(!game){box.innerHTML='';return;}
  var coins=Number(game.coins)||0,on=dgOn(),busy=!!(game.fight&&game.fight.on),rank=on?game.dg.r:selectedRank(),price=on?game.dg.fee:dungeonPrice(rank);
- var h='<div class="card"><h3>Данж · '+rankName(rank)+'</h3><p>Три монстра подряд, последний — усиленный хранитель. Между комнатами восстанавливается 25% максимального HP, а не всё здоровье. За каждого врага — опыт и монеты, за полный проход — бонус XP и предмет твоего класса. При гибели или выходе теряется только взнос; уже полученные награды остаются.</p><p>Ранг выбирается над рулеткой. Сила персонажа фиксируется на входе.</p><span class="price">'+coinSvg()+price+'</span>';
+ var h='<div class="card"><h3>Данж · '+rankName(rank)+'</h3><p>Три монстра подряд, последний — усиленный хранитель. Между комнатами восстанавливается 25% максимального HP, а не всё здоровье. За каждого врага — опыт и монеты, за полный проход — бонус XP и предмет твоего класса. При гибели или выходе теряется только взнос; уже полученные награды остаются.</p><p>Ранг выбирается во вкладке «Персонаж». Сила персонажа фиксируется на входе.</p><span class="price">'+coinSvg()+price+'</span>';
  if(on){h+='<p>Комната '+(game.dg.st+1)+' из '+DG_STAGES+'. Бой на вкладке «Рулетка».</p><button id="dgGo">К бою</button>';}
  else{var lab=!game.cls?'Сначала выбери класс':busy?'Сначала закончи бой':coins<price?'Не хватает '+(price-coins)+' монет':'Войти в данж';h+='<button id="dgIn"'+((!gameLoaded||!game.cls||busy||coins<price)?' disabled':'')+'>'+lab+'</button>';}
  h+='</div><div class="card"><h3>Сундук · ранг '+rank+'</h3><p>Редкость зависит от ранга; предмет всегда подходит твоему классу.</p><div class="odds">';
@@ -1548,8 +1676,8 @@ svg.chr{overflow:visible}
       var ok=!it.cls||it.cls===game.cls;
       b.title=itemLine(id)+', '+RARITY[it.r].name+(it.cls?'. Класс: '+CLASSES[it.cls].name:'')+(ok?'. Нажми, чтобы надеть':'. Не твой класс, надеть нельзя');
       if(!ok){b.disabled=true; b.style.opacity='.45';}
-      b.innerHTML=itemIcon(id)+'<span>'+it.name+'</span>'+(it.cls?'<span style="opacity:.75">'+CLASSES[it.cls].name+'</span>':'');
-      b.addEventListener('click',function(){if(it.cls&&it.cls!==game.cls) return; game.eq[it.slot]=id; saveGame(); renderChar();});
+      b.innerHTML=itemIcon(id)+'<span>'+(game.favorites&&game.favorites[id]?'★ ':'')+it.name+'</span>'+(it.cls?'<span style="opacity:.75">'+CLASSES[it.cls].name+'</span>':'');
+      b.addEventListener('click',function(){if(merchantBusy||!gameLoaded)return;if(it.cls&&it.cls!==game.cls) return; game.eq[it.slot]=id; saveGame(); renderChar();});
       box.appendChild(b);
     });
   }
@@ -1825,7 +1953,7 @@ svg.chr{overflow:visible}
   function onSpinClick(e){
     if(!e.isTrusted) return;                       // клик, сделанный скриптом
     if(updating) return;
-    if(!gameLoaded){ toast('Прогресс ещё грузится, подожди секунду.'); return; }
+    if(!gameLoaded||merchantBusy){ toast('Прогресс загружается или сохраняется продажа, подожди.'); return; }
     if(spinning){ deadClick(); return; }           // колесо крутится, а на кнопку жмут
     var now=performance.now();
     if(now<guard.blockedUntil){ toast('Подожди ещё '+Math.ceil((guard.blockedUntil-now)/1000)+' с'); return; }
