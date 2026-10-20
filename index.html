@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="4">
+<meta name="app-version" content="5">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -424,10 +424,10 @@ svg.chr{overflow:visible}
   function start(){
     uid=sess.uid; nick=sess.name;
     $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
-    game=null; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; renderChat(); load(); loadGame();
+    game=null; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); loadGame();
   }
   function logout(){
-    sess=null; game=null; docs=[]; lastSig=''; $('coinBox').hidden=true;
+    sess=null; game=null; docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true;
     try{localStorage.removeItem('roulette_sess');}catch(e){}
     $('app').hidden=true; $('login').hidden=false; setErr('');
   }
@@ -1576,6 +1576,7 @@ svg.chr{overflow:visible}
 
   var msgsEl=$('msgs'), msgIn=$('msgIn'), sendBtn=$('send'), noteEl=$('chatNote');
   var docs=[], lastSig='';
+  var chatMap={}, chatLast='', chatBusy=false;   // чат: что уже скачано и ключ последнего сообщения
   function configured(){return DB_URL.indexOf('ВАШ-ПРОЕКТ')===-1 && API_KEY.indexOf('ВСТАВЬ')===-1;}
   var chatReady=configured();
 
@@ -1607,18 +1608,24 @@ svg.chr{overflow:visible}
   }
 
   function load(){
-    if(!chatReady||!sess||!sess.name||document.hidden) return;
+    if(!chatReady||!sess||!sess.name||document.hidden||chatBusy) return;
+    chatBusy=true;
     token().then(function(t){
-      return fetch(DB_URL+'/chat.json?orderBy=%22%24key%22&limitToLast=100&auth='+encodeURIComponent(t));
+      // первый раз берём последние 100 сообщений, потом только новые (начиная с ключа последнего)
+      var q=chatLast?('startAt=%22'+encodeURIComponent(chatLast)+'%22'):'limitToLast=100';
+      return fetch(DB_URL+'/chat.json?orderBy=%22%24key%22&'+q+'&auth='+encodeURIComponent(t));
     }).then(function(r){return r.json();}).then(function(obj){
       if(!obj||obj.error){ if(obj&&obj.error){noteEl.textContent='Нет доступа к чату: проверь правила в Firebase';} return; }
-      var keys=Object.keys(obj).sort();
-      var sig=keys.length+':'+keys[keys.length-1];
+      for(var k in obj) chatMap[k]=obj[k];
+      var keys=Object.keys(chatMap).sort();
+      if(keys.length>100){ keys.slice(0,keys.length-100).forEach(function(x){delete chatMap[x];}); keys=keys.slice(-100); }
+      chatLast=keys[keys.length-1]||'';
+      var sig=keys.length+':'+chatLast;
       if(sig===lastSig) return;
       lastSig=sig;
-      docs=keys.map(function(k){return obj[k];}).filter(function(m){return m&&m.kind!=='spin';});
+      docs=keys.map(function(k){return chatMap[k];}).filter(function(m){return m&&m.kind!=='spin';});
       renderChat();
-    }).catch(function(){});
+    }).catch(function(){}).then(function(){ chatBusy=false; });
   }
 
   function post(fields){
