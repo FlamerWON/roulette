@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="2">
+<meta name="app-version" content="4">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -38,7 +38,7 @@ h1{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-weight:40
 button,input{font:inherit}
 button{font-weight:700;cursor:pointer;border:0;border-radius:999px;background:var(--gold);color:#1b1405;padding:12px 30px;font-size:17px}
 button:hover:not(:disabled){filter:brightness(1.06)}
-button:disabled{opacity:.55;cursor:default}
+button:disabled,#spin.busy{opacity:.55;cursor:default}
 button:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 input{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px;min-width:0}
 
@@ -1408,7 +1408,7 @@ svg.chr{overflow:visible}
   }
   function spin(){
     if(spinning) return;
-    spinning=true; btn.disabled=true; labelEl.textContent='Крутится…';
+    spinning=true; btn.classList.add('busy'); btn.setAttribute('aria-disabled','true'); guard.deadNow=0; guard.deadT=[]; labelEl.textContent='Крутится…';
     var k=Math.floor(Math.random()*N), jitter=(Math.random()-.5)*SEG*0.7, start=rot;
     var base=((-k*SEG+jitter)-start)%TAU; if(base<0) base+=TAU;
     var target=start+(5+Math.floor(Math.random()*3))*TAU+base;
@@ -1417,7 +1417,7 @@ svg.chr{overflow:visible}
       var t=Math.min(1,(now-t0)/dur);
       rot=start+(target-start)*ease(t); draw();
       if(t<1) requestAnimationFrame(frame);
-      else{rot=target; spinning=false; btn.disabled=false; guard.freeAt=performance.now(); show(ORDER[k]);}
+      else{rot=target; spinning=false; btn.classList.remove('busy'); btn.removeAttribute('aria-disabled'); guard.freeAt=performance.now(); endSpinGuard(); show(ORDER[k]);}
     }
     requestAnimationFrame(frame);
   }
@@ -1426,11 +1426,16 @@ svg.chr{overflow:visible}
   var G_MIN_SAMPLES=8;      // сколько последних кликов анализируем
   var G_SD_STRICT=30;       // разброс времени реакции (мс) меньше этого = робот
   var G_SD_SOFT=60;         // меньше этого И клик в одну и ту же точку = робот
-  var G_EVERY=[40,80];      // проверка «ты человек?» раз в столько прокрутов (случайно)
+  var G_EVERY=[25,50];      // проверка «ты человек?» раз в столько прокрутов (случайно)
+  var G_RECHECK=[6,12];     // если подозрение было — следующая проверка через столько прокрутов
+  var G_TELEPORT=4;         // сколько «телепортов» мыши из последних 8 кликов = робот
+  var G_DEAD_ONE=12;        // столько нажатий за ОДИН прокрут, пока колесо крутится = робот
+  var G_DEAD_SPINS=3;       // столько прокрутов из последних 5 с 3+ пустыми нажатиями = робот
+  var G_HOLD_MAX=20;        // если все нажатия короче (мс) — робот (человек держит кнопку дольше)
   var G_FIRST=[10,30];      // первая проверка после загрузки страницы
   var G_BLOCK_MS=30000;     // штраф за провал проверки (растёт с каждым провалом)
   function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-  var guard={freeAt:0,rts:[],pts:[],count:0,nextAt:rnd(G_FIRST[0],G_FIRST[1]),blockedUntil:0,fails:0,asking:false};
+  var guard={freeAt:0,rts:[],pts:[],jumps:[],holds:[],tpts:[],deadNow:0,deadT:[],deadHist:[],force:false,ptype:'',downAt:0,lastPt:'',moves:0,suspect:false,count:0,nextAt:rnd(G_FIRST[0],G_FIRST[1]),blockedUntil:0,fails:0,asking:false};
 
   function sdOf(a){
     var m=0,i; for(i=0;i<a.length;i++) m+=a[i]; m/=a.length;
@@ -1439,19 +1444,56 @@ svg.chr{overflow:visible}
   }
   // человек каждый раз нажимает чуть по-разному, автокликер — как часы
   function looksLikeBot(){
-    if(guard.rts.length<G_MIN_SAMPLES) return false;
-    var sd=sdOf(guard.rts);
-    if(sd<G_SD_STRICT) return true;
-    var same=guard.pts.length>=G_MIN_SAMPLES && guard.pts.every(function(x){return x===guard.pts[0];});
-    return same && sd<G_SD_SOFT;
+    // 1) время реакции как часы
+    if(guard.rts.length>=G_MIN_SAMPLES){
+      var sd=sdOf(guard.rts);
+      if(sd<G_SD_STRICT) return true;
+      var same=guard.pts.length>=G_MIN_SAMPLES && guard.pts.every(function(x){return x===guard.pts[0];});
+      if(same && sd<G_SD_SOFT) return true;
+    }
+    // 2) «телепорт» курсора: поменял точку клика, а по дороге почти нет движений мыши
+    var tp=guard.jumps.filter(function(j){return j;}).length;
+    if(guard.jumps.length>=G_MIN_SAMPLES && tp>=G_TELEPORT) return true;
+    // 2.5) тач: палец не попадает в один и тот же пиксель 8 раз подряд
+    if(guard.tpts.length>=G_MIN_SAMPLES){
+      var xs=guard.tpts.map(function(q){return q[0];}), ys=guard.tpts.map(function(q){return q[1];});
+      var spread=Math.max(Math.max.apply(null,xs)-Math.min.apply(null,xs), Math.max.apply(null,ys)-Math.min.apply(null,ys));
+      if(spread<=1) return true;
+    }
+    // 3) нажатие слишком короткое и всегда одинаковое
+    if(guard.holds.length>=G_MIN_SAMPLES){
+      var mx=Math.max.apply(null,guard.holds);
+      if(mx<G_HOLD_MAX || sdOf(guard.holds)<4) return true;
+    }
+    return false;
   }
+  // пустые нажатия: колесо ещё крутится, а на кнопку уже жмут
+  function flagBot(){ guard.suspect=true; guard.force=true; }
+  function deadClick(){
+    var now=performance.now();
+    guard.deadNow++; guard.deadT.push(now); guard.deadT=guard.deadT.slice(-6);
+    if(guard.deadNow>=G_DEAD_ONE){ flagBot(); return; }
+    if(guard.deadT.length>=6){
+      var ints=[]; for(var i=1;i<guard.deadT.length;i++) ints.push(guard.deadT[i]-guard.deadT[i-1]);
+      if(sdOf(ints)<25) flagBot();      // ровные тычки как часы
+    }
+  }
+  function endSpinGuard(){
+    guard.deadHist.push(guard.deadNow); guard.deadHist=guard.deadHist.slice(-5);
+    guard.deadNow=0; guard.deadT=[];
+    var many=guard.deadHist.filter(function(n){return n>=3;}).length;
+    if(many>=G_DEAD_SPINS) flagBot();
+  }
+  // следим за мышью: сколько раз она двигалась между кликами
+  document.addEventListener('pointermove',function(e){ if(e.pointerType==='mouse') guard.moves++; },{passive:true});
+  btn.addEventListener('pointerdown',function(e){ guard.ptype=e.pointerType||''; guard.downAt=(e.pointerType==='mouse')?performance.now():0; });
   function closeAsk(){ $('cmodal').hidden=true; guard.asking=false; }
   function ask(){
     if(guard.asking) return;
     guard.asking=true;
     var box=$('cbox'); box.innerHTML='';
-    var target=rnd(1,9), nums=[target];
-    while(nums.length<5){ var x=rnd(1,9); if(nums.indexOf(x)<0) nums.push(x); }
+    var target=rnd(1,20), nums=[target];
+    while(nums.length<6){ var x=rnd(1,20); if(nums.indexOf(x)<0) nums.push(x); }
     nums.sort(function(){return Math.random()-.5;});
     var p=document.createElement('p'); p.textContent='Проверка: нажми число '+target+', чтобы продолжить.';
     var row=document.createElement('div'); row.className='cq';
@@ -1460,10 +1502,11 @@ svg.chr{overflow:visible}
       b.addEventListener('click',function(e){
         if(!e.isTrusted) return;
         if(v===target){
-          guard.count=0; guard.nextAt=rnd(G_EVERY[0],G_EVERY[1]); guard.rts=[]; guard.pts=[];
+          guard.count=0; guard.nextAt=guard.suspect?rnd(G_RECHECK[0],G_RECHECK[1]):rnd(G_EVERY[0],G_EVERY[1]); guard.suspect=false; guard.force=false;
+          guard.rts=[]; guard.pts=[]; guard.jumps=[]; guard.holds=[]; guard.tpts=[]; guard.deadHist=[];
           closeAsk(); spin();
         }else{
-          guard.fails++; guard.count=0; guard.rts=[]; guard.pts=[];
+          guard.fails++; guard.count=0; guard.force=false; guard.rts=[]; guard.pts=[]; guard.jumps=[]; guard.holds=[]; guard.tpts=[]; guard.deadHist=[]; guard.nextAt=rnd(G_RECHECK[0],G_RECHECK[1]);
           guard.blockedUntil=performance.now()+G_BLOCK_MS*guard.fails;
           closeAsk(); toast('Не то число. Подожди '+Math.round(G_BLOCK_MS*guard.fails/1000)+' с.');
         }
@@ -1475,13 +1518,26 @@ svg.chr{overflow:visible}
   }
   function onSpinClick(e){
     if(!e.isTrusted) return;                       // клик, сделанный скриптом
+    if(updating) return;
+    if(spinning){ deadClick(); return; }           // колесо крутится, а на кнопку жмут
     var now=performance.now();
     if(now<guard.blockedUntil){ toast('Подожди ещё '+Math.ceil((guard.blockedUntil-now)/1000)+' с'); return; }
     if(guard.freeAt) guard.rts.push(now-guard.freeAt);
     if(e.detail>0) guard.pts.push(e.clientX+','+e.clientY);   // мышь или тач, не клавиатура
+    var type=e.pointerType||guard.ptype;
+    if(type==='touch'&&e.detail>0){ guard.tpts.push([e.clientX,e.clientY]); guard.tpts=guard.tpts.slice(-G_MIN_SAMPLES); }
+    if(type==='mouse'&&e.detail>0){
+      var pt=e.clientX+','+e.clientY;
+      if(guard.lastPt) guard.jumps.push(pt!==guard.lastPt && guard.moves<=2);
+      guard.lastPt=pt; guard.moves=0;
+      if(guard.downAt) guard.holds.push(now-guard.downAt);
+    }
     guard.rts=guard.rts.slice(-G_MIN_SAMPLES); guard.pts=guard.pts.slice(-G_MIN_SAMPLES);
+    guard.jumps=guard.jumps.slice(-G_MIN_SAMPLES); guard.holds=guard.holds.slice(-G_MIN_SAMPLES);
     guard.count++;
-    if(guard.count>=guard.nextAt||looksLikeBot()){ ask(); return; }
+    var bot=looksLikeBot();
+    if(bot) guard.suspect=true;
+    if(guard.count>=guard.nextAt||bot||guard.force){ ask(); return; }
     spin();
   }
   /* ---------- принудительное обновление ---------- */
@@ -1490,7 +1546,7 @@ svg.chr{overflow:visible}
   var updating=false;
   function showUpdate(){
     if(updating) return; updating=true;
-    btn.disabled=true; guard.blockedUntil=Infinity;
+    btn.classList.add('busy'); guard.blockedUntil=Infinity;
     $('umodal').hidden=false;
     setTimeout(function(){location.reload();},6000);
   }
