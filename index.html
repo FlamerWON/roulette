@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="8">
+<meta name="app-version" content="9">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -238,6 +238,11 @@ svg.chr{overflow:visible}
   .rightCol{order:-1}
   .chat{height:420px}
 }
+.progressPanel{width:100%;max-width:520px;margin:0 auto 16px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-sizing:border-box}
+.progressTop{display:flex;justify-content:space-between;gap:8px;font-size:14px;align-items:center}.progressTop span{color:var(--muted);font-variant-numeric:tabular-nums}
+.xpBar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:9px 0 12px}.xpBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#477b58,#b8892f);transition:width .3s}
+.rankRow{display:flex;align-items:center;gap:12px}.rankRow label{font-size:13px;color:var(--muted)}.rankRow select{min-width:0;flex:1;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px}
+.progressPanel p{font-size:12px;line-height:1.5;color:var(--muted);margin:8px 0 0}.rankRow select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}@media(prefers-reduced-motion:reduce){.xpBar i{transition:none}}
 </style>
 </head>
 <body>
@@ -274,6 +279,12 @@ svg.chr{overflow:visible}
       <button id="tabShop" class="tab">Магазин</button>
       <button id="tabDg" class="tab">Данж</button>
     </div>
+    <section class="progressPanel" aria-label="Прогресс персонажа">
+      <div class="progressTop"><strong id="levelLabel">Уровень 1</strong><span id="xpLabel">0 / 100 XP</span></div>
+      <div class="xpBar" id="xpBar" role="progressbar" aria-label="Опыт до следующего уровня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpFill"></i></div>
+      <div class="rankRow"><label for="rankSelect">Сложность</label><select id="rankSelect"><option value="1">Поход · ранг 1</option></select></div>
+      <p id="rankHint"></p>
+    </section>
     <div class="eventBar" id="eventBar">
       <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
       <button id="evBtn" hidden>Сразиться</button>
@@ -472,7 +483,7 @@ svg.chr{overflow:visible}
     for(var i=0;i<TITLES.length;i++){ if(TITLES[i].id===id) return TITLES[i].name; }
     return '';
   }
-  function defaultGame(){return {spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function defaultGame(){return {balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   var saving=false, again=false;
   var gameLoaded=false, loadRetry=0;
@@ -544,9 +555,9 @@ svg.chr{overflow:visible}
         for(var csl in cg){
           if(game.inv.indexOf(cg[csl])<0){ game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; added=true; }
         }
-        game.gm=1; if(added) saveGame();
+        game.gm=1; if(g.balanceV!==9)game.balanceV=0; migrateBalance(game);
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
-        gameLoaded=true;
+        gameLoaded=true; renderProgress(); saveGame();
       }else if(g===null){
         // в базе правда пусто: новый аккаунт
         game=defaultGame(); gameLoaded=true; renderChar(); renderCoins(); return saveGame();
@@ -585,6 +596,7 @@ svg.chr{overflow:visible}
   }
   function renderChar(){
     if(!game) return;
+    renderProgress();
     $('charName').textContent=nameOf(nick,game.cowardUntil);
     $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title,game.race,equipped());
     $('charTitle').textContent=titleName(game.title)||'Новичок';
@@ -765,7 +777,99 @@ svg.chr{overflow:visible}
   $('shopBody').style.display='flex'; $('shopBody').style.flexDirection='column'; $('shopBody').style.gap='14px';
 
   /* ---------- событие раз в час и бой с монстром ---------- */
-  var HOUR=30*60000, EVENT_MS=10*60000, WIN_MIN=100, WIN_MAX=300, LOSE_SHARE=0.7;
+  var HOUR=30*60000, EVENT_MS=10*60000;
+  // Balance v9. Pure numeric helpers are shared by gameplay and simulation tests.
+  var LEVEL_CAP=100;
+  var RANK_LEVELS=[1,4,8,13,19,27];
+  var RANK_POWER=[0,1600,4000,8500,15500,24000];
+  var RANK_NAMES=['Поход','Охота','Ветеран','Герой','Легенда','Кошмар'];
+  function xpNeed(level){return 100+35*(level-1)+5*(level-1)*(level-1);}
+  function rankLevel(rank){return rank<=6?RANK_LEVELS[rank-1]:27+(rank-6)*8;}
+  function rankName(rank){return (RANK_NAMES[rank-1]||'Кошмар '+(rank-5))+' · ранг '+rank;}
+  function rankHP(rank){var a=[1,1.9,3.1,4.7,6.8,9.5];return rank<=6?a[rank-1]:9.5*(1+.07*(rank-6));}
+  function rankDMG(rank){var a=[1,1.3,1.7,2.2,2.9,3.7];return rank<=6?a[rank-1]:3.7*(1+.05*(rank-6));}
+  function maxRank(){
+    if(!game)return 1;
+    var st=stats(),power=st.hp*st.atk, r=1;
+    for(var k=2;k<=15;k++)if(game.level>=rankLevel(k)||(k<=6&&power>=RANK_POWER[k-1]))r=k;
+    return Math.max(r,Math.min(15,Math.floor(Number(game.unlockedRank)||1)));
+  }
+  function selectedRank(){return Math.max(1,Math.min(maxRank(),Math.floor(Number(game.rank)||1)));}
+  function healBetween(hp,max){return Math.min(max,hp+Math.round(max*.25));}
+  function battleStats(f){return {hp:f.ph,atk:f.pa};}
+  function makeMonster(base,rank,elite,boss,dungeon){
+    // Normalize HP for wheel hit conditions; 0 and 1 are handled separately.
+    var hits=0;for(var n=2;n<=36;n++)if(base.hit(n))hits++;
+    var hp=Math.round(base.hp*rankHP(rank)*(hits+2)/20*(elite?1.4:1)*(boss?1.25:1)*(dungeon?.75:1));
+    var dmg=Math.max(1,Math.round(base.dmg*rankDMG(rank)*(elite?1.2:1)*(boss?1.15:1)*(dungeon?.8:1)));
+    return {id:base.id,name:(boss?'Хранитель: ':elite?'Элитный ':'')+base.name,hp:hp,dmg:dmg,rule:base.rule,hit:base.hit,elite:!!elite,boss:!!boss,rank:rank};
+  }
+  function rewardBase(mo){
+    var weight={goblin:1,kobold:.9,slime:1,skeleton:1.15,wolf:1.2,ogre:1.45,bat:1.05,spider:1.15,mummy:1.15,troll:1.2,knight:1.35,lich:1.15}[mo.id]||1;
+    var special=(mo.elite?1.6:1)*(mo.boss?1.35:1);
+    return {xp:Math.round(45*Math.pow(mo.rank,1.65)*weight*special),coins:Math.round(180*Math.pow(mo.rank,.72)*weight*special)};
+  }
+  function rollReward(base){return Math.max(1,Math.round(base*(.8+Math.random()*.4)));}
+  function xpFactor(rank){
+    var gap=0;for(var k=1;k<=15;k++)if(game.level>=rankLevel(k))gap=Math.max(gap,k-rank);
+    return Math.max(.15,Math.pow(.65,gap));
+  }
+  function gainXP(amount){
+    if(game.level>=LEVEL_CAP)return '';
+    var before=game.level;game.xp+=Math.max(0,Math.floor(amount));
+    while(game.level<LEVEL_CAP&&game.xp>=xpNeed(game.level)){game.xp-=xpNeed(game.level);game.level++;}
+    if(game.level>=LEVEL_CAP)game.xp=0;
+    renderProgress();return game.level>before?' Уровень повышен: '+before+' → '+game.level+'!':'';
+  }
+  function lossCap(rank){return 30*rank;}
+  function dungeonPrice(rank){return Math.round(150*Math.pow(rank,1.15));}
+  function lootWeights(rank,dungeon){
+    var rows=[[60,32,8,0,0],[45,35,18,2,0],[28,38,29,4,1],[15,33,41,9,2],[7,25,47,17,4],[2,18,48,25,7]];
+    var v=rows[Math.min(rank,6)-1].slice();
+    if(dungeon){var shift=Math.min(v[0],10);v[0]-=shift;v[2]+=shift;}
+    return ['common','uncommon','rare','epic','legendary'].map(function(r,i){return [r,v[i]];});
+  }
+  function rollLoot(rank,dungeon,elite){
+    var w=lootWeights(rank,dungeon),x=Math.random()*100,acc=0,r='common';
+    if(elite){var add=Math.min(w[0][1],10);w[0][1]-=add;w[3][1]+=add;}
+    for(var i=0;i<w.length;i++){acc+=w[i][1];if(x<acc){r=w[i][0];break;}}
+    var pool=Object.keys(ITEMS).filter(function(id){var it=ITEMS[id];return it.drop&&it.r===r&&(!game.cls||it.cls===game.cls);});
+    return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+  }
+  function renderProgress(){
+    if(!game)return;
+    game.unlockedRank=maxRank();game.rank=selectedRank();
+    var need=xpNeed(game.level),pct=game.level>=LEVEL_CAP?100:Math.min(100,game.xp/need*100);
+    $('levelLabel').textContent='Уровень '+game.level;
+    $('xpLabel').textContent=game.level>=LEVEL_CAP?'Максимальный уровень':game.xp+' / '+need+' XP';
+    $('xpFill').style.width=pct+'%';
+    var bar=$('xpBar');bar.setAttribute('aria-valuemax',game.level>=LEVEL_CAP?1:need);bar.setAttribute('aria-valuenow',game.level>=LEVEL_CAP?1:game.xp);
+    var select=$('rankSelect'),sig=maxRank()+':'+game.rank;
+    if(select.dataset.sig!==sig){select.innerHTML='';for(var r=1;r<=maxRank();r++){var o=document.createElement('option');o.value=r;o.textContent=rankName(r);o.selected=r===game.rank;select.appendChild(o);}select.dataset.sig=sig;}
+    select.disabled=!gameLoaded||!!(game.fight&&game.fight.on)||dgOn();
+    var next=maxRank()+1,info='Опыт за победы · +4 HP за уровень · +1 урона каждые 3 уровня. Сила врагов не зависит от надетого шмота.';
+    if(xpFactor(game.rank)<1)info+=' XP этого ранга: '+Math.round(xpFactor(game.rank)*100)+'% (перерос противников).';
+    if(next<=15)info+=' Следующий ранг: уровень '+rankLevel(next)+(next<=6?' или сила '+RANK_POWER[next-1]+' (HP × урон).':'.');
+    $('rankHint').textContent=info;
+  }
+  function migrateBalance(g){
+    // Historical victories were not tracked. Existing equipment is kept; no invented XP.
+    if(g.balanceV!==9){
+      if(g.dg&&g.dg.on)g.coins=(Number(g.coins)||0)+DG_PRICE;
+      g.fight={s:0,m:0,p:0,on:false,skip:false};delete g.dg;
+      g.level=1;g.xp=0;g.rank=1;g.unlockedRank=1;g.balanceV=9;
+    }
+    if(g.fight&&g.fight.on&&(!Number.isFinite(g.fight.ph)||!Number.isFinite(g.fight.pa)||!Number.isFinite(g.fight.r))){g.fight.on=false;g.fight.skip=false;}
+    if(g.dg&&g.dg.on&&(!Number.isFinite(g.dg.ph)||!Number.isFinite(g.dg.pa)||!Number.isFinite(g.dg.r))){g.coins+=Number(g.dg.fee)||150;delete g.dg;}
+    g.level=Math.max(1,Math.min(LEVEL_CAP,Math.floor(Number(g.level)||1)));
+    g.xp=Math.max(0,Math.floor(Number(g.xp)||0));
+    while(g.level<LEVEL_CAP&&g.xp>=xpNeed(g.level)){g.xp-=xpNeed(g.level);g.level++;}
+    if(g.level===LEVEL_CAP)g.xp=0;
+    g.rank=Math.max(1,Math.min(15,Math.floor(Number(g.rank)||1)));
+    g.unlockedRank=Math.max(1,Math.min(15,Math.floor(Number(g.unlockedRank)||1)));
+  }
+  $('rankSelect').addEventListener('change',function(){if(!game||(game.fight&&game.fight.on)||dgOn())return;game.rank=Number(this.value);renderProgress();renderEvent();renderDg();saveGame();});
+
   var MONSTERS=[
     {id:'goblin',name:'Гоблин',hp:40,dmg:6,rule:'чёрное',hit:function(n){return n>0&&color(n)==='black';}},
     {id:'kobold',name:'Кобольд',hp:35,dmg:5,rule:'красное',hit:function(n){return n>0&&color(n)==='red';}},
@@ -777,10 +881,7 @@ svg.chr{overflow:visible}
   function monsterFor(slot){return MONSTERS[hashStr('m'+slot)%MONSTERS.length];}
   // элитный монстр: шанс 10%, у каждого игрока свой; вдвое больше здоровья и урона
   function eliteFor(slot){return !!(sess&&(hashStr('e'+sess.uid+':'+slot)%100)<10);}
-  function foeFor(slot){
-    var b=monsterFor(slot), e=eliteFor(slot), k=e?2:1;
-    return {id:b.id,name:(e?'Элитный ':'')+b.name,hp:b.hp*k,dmg:b.dmg*k,rule:b.rule,hit:b.hit,elite:e};
-  }
+  function foeFor(slot,rank){return makeMonster(monsterFor(slot),rank||selectedRank(),eliteFor(slot),false);}
   function slotNow(){return Math.floor(Date.now()/HOUR);}
   function fmt(ms){var t=Math.max(0,Math.ceil(ms/1000)), m=Math.floor(t/60), r=t%60; return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;}
   var fightLog='', fightMsg='', fightChest=false;
@@ -886,30 +987,25 @@ svg.chr{overflow:visible}
   }
 
   function renderEvent(){
-    var bar=$('eventBar'); if(!bar||$('app').hidden) return;
-    var now=Date.now(), slot=Math.floor(now/HOUR), el=now-slot*HOUR, mo=foeFor(slot);
-    var live=el<EVENT_MS, f=game&&game.fight, T, S, btn=false;
-    if(live){
-      T='Событие: '+mo.name;
-      if(f&&f.on&&f.s===slot) S='Бой идёт';
-      else if(f&&f.s===slot) S='Ты уже сразился с этим монстром';
-      else{ S='Монстр уйдёт через '+fmt(EVENT_MS-el); btn=!!game&&!dgOn(); }
-    }else{
-      T='Следующий монстр'; S='Появится через '+fmt(HOUR-el);
-    }
-    $('evT').textContent=T; $('evS').textContent=S; $('evBtn').hidden=!btn;
-    bar.className='eventBar'+(live?' live':'')+(live&&mo.elite?' elite':'');
-  }
+ var bar=$('eventBar');if(!bar||$('app').hidden)return;
+ var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game&&game.fight,mo=foeFor(slot,f&&f.on?f.r:selectedRank());
+ var live=el<EVENT_MS,T,S,btn=false;
+ if(f&&f.on){T='Бой: '+mo.name;S=rankName(f.r)+' · характеристики зафиксированы';}
+ else if(live){T=mo.name+' · '+rankName(mo.rank);if(f&&f.s===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=!!game&&gameLoaded&&!dgOn();}}
+ else{T='Следующий монстр';S='Через '+fmt(HOUR-el)+' · '+rankName(selectedRank());}
+ $('evT').textContent=T;$('evS').textContent=S;$('evBtn').hidden=!btn;
+ bar.className='eventBar'+(live?' live':'')+(live&&mo.elite?' elite':'');
+}
   function renderFight(){
     var box=$('fight'); box.className='fight';
     if(!game){box.hidden=true;return;}
     var f=game.fight||{};
     if(dgOn()){renderDgFight(box); return;}
     if(f.on){
-      var mo=foeFor(f.s), st=stats();
+      var mo=foeFor(f.s,f.r), st=battleStats(f);
       var pm=Math.max(0,Math.min(100,Math.round(f.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(f.p/st.hp*100)));
       box.hidden=false;
-      box.className=mo.elite?'fight elite':'fight'; box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
+      box.className=mo.elite?'fight elite':'fight'; box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+' · '+rankName(mo.rank)+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
         +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+f.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
         +'<div><div class="hpl"><span>Ты</span><span>'+f.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
         +'<div class="flog">'+fightLog+'</div><button id="fFlee" class="ghost">Сбежать</button>';
@@ -923,26 +1019,26 @@ svg.chr{overflow:visible}
     }
   }
   function startFight(){
-    if(!game) return;
-    var slot=slotNow(), el=Date.now()-slot*HOUR, f=game.fight;
-    if(el>=EVENT_MS||f.on||f.s===slot||dgOn()) return;
-    var mo=foeFor(slot), st=stats();
-    game.fight={s:slot,m:mo.hp,p:st.hp,on:true};
-    fightLog='Бой начался. Крути колесо!'; fightMsg='';
-    saveGame(); renderFight(); renderEvent();
-  }
+ if(!game||!gameLoaded)return;
+ var slot=slotNow(),el=Date.now()-slot*HOUR,f=game.fight;
+ if(el>=EVENT_MS||f.on||f.s===slot||dgOn())return;
+ var rank=selectedRank(),mo=foeFor(slot,rank),st=stats();
+ game.fight={s:slot,m:mo.hp,p:st.hp,on:true,skip:false,r:rank,ph:st.hp,pa:st.atk};
+ fightLog='Бой начался. '+rankName(rank)+'. Снаряжение и характеристики зафиксированы до конца боя.';fightMsg='';fightChest=false;
+ saveGame();renderProgress();renderFight();renderEvent();
+}
   function loseFight(prefix){
-    var lost=Math.floor((Number(game.coins)||0)*LOSE_SHARE);
-    game.coins-=lost; game.fight.on=false;
-    fightMsg=prefix+' Потеряно 70% монет: −'+lost+'.';
-    renderCoins();
-  }
+ var rank=game.fight.r||1,lost=Math.min(Math.floor((Number(game.coins)||0)*.1),lossCap(rank));
+ game.coins-=lost;game.fight.on=false;game.fight.skip=false;
+ fightMsg=prefix+' Потеряно '+lost+' монет (10% кошелька, не больше '+lossCap(rank)+'). Опыт сохранён.';
+ renderCoins();renderProgress();
+}
   function fleeFight(){
-    var f=game&&game.fight; if(!f||!f.on) return;
-    f.on=false; f.skip=false; game.cowardUntil=Date.now()+5*60000;
-    fightMsg='Ты сбежал с поля боя. 5 минут тебя будут звать трусом.';
-    saveGame(); renderFight(); renderEvent(); renderChar();
-  }
+ var f=game&&game.fight;if(!f||!f.on)return;
+ f.on=false;f.skip=false;game.cowardUntil=Date.now()+5*60000;
+ fightMsg='Ты сбежал с поля боя. 5 минут тебя будут звать трусом. Монеты и опыт сохранены.';
+ saveGame();renderFight();renderEvent();renderChar();
+}
   // один удар по правилам боя: зеро это крит x2, единица это неудача и пропуск хода
   function strikeCore(f,mo,st,n){
     if(f.skip){ f.skip=false; f.p-=mo.dmg; return 'Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.'; }
@@ -952,28 +1048,26 @@ svg.chr{overflow:visible}
     f.p-=mo.dmg; return 'Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
   }
   function fightStrike(n){
-    var f=game&&game.fight; if(!f||!f.on) return;
-    var mo=foeFor(f.s), st=stats();
-    fightLog=strikeCore(f,mo,st,n);
-    if(f.m<=0){
-      f.m=0; f.on=false; f.skip=false;
-      var rew=WIN_MIN+Math.floor(Math.random()*(WIN_MAX-WIN_MIN+1)), id=(Math.random()<0.5)?null:dropItem(mo.elite);
-      game.coins+=rew; if(id) game.inv.push(id);
-      fightMsg=fightLog+' Победа! Награда: '+rew+' монет.'+(id?' Добыча: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':' Предметов не выпало.');
-      if(id){toast('Выпал предмет: '+ITEMS[id].name); $('dot').hidden=false;}
-      renderCoins();
-    }else if(f.p<=0){
-      f.p=0; f.skip=false; loseFight(fightLog+' Ты погиб.');
-    }
-  }
+ var f=game&&game.fight;if(!f||!f.on)return;
+ var mo=foeFor(f.s,f.r),st=battleStats(f);fightLog=strikeCore(f,mo,st,n);
+ if(f.m<=0){
+  f.m=0;f.on=false;f.skip=false;
+  var base=rewardBase(mo),coins=rollReward(base.coins),xp=game.level>=LEVEL_CAP?0:rollReward(base.xp*xpFactor(mo.rank));
+  var id=Math.random()<(mo.elite?.7:.4)?rollLoot(mo.rank,false,mo.elite):null;
+  game.coins+=coins;if(id)game.inv.push(id);var up=gainXP(xp);
+  fightMsg=fightLog+' Победа! +'+coins+' монет · +'+xp+' XP.'+up+(id?' Добыча: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':' Предметов не выпало.');
+  if(id){toast('Выпал предмет: '+ITEMS[id].name);$('dot').hidden=false;}else if(up)toast(up);
+  renderCoins();renderProgress();
+ }else if(f.p<=0){f.p=0;f.skip=false;loseFight(fightLog+' Ты погиб.');}
+}
   // если бой не закончен, а час уже сменился, это считается поражением
   function checkAbandon(){
     var f=game&&game.fight;
     if(f&&f.on&&f.s!==slotNow()){ loseFight('Бой не был закончен, монстр победил.'); saveGame(); renderFight(); renderEvent(); }
   }
   $('evBtn').addEventListener('click',function(){
-    var mo=foeFor(slotNow());
-    confirmBox('Начать бой с монстром «'+mo.name+'»? Если погибнешь, потеряешь 70% монет. За победу дают от '+WIN_MIN+' до '+WIN_MAX+' монет.'+(mo.elite?' Этот монстр элитный: у него вдвое больше здоровья и урона, зато редкие предметы падают намного чаще.':''),'В бой',startFight);
+    if(!game||!gameLoaded)return;var mo=foeFor(slotNow(),selectedRank()),b=rewardBase(mo);
+    confirmBox('Начать бой: '+mo.name+' · '+rankName(mo.rank)+'? '+mo.hp+' HP / '+mo.dmg+' урона. Награда: '+Math.round(b.coins*.8)+'–'+Math.round(b.coins*1.2)+' монет и '+Math.round(b.xp*xpFactor(mo.rank)*.8)+'–'+Math.round(b.xp*xpFactor(mo.rank)*1.2)+' XP. При поражении: 10% монет, максимум '+lossCap(mo.rank)+'. Зеро — крит x2, единица — пропуск хода.','В бой',function(){startFight();showTab('game');});
   });
   setInterval(function(){
     if(game){
@@ -1001,72 +1095,61 @@ svg.chr{overflow:visible}
     for(var k=0;k<DG_STAGES;k++){ o.push(a.splice(Math.floor(r()*a.length),1)[0]); }
     return o;
   }
-  function dgFoe(){var d=game.dg; return dgList(d.seed)[d.st];}
-  function dgChestItem(){
-    var x=Math.random()*100, acc=0, r='common';
-    for(var k=0;k<DROP_D.length;k++){acc+=DROP_D[k][1]; if(x<acc){r=DROP_D[k][0];break;}}
-    var pool=Object.keys(ITEMS).filter(function(id){var it=ITEMS[id]; return it.drop&&it.r===r&&(!game.cls||it.cls===game.cls);});
-    return pool[Math.floor(Math.random()*pool.length)];
-  }
+  function dgFoe(){var d=game.dg;return makeMonster(dgList(d.seed)[d.st],d.r||1,false,d.st===DG_STAGES-1,true);}
+  function dgChestItem(){return rollLoot(game.dg.r||1,true,false);}
   function dgEnter(){
-    if(!game||dgOn()||(game.fight&&game.fight.on)||(Number(game.coins)||0)<DG_PRICE) return;
-    game.coins-=DG_PRICE;
-    game.dg={on:true,st:0,seed:Math.floor(Math.random()*1000000000),m:0,p:stats().hp,skip:false};
-    game.dg.m=dgFoe().hp;
-    fightLog='Ты вошёл в данж. Монстр 1 из '+DG_STAGES+'. Крути колесо!'; fightMsg=''; fightChest=false;
-    saveGame(); renderCoins(); renderFight(); renderEvent(); showTab('game');
-  }
+ if(!game||!gameLoaded||!game.cls||dgOn()||(game.fight&&game.fight.on))return;
+ var rank=selectedRank(),price=dungeonPrice(rank);if(game.coins<price)return;
+ var st=stats();game.coins-=price;
+ game.dg={on:true,st:0,seed:Math.floor(Math.random()*1000000000),m:0,p:st.hp,skip:false,r:rank,ph:st.hp,pa:st.atk,fee:price};game.dg.m=dgFoe().hp;
+ fightLog='Ты вошёл в данж. '+rankName(rank)+'. Характеристики зафиксированы. Монстр 1 из '+DG_STAGES+'.';fightMsg='';fightChest=false;
+ saveGame();renderCoins();renderProgress();renderFight();renderEvent();showTab('game');
+}
   function dgLeave(){
-    if(!dgOn()) return;
-    delete game.dg; fightMsg='Ты покинул данж. Вход ('+DG_PRICE+' монет) не вернулся.'; fightChest=false;
-    saveGame(); renderFight(); renderEvent(); renderDg();
-  }
+ if(!dgOn())return;var fee=game.dg.fee;delete game.dg;
+ fightMsg='Ты покинул данж. Вход ('+fee+' монет) не вернулся. Заработанные опыт и монеты сохранены.';fightChest=false;
+ saveGame();renderProgress();renderFight();renderEvent();renderDg();
+}
   function dgStrike(n){
-    var d=game&&game.dg; if(!d||!d.on) return;
-    var mo=dgFoe(), st=stats();
-    fightLog=strikeCore(d,mo,st,n);
-    if(d.m<=0){
-      d.m=0; d.st++;
-      if(d.st>=DG_STAGES){
-        var id=dgChestItem(); game.inv.push(id); delete game.dg;
-        fightMsg=fightLog+' Данж пройден! В сундуке: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').'; fightChest=true;
-        toast('Данж пройден: '+ITEMS[id].name); $('dot').hidden=false;
-      }else{
-        var nx=dgFoe(); d.m=nx.hp; d.p=st.hp; d.skip=false;
-        fightLog+=' Монстр повержен! Дальше: '+nx.name+' ('+(d.st+1)+' из '+DG_STAGES+'). Здоровье восстановлено.';
-      }
-    }else if(d.p<=0){
-      delete game.dg; fightMsg=fightLog+' Ты погиб в данже. Вход потерян.'; fightChest=false;
-    }
+ var d=game&&game.dg;if(!d||!d.on)return;
+ var mo=dgFoe(),st=battleStats(d);fightLog=strikeCore(d,mo,st,n);
+ if(d.m<=0){
+  var base=rewardBase(mo),xp=game.level>=LEVEL_CAP?0:rollReward(base.xp*xpFactor(d.r)),coins=rollReward(dungeonPrice(d.r)*.21);
+  game.coins+=coins;var up=gainXP(xp);d.m=0;
+  var earned=' +'+xp+' XP · +'+coins+' монет.'+up;
+  if(d.st+1>=DG_STAGES){
+   var id=dgChestItem(),bonus=game.level>=LEVEL_CAP?0:rollReward(45*Math.pow(d.r,1.65)*xpFactor(d.r));
+   if(id)game.inv.push(id);var more=gainXP(bonus);delete game.dg;
+   fightMsg=fightLog+' Данж пройден!'+earned+' Бонус: +'+bonus+' XP.'+more+(id?' В сундуке: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':'');fightChest=true;
+   toast(id?'Данж пройден: '+ITEMS[id].name:'Данж пройден!');$('dot').hidden=false;
+  }else{
+   d.st++;var nx=dgFoe();d.m=nx.hp;d.p=healBetween(d.p,d.ph);d.skip=false;
+   fightLog+=' Монстр повержен!'+earned+' Далее: '+nx.name+'. Восстановлено до 25% максимального HP.';
   }
+  renderCoins();renderProgress();
+ }else if(d.p<=0){delete game.dg;fightMsg=fightLog+' Ты погиб в данже. Потерян только взнос. Заработанные опыт и монеты сохранены.';fightChest=false;renderProgress();}
+}
   function renderDgFight(box){
-    var d=game.dg, mo=dgFoe(), st=stats();
+    var d=game.dg, mo=dgFoe(), st=battleStats(d);
     var pm=Math.max(0,Math.min(100,Math.round(d.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(d.p/st.hp*100)));
     box.hidden=false; box.className='fight';
     box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">Данж: '+mo.name+' ('+(d.st+1)+' из '+DG_STAGES+')</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
       +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+d.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
       +'<div><div class="hpl"><span>Ты</span><span>'+d.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
       +'<div class="flog">'+fightLog+'</div><button id="dgLeave" class="ghost">Покинуть данж</button>';
-    $('dgLeave').addEventListener('click',function(){confirmBox('Покинуть данж? Вход ('+DG_PRICE+' монет) не вернётся, а прогресс пропадёт.','Покинуть',dgLeave);});
+    $('dgLeave').addEventListener('click',function(){confirmBox('Покинуть данж? Вход ('+game.dg.fee+' монет) не вернётся. Полученные опыт и монеты останутся.','Покинуть',dgLeave);});
   }
   function renderDg(){
-    var box=$('dgBody'); if(!game){box.innerHTML='';return;}
-    var coins=Number(game.coins)||0, on=dgOn(), busy=!!(game.fight&&game.fight.on);
-    var h='<div class="card"><h3>Данж</h3><p>Заплати за вход и победи трёх монстров подряд. Правила боя те же, что в событии. Между монстрами здоровье восстанавливается. В конце тебя ждёт сундук с предметом твоего класса. Если погибнешь или уйдёшь, вход не возвращается.</p>'
-      +'<span class="price">'+coinSvg()+DG_PRICE+'</span>';
-    if(on){
-      h+='<p style="margin-top:8px">Ты в данже: монстр '+(game.dg.st+1)+' из '+DG_STAGES+'. Бой идёт на вкладке «Рулетка».</p><button id="dgGo">К бою</button>';
-    }else{
-      var lab=busy?'Сначала закончи бой с монстром':(coins<DG_PRICE?'Не хватает '+(DG_PRICE-coins):'Войти в данж');
-      h+='<button id="dgIn"'+((busy||coins<DG_PRICE)?' disabled':'')+'>'+lab+'</button>';
-    }
-    h+='</div><div class="card"><h3>Что в сундуке</h3><div class="odds">';
-    DROP_D.forEach(function(x){h+=rarPill(x[0]).replace('</span>',' '+x[1]+'%</span>');});
-    h+='</div></div>';
-    box.innerHTML=h;
-    var a=$('dgIn'); if(a) a.addEventListener('click',function(){confirmBox('Войти в данж за '+DG_PRICE+' монет? Нужно победить трёх монстров подряд. Если погибнешь или уйдёшь, вход не вернётся.','Войти',dgEnter);});
-    var g=$('dgGo'); if(g) g.addEventListener('click',function(){showTab('game');});
-  }
+ var box=$('dgBody');if(!game){box.innerHTML='';return;}
+ var coins=Number(game.coins)||0,on=dgOn(),busy=!!(game.fight&&game.fight.on),rank=on?game.dg.r:selectedRank(),price=on?game.dg.fee:dungeonPrice(rank);
+ var h='<div class="card"><h3>Данж · '+rankName(rank)+'</h3><p>Три монстра подряд, последний — усиленный хранитель. Между комнатами восстанавливается 25% максимального HP, а не всё здоровье. За каждого врага — опыт и монеты, за полный проход — бонус XP и предмет твоего класса. При гибели или выходе теряется только взнос; уже полученные награды остаются.</p><p>Ранг выбирается над рулеткой. Сила персонажа фиксируется на входе.</p><span class="price">'+coinSvg()+price+'</span>';
+ if(on){h+='<p>Комната '+(game.dg.st+1)+' из '+DG_STAGES+'. Бой на вкладке «Рулетка».</p><button id="dgGo">К бою</button>';}
+ else{var lab=!game.cls?'Сначала выбери класс':busy?'Сначала закончи бой':coins<price?'Не хватает '+(price-coins)+' монет':'Войти в данж';h+='<button id="dgIn"'+((!gameLoaded||!game.cls||busy||coins<price)?' disabled':'')+'>'+lab+'</button>';}
+ h+='</div><div class="card"><h3>Сундук · ранг '+rank+'</h3><p>Редкость зависит от ранга; предмет всегда подходит твоему классу.</p><div class="odds">';
+ lootWeights(rank,true).forEach(function(x){if(x[1])h+=rarPill(x[0]).replace('</span>',' '+x[1]+'%</span>');});h+='</div></div>';box.innerHTML=h;
+ var a=$('dgIn');if(a)a.addEventListener('click',function(){confirmBox('Войти в данж «'+rankName(rank)+'» за '+price+' монет? Частичное лечение между комнатами. При гибели теряется только взнос.','Войти',dgEnter);});
+ var go=$('dgGo');if(go)go.addEventListener('click',function(){showTab('game');});
+}
   $('dgBody').style.display='flex'; $('dgBody').style.flexDirection='column'; $('dgBody').style.gap='14px';
 
   /* ---------- лидерборд ---------- */
@@ -1441,8 +1524,8 @@ svg.chr{overflow:visible}
   }
   function equipped(){return gearFromGame(game);}
   // Базовые бонусы. Класс даёт своё, раса даёт бонус по своей редкости.
-  var CLASS_BASE={mage:{hp:0,atk:3},warrior:{hp:30,atk:0},archer:{hp:10,atk:2}};
-  var RACE_BONUS={common:{hp:0,atk:0},uncommon:{hp:5,atk:1},rare:{hp:10,atk:2},epic:{hp:20,atk:4},legendary:{hp:35,atk:7}};
+  var CLASS_BASE={mage:{hp:0,atk:4},warrior:{hp:35,atk:0},archer:{hp:15,atk:2}};
+  var RACE_BONUS={common:{hp:0,atk:0},uncommon:{hp:6,atk:0},rare:{hp:10,atk:1},epic:{hp:14,atk:2},legendary:{hp:18,atk:3}};
   function bonusLine(b){var p=[]; if(b&&b.hp) p.push('здоровье +'+b.hp); if(b&&b.atk) p.push('урон +'+b.atk); return p.length?p.join(', '):'нет';}
   // Шанс предмета с монстра по редкости (в сумме 100)
   var DROP_W=[['common',50],['uncommon',30],['rare',15],['epic',4],['legendary',1]];
@@ -1472,13 +1555,12 @@ svg.chr{overflow:visible}
   function nameOf(name,until){return name+(Number(until)>Date.now()?' [трус]':'');}
   function itemIcon(id){var it=ITEMS[id];return '<svg viewBox="'+it.vb+'" aria-hidden="true">'+it.draw+'</svg>';}
   function stats(){
-    var hp=100, atk=5, cb=CLASS_BASE[game&&game.cls], rc=raceById(game&&game.race), rb=rc?RACE_BONUS[rc.r]:null;
-    if(cb){hp+=cb.hp; atk+=cb.atk;}
-    if(rb){hp+=rb.hp; atk+=rb.atk;}
-    var g=equipped();
-    for(var sl in g){var it=ITEMS[g[sl]]; if(it){hp+=it.hp||0; atk+=it.atk||0;}}
-    return {hp:hp,atk:atk};
-  }
+ var level=Math.max(1,Math.min(100,Number(game&&game.level)||1));
+ var hp=100+4*(level-1),atk=6+Math.floor((level-1)/3),cb=CLASS_BASE[game&&game.cls],rc=raceById(game&&game.race),rb=rc?RACE_BONUS[rc.r]:null;
+ if(cb){hp+=cb.hp;atk+=cb.atk;}if(rb){hp+=rb.hp;atk+=rb.atk;}
+ var gear=equipped();for(var sl in gear){var it=ITEMS[gear[sl]];if(it){hp+=it.hp||0;atk+=it.atk||0;}}
+ return {hp:hp,atk:atk};
+}
 
   function hashStr(str){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
