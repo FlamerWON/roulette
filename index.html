@@ -209,6 +209,8 @@ svg.chr{overflow:visible}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
 .mbox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:16px}
 .mbox p{margin:0;line-height:1.4}
+.cq{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.cq button{padding:10px 20px;font-size:18px}
 .mbtns{display:flex;gap:10px;justify-content:flex-end}
 
 /* чат */
@@ -330,6 +332,7 @@ svg.chr{overflow:visible}
 </div>
 
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
+<div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 
 <script src="config.js"></script>
 <script>
@@ -1400,11 +1403,74 @@ svg.chr{overflow:visible}
       var t=Math.min(1,(now-t0)/dur);
       rot=start+(target-start)*ease(t); draw();
       if(t<1) requestAnimationFrame(frame);
-      else{rot=target; spinning=false; btn.disabled=false; show(ORDER[k]);}
+      else{rot=target; spinning=false; btn.disabled=false; guard.freeAt=performance.now(); show(ORDER[k]);}
     }
     requestAnimationFrame(frame);
   }
-  btn.addEventListener('click',spin);
+  /* ---------- защита от автокликера ---------- */
+  // Настройки: можно менять
+  var G_MIN_SAMPLES=8;      // сколько последних кликов анализируем
+  var G_SD_STRICT=30;       // разброс времени реакции (мс) меньше этого = робот
+  var G_SD_SOFT=60;         // меньше этого И клик в одну и ту же точку = робот
+  var G_EVERY=[40,80];      // проверка «ты человек?» раз в столько прокрутов (случайно)
+  var G_FIRST=[10,30];      // первая проверка после загрузки страницы
+  var G_BLOCK_MS=30000;     // штраф за провал проверки (растёт с каждым провалом)
+  function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+  var guard={freeAt:0,rts:[],pts:[],count:0,nextAt:rnd(G_FIRST[0],G_FIRST[1]),blockedUntil:0,fails:0,asking:false};
+
+  function sdOf(a){
+    var m=0,i; for(i=0;i<a.length;i++) m+=a[i]; m/=a.length;
+    var v=0; for(i=0;i<a.length;i++) v+=(a[i]-m)*(a[i]-m);
+    return Math.sqrt(v/a.length);
+  }
+  // человек каждый раз нажимает чуть по-разному, автокликер — как часы
+  function looksLikeBot(){
+    if(guard.rts.length<G_MIN_SAMPLES) return false;
+    var sd=sdOf(guard.rts);
+    if(sd<G_SD_STRICT) return true;
+    var same=guard.pts.length>=G_MIN_SAMPLES && guard.pts.every(function(x){return x===guard.pts[0];});
+    return same && sd<G_SD_SOFT;
+  }
+  function closeAsk(){ $('cmodal').hidden=true; guard.asking=false; }
+  function ask(){
+    if(guard.asking) return;
+    guard.asking=true;
+    var box=$('cbox'); box.innerHTML='';
+    var target=rnd(1,9), nums=[target];
+    while(nums.length<5){ var x=rnd(1,9); if(nums.indexOf(x)<0) nums.push(x); }
+    nums.sort(function(){return Math.random()-.5;});
+    var p=document.createElement('p'); p.textContent='Проверка: нажми число '+target+', чтобы продолжить.';
+    var row=document.createElement('div'); row.className='cq';
+    nums.forEach(function(v){
+      var b=document.createElement('button'); b.textContent=String(v);
+      b.addEventListener('click',function(e){
+        if(!e.isTrusted) return;
+        if(v===target){
+          guard.count=0; guard.nextAt=rnd(G_EVERY[0],G_EVERY[1]); guard.rts=[]; guard.pts=[];
+          closeAsk(); spin();
+        }else{
+          guard.fails++; guard.count=0; guard.rts=[]; guard.pts=[];
+          guard.blockedUntil=performance.now()+G_BLOCK_MS*guard.fails;
+          closeAsk(); toast('Не то число. Подожди '+Math.round(G_BLOCK_MS*guard.fails/1000)+' с.');
+        }
+      });
+      row.appendChild(b);
+    });
+    box.appendChild(p); box.appendChild(row);
+    $('cmodal').hidden=false;
+  }
+  function onSpinClick(e){
+    if(!e.isTrusted) return;                       // клик, сделанный скриптом
+    var now=performance.now();
+    if(now<guard.blockedUntil){ toast('Подожди ещё '+Math.ceil((guard.blockedUntil-now)/1000)+' с'); return; }
+    if(guard.freeAt) guard.rts.push(now-guard.freeAt);
+    if(e.detail>0) guard.pts.push(e.clientX+','+e.clientY);   // мышь или тач, не клавиатура
+    guard.rts=guard.rts.slice(-G_MIN_SAMPLES); guard.pts=guard.pts.slice(-G_MIN_SAMPLES);
+    guard.count++;
+    if(guard.count>=guard.nextAt||looksLikeBot()){ ask(); return; }
+    spin();
+  }
+  btn.addEventListener('click',onSpinClick);
   window.addEventListener('resize',draw);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
 
