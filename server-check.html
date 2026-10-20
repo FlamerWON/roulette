@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://roulette-api.aladin4357.workers.dev https://securetoken.googleapis.com; base-uri 'none'; form-action 'none'">
+<title>Проверка сервера · Рулетка</title>
+<style>
+:root{color-scheme:light;--bg:#f7f8f9;--panel:#fff;--ink:#252a30;--muted:#59636e;--line:#d9dfe6;--accent:#165cb5;--soft:#edf4fd;--good:#19623e;--bad:#a62222}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:720px;margin:56px auto;padding:0 24px 40px}header{margin-bottom:24px}.eyebrow{font-size:14px;color:var(--muted);margin:0 0 8px}h1{font-size:32px;letter-spacing:-.8px;line-height:1.15;margin:0 0 12px}p{margin:0 0 16px}a{color:var(--accent);text-underline-offset:3px}.note{background:var(--soft);border:1px solid var(--line);padding:16px;border-radius:10px;margin-bottom:24px}.checks{display:grid;gap:16px}.check{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px}.top{display:flex;gap:12px;align-items:baseline;margin-bottom:8px}.step{font-size:14px;color:var(--muted);font-weight:600}h2{font-size:20px;line-height:1.3;margin:0}.check p{color:var(--muted)}button{font:600 16px/1.4 system-ui,sans-serif;min-height:48px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:#fff;padding:10px 16px;cursor:pointer}button.secondary{background:transparent;color:var(--accent)}button:disabled{opacity:.6;cursor:wait}button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.result{margin-top:16px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;border-top:1px solid var(--line);padding-top:12px}.result:empty{display:none}.result[data-state="good"]{color:var(--good)}.result[data-state="bad"]{color:var(--bad)}footer{font-size:14px;color:var(--muted);margin-top:24px}footer p{margin-bottom:8px}[hidden]{display:none!important}@media(max-width:600px){main{margin:28px auto;padding:0 16px 24px}h1{font-size:28px}.check{padding:20px}button{width:100%}}@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#15191e;--panel:#1e242b;--ink:#eef2f6;--muted:#b0bac6;--line:#39424d;--accent:#8cbcff;--soft:#202c3c;--good:#8bdbad;--bad:#ffa5a5}button{background:#8cbcff;color:#132036}.secondary{color:var(--accent)}}
+</style>
+<script src="./config.js"></script>
+</head>
+<body>
+<main>
+<header><p class="eyebrow">РУЛЕТКА / ПОДКЛЮЧЕНИЕ СЕРВЕРА</p><h1>Проверка соединения</h1><p>Два теста перед подключением безопасного обмена.</p></header>
+<div class="note">Только проверка входа. Эта страница не меняет монеты, вещи, бои или правила Firebase. Обмен ещё не включён.</div>
+<div class="checks">
+<section class="check" aria-labelledby="healthTitle"><div class="top"><span class="step">01</span><h2 id="healthTitle">Обработчик Cloudflare</h2></div><p>Проверим адрес сервера и наличие настроек Firebase.</p><button id="health" class="secondary" type="button">Проверить соединение</button><div id="healthResult" class="result" role="status" aria-live="polite"></div></section>
+<section class="check" aria-labelledby="authTitle"><div class="top"><span class="step">02</span><h2 id="authTitle">Вход через Firebase</h2></div><p>Сначала <a href="./">войди в игру</a>, затем вернись сюда в том же браузере. Пароль вводить повторно не нужно.</p><button id="auth" type="button">Проверить мой вход</button><div id="authResult" class="result" role="status" aria-live="polite"></div></section>
+</div>
+<footer><p id="locationHint" hidden>Открой эту страницу на GitHub Pages, рядом с игрой и config.js. Из скачанного файла проверка не работает.</p><p>Токены не показываются и не выводятся в консоль. Краткоживущий токен передаётся обработчику по HTTPS для проверки; пароль и refresh-токен ему не отправляются.</p><p>Успешный тест подтверждает только вход, не безопасность всей игровой экономики.</p></footer>
+</main>
+<script>
+(function(){
+'use strict';
+const BASE='https://roulette-api.aladin4357.workers.dev';
+const $=id=>document.getElementById(id);
+let busy=false;
+function output(id,text,state){$(id).textContent=text;$(id).dataset.state=state||'';}
+function lock(value){busy=value;$('health').disabled=value;$('auth').disabled=value;}
+function checkLocation(){if(location.origin!=='https://flamerwon.github.io')throw Error('Открой https://flamerwon.github.io/roulette/server-check.html, а не скачанный файл.');}
+async function request(url,options){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);try{return await fetch(url,{...options,signal:controller.signal,cache:'no-store',credentials:'omit',redirect:'error'});}finally{clearTimeout(timer);}}
+async function body(response){try{return await response.json();}catch{throw Error('Сервер вернул не JSON. Если видишь Hello World, сначала замени код Worker и нажми Deploy.');}}
+const errors={SERVER_NOT_CONFIGURED:'В Cloudflare не заполнены FIREBASE_PROJECT_ID или FIREBASE_WEB_API_KEY.',FIREBASE_CONFIG:'Firebase отклонил настройки сервера. Проверь Web API Key и его ограничения; не отключай ограничения вслепую.',INVALID_TOKEN:'Сессия не прошла проверку. Выйди из игры, войди снова и повтори тест.',TOKEN_EXPIRED:'Токен истёк. Войди в игру ещё раз.',WRONG_PROJECT:'FIREBASE_PROJECT_ID не совпадает с проектом авторизации игры.',AUTH_UNAVAILABLE:'Firebase временно недоступен или превышены квоты. Попробуй позже.',ORIGIN_NOT_ALLOWED:'Сервер не разрешил этот адрес сайта.',UNSUPPORTED_TENANT:'Этот тест не поддерживает многопользовательские пространства Identity Platform.'};
+function message(e){if(e?.name==='AbortError')return 'Время ожидания истекло. Проверь соединение и повтори позже.';if(e instanceof TypeError)return 'Не удалось связаться с сервером. Проверь интернет, Deploy обработчика и CORS. Подробности Network могут содержать токены: не отправляй их скриншотом.';return e?.message||'Проверка не завершена.';}
+async function run(id,fn){if(busy)return;lock(true);output(id,'Проверяем…');try{checkLocation();await fn();}catch(e){output(id,message(e),'bad');}finally{lock(false);}}
+$('health').addEventListener('click',()=>run('healthResult',async()=>{const r=await request(BASE+'/health',{method:'GET',mode:'cors'}),d=await body(r);if(!r.ok||d.ok!==true||d.service!=='roulette-api')throw Error(errors[d.error]||'Проверь, что опубликован правильный код Worker.');output('healthResult',d.authConfigured?'Соединение работает. Настройки Firebase заполнены. Можно проверить вход.':'Соединение работает. Теперь добавь в Worker FIREBASE_PROJECT_ID и FIREBASE_WEB_API_KEY, затем нажми Deploy.',d.authConfigured?'good':'');}));
+$('auth').addEventListener('click',()=>run('authResult',async()=>{
+const key=window.ROULETTE_CONFIG?.API_KEY;if(typeof key!=='string'||!key.trim())throw Error('Не загружен API_KEY из config.js. Размести страницу рядом с файлом игры.');
+let initial,session;try{initial=localStorage.getItem('roulette_sess');session=JSON.parse(initial||'null');}catch{throw Error('Браузер не разрешил доступ к сессии. Открой страницу в обычной вкладке после входа в игру.');}
+if(!session?.refreshToken)throw Error('В этом браузере нет сохранённого входа. Сначала войди в игру по ссылке выше.');
+// Refresh directly with Firebase. Never send the refresh token to the Worker.
+const refreshed=await request('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:session.refreshToken})});
+const fresh=await body(refreshed);if(!refreshed.ok||!fresh.id_token||!fresh.refresh_token||!fresh.user_id)throw Error('Не удалось обновить сессию Firebase. Войди в игру заново.');
+if(localStorage.getItem('roulette_sess')!==initial)throw Error('За время проверки изменился вход. Повтори тест для текущего аккаунта.');
+localStorage.setItem('roulette_sess',JSON.stringify({refreshToken:fresh.refresh_token}));
+const verified=await request(BASE+'/auth/check',{method:'POST',mode:'cors',headers:{Authorization:'Bearer '+fresh.id_token}}),result=await body(verified);
+if(!verified.ok||result.ok!==true)throw Error(errors[result.error]||'Сервер не подтвердил вход. Код: '+(typeof result.error==='string'?result.error:'UNKNOWN'));
+if(result.uid!==fresh.user_id)throw Error('Ответ сервера не совпадает с аккаунтом Firebase. Не подключай обмен до проверки настроек.');
+output('authResult','Вход подтверждён.\nUID: '+result.uid+'\nМонеты и инвентарь не изменялись.','good');
+}));
+if(location.origin!=='https://flamerwon.github.io')$('locationHint').hidden=false;
+})();
+</script>
+</body>
+</html>
