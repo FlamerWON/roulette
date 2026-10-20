@@ -62,7 +62,7 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
 
 /* вкладки и персонаж */
 .rightCol{display:flex;flex-direction:column;gap:18px;align-items:center;min-width:0}
-.tabs{display:flex;gap:8px;justify-content:center}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .tab{background:transparent;color:var(--ink);border:1px solid var(--line);padding:8px 22px;font-size:16px}
 .tab.on{background:var(--gold);color:#1b1405;border-color:var(--gold)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-left:8px;vertical-align:middle}
@@ -88,7 +88,7 @@ canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 1
 /* аватары */
 .av{display:inline-block;flex:none;width:36px;height:36px;border-radius:10px;overflow:hidden}
 .av svg{display:block;width:100%;height:100%}
-.charAv{width:120px;height:173px;margin:0 auto 6px}
+.charAv{width:150px;height:150px;margin:0 auto 8px}
 .charAv svg{display:block;width:100%;height:100%}
 svg.chr{overflow:visible}
 .chr .chrBob{animation:chrBob .9s ease-in-out infinite}
@@ -110,6 +110,27 @@ svg.chr{overflow:visible}
 @keyframes chrShadow{0%,100%{transform:scale(1)}50%{transform:scale(.85)}}
 @media (prefers-reduced-motion:reduce){.chr *{animation:none!important}}
 .msg .body{min-width:0}
+
+/* снаряжение и инвентарь */
+.equipWrap{display:grid;grid-template-columns:72px 1fr 72px;gap:12px;align-items:start;width:100%}
+.eqCol{display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.slot{aspect-ratio:1;border:2px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--muted);background:var(--card);padding:2px}
+.invTitle{align-self:flex-start;font-family:'DM Serif Display',Georgia,serif;font-size:20px}
+.inv{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%}
+.cell{aspect-ratio:1;border:2px dashed var(--line);border-radius:12px;background:var(--card)}
+
+/* лидерборд */
+.boardPane{width:100%;max-width:520px;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.bt{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:30px;margin:0;text-align:center}
+.board{display:flex;flex-direction:column;gap:8px}
+.brow{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px}
+.brow.me{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.rk{min-width:30px;text-align:center;font-weight:700;color:var(--muted);padding:2px 0;border-radius:8px}
+.rk.top{background:var(--gold);color:#1b1405}
+.bn{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bs{font-weight:700;flex:none}
+.bs small{font-weight:500;color:var(--muted)}
+.bempty{text-align:center;color:var(--muted);padding:20px 0}
 
 /* чат */
 .chat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:18px;height:min(72vh,600px);overflow:hidden}
@@ -163,6 +184,7 @@ svg.chr{overflow:visible}
     <div class="tabs">
       <button id="tabGame" class="tab on">Рулетка</button>
       <button id="tabChar" class="tab">Персонаж<span id="dot" class="dot" hidden></span></button>
+      <button id="tabBoard" class="tab">Лидеры</button>
     </div>
     <section class="wheelCol" id="gamePane">
       <h1>Рулетка</h1>
@@ -179,7 +201,19 @@ svg.chr{overflow:visible}
     </section>
 
     <section class="charPane" id="charPane" hidden>
-      <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div></div>
+      <div class="equipWrap">
+        <div class="eqCol">
+          <div class="slot" aria-label="Голова: пусто">Голова</div>
+          <div class="slot" aria-label="Тело: пусто">Тело</div>
+        </div>
+        <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div></div>
+        <div class="eqCol">
+          <div class="slot" aria-label="Руки: пусто">Руки</div>
+          <div class="slot" aria-label="Ноги: пусто">Ноги</div>
+        </div>
+      </div>
+      <div class="invTitle">Инвентарь</div>
+      <div class="inv" aria-label="Инвентарь: пусто"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
       <div class="stats">
         <div class="stat"><b id="stSpins">0</b><span>Прокруток</span></div>
         <div class="stat"><b id="stRed">0</b><span>Красное</span></div>
@@ -188,10 +222,17 @@ svg.chr{overflow:visible}
       </div>
       <div class="tlist" id="tlist"></div>
     </section>
+
+    <section class="boardPane" id="boardPane" hidden>
+      <h2 class="bt">Рейтинг по прокрутам</h2>
+      <div class="board" id="board"></div>
+      <button id="boardRefresh" class="ghost">Обновить</button>
+    </section>
     </div>
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
 (function(){
   var ORDER=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
@@ -260,7 +301,7 @@ svg.chr{overflow:visible}
   }
   function submit(mode){
     setErr('');
-    if(!configured()){setErr('В файле не заполнены DB_URL и API_KEY');return;}
+    if(!configured()){setErr('В файле config.js не заполнен API_KEY');return;}
     var name=nickIn.value.replace(/\s+/g,' ').trim(), pass=passIn.value;
     if(name.length<2||name.length>15){setErr('Имя: от 2 до 15 символов');return;}
     if(pass.length<6){setErr('Пароль: не короче 6 символов');return;}
@@ -307,13 +348,23 @@ svg.chr{overflow:visible}
     {id:'luck',name:'Мистер удача',desc:'Выкрути зеро',check:function(n){return n===0;}},
     {id:'unlucky',name:'Мистер неудача',desc:'Выкрути число 13',check:function(n){return n===13;}},
     {id:'bum',name:'Бомж',desc:'Чёрное выпало 5 раз подряд',check:function(n,p,g){return g.blackRun>=5;}},
-    {id:'hen',name:'Мама курица',desc:'Выкрути одно и то же число два раза подряд',check:function(n,p){return n===p;}}
+    {id:'hen',name:'Мама курица',desc:'Выкрути одно и то же число два раза подряд',check:function(n,p){return n===p;}},
+    {id:'cycle',name:'Цикл',desc:'Выбей красное 5 раз подряд',check:function(n,p,g){return /rrrrr$/.test(g.cols);}},
+    {id:'street',name:'Стрит',desc:'Выбей 3 числа по порядку подряд (например 7, 8, 9)',check:function(n,p,g,a){return a.length>=3&&a[a.length-2]===a[a.length-3]+1&&a[a.length-1]===a[a.length-2]+1;}},
+    {id:'grind',name:'Задротище',desc:'Выбей каждое число от 0 до 36 хотя бы по разу',check:function(n,p,g){return String(g.seen).indexOf('0')===-1;},
+      prog:function(g){var c=0,sn=String(g.seen||'');for(var i=0;i<sn.length;i++){if(sn.charAt(i)==='1')c++;}return 'выпало '+c+' из 37';}},
+    {id:'elbe',name:'Встреча на Эльбе',desc:'Выбей два соседних числа подряд (например 20 и 21)',check:function(n,p,g,a){return a.length>=2&&Math.abs(a[a.length-1]-a[a.length-2])===1;}},
+    {id:'fiveeight',name:'Пять и восемь. ОтсылОчка)))',desc:'Выбей 5 и 8 за два прокрута подряд',check:function(n,p,g,a){var x=a[a.length-2],y=a[a.length-1];return a.length>=2&&((x===5&&y===8)||(x===8&&y===5));}},
+    {id:'veteran',name:'Ветеран',desc:'Сделай 2026 прокрутов',check:function(n,p,g){return g.spins>=2026;},prog:function(g){return g.spins+' из 2026';}},
+    {id:'choco',name:'Шоколад ни в чем не виноват',desc:'Сделай 101 прокрут',check:function(n,p,g){return g.spins>=101;},prog:function(g){return Math.min(g.spins,101)+' из 101';}},
+    {id:'checkers',name:'Шашки нарды',desc:'10 раз подряд по очереди: красное, чёрное, красное...',check:function(n,p,g){return g.cols==='rbrbrbrbrb';}},
+    {id:'backgammon',name:'Нарды шашки',desc:'10 раз подряд по очереди: чёрное, красное, чёрное...',check:function(n,p,g){return g.cols==='brbrbrbrbr';}}
   ];
   function titleName(id){
     for(var i=0;i<TITLES.length;i++){ if(TITLES[i].id===id) return TITLES[i].name; }
     return '';
   }
-  function defaultGame(){return {spins:0,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true}};}
+  function defaultGame(){return {spins:0,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   function saveGame(){
     if(!game||!sess) return Promise.resolve();
@@ -345,9 +396,14 @@ svg.chr{overflow:visible}
     game.spins++; game[c==='green'?'zero':c]++;
     game.blackRun=(c==='black')?game.blackRun+1:0;
     game.last=n;
+    game.cols=(String(game.cols||'')+(c==='red'?'r':(c==='black'?'b':'g'))).slice(-10);
+    var arr=game.nums?String(game.nums).split(',').map(Number):[];
+    arr.push(n); arr=arr.slice(-3); game.nums=arr.join(',');
+    var sn=String(game.seen||''); while(sn.length<37) sn+='0';
+    game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
     var got=[];
     TITLES.forEach(function(t){
-      if(!game.earned[t.id]&&t.check(n,prev,game)){game.earned[t.id]=true; got.push(t.name);}
+      if(!game.earned[t.id]&&t.check(n,prev,game,arr)){game.earned[t.id]=true; got.push(t.name);}
     });
     if(got.length){ toast('Новый титул: '+got.join(', ')); $('dot').hidden=false; }
     saveGame(); renderChar();
@@ -365,7 +421,8 @@ svg.chr{overflow:visible}
       var row=document.createElement('div'); row.className='titem'+(has?'':' locked');
       var left=document.createElement('div');
       var a=document.createElement('div'); a.className='tn'; a.textContent=t.name;
-      var b=document.createElement('div'); b.className='td'; b.textContent=t.desc;
+      var b=document.createElement('div'); b.className='td';
+      b.textContent=t.desc+((!has&&t.prog)?' ('+t.prog(game)+')':'');
       left.appendChild(a); left.appendChild(b); row.appendChild(left);
       if(has){
         var bt=document.createElement('button'); var worn=game.title===t.id;
@@ -378,14 +435,49 @@ svg.chr{overflow:visible}
       list.appendChild(row);
     });
   }
+  /* ---------- лидерборд ---------- */
+  var curTab='game';
+  function loadBoard(){
+    var box=$('board');
+    token().then(function(t){
+      return fetch(DB_URL+'/users.json?orderBy=%22game%2Fspins%22&limitToLast=20&auth='+encodeURIComponent(t));
+    }).then(function(r){return r.json();}).then(function(obj){
+      if(!obj||obj.error){ box.innerHTML=''; var e=document.createElement('div'); e.className='bempty'; e.textContent='Не удалось загрузить рейтинг. Проверь правила в Firebase.'; box.appendChild(e); return; }
+      var rows=Object.keys(obj).map(function(k){
+        var u=obj[k]||{}, g=u.game||{};
+        return {uid:k,name:u.name||'Игрок',spins:Number(g.spins)||0,title:g.title};
+      }).filter(function(x){return x.spins>0;}).sort(function(x,y){return y.spins-x.spins;});
+      box.innerHTML='';
+      if(!rows.length){var e2=document.createElement('div'); e2.className='bempty'; e2.textContent='Пока никто не крутил колесо.'; box.appendChild(e2); return;}
+      rows.forEach(function(x,i){
+        var row=document.createElement('div'); row.className='brow'+((sess&&x.uid===sess.uid)?' me':'');
+        var rk=document.createElement('div'); rk.className='rk'+(i<3?' top':''); rk.textContent=String(i+1);
+        var av=document.createElement('span'); av.className='av'; av.innerHTML=avatar(x.uid,x.title);
+        var nm=document.createElement('div'); nm.className='bn'; nm.textContent=x.name;
+        var tn=titleName(x.title);
+        if(tn){var tt=document.createElement('span'); tt.className='tt'; tt.textContent=tn; nm.appendChild(tt);}
+        var sc=document.createElement('div'); sc.className='bs'; sc.appendChild(document.createTextNode(String(x.spins)+' '));
+        var sm=document.createElement('small'); sm.textContent='прокр.'; sc.appendChild(sm);
+        row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
+        box.appendChild(row);
+      });
+    }).catch(function(){});
+  }
+  setInterval(function(){ if(curTab==='board'&&!document.hidden) loadBoard(); },15000);
   function showTab(which){
-    var g=(which==='game');
-    $('gamePane').hidden=!g; $('charPane').hidden=g;
-    $('tabGame').className='tab'+(g?' on':''); $('tabChar').className='tab'+(g?'':' on');
-    if(g) draw(); else {$('dot').hidden=true; renderChar();}
+    curTab=which;
+    $('gamePane').hidden=(which!=='game'); $('charPane').hidden=(which!=='char'); $('boardPane').hidden=(which!=='board');
+    $('tabGame').className='tab'+(which==='game'?' on':'');
+    $('tabChar').className='tab'+(which==='char'?' on':'');
+    $('tabBoard').className='tab'+(which==='board'?' on':'');
+    if(which==='game') draw();
+    if(which==='char'){$('dot').hidden=true; renderChar();}
+    if(which==='board') loadBoard();
   }
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
+  $('tabBoard').addEventListener('click',function(){showTab('board');});
+  $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
   var SKIN=['#f6d3b3','#e9b98f','#c98e63','#8d5a3b','#f2c9a0'];
@@ -463,8 +555,8 @@ svg.chr{overflow:visible}
   // персонаж в полный рост с анимацией (вкладка «Персонаж»)
   function avatarBody(seed,titleId){
     var L=look(seed), sk=L.skin;
-    var s='<svg class="chr" viewBox="0 0 100 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
-    s+='<ellipse cx="50" cy="76" rx="46" ry="64" fill="'+L.bg+'" opacity="0.6"/>';
+    var s='<svg class="chr" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+    s+='<rect width="144" height="144" rx="24" fill="'+L.bg+'" opacity="0.65"/><g transform="translate(22 0)">';
     s+='<ellipse class="sh" cx="50" cy="138" rx="24" ry="4" fill="#000" opacity="0.18"/>';
     s+='<g class="chrBob">';
     s+='<g class="legL"><rect x="37" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="40" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/></g>';
@@ -475,7 +567,7 @@ svg.chr{overflow:visible}
     s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
     s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/><circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
     s+='<g class="chead"><g transform="translate(50 52) scale(1.1) translate(-50 -52)">'+headParts(L,titleId)+'</g></g>';
-    return s+'</g></svg>';
+    return s+'</g></g></svg>';
   }
 
   /* ---------- колесо ---------- */
@@ -534,9 +626,10 @@ svg.chr{overflow:visible}
 
   /* ---------- чат (Firebase Realtime Database через обычные запросы) ---------- */
   // Адрес базы (Realtime Database -> Data), без слэша в конце:
-  var DB_URL='https://flamer-b1592-default-rtdb.firebaseio.com';
+  var CFG=window.ROULETTE_CONFIG||{};
+  var DB_URL=CFG.DB_URL||'https://flamer-b1592-default-rtdb.firebaseio.com';
   // Web API Key (Project settings -> General):
-  var API_KEY='AIzaSyDFbBbjzJOmiqnoJkrfOaNfv63Fq3lld7c';
+  var API_KEY=CFG.API_KEY||'ВСТАВЬ-API-KEY';
 
   var msgsEl=$('msgs'), msgIn=$('msgIn'), sendBtn=$('send'), noteEl=$('chatNote');
   var docs=[], lastSig='';
@@ -547,7 +640,7 @@ svg.chr{overflow:visible}
     msgsEl.innerHTML='';
     if(!docs.length){
       var e=document.createElement('div'); e.className='empty';
-      e.textContent=chatReady?'Сообщений пока нет. Напиши первым.':'Чат не настроен: впиши DB_URL и API_KEY в файл.';
+      e.textContent=chatReady?'Сообщений пока нет. Напиши первым.':'Чат не настроен: впиши API_KEY в файл config.js.';
       msgsEl.appendChild(e); return;
     }
     docs.forEach(function(m){
