@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="7">
+<meta name="app-version" content="8">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -132,7 +132,9 @@ svg.chr{overflow:visible}
 .eqCol{display:flex;flex-direction:column;gap:10px;padding-top:6px}
 .slot{aspect-ratio:1;border:2px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--muted);background:var(--card);padding:2px}
 .invTitle{align-self:flex-start;font-family:'DM Serif Display',Georgia,serif;font-size:20px}
-.inv{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%}
+.inv{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;width:100%}
+.icell{min-width:0;overflow-wrap:anywhere}
+@media(max-width:520px){.inv{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .cell{aspect-ratio:1;border:2px dashed var(--line);border-radius:12px;background:var(--card)}
 
 /* лидерборд */
@@ -1239,6 +1241,184 @@ svg.chr{overflow:visible}
     if(d[7]==='bow') it.hand='L';
     ITEMS[d[0]]=it;
   });
+  /* Armor art v8: shared, avatar-space SVG geometry. Item IDs and stats unchanged. */
+  function armorTint(hex, amount){
+    var n=parseInt(hex.slice(1),16), out='#';
+    [16,8,0].forEach(function(sh){var v=(n>>sh)&255; v=Math.round(amount>0?v+(255-v)*amount:v*(1+amount));out+=('0'+v.toString(16)).slice(-2);});
+    return out;
+  }
+  function armorPath(d,fill,stroke,width){return '<path d="'+d+'" fill="'+(fill||'none')+'" stroke="'+(stroke||INK)+'" stroke-width="'+(width||1.5)+'" stroke-linejoin="round" stroke-linecap="round"/>';}
+  function armorDot(x,y,c,r){return '<circle cx="'+x+'" cy="'+y+'" r="'+(r||.8)+'" fill="'+c+'"/>';}
+  function armorGem(x,y,c,r){r=r||2;return armorPath('M'+x+' '+(y-r)+' L'+(x+r*.75)+' '+y+' L'+x+' '+(y+r)+' L'+(x-r*.75)+' '+y+'Z',c,INK,.7)+armorPath('M'+x+' '+(y-r*.65)+' L'+(x+r*.4)+' '+y,'none','#fff',.6);}
+  function armorBody(id,c,a,cls){
+    var dark=armorTint(c,-.34), light=armorTint(c,.32), trim=a||((cls==='mage')?'#e6c581':(cls==='archer'?'#d8b77a':'#d9c2a0'));
+    var s='';
+    if(cls==='mage'){
+      s+=armorPath('M37 81 Q50 76 63 81 L68 118 Q59 121 50 119 Q41 121 32 118Z',c);
+      s+=armorPath('M38 88 L34 117 L42 118 L46 90 M62 88 L66 117 L58 118 L54 90',dark,dark,.5);
+      s+=armorPath('M42 80 L50 92 L58 80 L55 78 L50 83 L45 78Z',trim,INK,1);
+      s+=armorPath('M43 82 L49 94 L46 118 M57 82 L51 94 L54 118','none',trim,1.3);
+      s+=armorPath('M36 103 Q50 106 64 103 L64 107 Q50 110 36 107Z',dark);
+      s+=armorGem(50,106,trim,2.4);
+      s+=armorPath('M35 116 Q42 118 46 116 M54 116 Q60 118 65 116','none',trim,1);
+      s+=armorPath('M40 91 L39 99 M60 91 L61 99','none',light,1);
+      if(id!=='apprentice_robe'){
+        [40,60].forEach(function(x){s+=armorGem(x,112,id==='storm_robe'?'#c2efff':trim,1.7);});
+        s+=armorPath('M48 95 L50 97 L52 95 M48 99 L50 101 L52 99','none',trim,.8);
+      }
+      if(id==='storm_robe') s+=armorPath('M42 89 L39 95 L42 95 L40 100 M58 89 L61 95 L58 95 L60 100','none','#c2efff',1.2);
+    }else if(cls==='warrior'){
+      s+=armorPath('M37 81 Q50 77 63 81 L65 109 Q50 114 35 109Z',dark);
+      if(id==='plate_armor'){
+        s+=armorPath('M36 84 L43 80 L50 84 L57 80 L64 84 L62 101 L50 105 L38 101Z',c);
+        s+=armorPath('M50 84 L50 103 L39 99 L38 86Z',light,INK,.9);
+        s+=armorPath('M52 85 L61 83 L60 98 L52 101Z',armorTint(c,-.13),armorTint(c,-.13),.5);
+        s+=armorPath('M39 104 L50 107 L61 104 L63 109 L50 113 L37 109Z',c);
+        s+=armorPath('M37 110 L49 114 L47 120 L34 116Z',c);
+        s+=armorPath('M63 110 L51 114 L53 120 L66 116Z',c);
+        s+=armorPath('M40 113 L46 115 M54 115 L60 113','none',light,1.1);
+        s+=armorPath('M42 86 L46 88 M55 87 L58 85','none','#fff',1.2);
+        s+=armorGem(50,91,'#7796a5',2.6);
+      }else if(id==='chain_mail'){
+        s+=armorPath('M38 82 L44 80 Q50 85 56 80 L62 82 L64 112 L36 112Z',c);
+        for(var y=87;y<=109;y+=3.4){for(var x=39;x<=60;x+=4){var xx=x+((Math.round(y/3.4)%2)?1.5:0);s+=armorPath('M'+xx+' '+y+' q1.5 2.5 3 0','none',dark,.75);}}
+        s+=armorPath('M43 80 Q50 88 57 80','none',light,2.4);
+        s+=armorPath('M36 113 L47 115 L46 119 L35 116 M53 115 L64 113 L65 116 L54 119',dark);
+      }else{
+        s+=armorPath('M38 81 L44 80 Q50 85 56 80 L62 81 L64 112 Q50 116 36 112Z',c);
+        s+='<path d="M39 86 L60 107 M39 94 L56 112 M45 83 L62 100 M60 86 L39 107 M61 94 L44 112 M54 83 L38 100" fill="none" stroke="'+dark+'" stroke-width=".8"/>';
+        s+=armorPath('M43 81 Q50 88 57 81','none',light,2);
+        s+=armorPath('M49 86 V111','none',trim,1.2);
+        [89,95,101].forEach(function(y){s+=armorDot(50,y,INK,.65);});
+      }
+      s+=armorPath('M36 104 Q50 107 64 104 L64 108 Q50 111 36 108Z','#674832');
+      s+='<rect x="47" y="105" width="6" height="5" rx="1" fill="#d8b87b" stroke="'+INK+'" stroke-width=".8"/><path d="M49 107.5 H52" stroke="'+INK+'" stroke-width=".8"/>';
+    }else{
+      var cloak=id!=='leather_vest';
+      s+=armorPath('M37 82 L44 79 L50 84 L56 79 L63 82 L64 109 Q50 114 36 109Z',c);
+      if(cloak){
+        s+=armorPath('M36 82 L43 80 L48 91 L40 113 L33 114Z',dark);
+        s+=armorPath('M64 82 L57 80 L52 91 L60 113 L67 114Z',armorTint(c,-.18));
+        s+=armorPath('M38 86 L36 108 M62 86 L64 108','none',light,1);
+        s+=armorPath('M43 81 L48 91 M57 81 L52 91','none',trim,1.2);
+        s+=armorGem(50,86,id==='shadow_cloak'?'#b9a1ee':'#d2dca4',2);
+      }else{
+        s+=armorPath('M44 80 L48 88 L46 110 L38 108 L39 85Z',light);
+        s+=armorPath('M56 80 L52 88 L54 110 L62 108 L61 85Z',armorTint(c,-.12));
+        s+=armorPath('M49 89 L52 92 L49 95 L52 98 L49 101','none',trim,1);
+        s+=armorPath('M40 89 V102 M60 89 V102','none',trim,.7);
+      }
+      s+=armorPath('M58 81 L62 84 L41 109 L37 106Z','#775037',INK,1.1);
+      s+=armorPath('M58 84 L40 106','none','#c7955c',.7);
+      s+=armorPath('M36 104 Q50 107 64 104 L64 108 Q50 111 36 108Z','#4c382c');
+      s+='<rect x="47" y="105" width="6" height="4.6" rx=".8" fill="'+trim+'" stroke="'+INK+'" stroke-width=".8"/>';
+      s+=armorPath('M58 107 L64 107 L65 114 L58 114Z','#a5794a',INK,1);
+      s+=armorDot(61,110,trim,.65);
+      if(id==='shadow_cloak') s+=armorPath('M38 111 L40 113 L42 111 M58 111 L60 113 L62 111','none','#b9a1ee',.8);
+    }
+    return s;
+  }
+  function armorSleeve(id,c,cls){
+    var s='', dark=armorTint(c,-.3),light=armorTint(c,.3);
+    if(cls==='warrior'){
+      s+=armorPath('M32 82 Q35 80 39 83 L36 92 L27 94 L26 89Z',c);
+      s+=armorPath('M28 91 L36 89 L35 94 L27 96Z',dark);
+      if(id==='plate_armor')s+=armorPath('M28 85 Q33 82 37 84 M28 89 L35 87','none',light,1.1);
+      else if(id==='chain_mail')s+=armorPath('M28 89 q2 3 4 0 M31 86 q2 3 4 0','none',dark,.8);
+      else s+=armorPath('M30 85 L34 91 M28 89 L35 85','none',dark,.8);
+      s+=armorDot(33,85,light,1);
+    }else if(cls==='mage'){
+      s+=armorPath('M33 82 L39 85 L33 98 L24 96 Q26 86 33 82Z',c);
+      s+=armorPath('M24 95 L33 97 L32 101 L23 99Z',dark);
+      s+=armorPath('M25 97 L31 99','none','#e6c581',1);
+      s+=armorPath('M32 87 L28 94','none',light,1);
+    }else{
+      s+=armorPath('M32 83 L38 85 L34 93 L27 92 L27 88Z',c);
+      s+=armorPath('M28 89 L34 90','none',light,1);
+      s+=armorPath('M24 99 L29 100 L27 105 L22 104Z','#795137',INK,1.2);
+      s+=armorPath('M24 101 L27 102','none','#d6b384',.7);
+    }
+    return s;
+  }
+  function armorBoot(id,c,cls){
+    var dark=armorTint(c,-.3),light=armorTint(c,.3),s='';
+    if(cls==='warrior'&&id==='iron_boots'){
+      s+=armorPath('M8 3 L20 3 L19 19 L22 23 L21 28 L1 28 L1 24 L8 19Z',c);
+      s+=armorPath('M9 5 L18 5 L17 17 L13 21 L9 17Z',light);
+      s+=armorPath('M3 23 L19 23 M6 20 L18 20 M2 26 H20','none',dark,1.2);
+      s+=armorPath('M13 7 V16','none','#fff',1);
+      s+=armorDot(10,5,dark,.7)+armorDot(17,5,dark,.7);
+    }else if(cls==='mage'){
+      s+=armorPath('M8 12 L19 12 L19 21 Q19 24 21 26 Q11 30 1 27 Q0 22 8 21Z',c);
+      s+=armorPath('M8 12 L19 12 L19 17 L8 17Z',dark);
+      s+=armorPath('M2 27 Q10 29 21 26','none',dark,2);
+      s+=armorPath('M5 23 Q10 21 14 23','none',light,1);
+      s+=armorGem(13,18,id==='wizard_shoes'?'#e6c581':'#cfc3fa',1.8);
+    }else{
+      s+=armorPath('M8 3 L20 3 L19 20 L21 24 L21 28 L1 28 Q-1 23 8 21Z',c);
+      s+=armorPath('M7 3 L21 3 L20 8 L7 8Z',dark);
+      s+=armorPath('M1 27 H21','none',dark,2.4);
+      s+=armorPath('M10 10 L16 12 L10 14 L16 16 L10 18','none',light,.95);
+      s+=armorPath('M3 24 Q6 22 9 23','none',light,1);
+      if(id==='swift_boots')s+=armorPath('M17 10 L22 8 L20 13 L23 13 L18 18Z','#e4d9a0',INK,.7);
+      if(id==='rag_boots')s+=armorPath('M6 4 L10 7 L13 4 M12 20 L17 22 L16 25 L11 24Z','#ad8a62',INK,.7);
+    }
+    return s;
+  }
+  function armorHead(id,c,a,kind){
+    var dark=armorTint(c,-.3),light=armorTint(c,.3),trim=a||'#dec28c',s='';
+    if(kind==='helm'){
+      s+=armorPath('M23 42 Q22 15 50 14 Q78 15 77 42 L73 65 L65 69 L65 41 Q50 33 35 41 L35 69 L27 65Z',c);
+      s+=armorPath('M49 16 Q36 17 31 32 L47 29Z',light,light,.5);
+      s+=armorPath('M50 15 L54 32 L50 39 L46 32Z',dark);
+      s+=armorPath('M26 39 Q50 29 74 39 L73 44 Q50 35 27 44Z',dark);
+      s+=armorPath('M28 48 L31 46 L32 61 L28 59 M72 48 L69 46 L68 61 L72 59',light,INK,.8);
+      [30,39,61,70].forEach(function(x){s+=armorDot(x,x===30||x===70?40:37,'#f1dfb1',1);});
+      s+=armorPath('M31 28 Q36 21 42 20','none','#fff',1.5);
+    }else if(kind==='hood'){
+      s+=armorPath('M19 48 Q17 15 49 12 Q80 16 81 48 L77 76 L65 79 L68 44 Q64 31 50 30 Q36 31 32 44 L35 79 L23 76Z',c);
+      s+=armorPath('M49 15 Q29 20 25 42 L25 65 L31 70 L29 42 Q35 27 49 26Z',light,light,.5);
+      s+=armorPath('M51 15 Q75 24 76 47 L73 71 L69 73 L71 43 Q66 28 51 26Z',dark,dark,.5);
+      s+=armorPath('M31 72 L29 43 Q35 29 50 28 Q65 29 71 43 L69 72','none',trim,1.2);
+      s+=armorGem(50,23,id==='eagle_hood'?'#d1e8ca':'#d6b77c',2.8);
+      if(id==='eagle_hood')s+=armorPath('M42 23 L46 26 L50 25 L54 26 L58 23 M46 20 L50 23 L54 20','none',trim,1.1);
+    }else if(kind==='hat'){
+      s+=armorPath('M30 33 Q39 20 44 5 Q49 0 56 7 L53 11 Q58 25 69 33Z',c);
+      s+=armorPath('M44 8 Q43 22 36 31 L45 32 L49 13Z',light,light,.5);
+      s+='<ellipse cx="50" cy="35" rx="31" ry="6" fill="'+dark+'" stroke="'+INK+'" stroke-width="1.7"/>';
+      s+=armorPath('M32 28 Q50 34 66 28 L69 33 Q50 40 29 33Z',c);
+      s+=armorPath('M32 29 Q50 35 66 29','none',trim,2);
+      s+=armorGem(50,32,trim,3);
+      s+=armorPath('M49 15 L49 20 M46.5 17.5 H51.5 M57 23 V27 M55 25 H59','none',trim,1);
+      s+=armorDot(41,24,trim,1);
+    }else if(kind==='crown'){
+      s+=armorPath('M25 35 L23 15 L35 24 L42 11 L50 22 L58 11 L65 24 L77 15 L75 35Z',c);
+      s+=armorPath('M25 33 Q50 39 75 33 L74 41 Q50 45 26 41Z',dark);
+      s+=armorPath('M27 35 Q50 40 73 35 M28 40 Q50 44 72 40','none','#f6dfa2',1);
+      s+=armorGem(50,30,trim,5)+armorGem(35,31,trim,2.4)+armorGem(65,31,trim,2.4);
+      [23,42,58,77].forEach(function(x){s+=armorDot(x,(x===42||x===58)?11:15,'#f6dfa2',1.5);});
+      s+=armorPath('M28 21 L30 31 M42 17 L45 24 M60 18 L58 23','none',light,1.4);
+    }
+    if(kind==='hat') s='<g transform="translate(0 4)">'+s+'</g>';
+    return s;
+  }
+  DEFS.forEach(function(d){
+    var it=ITEMS[d[0]],kind=d[7], c=d[8];
+    if(kind==='body'){
+      it.draw=armorBody(d[0],c,d[9],d[3]);it.avd=it.draw;it.tint=c;it.vb='23 76 54 48';
+      it.sleeve=armorSleeve(d[0],c,d[3]);
+      if(d[3]==='archer'&&d[0]!=='leather_vest')it.back=armorPath('M35 82 Q50 77 65 82 L72 119 L62 117 L56 121 L50 118 L44 121 L38 117 L28 119Z',armorTint(c,-.38));
+    }else if(kind==='boots'){
+      it.draw=armorBoot(d[0],c,d[3]);it.vb='-2 0 27 32';
+    }else if(['helm','hood','hat','crown'].indexOf(kind)>-1){
+      it.draw=armorHead(d[0],c,d[9],kind);it.avd=it.draw;
+      it.vb=kind==='hood'?'15 8 70 74':kind==='helm'?'18 10 64 63':kind==='hat'?'15 0 70 50':'18 6 64 42';
+    }
+  });
+  ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_hat.vb='15 0 70 50';
+  ITEMS.war_helm.draw=armorPath('M24 38 Q24 16 50 16 Q76 16 76 38Z','#aab3bd')+armorPath('M27 35 Q50 27 73 35 L76 40 L24 40Z','#8a939d')+armorPath('M30 28 Q35 21 43 21','none','#edf2f6',2)+armorPath('M49 17 V30','none','#73818d',1.5)+armorDot(29,37,'#e9d3a3',1)+armorDot(71,37,'#e9d3a3',1);ITEMS.war_helm.vb='18 10 64 36';
+  ITEMS.robin_hat.draw=armorPath('M23 37 Q27 18 53 19 L76 14 L69 31 L77 36 Q50 31 24 42Z','#478b44')+armorPath('M26 37 Q50 28 73 35','none','#b4c987',2)+armorPath('M63 28 Q73 9 84 7 Q83 20 65 29Z','#c65849',INK,1.3)+armorPath('M65 28 L80 11','none','#f3d7aa',.9);ITEMS.robin_hat.vb='18 3 71 43';
+
   // стартовое снаряжение классов: тоже только для своего класса, с монстров не выпадает
   ['mage_hat','wand'].forEach(function(i){ITEMS[i].cls='mage';});
   ['war_helm','wood_sword'].forEach(function(i){ITEMS[i].cls='warrior';});
@@ -1310,7 +1490,7 @@ svg.chr{overflow:visible}
     L.pants=pick(r,PANTS); L.shoe=pick(r,SHOES); L.ts=Math.floor(r()*3);
     L.race=race||'human';
     if(L.race==='orc') L.skin='#86b86b';
-    var g=(cls&&typeof cls==='object')?cls:gearOf(cls); L.hat=g.head||''; L.hand=g.arms||''; L.body=g.body||''; L.legs=g.legs||'';
+    var g=(cls&&typeof cls==='object')?cls:gearOf(cls); L.hat=g.head||''; L.hand=g.arms||''; L.body=g.body||''; L.legs=g.legs||''; if(L.body&&ITEMS[L.body]&&ITEMS[L.body].tint) L.shirt=ITEMS[L.body].tint;
     return L;
   }
   // голова с причёской, лицом, чертами расы, шапкой класса и украшением титула (область 100x100)
@@ -1324,11 +1504,11 @@ svg.chr{overflow:visible}
       s+='<circle cx="24.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/><circle cx="75.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/>';
     }
     s+='<ellipse cx="50" cy="52" rx="26" ry="27" fill="'+skin+'" '+OUT+'/>';
-    if(hs===0) s+='<path d="M50 26 Q44 18 52 14" fill="none" stroke="'+hair+'" stroke-width="3.5" stroke-linecap="round"/>';
+    if(!L.hat&&hs===0) s+='<path d="M50 26 Q44 18 52 14" fill="none" stroke="'+hair+'" stroke-width="3.5" stroke-linecap="round"/>';
     if(hs===1) s+='<path d="M24 48 C22 26 38 20 50 20 C62 20 78 26 76 48 C70 38 60 34 50 34 C40 34 30 38 24 48Z" fill="'+hair+'" '+OUT+'/>';
-    if(hs===2) s+='<polygon points="24,46 26,28 34,36 38,20 46,32 52,18 58,32 66,20 68,36 76,28 76,46 66,36 50,33 34,36" fill="'+hair+'" '+OUT+'/>';
+    if(!L.hat&&hs===2) s+='<polygon points="24,46 26,28 34,36 38,20 46,32 52,18 58,32 66,20 68,36 76,28 76,46 66,36 50,33 34,36" fill="'+hair+'" '+OUT+'/>';
     if(hs===3) s+='<path d="M26 44 C30 28 70 28 74 44 C64 36 36 36 26 44Z" fill="'+hair+'" '+OUT+'/>';
-    if(hs===4) s+='<polygon points="42,30 44,12 50,22 56,12 58,30" fill="'+hair+'" '+OUT+'/>';
+    if(!L.hat&&hs===4) s+='<polygon points="42,30 44,12 50,22 56,12 58,30" fill="'+hair+'" '+OUT+'/>';
     if(rc==='beast'){
       s+='<path d="M27 36 L30 9 L45 26Z" fill="'+hair+'" '+OUT+'/><path d="M31 28 L32 16 L40 25Z" fill="#ff9fb0"/>'
         +'<path d="M73 36 L70 9 L55 26Z" fill="'+hair+'" '+OUT+'/><path d="M69 28 L68 16 L60 25Z" fill="#ff9fb0"/>';
@@ -1381,14 +1561,14 @@ svg.chr{overflow:visible}
     return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
       +'<rect width="100" height="100" fill="'+L.bg+'"/>'
       +'<path d="M14 100 C16 78 32 74 50 74 C68 74 84 78 86 100Z" fill="'+L.shirt+'" '+OUT+'/>'
-      +headParts(L,titleId)+'</svg>';
+      +(L.body?(ITEMS[L.body].back||'')+(ITEMS[L.body].avd||'')+(ITEMS[L.body].sleeve||'')+'<g transform="translate(100 0) scale(-1 1)">'+(ITEMS[L.body].sleeve||'')+'</g>':'')+headParts(L,titleId)+'</svg>';
   }
   // персонаж в полный рост с анимацией
   function avatarBody(seed,titleId,race,cls){
     var L=look(seed,race,cls), sk=L.skin, rc=L.race;
     var wp=L.hand?ITEMS[L.hand]:null;
     var wd=wp?(wp.avd||wp.draw):'', wL=(wp&&wp.hand==='L')?wd:'', wR=(wp&&wp.hand==='R')?wd:'';
-    function legD(x){return L.legs?'<g transform="translate('+x+' 104.8) scale(.9)">'+ITEMS[L.legs].draw+'</g>':'';}
+    function legD(right){return L.legs?'<g transform="'+(right?'translate(70 111) scale(-.85 .85)':'translate(30 111) scale(.85)')+'">'+ITEMS[L.legs].draw+'</g>':'';}
     var s='<svg class="chr" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
     s+='<rect width="144" height="144" rx="24" fill="'+L.bg+'" opacity="0.65"/><g transform="translate(22 0)">';
     if(rc==='dwarf') s+='<g transform="translate(50 138) scale(0.84) translate(-50 -138)">';
@@ -1400,14 +1580,15 @@ svg.chr{overflow:visible}
       if(rc==='drake') s+='<path d="M88 71 L83 82 L93 82Z" fill="#f2c94c" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/>';
       s+='</g>';
     }
-    s+='<g class="legL"><rect x="37" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="40" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/>'+legD(28)+'</g>';
-    s+='<g class="legR"><rect x="53" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="60" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/>'+legD(44)+'</g>';
+    if(L.body&&ITEMS[L.body].back) s+=ITEMS[L.body].back;
+    s+='<g class="legL"><rect x="37" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="40" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/>'+legD(false)+'</g>';
+    s+='<g class="legR"><rect x="53" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="60" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/>'+legD(true)+'</g>';
     s+='<path d="M36 82 Q50 77 64 82 L65 108 Q50 112 35 108Z" fill="'+L.shirt+'" '+OUT+'/>';
-    if(L.ts===1) s+='<path d="M36.5 94 H63.5 M36 101 H64" stroke="#fff" stroke-width="3" opacity="0.55"/>';
-    if(L.ts===2) s+='<circle cx="50" cy="96" r="5" fill="#fff" opacity="0.75"/>';
+    if(!L.body&&L.ts===1) s+='<path d="M36.5 94 H63.5 M36 101 H64" stroke="#fff" stroke-width="3" opacity="0.55"/>';
+    if(!L.body&&L.ts===2) s+='<circle cx="50" cy="96" r="5" fill="#fff" opacity="0.75"/>';
     if(L.body) s+=ITEMS[L.body].avd;
-    s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+wL+'<circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
-    s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+wR+'<circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
+    s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+(L.body&&ITEMS[L.body].sleeve?ITEMS[L.body].sleeve:'')+wL+'<circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
+    s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+(L.body&&ITEMS[L.body].sleeve?'<g transform="translate(100 0) scale(-1 1)">'+ITEMS[L.body].sleeve+'</g>':'')+wR+'<circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
     s+='<g class="chead"><g transform="translate(50 52) scale(1.1) translate(-50 -52)">'+headParts(L,titleId)+'</g></g>';
     s+='</g>';
     if(rc==='dwarf') s+='</g>';
