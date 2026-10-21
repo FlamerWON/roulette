@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="11">
+<meta name="app-version" content="12">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -479,13 +479,38 @@ svg.chr{overflow:visible}
     {id:'veteran',name:'Ветеран',desc:'Сделай 2026 прокрутов',check:function(n,p,g){return g.spins>=2026;},prog:function(g){return g.spins+' из 2026';}},
     {id:'choco',name:'Шоколад ни в чем не виноват',desc:'Сделай 101 прокрут',check:function(n,p,g){return g.spins>=101;},prog:function(g){return Math.min(g.spins,101)+' из 101';}},
     {id:'checkers',name:'Шашки нарды',desc:'10 раз подряд по очереди: красное, чёрное, красное...',check:function(n,p,g){return g.cols==='rbrbrbrbrb';}},
-    {id:'backgammon',name:'Нарды шашки',desc:'10 раз подряд по очереди: чёрное, красное, чёрное...',check:function(n,p,g){return g.cols==='brbrbrbrbr';}}
+    {id:'backgammon',name:'Нарды шашки',desc:'10 раз подряд по очереди: чёрное, красное, чёрное...',check:function(n,p,g){return g.cols==='brbrbrbrbr';}},
+    {id:'doggy',name:'Собачка',desc:'Погибнуть в бою с монстром',check:function(){return false;}},
+    {id:'fiasco',name:'Это фиаско, братан',desc:'Получить не меньше 100 монет за победу над монстром',check:function(){return false;}},
+    {id:'tractor',name:'Тракторист',desc:'Получить не меньше 300 монет за победу над монстром',check:function(){return false;}},
+    {id:'multiplier',name:'Умножитель',desc:'Выбить число ровно в 2 раза больше предыдущего',check:function(n,p){return p>0&&n===p*2;}},
+    {id:'divider',name:'Делитель',desc:'Выбить число ровно в 2 раза меньше предыдущего',check:function(n,p){return p>0&&p%2===0&&n*2===p;}},
+    {id:'color_week',name:'Неделя красок',desc:'Выбить красное число 10 раз подряд',check:function(n,p,g){return g.cols==='rrrrrrrrrr';}},
+    {id:'ghetto',name:'Гетто',desc:'Выбить чёрное число 10 раз подряд',check:function(n,p,g){return g.blackRun>=10;}},
+    {id:'popusk',name:'Попуск',desc:'Погибнуть от монстра, не нанеся ему урона',check:function(){return false;}},
+    {id:'dodge_master',name:'Мастер уклонения',desc:'Победить монстра, не получив урона',check:function(){return false;}}
   ];
   function titleName(id){
     for(var i=0;i<TITLES.length;i++){ if(TITLES[i].id===id) return TITLES[i].name; }
     return '';
   }
-  function defaultGame(){return {favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function awardTitles(ids){
+    if(!game||!game.earned)return [];
+    var got=[];
+    ids.forEach(function(id){
+      var name=titleName(id);
+      if(name&&!game.earned[id]){game.earned[id]=true;got.push(name);post({kind:'title',tn:name});}
+    });
+    if(got.length){toast('Новый титул: '+got.join(', '));$('dot').hidden=false;}
+    return got;
+  }
+  function battleTitles(coins,state,won){
+    var ids=[];
+    if(won){if(coins>=100)ids.push('fiasco');if(coins>=300)ids.push('tractor');if((Number(state&&state.taken)||0)===0)ids.push('dodge_master');}
+    else{ids.push('doggy');if((Number(state&&state.dealt)||0)===0)ids.push('popusk');}
+    return awardTitles(ids);
+  }
+  function defaultGame(){return {favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false,dealt:0,taken:0},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   var saving=false, again=false;
   var gameLoaded=false, loadRetry=0;
@@ -549,7 +574,8 @@ svg.chr{overflow:visible}
         if(typeof game.cls!=='string'||!CLASSES[game.cls]) game.cls='';
         if(!game.fight||typeof game.fight!=='object') game.fight={s:0,m:0,p:0,on:false};
         game.fight.on=!!game.fight.on; game.fight.skip=!!game.fight.skip;
-        if(game.dg&&typeof game.dg==='object'&&game.dg.on&&game.dg.st>=0&&game.dg.st<3){ game.dg.skip=!!game.dg.skip; } else { delete game.dg; }
+        if(!Number.isFinite(game.fight.dealt))game.fight.dealt=0;if(!Number.isFinite(game.fight.taken))game.fight.taken=0;
+        if(game.dg&&typeof game.dg==='object'&&game.dg.on&&game.dg.st>=0&&game.dg.st<3){ game.dg.skip=!!game.dg.skip;if(!Number.isFinite(game.dg.dealt))game.dg.dealt=0;if(!Number.isFinite(game.dg.taken))game.dg.taken=0; } else { delete game.dg; }
         game.inv=Array.isArray(game.inv)?game.inv.filter(function(i){return ITEMS[i];}):[];
         if(!game.eq||typeof game.eq!=='object') game.eq={};
         // стартовое снаряжение класса всегда должно лежать в инвентаре; чего нет, то добавляем и надеваем
@@ -587,14 +613,9 @@ svg.chr{overflow:visible}
     game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
     fightStrike(n); dgStrike(n);
     if(!wasInCombat)maybeAmbush();
-    var got=[];
-    TITLES.forEach(function(t){
-      if(!game.earned[t.id]&&t.check(n,prev,game,arr)){game.earned[t.id]=true; got.push(t.name);}
-    });
-    if(got.length){
-      toast('Новый титул: '+got.join(', ')); $('dot').hidden=false;
-      got.forEach(function(nm){post({kind:'title',tn:nm});});
-    }
+    var titleIds=[];
+    TITLES.forEach(function(t){if(!game.earned[t.id]&&t.check(n,prev,game,arr))titleIds.push(t.id);});
+    awardTitles(titleIds);
     renderCoins(); renderFight(); renderEvent();
     saveGame(); renderChar();
   }
@@ -647,7 +668,7 @@ svg.chr{overflow:visible}
   }
   // v11 additions. Keep balanceV=9: existing levels, XP and item IDs are retained.
   var merchantBusy=false;
-  var SELL_PRICES={common:8,uncommon:20,rare:55,epic:140,legendary:400};
+  var SELL_PRICES={common:8,uncommon:20,rare:55,epic:140,legendary:400,mythic:1100,divine:3000};
   var AMBUSH_CHANCE=.05,AMBUSH_REWARD=.4;
   function initV11(g){
     if(!Number.isFinite(g.eventSlot))g.eventSlot=g.fight&&g.fight.kind!=='ambush'?Number(g.fight.s)||0:0;
@@ -665,7 +686,7 @@ svg.chr{overflow:visible}
     if(Math.random()>=AMBUSH_CHANCE)return false;
     var rank=selectedRank(),mid=Math.floor(Math.random()*MONSTERS.length),elite=Math.random()<.1;
     var mo=makeMonster(MONSTERS[mid],rank,elite,false),st=stats();
-    game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:Date.now()+30*60000,r:rank,m:mo.hp,p:st.hp,ph:st.hp,pa:st.atk,on:true,skip:false};
+    game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:Date.now()+30*60000,r:rank,m:mo.hp,p:st.hp,ph:st.hp,pa:st.atk,on:true,skip:false,dealt:0,taken:0};
     fightLog='Внезапное нападение! '+mo.name+'. Бой начнётся со следующей прокрутки. Можно отступить без штрафа.';
     fightMsg='';fightChest=false;renderProgress();renderFight();renderEvent();
     toast('На тебя напал '+mo.name+'! Следующая прокрутка — ход боя.');return true;
@@ -801,16 +822,18 @@ svg.chr{overflow:visible}
     uncommon:{name:'Необычная',color:'#2f8f4e'},
     rare:{name:'Редкая',color:'#2a6fd6'},
     epic:{name:'Эпическая',color:'#7e3fc4'},
-    legendary:{name:'Легендарная',color:'#b8610a'}
+    legendary:{name:'Легендарная',color:'#b8610a'},
+    mythic:{name:'Мифическая',color:'#c026d3'},
+    divine:{name:'Божественная',color:'#e0b100'}
   };
   // w — вес выпадения (в сумме 100)
   var RACES=[
-    {id:'human',name:'Человек',r:'common',w:40,desc:'Обычный вид, ничего не меняется'},
-    {id:'beast',name:'Зверолюд',r:'uncommon',w:22,desc:'Звериные ушки, усы и хвост'},
-    {id:'dwarf',name:'Дворф',r:'rare',w:14,desc:'Низкий и коренастый, с большой бородой'},
-    {id:'orc',name:'Орк',r:'rare',w:10,desc:'Зелёная кожа и клыки'},
-    {id:'elf',name:'Эльф',r:'epic',w:10,desc:'Длинные остроконечные уши'},
-    {id:'drake',name:'Драконорождённый',r:'legendary',w:4,desc:'Рожки и чешуйчатый хвост'}
+    {id:'human',name:'Человек',r:'common',w:55,desc:'Обычный вид, ничего не меняется'},
+    {id:'beast',name:'Зверолюд',r:'uncommon',w:25,desc:'Звериные ушки, усы и хвост'},
+    {id:'dwarf',name:'Дворф',r:'rare',w:7,desc:'Низкий и коренастый, с большой бородой'},
+    {id:'orc',name:'Орк',r:'rare',w:7,desc:'Зелёная кожа и клыки'},
+    {id:'elf',name:'Эльф',r:'epic',w:5,desc:'Длинные остроконечные уши'},
+    {id:'drake',name:'Драконорождённый',r:'legendary',w:1,desc:'Рожки и чешуйчатый хвост'}
   ];
   function raceById(id){for(var i=0;i<RACES.length;i++){if(RACES[i].id===id) return RACES[i];}return null;}
   function rarPill(key){var r=RARITY[key];return '<span class="rar" style="background:'+r.color+'">'+r.name+'</span>';}
@@ -949,15 +972,17 @@ svg.chr{overflow:visible}
   }
   function lossCap(rank){return 30*rank;}
   function dungeonPrice(rank){return Math.round(150*Math.pow(rank,1.15));}
-  function lootWeights(rank,dungeon){
-    var rows=[[60,32,8,0,0],[45,35,18,2,0],[28,38,29,4,1],[15,33,41,9,2],[7,25,47,17,4],[2,18,48,25,7]];
+  function lootWeights(rank,dungeon,elite){
+    // Базовый шанс каждой новой редкости ниже 1%; данж и элита слегка повышают его, но не до 1%.
+    var rows=[[67,25,7,.6,0,.35,.05],[50,31,16,2,.6,.35,.05],[32,37,25,4,1.6,.35,.05],[18,31,38,10,2.6,.35,.05],[9,24,44,17,5.6,.35,.05],[3,17,44,25,10.6,.35,.05]];
     var v=rows[Math.min(rank,6)-1].slice();
-    if(dungeon){var shift=Math.min(v[0],10);v[0]-=shift;v[2]+=shift;}
-    return ['common','uncommon','rare','epic','legendary'].map(function(r,i){return [r,v[i]];});
+    if(dungeon){v[0]-=.4;v[5]+=.3;v[6]+=.1;var ds=Math.min(v[0],10);v[0]-=ds;v[2]+=ds;}
+    if(elite){v[0]-=.55;v[5]+=.4;v[6]+=.15;var es=Math.min(v[0],10);v[0]-=es;v[3]+=es;}
+    return ['common','uncommon','rare','epic','legendary','mythic','divine'].map(function(r,i){return [r,v[i]];});
   }
   function rollLoot(rank,dungeon,elite){
-    var w=lootWeights(rank,dungeon),x=Math.random()*100,acc=0,r='common';
-    if(elite){var add=Math.min(w[0][1],10);w[0][1]-=add;w[3][1]+=add;}
+    var w=lootWeights(rank,dungeon,elite),x=Math.random()*100,acc=0,r='common';
+
     for(var i=0;i<w.length;i++){acc+=w[i][1];if(x<acc){r=w[i][0];break;}}
     var pool=Object.keys(ITEMS).filter(function(id){var it=ITEMS[id];return it.drop&&it.r===r&&(!game.cls||it.cls===game.cls);});
     return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
@@ -1150,12 +1175,13 @@ svg.chr{overflow:visible}
  var slot=slotNow(),el=Date.now()-slot*HOUR,f=game.fight;
  if(el>=EVENT_MS||f.on||game.eventSlot===slot||dgOn())return;
  var rank=selectedRank(),mo=foeFor(slot,rank),st=stats();
- game.eventSlot=slot;game.fight={s:slot,kind:'event',m:mo.hp,p:st.hp,on:true,skip:false,r:rank,ph:st.hp,pa:st.atk};
+ game.eventSlot=slot;game.fight={s:slot,kind:'event',m:mo.hp,p:st.hp,on:true,skip:false,r:rank,ph:st.hp,pa:st.atk,dealt:0,taken:0};
  fightLog='Бой начался. '+rankName(rank)+'. Снаряжение и характеристики зафиксированы до конца боя.';fightMsg='';fightChest=false;
  saveGame();renderProgress();renderFight();renderEvent();
 }
-  function loseFight(prefix){
+  function loseFight(prefix,died){
  var rank=game.fight.r||1,lost=Math.min(Math.floor((Number(game.coins)||0)*.1),lossCap(rank));
+ if(died)battleTitles(0,game.fight,false);
  game.coins-=lost;game.fight.on=false;game.fight.skip=false;
  fightMsg=prefix+' Потеряно '+lost+' монет (10% кошелька, не больше '+lossCap(rank)+'). Опыт сохранён.';
  renderCoins();renderProgress();
@@ -1169,11 +1195,12 @@ svg.chr{overflow:visible}
 }
   // один удар по правилам боя: зеро это крит x2, единица это неудача и пропуск хода
   function strikeCore(f,mo,st,n){
-    if(f.skip){ f.skip=false; f.p-=mo.dmg; return 'Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.'; }
-    if(n===0){ f.m-=st.atk*2; return 'Зеро! Критический удар: '+mo.name+' теряет '+(st.atk*2)+' HP (x2).'; }
-    if(n===1){ f.p-=mo.dmg; f.skip=true; return 'Единица, критическая неудача! '+mo.name+' бьёт на '+mo.dmg+', а следующий ход ты пропускаешь.'; }
-    if(mo.hit(n)){ f.m-=st.atk; return 'Выпало '+n+': попал! '+mo.name+' теряет '+st.atk+' HP.'; }
-    f.p-=mo.dmg; return 'Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
+    if(!Number.isFinite(f.dealt))f.dealt=0;if(!Number.isFinite(f.taken))f.taken=0;
+    if(f.skip){ f.skip=false; f.p-=mo.dmg;f.taken+=mo.dmg; return 'Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.'; }
+    if(n===0){ f.m-=st.atk*2;f.dealt+=st.atk*2; return 'Зеро! Критический удар: '+mo.name+' теряет '+(st.atk*2)+' HP (x2).'; }
+    if(n===1){ f.p-=mo.dmg;f.taken+=mo.dmg; f.skip=true; return 'Единица, критическая неудача! '+mo.name+' бьёт на '+mo.dmg+', а следующий ход ты пропускаешь.'; }
+    if(mo.hit(n)){ f.m-=st.atk;f.dealt+=st.atk; return 'Выпало '+n+': попал! '+mo.name+' теряет '+st.atk+' HP.'; }
+    f.p-=mo.dmg;f.taken+=mo.dmg; return 'Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
   }
   function fightStrike(n){
  var f=game&&game.fight;if(!f||!f.on)return;
@@ -1184,9 +1211,9 @@ svg.chr{overflow:visible}
   var chance=f.kind==='ambush'?(mo.elite?.35:.2):(mo.elite?.7:.4);var id=Math.random()<chance?rollLoot(mo.rank,false,mo.elite):null;
   game.coins+=coins;if(id)game.inv.push(id);var up=gainXP(xp);
   fightMsg=fightLog+' Победа! +'+coins+' монет · +'+xp+' XP.'+up+(id?' Добыча: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':' Предметов не выпало.');
-  if(id){toast('Выпал предмет: '+ITEMS[id].name);$('dot').hidden=false;}else if(up)toast(up);
+  if(id){toast('Выпал предмет: '+ITEMS[id].name);$('dot').hidden=false;}else if(up)toast(up);battleTitles(coins,f,true);
   renderCoins();renderProgress();
- }else if(f.p<=0){f.p=0;f.skip=false;loseFight(fightLog+' Ты погиб.');}
+ }else if(f.p<=0){f.p=0;f.skip=false;loseFight(fightLog+' Ты погиб.',true);}
 }
   // если бой не закончен, а час уже сменился, это считается поражением
   function checkAbandon(){
@@ -1217,7 +1244,7 @@ svg.chr{overflow:visible}
     {id:'lich',name:'Лич',hp:50,dmg:9,rule:'число, кратное трём',hit:function(n){return n>0&&n%3===0;}}
   ];
   // предмет из сундука данжа: шансы по редкости, и только для твоего класса
-  var DROP_D=[['common',10],['uncommon',30],['rare',35],['epic',20],['legendary',5]];
+  var DROP_D=[['common',9.6],['uncommon',30],['rare',35],['epic',20],['legendary',5],['mythic',.3],['divine',.1]];
   function dgOn(){return !!(game&&game.dg&&game.dg.on);}
   function dgList(seed){
     var r=rng(hashStr('d'+seed)), a=DG_MONSTERS.slice(), o=[];
@@ -1230,7 +1257,7 @@ svg.chr{overflow:visible}
  if(!game||!gameLoaded||!game.cls||dgOn()||(game.fight&&game.fight.on))return;
  var rank=selectedRank(),price=dungeonPrice(rank);if(game.coins<price)return;
  var st=stats();game.coins-=price;
- game.dg={on:true,st:0,seed:Math.floor(Math.random()*1000000000),m:0,p:st.hp,skip:false,r:rank,ph:st.hp,pa:st.atk,fee:price};game.dg.m=dgFoe().hp;
+ game.dg={on:true,st:0,seed:Math.floor(Math.random()*1000000000),m:0,p:st.hp,skip:false,r:rank,ph:st.hp,pa:st.atk,fee:price,dealt:0,taken:0};game.dg.m=dgFoe().hp;
  fightLog='Ты вошёл в данж. '+rankName(rank)+'. Характеристики зафиксированы. Монстр 1 из '+DG_STAGES+'.';fightMsg='';fightChest=false;
  saveGame();renderCoins();renderProgress();renderFight();renderEvent();showTab('game');
 }
@@ -1244,7 +1271,7 @@ svg.chr{overflow:visible}
  var mo=dgFoe(),st=battleStats(d);fightLog=strikeCore(d,mo,st,n);
  if(d.m<=0){
   var base=rewardBase(mo),xp=game.level>=LEVEL_CAP?0:rollReward(base.xp*xpFactor(d.r)),coins=rollReward(dungeonPrice(d.r)*.21);
-  game.coins+=coins;var up=gainXP(xp);d.m=0;
+  game.coins+=coins;var up=gainXP(xp);d.m=0;var wonState={dealt:d.dealt,taken:d.taken};
   var earned=' +'+xp+' XP · +'+coins+' монет.'+up;
   if(d.st+1>=DG_STAGES){
    var id=dgChestItem(),bonus=game.level>=LEVEL_CAP?0:rollReward(45*Math.pow(d.r,1.65)*xpFactor(d.r));
@@ -1252,11 +1279,11 @@ svg.chr{overflow:visible}
    fightMsg=fightLog+' Данж пройден!'+earned+' Бонус: +'+bonus+' XP.'+more+(id?' В сундуке: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':'');fightChest=true;
    toast(id?'Данж пройден: '+ITEMS[id].name:'Данж пройден!');$('dot').hidden=false;
   }else{
-   d.st++;var nx=dgFoe();d.m=nx.hp;d.p=healBetween(d.p,d.ph);d.skip=false;
+   d.st++;var nx=dgFoe();d.m=nx.hp;d.p=healBetween(d.p,d.ph);d.skip=false;d.dealt=0;d.taken=0;
    fightLog+=' Монстр повержен!'+earned+' Далее: '+nx.name+'. Восстановлено до 25% максимального HP.';
   }
-  renderCoins();renderProgress();
- }else if(d.p<=0){delete game.dg;fightMsg=fightLog+' Ты погиб в данже. Потерян только взнос. Заработанные опыт и монеты сохранены.';fightChest=false;renderProgress();}
+  battleTitles(coins,wonState,true);renderCoins();renderProgress();
+ }else if(d.p<=0){battleTitles(0,d,false);delete game.dg;fightMsg=fightLog+' Ты погиб в данже. Потерян только взнос. Заработанные опыт и монеты сохранены.';fightChest=false;renderProgress();}
 }
   function renderDgFight(box){
     var d=game.dg, mo=dgFoe(), st=battleStats(d);
@@ -1452,6 +1479,22 @@ svg.chr{overflow:visible}
     if(d[7]==='sword'||d[7]==='axe'||d[7]==='staff') it.hand='R';
     if(d[7]==='bow') it.hand='L';
     ITEMS[d[0]]=it;
+  });
+  // 40 полных комплектов для каждого класса: 120 комплектов, 480 отдельных предметов.
+  var SET_THEMES=['Пепла','Мха','Меди','Тумана','Кремня','Вереска','Дождя','Янтаря','Инея','Кедра','Руны','Прилива','Зари','Сумерек','Бури','Грома','Кометы','Сапфира','Рубина','Обсидиана','Феникса','Виверны','Валькирии','Бездны','Затмения','Шторма','Дракона','Созвездия','Лунного света','Солнечного ветра','Звёздной пыли','Хаоса','Мирового древа','Вечности','Небесного огня','Пустоты','Судьбы','Олимпа','Творения','Абсолюта'];
+  var SET_RARITIES=['common','common','common','common','common','common','common','uncommon','uncommon','uncommon','uncommon','uncommon','uncommon','uncommon','rare','rare','rare','rare','rare','rare','rare','epic','epic','epic','epic','epic','epic','legendary','legendary','legendary','legendary','legendary','mythic','mythic','mythic','mythic','mythic','divine','divine','divine'];
+  var SET_COLORS=['#8b7355','#607d5b','#a56b46','#718096','#81715e','#7b6d8d','#557c93','#b77a3d','#7293b5','#526f4f','#8060a8','#3b82a0','#d97745','#634b7a','#4169a8','#6950a1','#8154b7','#376da4','#9c334b','#39364f','#bf4a2f','#7150a8','#a77c28','#342b58','#473c82','#28678d','#9f3b32','#3f4c9a','#5767b7','#d28a2c','#7b5fc1','#a32174','#3f8f61','#8d4fc2','#d05633','#4e3ca8','#9647b8','#d6a514','#f0c233','#fff0a0'];
+  var SET_STATS={common:[[12,1],[20,1],[2,6],[10,1]],uncommon:[[18,2],[30,2],[4,10],[15,2]],rare:[[28,4],[45,4],[7,16],[22,3]],epic:[[42,7],[68,7],[12,25],[32,5]],legendary:[[62,11],[95,10],[20,38],[46,8]],mythic:[[90,16],[140,15],[30,55],[68,12]],divine:[[130,24],[200,22],[45,80],[95,18]]};
+  var SET_CLASS={mage:{code:'m',who:'мага',head:'hat',headName:'Шляпа',bodyName:'Мантия',arms:'staff',armsName:'Посох',legsName:'Сапоги',hp:.85,atk:1.15},warrior:{code:'w',who:'стража',head:'helm',headName:'Шлем',bodyName:'Доспех',arms:'sword',armsName:'Клинок',legsName:'Сапоги',hp:1.2,atk:.8},archer:{code:'a',who:'следопыта',head:'hood',headName:'Капюшон',bodyName:'Куртка',arms:'bow',armsName:'Лук',legsName:'Сапоги',hp:1,atk:1}};
+  Object.keys(SET_CLASS).forEach(function(cls){
+    var cc=SET_CLASS[cls];SET_THEMES.forEach(function(theme,i){
+      var rarity=SET_RARITIES[i],color=SET_COLORS[i],accent=armorTint(color,.38),stats=SET_STATS[rarity];
+      [['h','head',cc.head,cc.headName],['b','body','body',cc.bodyName],['a','arms',cc.arms,cc.armsName],['l','legs','boots',cc.legsName]].forEach(function(part,j){
+        var id='s'+cc.code+(i<10?'0':'')+i+part[0],base=stats[j],it={name:part[3]+' '+theme+' '+cc.who,slot:part[1],cls:cls,r:rarity,hp:Math.round(base[0]*cc.hp),atk:Math.round(base[1]*cc.atk),drop:true,setId:'s'+cc.code+(i<10?'0':'')+i,vb:'0 0 40 40',draw:K[part[2]](color,accent)};
+        if(AVK[part[2]]&&part[1]!=='legs')it.avd='<g transform="'+AVK[part[2]]+'">'+it.draw+'</g>';
+        if(part[2]==='sword'||part[2]==='staff')it.hand='R';if(part[2]==='bow')it.hand='L';ITEMS[id]=it;
+      });
+    });
   });
   /* Armor art v8: shared, avatar-space SVG geometry. Item IDs and stats unchanged. */
   function armorTint(hex, amount){
@@ -1657,8 +1700,8 @@ svg.chr{overflow:visible}
   var RACE_BONUS={common:{hp:0,atk:0},uncommon:{hp:6,atk:0},rare:{hp:10,atk:1},epic:{hp:14,atk:2},legendary:{hp:18,atk:3}};
   function bonusLine(b){var p=[]; if(b&&b.hp) p.push('здоровье +'+b.hp); if(b&&b.atk) p.push('урон +'+b.atk); return p.length?p.join(', '):'нет';}
   // Шанс предмета с монстра по редкости (в сумме 100)
-  var DROP_W=[['common',50],['uncommon',30],['rare',15],['epic',4],['legendary',1]];
-  var DROP_E=[['common',20],['uncommon',30],['rare',28],['epic',17],['legendary',5]]; // с элитного монстра
+  var DROP_W=[['common',49.6],['uncommon',30],['rare',15],['epic',4],['legendary',1],['mythic',.35],['divine',.05]];
+  var DROP_E=[['common',19.05],['uncommon',30],['rare',28],['epic',17],['legendary',5],['mythic',.75],['divine',.2]]; // с элитного монстра
   function dropItem(elite){
     var x=Math.random()*100, acc=0, r='common';
     var W=elite?DROP_E:DROP_W;
