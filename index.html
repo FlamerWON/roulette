@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="12">
+<meta name="app-version" content="13">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -244,6 +244,8 @@ svg.chr{overflow:visible}
 .rankRow{display:flex;align-items:center;gap:12px}.rankRow label{font-size:13px;color:var(--muted)}.rankRow select{min-width:0;flex:1;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px}
 .progressPanel p{font-size:12px;line-height:1.5;color:var(--muted);margin:8px 0 0}.rankRow select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}@media(prefers-reduced-motion:reduce){.xpBar i{transition:none}}
 #toast:empty{display:none}#toast{width:100%;max-width:520px;min-height:0;font-size:14px;line-height:1.5}#toast.on{border-radius:12px}#merchantBody{display:flex;flex-direction:column;gap:14px}.merchantList{display:flex;flex-direction:column;gap:10px}.merchantItem{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px}.merchantIcon{width:52px;height:52px;border:2px solid var(--line);border-radius:10px;padding:5px}.merchantIcon svg{display:block;width:100%;height:100%}.merchantDetails{display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere;min-width:0}.merchantDetails strong{font-size:14px;line-height:1.35}.merchantDetails span{font-size:12px;line-height:1.4;color:var(--muted)}.merchantActions{display:flex;align-items:center;gap:8px}.merchantActions button{font-size:13px;padding:8px 10px;min-height:44px;border-radius:10px}.merchantActions .favoriteButton{min-width:44px;font-size:22px;padding:4px 8px}.favoriteButton[aria-pressed="true"]{color:var(--gold);border-color:var(--gold)}.sellPrices{display:flex;gap:8px;flex-wrap:wrap}.sellPrices>span{display:inline-flex;align-items:center;gap:4px;font-size:12px}.merchantIntro .merchantNote{font-size:12px;line-height:1.5}.huntNote{font-size:13px;line-height:1.5;color:var(--muted);text-align:center;max-width:420px;margin:0}.charPane>.progressPanel{margin:0} @media(max-width:600px){.merchantItem{grid-template-columns:48px minmax(0,1fr);gap:10px}.merchantIcon{width:48px;height:48px}.merchantActions{grid-column:1/-1;justify-content:flex-end}.merchantActions button[data-sell]{min-width:150px}}
+
+#forgeBody{margin-bottom:16px}#forgeItem{width:100%;padding:12px;margin:10px 0;box-sizing:border-box;max-width:100%}.forgeButtons{display:flex;gap:8px;flex-wrap:wrap}.forgeButtons button{flex:1;min-height:44px}.forgePreview{padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0}.forgePreview>svg{width:60px;height:60px;vertical-align:middle;margin-right:12px}.forgePreview strong{overflow-wrap:anywhere}.forgeWarning{color:#ff8a80!important;font-weight:700}#forgeBody table{width:100%;font-size:13px;text-align:left;border-collapse:collapse}#forgeBody td,#forgeBody th{padding:8px;border-bottom:1px solid var(--line)}#newsOpen{padding:8px 12px;min-height:40px;margin:8px 0}#newsModal .mbox{max-height:85vh;overflow:auto;text-align:left;max-width:580px;width:90%;box-sizing:border-box}#newsContent{max-height:55vh;overflow:auto}#newsContent li{margin:12px 0;line-height:1.5}#newsClose{margin-top:12px;width:100%}#newsModal:before{content:'';position:absolute;inset:0}#newsModal .mbox{position:relative}.icell .enhancedBonus{color:#84e3a5;font-size:11px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -280,6 +282,7 @@ svg.chr{overflow:visible}
       <button id="tabShop" class="tab">Магазин</button>
       <button id="tabDg" class="tab">Данж</button>
     </div>
+    <button id="newsOpen" class="ghost">Что нового</button>
     <div id="toast" role="status" aria-live="polite"></div>
     <div class="eventBar" id="eventBar">
       <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
@@ -338,7 +341,7 @@ svg.chr{overflow:visible}
       <button id="boardRefresh" class="ghost">Обновить</button>
     </section>
 
-    <section class="shopPane" id="shopPane" hidden><div id="merchantBody"></div><div id="shopBody"></div></section>
+    <section class="shopPane" id="shopPane" hidden><div id="forgeBody"></div><div id="merchantBody"></div><div id="shopBody"></div></section>
     <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
     </div>
   </div>
@@ -348,6 +351,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 13</h2><div id="newsContent" tabindex="0"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -510,7 +514,7 @@ svg.chr{overflow:visible}
     else{ids.push('doggy');if((Number(state&&state.dealt)||0)===0)ids.push('popusk');}
     return awardTitles(ids);
   }
-  function defaultGame(){return {favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false,dealt:0,taken:0},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function defaultGame(){return {stones:0,enhance:{},eqCopies:{},releaseSeen:0,favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false,dealt:0,taken:0},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   var saving=false, again=false;
   var gameLoaded=false, loadRetry=0;
@@ -559,7 +563,7 @@ svg.chr{overflow:visible}
       return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(game)});
     }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
     .catch(function(e){ if(!kickedOut) toast('Прогресс не сохранился ('+((e&&e.message)||'нет связи')+').'); checkSession(); })
-    .then(function(){ saving=false; if(again){again=false; return saveGame();} });
+    .then(function(){ saving=false; if(again){again=false; return saveGame();} if(curTab==='shop')renderForge(); });
   }
   function loadGame(){
     return token().then(function(t){return fetch(gameUrl(t));}).then(function(r){return r.json();}).then(function(g){
@@ -576,7 +580,7 @@ svg.chr{overflow:visible}
         game.fight.on=!!game.fight.on; game.fight.skip=!!game.fight.skip;
         if(!Number.isFinite(game.fight.dealt))game.fight.dealt=0;if(!Number.isFinite(game.fight.taken))game.fight.taken=0;
         if(game.dg&&typeof game.dg==='object'&&game.dg.on&&game.dg.st>=0&&game.dg.st<3){ game.dg.skip=!!game.dg.skip;if(!Number.isFinite(game.dg.dealt))game.dg.dealt=0;if(!Number.isFinite(game.dg.taken))game.dg.taken=0; } else { delete game.dg; }
-        game.inv=Array.isArray(game.inv)?game.inv.filter(function(i){return ITEMS[i];}):[];
+        game.inv=Array.isArray(game.inv)?game.inv:[]; filterInventory(game,function(id){return !!ITEMS[id];});
         if(!game.eq||typeof game.eq!=='object') game.eq={};
         // стартовое снаряжение класса всегда должно лежать в инвентаре; чего нет, то добавляем и надеваем
         var cg=gearOf(game.cls), added=false;
@@ -585,10 +589,10 @@ svg.chr{overflow:visible}
         }
         game.gm=1; if(g.balanceV!==9)game.balanceV=0; migrateBalance(game); if(!Number.isFinite(g.eventSlot))delete game.eventSlot; initV11(game);
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
-        gameLoaded=true; renderProgress(); saveGame();
+        gameLoaded=true; renderProgress(); saveGame(); maybeNews();
       }else if(g===null){
         // в базе правда пусто: новый аккаунт
-        game=defaultGame(); initV11(game); gameLoaded=true; renderChar(); renderCoins(); return saveGame();
+        game=defaultGame(); initV11(game); gameLoaded=true; renderChar(); renderCoins(); maybeNews(); return saveGame();
       }else{
         loadFailed();
       }
@@ -632,11 +636,13 @@ svg.chr{overflow:visible}
     var gear=equipped();
     [['slotHead','head','Голова'],['slotBody','body','Тело'],['slotArms','arms','Руки'],['slotLegs','legs','Ноги']].forEach(function(sl){
       var el=$(sl[0]), id=gear[sl[1]];
-      el.onclick=(game.eq&&game.eq[sl[1]])?function(){if(merchantBusy||!gameLoaded)return;delete game.eq[sl[1]]; saveGame(); renderChar();}:null;
+      el.onclick=(game.eq&&game.eq[sl[1]])?function(){if(merchantBusy||!gameLoaded)return;delete game.eq[sl[1]];delete game.eqCopies[sl[1]]; saveGame(); renderChar();}:null;
       el.title=(game.eq&&game.eq[sl[1]])?'Нажми, чтобы снять':'';
       if(id){
         var it=ITEMS[id];
-        el.innerHTML=itemIcon(id)+'<span class="sn">'+it.name+'</span>';
+        var ci=wornIndex(game,sl[1]),lv=ci>=0?copyLevel(game,ci):0;
+        el.innerHTML=itemIcon(id)+'<span class="sn">'+it.name+(lv?' +'+lv:'')+'</span>';
+        el.title=(ci>=0?copyStatsLine(game,ci):itemLine(id))+'. Нажми, чтобы снять';
         el.style.borderStyle='solid'; el.style.borderColor=RARITY[it.r].color;
         el.setAttribute('aria-label',sl[2]+': '+it.name);
       }else{
@@ -670,7 +676,153 @@ svg.chr{overflow:visible}
   var merchantBusy=false;
   var SELL_PRICES={common:8,uncommon:20,rare:55,epic:140,legendary:400,mythic:1100,divine:3000};
   var AMBUSH_CHANCE=.05,AMBUSH_REWARD=.4;
+  /* ---------- v13: per-copy enhancement, legacy inventory IDs unchanged ---------- */
+  var FORGE_CHANCES=[100,100,80,70,60,50,40,30,20,10];
+  var FORGE_COSTS=[100,150,250,400,600,850,1150,1500,2000,2600];
+  var STONE_PRICE=150,forgeIndex=0;
+  function copyLevel(g,i){var n=Number(g.enhance&&g.enhance[i]);return Number.isInteger(n)&&n>=0&&n<=10?n:0;}
+  function wornIndex(g,slot){
+    var id=g.eq&&g.eq[slot],i=Number(g.eqCopies&&g.eqCopies[slot]);
+    if(!id)return -1;
+    return Number.isInteger(i)&&i>=0&&g.inv[i]===id?i:g.inv.indexOf(id);
+  }
+  function initEnhancement(g){
+    g.stones=Number.isInteger(g.stones)&&g.stones>=0?Math.min(g.stones,1000000):0;
+    var old=g.enhance||{},valid={};
+    (g.inv||[]).forEach(function(id,i){var n=Number(old[i]);if(Number.isInteger(n)&&n>0&&n<=10)valid[i]=n;});g.enhance=valid;
+    var copies={};['head','body','arms','legs'].forEach(function(sl){var i=wornIndex(g,sl);if(i>=0)copies[sl]=i;});g.eqCopies=copies;
+  }
+  // Every removal compacts ALL per-copy metadata, including the equipped duplicate.
+  function filterInventory(g,keep){
+    var inv=[],levels={},copies={},mapping={};
+    (g.inv||[]).forEach(function(id,i){if(keep(id,i)){var j=inv.length;mapping[i]=j;inv.push(id);var n=copyLevel(g,i);if(n)levels[j]=n;}});
+    ['head','body','arms','legs'].forEach(function(sl){var i=wornIndex(g,sl);if(Object.prototype.hasOwnProperty.call(mapping,i))copies[sl]=mapping[i];});
+    g.inv=inv;g.enhance=levels;g.eqCopies=copies;
+  }
+  function enhancedStats(it,n){
+    var hp=it.hp||0,atk=it.atk||0;
+    // The current game has HP and attack, NOT a separate defense stat.
+    return {hp:hp+(hp>0?5*n+Math.floor(hp*3*n/100):0),atk:atk+(atk>0?n+Math.floor(atk*3*n/100):0)};
+  }
+  function copyName(g,i){return ITEMS[g.inv[i]].name+(copyLevel(g,i)?' +'+copyLevel(g,i):'');}
+  function copyStatsLine(g,i){var it=ITEMS[g.inv[i]],n=copyLevel(g,i),st=enhancedStats(it,n),p=[];
+    if(st.hp)p.push('HP '+st.hp+(n?' (база '+it.hp+', +'+(st.hp-it.hp)+')':''));
+    if(st.atk)p.push('урон '+st.atk+(n?' (база '+it.atk+', +'+(st.atk-it.atk)+')':''));return p.join(' · ');
+  }
+  function saleCopyIndices(g,id,duplicates){
+    var groups={},remove={};
+    (g.inv||[]).forEach(function(key,i){(groups[key]||(groups[key]=[])).push(i);});
+    Object.keys(groups).forEach(function(key){
+      if(id&&key!==id||saleProtected(g,key))return;
+      var indices=groups[key],it=ITEMS[key],worn=wornIndex(g,it.slot),protectedCount=0;
+      var available=indices.filter(function(i){var protect=copyLevel(g,i)>0||i===worn;if(protect)protectedCount++;return !protect;});
+      var leave=(duplicates||isStarterItem(key))&&protectedCount===0?1:0;
+      var n=duplicates?Math.max(0,available.length-leave):Math.min(1,Math.max(0,available.length-leave));
+      // Deterministic choice: sell the last unenhanced copies, retaining earlier ones.
+      available.slice(available.length-n).forEach(function(i){remove[i]=true;});
+    });return remove;
+  }
+  function forgePlan(g,type,i,count,random){
+    var next=JSON.parse(JSON.stringify(g));initEnhancement(next);
+    if((g.fight&&g.fight.on)||(g.dg&&g.dg.on))throw Error('Сначала закончи бой или данж');
+    if(type==='buy'){
+      if([1,5,10].indexOf(count)<0)throw Error('Неверное количество камней');
+      if(next.stones+count>1000000)throw Error('Достигнут предел камней');
+      if(next.coins<count*STONE_PRICE)throw Error('Не хватает монет');
+      next.coins-=count*STONE_PRICE;next.stones+=count;return {next:next,message:'Куплено камней: '+count+'.'};
+    }
+    if(type!=='enhance'||!Number.isInteger(i)||!ITEMS[g.inv[i]])throw Error('Предмет не найден');
+    var it=ITEMS[g.inv[i]],n=copyLevel(g,i);
+    if(it.cls&&it.cls!==g.cls)throw Error('Улучшать можно только вещи своего класса');
+    if(!(it.hp>0||it.atk>0))throw Error('У этой вещи нет улучшаемых характеристик');
+    if(n>=10)throw Error('Уже максимальный уровень +10');
+    if(next.stones<1)throw Error('Нужен камень улучшения');
+    if(next.coins<FORGE_COSTS[n])throw Error('Не хватает монет');
+    if(!Number.isFinite(random)||random<0||random>=1)throw Error('Не удалось получить случайное число');
+    next.stones--;next.coins-=FORGE_COSTS[n];
+    var success=random<FORGE_CHANCES[n]/100;
+    if(success)next.enhance[i]=n+1;else delete next.enhance[i];
+    return {next:next,message:success?'Успех! '+it.name+' +'+(n+1)+'.':'Неудача. '+it.name+' сброшен до +0. Сам предмет сохранён.'};
+  }
+  function forgeRandom(){var a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}
+  async function executeForge(type,i,count){
+    if(!canSell()){toast('Дождись окончания боя, прокрутки или сохранения.');return false;}
+    var session=sess,local=JSON.parse(JSON.stringify(game));local.v=APP_V;local.sid=mySid;
+    merchantBusy=true;gameLoaded=false;
+    $('mText').textContent='Сохраняем операцию кузницы… Не закрывай страницу.';$('mYes').hidden=true;$('mNo').hidden=true;$('modal').hidden=false;
+    try{
+      var t=await token();if(sess!==session)throw Error('Сессия изменилась');
+      var url=gameUrl(t),read=await fetch(url,{headers:{'X-Firebase-ETag':'true'},cache:'no-store'});
+      if(!read.ok)throw Error('Не удалось проверить сохранение');
+      var server=await read.json(),etag=read.headers.get('ETag');
+      if(!server||!etag||canonicalGame(server)!==canonicalGame(local))throw Error('Сохранение изменилось');
+      var plan=forgePlan(server,type,i,count,type==='enhance'?forgeRandom():0);plan.next.v=APP_V;plan.next.sid=mySid;plan.next.unlockedRank=maxRank(plan.next);
+      var write=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(plan.next)});
+      if(!write.ok)throw Error(write.status===412?'Другая операция уже изменила сохранение':'Запись не подтверждена');
+      if(sess!==session)return false;
+      game=plan.next;gameLoaded=true;again=false;merchantBusy=false;
+      renderCoins();renderChar();renderMerchant();renderForge();renderEvent();toast(plan.message);return true;
+    }catch(e){
+      // Never re-roll or blindly repeat a possibly committed enhancement.
+      merchantBusy=false;again=false;
+      if(sess===session){gameLoaded=false;await loadGame();renderForge();toast((e.message||'Нет подтверждения')+'. Загружен доступный прогресс. Проверь монеты, камни и уровень вещи; автоматического повтора нет.');}
+      return false;
+    }finally{merchantBusy=false;$('mYes').hidden=false;$('mNo').hidden=false;closeModal();}
+  }
+  function confirmForge(type,i,count){
+    if(!canSell()){toast('Дождись окончания боя, прокрутки или сохранения.');return;}
+    var text;
+    if(type==='buy')text='Купить '+count+' камней за '+(count*STONE_PRICE)+' монет?';
+    else{var n=copyLevel(game,i),id=game.inv[i];if(!ITEMS[id]||n>=10)return;
+      if(game.stones<1||game.coins<FORGE_COSTS[n]){toast('Не хватает камня или монет.');return;}
+      text='Экземпляр №'+(i+1)+': '+copyName(game,i)+'. Улучшить до +'+(n+1)+'? Шанс '+FORGE_CHANCES[n]+'%. Цена: '+FORGE_COSTS[n]+' монет и 1 камень. '+(n<2?'Успех гарантирован.':'При неудаче ВСЕ улучшения этой вещи сбросятся до +0. Предмет не исчезнет.');}
+    confirmBox(text,type==='buy'?'Купить':'Улучшить',function(){executeForge(type,i,count);});
+  }
+  function renderForge(){
+    var box=$('forgeBody');if(!box||!game)return;
+    var indices=[];game.inv.forEach(function(id,i){var it=ITEMS[id];if(it&&(!it.cls||it.cls===game.cls)&&(it.hp>0||it.atk>0))indices.push(i);});
+    if(indices.indexOf(forgeIndex)<0)forgeIndex=indices.length?indices[0]:-1;
+    var blocked=!canSell();
+    var h='<div class="card"><h3>Кузница</h3><p>Камни: <strong>'+game.stones+'</strong> · один камень — '+STONE_PRICE+' монет. Каждая попытка также стоит монеты.</p><div class="forgeButtons">';
+    [1,5,10].forEach(function(n){h+='<button data-stones="'+n+'"'+(blocked||game.coins<STONE_PRICE*n?' disabled':'')+'>Купить '+n+' · '+(STONE_PRICE*n)+' мон.</button>';});
+    h+='</div><p>Каждый +1: для существующего урона +1 и 3% от базы; для существующего HP +5 и 3% от базы. Отдельной защиты в игре нет. Новые характеристики не появляются.</p><p>Первые +1 и +2 гарантированы. Далее неудача сбрасывает заточку выбранной копии до +0, но не уничтожает вещь. Заточенные вещи скупщик не продаёт.</p>';
+    if(indices.length){h+='<label for="forgeItem">Выбери экземпляр</label><select id="forgeItem"'+(blocked?' disabled':'')+'>';indices.forEach(function(i){h+='<option value="'+i+'"'+(i===forgeIndex?' selected':'')+'>'+copyName(game,i)+' · экземпляр №'+(i+1)+'</option>';});h+='</select>';
+      var n=copyLevel(game,forgeIndex),it=ITEMS[game.inv[forgeIndex]],st=enhancedStats(it,n+1);
+      h+='<div class="forgePreview">'+itemIcon(game.inv[forgeIndex])+'<strong>'+copyName(game,forgeIndex)+'</strong><p>'+copyStatsLine(game,forgeIndex)+'</p>';
+      if(n<10)h+='<p>Следующий уровень +'+(n+1)+': '+(st.hp?'HP '+st.hp+' ':'')+(st.atk?'урон '+st.atk:'')+'</p><p>Шанс: <b>'+FORGE_CHANCES[n]+'%</b> · '+FORGE_COSTS[n]+' монет + 1 камень.</p>'+(n>=2?'<p class="forgeWarning">При неудаче: сброс до +0.</p>':'<p>Успех гарантирован.</p>')+'<button id="forgeTry"'+(blocked||!game.stones||game.coins<FORGE_COSTS[n]?' disabled':'')+'>Улучшить до +'+(n+1)+'</button>';
+      else h+='<p>Максимальная заточка +10.</p>';
+      h+='</div>';
+    }else h+='<p>Получите экипировку своего класса.</p>';
+    h+='<details><summary>Все шансы и цены</summary><table><tr><th>Уровень</th><th>Шанс</th><th>Монеты + 1 камень</th></tr>';
+    FORGE_CHANCES.forEach(function(ch,i){h+='<tr><td>+'+i+' → +'+(i+1)+'</td><td>'+ch+'%</td><td>'+FORGE_COSTS[i]+'</td></tr>';});
+    h+='</table></details><p>Во время боя, данжа или сохранения кузница недоступна. Камни сейчас покупаются за монеты; разбор и выпадение камней пока не добавлены.</p></div>';box.innerHTML=h;
+    box.querySelectorAll('[data-stones]').forEach(function(b){b.onclick=function(){confirmForge('buy',null,Number(b.dataset.stones));};});
+    var select=$('forgeItem');if(select)select.onchange=function(){forgeIndex=Number(this.value);renderForge();};var button=$('forgeTry');if(button)button.onclick=function(){confirmForge('enhance',forgeIndex);};
+  }
+  /* ---------- release notes: acknowledged per account in saved game ---------- */
+  var RELEASE_ID=13;
+  var RELEASE_NOTES=[{title:'Заточка и новости обновлений',lines:[
+    'Кузница в магазине: камни по 150 монет, заточка до +10. Первые два уровня гарантированы.',
+    'Каждый уровень усиливает существующий урон на 1 + 3% от базы, HP на 5 + 3% от базы. При неудаче заточка сбрасывается до +0; вещь сохраняется.',
+    'Каждая копия улучшается отдельно. Заточенные экземпляры защищены от продажи скупщику.',
+    'Добавлено окно «Что нового». Оно появляется после входа до подтверждения и всегда доступно по кнопке.',
+    'Сохранены 120 комплектов, мифическая и божественная редкости, 23 титула и исправленные шансы рас.'
+  ]}];
+  function openNews(){
+    if(!gameLoaded||merchantBusy)return;
+    var box=$('newsContent');box.textContent='';
+    RELEASE_NOTES.forEach(function(release){var title=document.createElement('h3');title.textContent=release.title;box.appendChild(title);var list=document.createElement('ul');release.lines.forEach(function(line){var el=document.createElement('li');el.textContent=line;list.appendChild(el);});box.appendChild(list);});
+    $('newsModal').hidden=false;$('newsClose').focus();
+  }
+  function maybeNews(){if(gameLoaded&&Number(game.releaseSeen||0)<RELEASE_ID&&!kickedOut)openNews();}
+  function closeNews(){if(!gameLoaded||merchantBusy)return;$('newsModal').hidden=true;game.releaseSeen=RELEASE_ID;saveGame();$('newsOpen').focus();}
+  $('newsOpen').onclick=openNews;$('newsClose').onclick=closeNews;
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('newsModal').hidden)closeNews();
+    if(e.key==='Tab'&&!$('newsModal').hidden){var active=document.activeElement,first=$('newsClose'),last=$('newsContent');e.preventDefault();(active===first?last:first).focus();}
+  });
+
   function initV11(g){
+    initEnhancement(g);
     if(!Number.isFinite(g.eventSlot))g.eventSlot=g.fight&&g.fight.kind!=='ambush'?Number(g.fight.s)||0:0;
     if(!g.favorites||typeof g.favorites!=='object'||Array.isArray(g.favorites))g.favorites={};
     Object.keys(g.favorites).forEach(function(id){if(!ITEMS[id]||g.favorites[id]!==true)delete g.favorites[id];});
@@ -695,28 +847,20 @@ svg.chr{overflow:visible}
   function isStarterItem(id){return Object.keys(CLASSES).some(function(cls){return Object.values(gearOf(cls)).indexOf(id)>=0;});}
   function saleProtected(g,id){return !!(g.favorites&&g.favorites[id])||!ITEMS[id];}
   function saleAvailable(g,id){
-    if(saleProtected(g,id))return 0;
-    var n=saleCounts(g)[id]||0,it=ITEMS[id];
-    return Math.max(0,n-((g.eq&&g.eq[it.slot]===id)||isStarterItem(id)?1:0));
+    if(saleProtected(g,id))return 0;var it=ITEMS[id],w=wornIndex(g,it.slot),n=0,protectedCount=0;
+    g.inv.forEach(function(key,i){if(key===id){if(copyLevel(g,i)>0||i===w)protectedCount++;else n++;}});
+    return Math.max(0,n-(isStarterItem(id)&&!protectedCount?1:0));
   }
   function salePlan(g,id,duplicates){
-    var counts=saleCounts(g),remove={},total=0,amount=0;
-    Object.keys(counts).forEach(function(key){
-      if(id&&key!==id)return;
-      var n=duplicates?Math.min(saleAvailable(g,key),Math.max(0,counts[key]-1)):Math.min(1,saleAvailable(g,key));
-      if(n>0){remove[key]=n;amount+=n;total+=n*SELL_PRICES[ITEMS[key].r];}
-    });
-    return {remove:remove,total:total,amount:amount};
+    var indices=saleCopyIndices(g,id,duplicates),remove={},total=0;
+    Object.keys(indices).forEach(function(i){var key=g.inv[i];remove[key]=(remove[key]||0)+1;total+=SELL_PRICES[ITEMS[key].r];});
+    return {indices:indices,remove:remove,total:total,amount:Object.keys(indices).length};
   }
-  function applySale(g,plan){
-    var next=JSON.parse(JSON.stringify(g)),left=Object.assign({},plan.remove);
-    next.inv=next.inv.filter(function(id){if(left[id]>0){left[id]--;return false;}return true;});
-    next.coins+=plan.total;return next;
-  }
+  function applySale(g,plan){var next=JSON.parse(JSON.stringify(g));filterInventory(next,function(id,i){return !plan.indices[i];});next.coins+=plan.total;return next;}
   function canonicalGame(v){
     function clean(x){
       if(x===null||typeof x==='undefined')return undefined;
-      if(Array.isArray(x)){var a=x.map(clean);return a.length?a:undefined;}
+      if(Array.isArray(x)){var a={};x.forEach(function(v,i){var c=clean(v);if(typeof c!=='undefined')a[i]=c;});return Object.keys(a).length?a:undefined;}
       if(typeof x==='object'){var o={};Object.keys(x).sort().forEach(function(k){var c=clean(x[k]);if(typeof c!=='undefined')o[k]=c;});return Object.keys(o).length?o:undefined;}
       return x;
     }
@@ -749,7 +893,7 @@ svg.chr{overflow:visible}
       if(!write.ok)throw Error(write.status===412?'Инвентарь изменился во время продажи':'Продажа не подтверждена сервером');
       if(sess!==session)return false;
       game=next;initV11(game);gameLoaded=true;again=false;
-      merchantBusy=false;renderCoins();renderChar();renderMerchant();renderEvent();
+      merchantBusy=false;renderCoins();renderChar();renderMerchant();renderForge();renderEvent();
       toast('Продано '+plan.amount+' шт. Получено '+plan.total+' монет.');return true;
     }catch(e){
       // A lost response can mean a committed write. Read back instead of retrying
@@ -768,11 +912,12 @@ svg.chr{overflow:visible}
     confirmBox(label+' за '+p.total+' монет? Продажу нельзя отменить. Надетый и последний стартовый экземпляры, а также избранное защищены.','Продать',function(){executeSale(id,duplicates);});
   }
   function renderMerchant(){
+    renderForge();
     var box=$('merchantBody');if(!box)return;
     if(!game){box.textContent='Сначала загрузи персонажа.';return;}
     var counts=saleCounts(game),ids=Object.keys(counts),plan=salePlan(game,null,true);
     var blocked=merchantBusy||!gameLoaded||opening||spinning||!!(game.fight&&game.fight.on)||dgOn();
-    var h='<div class="card merchantIntro"><h3>Скупщик</h3><p>Продай лишний лут за монеты. Надетый и последний стартовый экземпляры не продаются. Звезда защищает все экземпляры выбранного предмета.</p><div class="sellPrices">';
+    var h='<div class="card merchantIntro"><h3>Скупщик</h3><p>Продай лишний лут за монеты. Надетый и последний стартовый экземпляры не продаются. Звезда защищает все экземпляры выбранного предмета. Копии с заточкой тоже защищены от продажи.</p><div class="sellPrices">';
     Object.keys(SELL_PRICES).forEach(function(r){h+='<span>'+rarPill(r)+' '+SELL_PRICES[r]+' мон.</span>';});
     h+='</div><button id="sellDuplicates"'+(blocked||!plan.amount?' disabled':'')+'>Продать дубликаты'+(plan.amount?' · '+plan.total+' мон.':'')+'</button><p class="merchantNote">Массовая продажа оставляет минимум один экземпляр каждого типа. Все продажи подтверждаются отдельно.</p>'+(blocked?'<p class="merchantNote">Торговля недоступна во время боя, прокрутки, открытия сундука или загрузки.</p>':'')+'</div>';
     if(!ids.length)h+='<div class="card"><p>Инвентарь пуст. Добыча появится после побед над монстрами.</p></div>';
@@ -870,7 +1015,7 @@ svg.chr{overflow:visible}
     if(!game||!gameLoaded||merchantBusy||game.cls||(Number(game.coins)||0)<CLASS_PRICE||!CLASSES[id]) return;
     game.coins-=CLASS_PRICE; game.cls=id;
     var cg=gearOf(id);
-    for(var sl in cg){ game.inv.push(cg[sl]); game.eq[sl]=cg[sl]; }
+    for(var sl in cg){ game.inv.push(cg[sl]); game.eq[sl]=cg[sl];game.eqCopies[sl]=game.inv.length-1; }
     saveGame(); renderCoins(); renderShop(); renderChar();
   }
   function itemLine(id){
@@ -937,11 +1082,12 @@ svg.chr{overflow:visible}
   function rankName(rank){return (RANK_NAMES[rank-1]||'Кошмар '+(rank-5))+' · ранг '+rank;}
   function rankHP(rank){var a=[1,1.9,3.1,4.7,6.8,9.5];return rank<=6?a[rank-1]:9.5*(1+.07*(rank-6));}
   function rankDMG(rank){var a=[1,1.3,1.7,2.2,2.9,3.7];return rank<=6?a[rank-1]:3.7*(1+.05*(rank-6));}
-  function maxRank(){
-    if(!game)return 1;
-    var st=stats(),power=st.hp*st.atk, r=1;
-    for(var k=2;k<=15;k++)if(game.level>=rankLevel(k)||(k<=6&&power>=RANK_POWER[k-1]))r=k;
-    return Math.max(r,Math.min(15,Math.floor(Number(game.unlockedRank)||1)));
+  function maxRank(source){
+    source=source||game;
+    if(!source)return 1;
+    var st=stats(source),power=st.hp*st.atk, r=1;
+    for(var k=2;k<=15;k++)if(source.level>=rankLevel(k)||(k<=6&&power>=RANK_POWER[k-1]))r=k;
+    return Math.max(r,Math.min(15,Math.floor(Number(source.unlockedRank)||1)));
   }
   function selectedRank(){return Math.max(1,Math.min(maxRank(),Math.floor(Number(game&&game.rank)||1)));}
   function healBetween(hp,max){return Math.min(max,hp+Math.round(max*.25));}
@@ -1228,7 +1374,7 @@ svg.chr{overflow:visible}
   setInterval(function(){
     if(game){
       checkAbandon();
-      if(game.cowardUntil&&Date.now()>game.cowardUntil){delete game.cowardUntil; saveGame(); renderChar();}
+      if(!merchantBusy&&game.cowardUntil&&Date.now()>game.cowardUntil){delete game.cowardUntil; saveGame(); renderChar();}
     }
     renderEvent();
   },1000);
@@ -1713,24 +1859,25 @@ svg.chr{overflow:visible}
     var box=$('inv'); if(!box||!game) return;
     box.innerHTML=''; var eq=equipped();
     if(!game.inv.length){var e=document.createElement('div'); e.className='invEmpty'; e.textContent='Пусто. Предметы выпадают с побеждённых монстров.'; box.appendChild(e); return;}
-    game.inv.forEach(function(id){
+    game.inv.forEach(function(id,index){
       var it=ITEMS[id], b=document.createElement('button'); b.type='button';
-      b.className='icell'+(eq[it.slot]===id?' on':''); b.style.borderColor=RARITY[it.r].color;
+      b.className='icell'+(eq[it.slot]===id&&wornIndex(game,it.slot)===index?' on':''); b.style.borderColor=RARITY[it.r].color;
       var ok=!it.cls||it.cls===game.cls;
-      b.title=itemLine(id)+', '+RARITY[it.r].name+(it.cls?'. Класс: '+CLASSES[it.cls].name:'')+(ok?'. Нажми, чтобы надеть':'. Не твой класс, надеть нельзя');
+      b.title=copyName(game,index)+' · '+copyStatsLine(game,index)+', '+RARITY[it.r].name+(it.cls?'. Класс: '+CLASSES[it.cls].name:'')+(ok?'. Нажми, чтобы надеть':'. Не твой класс, надеть нельзя');
       if(!ok){b.disabled=true; b.style.opacity='.45';}
-      b.innerHTML=itemIcon(id)+'<span>'+(game.favorites&&game.favorites[id]?'★ ':'')+it.name+'</span>'+(it.cls?'<span style="opacity:.75">'+CLASSES[it.cls].name+'</span>':'');
-      b.addEventListener('click',function(){if(merchantBusy||!gameLoaded)return;if(it.cls&&it.cls!==game.cls) return; game.eq[it.slot]=id; saveGame(); renderChar();});
+      b.innerHTML=itemIcon(id)+'<span>'+(game.favorites&&game.favorites[id]?'★ ':'')+copyName(game,index)+'</span><span class="enhancedBonus">'+copyStatsLine(game,index)+'</span>'+(it.cls?'<span style="opacity:.75">'+CLASSES[it.cls].name+'</span>':'');
+      b.addEventListener('click',function(){if(merchantBusy||!gameLoaded)return;if(it.cls&&it.cls!==game.cls) return; game.eq[it.slot]=id;game.eqCopies[it.slot]=index; saveGame(); renderChar();});
       box.appendChild(b);
     });
   }
   function nameOf(name,until){return name+(Number(until)>Date.now()?' [трус]':'');}
   function itemIcon(id){var it=ITEMS[id];return '<svg viewBox="'+it.vb+'" aria-hidden="true">'+it.draw+'</svg>';}
-  function stats(){
- var level=Math.max(1,Math.min(100,Number(game&&game.level)||1));
- var hp=100+4*(level-1),atk=6+Math.floor((level-1)/3),cb=CLASS_BASE[game&&game.cls],rc=raceById(game&&game.race),rb=rc?RACE_BONUS[rc.r]:null;
+  function stats(source){
+ source=source||game;
+ var level=Math.max(1,Math.min(100,Number(source&&source.level)||1));
+ var hp=100+4*(level-1),atk=6+Math.floor((level-1)/3),cb=CLASS_BASE[source&&source.cls],rc=raceById(source&&source.race),rb=rc?RACE_BONUS[rc.r]:null;
  if(cb){hp+=cb.hp;atk+=cb.atk;}if(rb){hp+=rb.hp;atk+=rb.atk;}
- var gear=equipped();for(var sl in gear){var it=ITEMS[gear[sl]];if(it){hp+=it.hp||0;atk+=it.atk||0;}}
+ var gear=gearFromGame(source);for(var sl in gear){var it=ITEMS[gear[sl]];if(it){var i=wornIndex(source,sl),n=i>=0?copyLevel(source,i):0,bonus=enhancedStats(it,n);hp+=bonus.hp;atk+=bonus.atk;}}
  return {hp:hp,atk:atk};
 }
 
@@ -1996,6 +2143,7 @@ svg.chr{overflow:visible}
   function onSpinClick(e){
     if(!e.isTrusted) return;                       // клик, сделанный скриптом
     if(updating) return;
+    if(!$('newsModal').hidden)return;
     if(!gameLoaded||merchantBusy){ toast('Прогресс загружается или сохраняется продажа, подожди.'); return; }
     if(spinning){ deadClick(); return; }           // колесо крутится, а на кнопку жмут
     var now=performance.now();
