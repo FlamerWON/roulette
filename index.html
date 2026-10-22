@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="13">
+<meta name="app-version" content="14">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -246,6 +246,11 @@ svg.chr{overflow:visible}
 #toast:empty{display:none}#toast{width:100%;max-width:520px;min-height:0;font-size:14px;line-height:1.5}#toast.on{border-radius:12px}#merchantBody{display:flex;flex-direction:column;gap:14px}.merchantList{display:flex;flex-direction:column;gap:10px}.merchantItem{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px}.merchantIcon{width:52px;height:52px;border:2px solid var(--line);border-radius:10px;padding:5px}.merchantIcon svg{display:block;width:100%;height:100%}.merchantDetails{display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere;min-width:0}.merchantDetails strong{font-size:14px;line-height:1.35}.merchantDetails span{font-size:12px;line-height:1.4;color:var(--muted)}.merchantActions{display:flex;align-items:center;gap:8px}.merchantActions button{font-size:13px;padding:8px 10px;min-height:44px;border-radius:10px}.merchantActions .favoriteButton{min-width:44px;font-size:22px;padding:4px 8px}.favoriteButton[aria-pressed="true"]{color:var(--gold);border-color:var(--gold)}.sellPrices{display:flex;gap:8px;flex-wrap:wrap}.sellPrices>span{display:inline-flex;align-items:center;gap:4px;font-size:12px}.merchantIntro .merchantNote{font-size:12px;line-height:1.5}.huntNote{font-size:13px;line-height:1.5;color:var(--muted);text-align:center;max-width:420px;margin:0}.charPane>.progressPanel{margin:0} @media(max-width:600px){.merchantItem{grid-template-columns:48px minmax(0,1fr);gap:10px}.merchantIcon{width:48px;height:48px}.merchantActions{grid-column:1/-1;justify-content:flex-end}.merchantActions button[data-sell]{min-width:150px}}
 
 #forgeBody{margin-bottom:16px}#forgeItem{width:100%;padding:12px;margin:10px 0;box-sizing:border-box;max-width:100%}.forgeButtons{display:flex;gap:8px;flex-wrap:wrap}.forgeButtons button{flex:1;min-height:44px}.forgePreview{padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0}.forgePreview>svg{width:60px;height:60px;vertical-align:middle;margin-right:12px}.forgePreview strong{overflow-wrap:anywhere}.forgeWarning{color:#ff8a80!important;font-weight:700}#forgeBody table{width:100%;font-size:13px;text-align:left;border-collapse:collapse}#forgeBody td,#forgeBody th{padding:8px;border-bottom:1px solid var(--line)}#newsOpen{padding:8px 12px;min-height:40px;margin:8px 0}#newsModal .mbox{max-height:85vh;overflow:auto;text-align:left;max-width:580px;width:90%;box-sizing:border-box}#newsContent{max-height:55vh;overflow:auto}#newsContent li{margin:12px 0;line-height:1.5}#newsClose{margin-top:12px;width:100%}#newsModal:before{content:'';position:absolute;inset:0}#newsModal .mbox{position:relative}.icell .enhancedBonus{color:#84e3a5;font-size:11px;line-height:1.4}
+
+.hero .charAv{width:210px;height:284px;max-width:100%;margin:0 auto 6px}.equipWrap{grid-template-columns:68px minmax(0,1fr) 68px;gap:8px;align-items:center}.hero{min-width:0}.hero .name{font-size:32px}.hatOption{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);line-height:1.4;min-height:44px;cursor:pointer}.hatOption input{accent-color:var(--gold);width:16px;height:16px;flex:none}.hero .raceTag{font-size:12px}.cvBody,.cvPortrait{overflow:visible}.cvIdle{transform-origin:50px 135px;animation:cvBreath 3s ease-in-out infinite}.cvHead{transform-origin:50px 77px;animation:cvHeadTurn 5s ease-in-out infinite}.cvBody .eyes,.cvPortrait .eyes{transform-origin:50px 52px;animation:cvBlink 5s infinite}.cvItem{overflow:visible}.drop .charAv{height:130px;width:110px}.slot{padding:4px}.slot svg{height:40px;width:40px}.av .cvPortrait{overflow:hidden;border-radius:50%}.icell{min-width:0}.icell>svg{max-width:100%}
+@keyframes cvBreath{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}@keyframes cvHeadTurn{0%,40%,100%{transform:rotate(0)}60%{transform:rotate(-1deg)}}@keyframes cvBlink{0%,93%,97%,100%{transform:scaleY(1)}95%{transform:scaleY(.12)}}
+@media(max-width:480px){.equipWrap{grid-template-columns:56px minmax(0,1fr) 56px;gap:4px}.hero .charAv{width:170px;height:240px}.slot .sn{font-size:9px}.hero .name{font-size:28px}.hatOption{font-size:10px}.slot svg{height:32px;width:32px}}
+@media(prefers-reduced-motion:reduce){.cvIdle,.cvHead,.eyes{animation:none!important}}
 </style>
 </head>
 <body>
@@ -315,7 +320,7 @@ svg.chr{overflow:visible}
           <div class="slot" id="slotHead" aria-label="Голова: пусто">Голова</div>
           <div class="slot" id="slotBody" aria-label="Тело: пусто">Тело</div>
         </div>
-        <div class="hero"><div class="charAv" id="charAv"></div><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
+        <div class="hero"><div class="charAv" id="charAv"></div><label class="hatOption"><input id="hatVisible" type="checkbox" checked> Показывать головной убор</label><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
         <div class="eqCol">
           <div class="slot" id="slotArms" aria-label="Руки: пусто">Руки</div>
           <div class="slot" id="slotLegs" aria-label="Ноги: пусто">Ноги</div>
@@ -351,7 +356,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 13</h2><div id="newsContent" tabindex="0"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 14</h2><div id="newsContent" tabindex="0"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -627,6 +632,7 @@ svg.chr{overflow:visible}
     if(!game) return;
     renderProgress();
     $('charName').textContent=nameOf(nick,game.cowardUntil);
+    $('hatVisible').checked=!cvHideHelmet(sess&&sess.uid);
     $('charAv').innerHTML=avatarBody(sess&&sess.uid,game.title,game.race,equipped());
     $('charTitle').textContent=titleName(game.title)||'Новичок';
     var rc=raceById(game.race)||RACES[0], rr=RARITY[rc.r];
@@ -800,8 +806,13 @@ svg.chr{overflow:visible}
     var select=$('forgeItem');if(select)select.onchange=function(){forgeIndex=Number(this.value);renderForge();};var button=$('forgeTry');if(button)button.onclick=function(){confirmForge('enhance',forgeIndex);};
   }
   /* ---------- release notes: acknowledged per account in saved game ---------- */
-  var RELEASE_ID=13;
-  var RELEASE_NOTES=[{title:'Заточка и новости обновлений',lines:[
+  var RELEASE_ID=14;
+  var RELEASE_NOTES=[{title:'Новый облик персонажей',lines:[
+    'Персонажи всех игроков получили новый чиби-стиль: крупная голова, выразительные глаза и обновлённое снаряжение.',
+    'Головной убор, одежда, оружие и обувь отображаются на модели. Иконки предметов обновлены в том же стиле.',
+    'Расы сохраняют отличительные черты. Уровни, предметы, заточка и характеристики не меняются.',
+    'Переключатель под персонажем скрывает головной убор только на этом устройстве, без потери характеристик.'
+  ]},{title:'Заточка и новости обновлений',lines:[
     'Кузница в магазине: камни по 150 монет, заточка до +10. Первые два уровня гарантированы.',
     'Каждый уровень усиливает существующий урон на 1 + 3% от базы, HP на 5 + 3% от базы. При неудаче заточка сбрасывается до +0; вещь сохраняется.',
     'Каждая копия улучшается отдельно. Заточенные экземпляры защищены от продажи скупщику.',
@@ -1871,7 +1882,6 @@ svg.chr{overflow:visible}
     });
   }
   function nameOf(name,until){return name+(Number(until)>Date.now()?' [трус]':'');}
-  function itemIcon(id){var it=ITEMS[id];return '<svg viewBox="'+it.vb+'" aria-hidden="true">'+it.draw+'</svg>';}
   function stats(source){
  source=source||game;
  var level=Math.max(1,Math.min(100,Number(source&&source.level)||1));
@@ -1894,107 +1904,185 @@ svg.chr{overflow:visible}
     var g=(cls&&typeof cls==='object')?cls:gearOf(cls); L.hat=g.head||''; L.hand=g.arms||''; L.body=g.body||''; L.legs=g.legs||''; if(L.body&&ITEMS[L.body]&&ITEMS[L.body].tint) L.shirt=ITEMS[L.body].tint;
     return L;
   }
-  // голова с причёской, лицом, чертами расы, шапкой класса и украшением титула (область 100x100)
-  function headParts(L,titleId){
-    var s='', hs=L.hs, es=L.es, ms=L.ms, hair=L.hair, skin=L.skin, rc=L.race;
-    if(L.hat) titleId='';
-    if(hs===3) s+='<path d="M22 50 C20 18 80 18 78 50 L80 82 L66 80 L34 80 L20 82Z" fill="'+hair+'" '+OUT+'/>';
-    if(rc==='elf'){
-      s+='<path d="M27 47 L7 35 L25 61Z" fill="'+skin+'" '+OUT+'/><path d="M73 47 L93 35 L75 61Z" fill="'+skin+'" '+OUT+'/>';
-    }else if(rc!=='beast'){
-      s+='<circle cx="24.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/><circle cx="75.5" cy="54" r="5" fill="'+skin+'" '+OUT+'/>';
+  /* v14 visual-only modular chibi renderer. Item identity and stats are untouched. */
+  var chibiStamp=0;
+  function cvPath(d,c,w,stroke){return '<path d="'+d+'" fill="'+(c||'none')+'" stroke="'+(stroke||'#493124')+'" stroke-width="'+(w===undefined?1.05:w)+'" stroke-linejoin="round" stroke-linecap="round"/>';}
+  function cvEllipse(x,y,rx,ry,c,w){return '<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="'+c+'"'+(w?' stroke="#493124" stroke-width="'+w+'"':'')+'/>';}
+  function cvGradient(id,c){return '<defs><linearGradient id="c14-'+id+'" x1="0" y1="0" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="'+armorTint(c,.28)+'"/><stop offset=".48" stop-color="'+c+'"/><stop offset="1" stop-color="'+armorTint(c,-.28)+'"/></linearGradient></defs>';}
+  function cvFill(id){return 'url(#c14-'+id+')';}
+  function cvGem(x,y,c,size){var k=size||2.4;return cvPath('M'+x+' '+(y-k)+' L'+(x+k)+' '+y+' L'+x+' '+(y+k)+' L'+(x-k)+' '+y+'Z',c,.65)+cvPath('M'+x+' '+(y-k)+' L'+x+' '+y+' L'+(x-k)+' '+y+'Z',armorTint(c,.45),.2,armorTint(c,.45));}
+  function cvSVG(content,view,cls){var suffix='-'+(++chibiStamp),seenDefs={};content=content.replace(/<defs>[\s\S]*?<\/defs>/g,function(block){if(seenDefs[block])return '';seenDefs[block]=true;return block;});content=content.replace(/id="(c14-[^"]+)"/g,'id="$1'+suffix+'"').replace(/url\(#(c14-[^)]+)\)/g,'url(#$1'+suffix+')');return '<svg'+(cls?' class="'+cls+'"':'')+' viewBox="'+view+'" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+content+'</svg>';}
+  function cvHeadItem(it,c,trim,kind,detail){
+    var s=cvGradient('hat',c),f=cvFill('hat'),dark=armorTint(c,-.3),light=armorTint(c,.4);
+    if(kind==='hat'){
+      s+=cvPath('M22 33 Q33 22 42 0 Q45 -8 55 -5 L69 5 L57 6 Q60 18 76 33Z',f,1.2);
+      s+=cvPath('M42 1 Q41 17 31 30 L43 29 L50 5Z',light,0,light);
+      s+=cvEllipse(49,35,40,8,dark,1.2)+cvPath('M20 30 Q47 40 78 29 L80 35 Q49 45 18 36Z',f,1);
+      s+=cvPath('M23 32 Q49 41 75 32','none',2.6,trim)+cvGem(50,36,trim,4);
+      s+=cvPath('M50 10 L51 14 L55 15 L51 16 L50 20 L49 16 L45 15 L49 14Z',trim,.3);
+    }else if(kind==='hood'){
+      s+=cvPath('M13 45 Q10 10 48 7 Q86 10 87 47 L82 82 L67 87 L71 43 Q63 27 50 27 Q35 27 28 43 L33 87 L17 81Z',f,1.2);
+      s+=cvPath('M47 11 Q20 18 19 46 L22 73 L28 75 L25 43 Q31 27 45 23Z',light,.2,light);
+      s+=cvPath('M30 76 L26 43 Q33 27 50 26 Q67 27 74 43 L71 76','none',1.4,trim)+cvGem(50,21,trim,3.3);
+      if(detail%2)s+=cvPath('M43 21 L47 24 L50 22 L53 24 L58 21','none',1,trim);
+    }else if(kind==='crown'){
+      s+=cvPath('M18 32 L15 10 L30 21 L38 4 L50 19 L62 4 L70 21 L85 10 L82 32Z',f,1.3);
+      s+=cvPath('M19 31 Q49 39 81 31 L80 40 Q50 47 20 40Z',dark,1.2)+cvPath('M23 35 Q50 42 77 35','none',1.5,light);
+      s+=cvGem(50,30,trim,5)+cvGem(32,32,trim,2.4)+cvGem(68,32,trim,2.4);
+      [15,38,62,85].forEach(function(x){s+=cvEllipse(x,x===15||x===85?10:4,1.8,1.8,light,.4);});
+    }else if(kind==='robin'){
+      s+=cvPath('M15 38 Q21 13 51 16 L85 10 L72 30 L83 38 Q50 31 17 45Z',f,1.2)+cvPath('M21 38 Q48 28 76 36','none',2,trim);
+      s+=cvPath('M67 27 Q76 2 94 -1 Q92 15 69 29Z','#c96e4f',.9)+cvPath('M68 28 L90 3','none',.8,'#f9dca5');
+    }else{
+      s+=cvPath('M15 43 Q12 8 50 8 Q88 8 85 43 L82 65 L72 70 L69 42 Q50 31 31 42 L28 70 L18 65Z',f,1.2);
+      s+=cvPath('M45 13 Q25 16 23 33 L41 28Z',light,.2,light);
+      s+=cvPath('M50 10 L55 31 L50 39 L45 31Z',dark,.8);
+      s+=cvPath('M19 36 Q50 26 81 36 L82 42 Q50 32 18 42Z',dark,1)+cvPath('M23 37 Q50 29 77 37','none',1,trim);
+      if(detail%3===1)s+=cvPath('M21 44 L26 42 L25 61 L21 62 M79 44 L74 42 L75 61 L79 62',light,.6);
+      if(detail%3===2)s+=cvGem(50,29,trim,3.7);
+      [23,34,66,77].forEach(function(x){s+=cvEllipse(x,x===23||x===77?38:34,1,1,trim,.3);});
     }
-    s+='<ellipse cx="50" cy="52" rx="26" ry="27" fill="'+skin+'" '+OUT+'/>';
-    if(!L.hat&&hs===0) s+='<path d="M50 26 Q44 18 52 14" fill="none" stroke="'+hair+'" stroke-width="3.5" stroke-linecap="round"/>';
-    if(hs===1) s+='<path d="M24 48 C22 26 38 20 50 20 C62 20 78 26 76 48 C70 38 60 34 50 34 C40 34 30 38 24 48Z" fill="'+hair+'" '+OUT+'/>';
-    if(!L.hat&&hs===2) s+='<polygon points="24,46 26,28 34,36 38,20 46,32 52,18 58,32 66,20 68,36 76,28 76,46 66,36 50,33 34,36" fill="'+hair+'" '+OUT+'/>';
-    if(hs===3) s+='<path d="M26 44 C30 28 70 28 74 44 C64 36 36 36 26 44Z" fill="'+hair+'" '+OUT+'/>';
-    if(!L.hat&&hs===4) s+='<polygon points="42,30 44,12 50,22 56,12 58,30" fill="'+hair+'" '+OUT+'/>';
-    if(rc==='beast'){
-      s+='<path d="M27 36 L30 9 L45 26Z" fill="'+hair+'" '+OUT+'/><path d="M31 28 L32 16 L40 25Z" fill="#ff9fb0"/>'
-        +'<path d="M73 36 L70 9 L55 26Z" fill="'+hair+'" '+OUT+'/><path d="M69 28 L68 16 L60 25Z" fill="#ff9fb0"/>';
+    return s;
+  }
+  function cvBodyItem(it,c,trim,detail){
+    var cls=it.cls||'warrior',dark=armorTint(c,-.27),light=armorTint(c,.32),s=cvGradient('body',c),f=cvFill('body');
+    if(cls==='mage'){
+      s+=cvPath('M31 87 Q49 80 69 87 L74 132 Q62 138 50 134 Q38 138 26 132Z',f,1.1);
+      s+=cvPath('M39 85 L49 99 L43 133 M61 85 L51 99 L57 133','none',2,trim);
+      s+=cvPath('M31 127 Q49 133 69 127','none',1.6,trim)+cvPath('M35 99 L32 121 M65 99 L68 121','none',1.2,light);
+      s+=cvPath('M45 86 L50 92 L55 86 L54 82 L50 85 L46 82Z',dark,.65);
+    }else if(cls==='archer'){
+      s+=cvPath('M31 86 L41 82 L50 88 L59 82 L69 86 L71 126 Q50 135 29 126Z',f,1.1);
+      s+=cvPath('M33 87 L41 84 L47 94 L37 128 L26 130Z',dark,.7)+cvPath('M67 87 L59 84 L53 94 L63 128 L74 130Z',dark,.7);
+      s+=cvPath('M62 85 L68 89 L38 126 L32 121Z','#886047',.8)+cvPath('M62 89 L37 121','none',.8,'#ddbb7c');
+      s+=cvPath('M33 96 L32 117 M67 96 L68 117','none',1,light);
+    }else{
+      s+=cvPath('M29 89 L39 82 L50 86 L61 82 L71 89 L68 119 Q50 132 32 119Z',f,1.1);
+      s+=cvPath('M39 85 L48 89 L48 115 L34 111 L33 92Z',light,.65)+cvPath('M52 89 L61 85 L67 92 L65 111 L52 115Z',dark,.65);
+      s+=cvPath('M32 119 L47 123 L44 132 L28 127Z',f,.8)+cvPath('M68 119 L53 123 L56 132 L72 127Z',f,.8);
+      s+=cvPath('M35 111 L50 116 L65 111 L65 117 L50 123 L35 117Z',f,.9);
+      if(detail%3===1){for(var y=94;y<111;y+=4)s+=cvPath('M36 '+y+' H44 M55 '+y+' H63','none',.8,trim);}
     }
-    if(rc==='drake'){
-      s+='<path d="M33 30 Q21 14 31 5 Q31 18 43 26Z" fill="#f2e3b3" '+OUT+'/><path d="M67 30 Q79 14 69 5 Q69 18 57 26Z" fill="#f2e3b3" '+OUT+'/>';
-    }
-    if(L.hat) s+=(ITEMS[L.hat].avd||ITEMS[L.hat].draw);
-    if(L.cheeks) s+='<circle cx="32" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/><circle cx="68" cy="62" r="4.5" fill="#ff8fa3" opacity="0.6"/>';
-    if(rc==='beast') s+='<path d="M26 60 L11 57 M26 64 L11 66 M74 60 L89 57 M74 64 L89 66" fill="none" stroke="'+INK+'" stroke-width="1.6" stroke-linecap="round"/>';
-    if(rc==='dwarf') s+='<path d="M26 60 C25 94 75 94 74 60 C70 72 60 70 50 70 C40 70 30 72 26 60Z" fill="'+BEARD[(hs+es)%4]+'" '+OUT+'/>';
+    s+=cvPath('M31 115 Q50 120 69 115 L69 121 Q50 126 31 121Z','#694532',.9);
+    s+='<rect x="46" y="117" width="9" height="6" rx="1" fill="'+trim+'" stroke="#493124" stroke-width=".8"/><path d="M49 119 H53 V121" fill="none" stroke="#79543a" stroke-width=".8"/>';
+    if(['rare','epic','legendary','mythic','divine'].indexOf(it.r)>=0)s+=cvGem(50,100,trim,3.3);
+    if(['legendary','mythic','divine'].indexOf(it.r)>=0)s+=cvPath('M40 95 L44 101 L41 108 M60 95 L56 101 L59 108','none',1.3,trim);
+    return s;
+  }
+  function cvSleeve(it,c,trim){var s=cvGradient('sleeve',c);s+=cvPath('M29 87 Q34 84 38 88 L31 105 L18 103 Q20 91 29 87Z',cvFill('sleeve'),1);s+=cvPath('M18 101 L31 104 L29 110 L16 107Z',armorTint(c,-.25),.8)+cvPath('M21 103 L28 105','none',1.2,trim);if(it.cls==='warrior')s+=cvPath('M23 90 L30 87 L34 90 L30 98 L20 97Z',armorTint(c,.28),.8);return s;}
+  function cvBoot(it,c,trim){var s=cvGradient('boot',c),f=cvFill('boot');s+=cvPath('M8 3 L24 3 L23 25 Q27 29 25 35 Q13 39 0 35 Q-1 30 8 26Z',f,1.2);s+=cvPath('M7 3 L25 3 L25 9 L6 9Z',armorTint(c,-.2),.8)+cvPath('M2 34 Q13 38 25 34 L25 37 Q12 40 0 36Z','#4a332b',.7)+cvPath('M10 13 L18 16 L10 19 L18 22','none',1.2,trim)+cvPath('M4 30 Q10 28 15 30','none',1,armorTint(c,.45));if(it.r!=='common')s+=cvGem(18,11,trim,1.6);return s;}
+  function cvWeapon(it,c,trim,kind,detail){
+    var s=cvGradient('weapon',c),f=cvFill('weapon'),d=armorTint(c,-.3);
+    if(kind==='bow'){
+      s+=cvPath('M21 87 Q-7 119 20 152','none',5.5,'#493124')+cvPath('M21 87 Q-7 119 20 152','none',3.5,c)+cvPath('M20 89 L20 150','none',.9,'#e7d7aa');
+      s+=cvPath('M5 117 L14 121 L7 126Z',trim,.6)+cvPath('M20 118 L-1 111','none',1.2,'#bb8c55')+cvPath('M-1 111 L2 106 L-5 109 L0 114Z','#bfc9ca',.6);
+    }else if(kind==='staff'||kind==='wand'){
+      s+=cvPath('M80 133 L91 77','none',5,'#493124')+cvPath('M80 133 L91 77','none',3,c);
+      if(kind==='wand')s+=cvPath('M91 69 L94 76 L102 77 L96 82 L97 90 L90 85 L84 89 L85 81 L79 76 L87 75Z',trim,.9);
+      else{s+=cvPath('M86 82 Q76 71 85 64 Q97 55 102 69 Q105 77 96 83 L96 88 L86 87Z',f,1)+cvGem(92,71,trim,6.2)+cvPath('M83 93 L94 95 M82 98 L93 100','none',1.8,trim);}
+    }else{
+      // Sword/axe grip is at the hand; blade points down and away from the body.
+      s+='<g transform="translate(80 117) rotate(-37)">';
+      if(kind==='axe'){
+        s+=cvPath('M-2 -11 H2 V42 H-2Z','#936144',.9)+cvPath('M2 13 Q20 10 19 28 Q8 28 2 23Z',f,1.1)+cvPath('M4 16 Q16 15 16 24','none',1.1,armorTint(c,.5));
+      }else{
+        s+=cvPath('M-4 4 L-4 30 L0 43 L4 30 L4 4Z',f,1.1)+cvPath('M0 5 V39 L3 30 V5Z',armorTint(c,-.23),.3,armorTint(c,-.23))+cvPath('M-2 8 V28','none',1,armorTint(c,.6));
+        s+=cvPath('M-8 -1 Q0 3 8 -1 L9 3 Q0 7 -9 3Z',trim,.9);
+        if(detail%2)s+=cvGem(0,16,trim,1.8);
+      }
+      s+=cvPath('M-2 -10 H2 V0 H-2Z','#855b3c',.8)+cvEllipse(0,-11,3,2,trim,.7)+'</g>';
+    }return s;
+  }
+  function applyChibiItems(){
+    var defMap={};DEFS.forEach(function(d){defMap[d[0]]=d;});
+    Object.keys(ITEMS).forEach(function(id){
+      var it=ITEMS[id],def=defMap[id],match=/^s([mwa])(\d\d)([hbal])$/.exec(id),detail=hashStr(id)%40;
+      var palette={mage:'#7960ad',warrior:'#879da1',archer:'#5b8754'},c=palette[it.cls]||'#98734f',trim='#dbc18a',kind;
+      if(def){c=def[8];trim=def[9]||trim;kind=def[7];}
+      if(match){c=SET_COLORS[Number(match[2])];trim=armorTint(c,.55);kind=it.slot==='head'?(it.r==='divine'?'crown':it.cls==='mage'?'hat':it.cls==='archer'?'hood':'helm'):it.slot==='arms'?(it.cls==='mage'?'staff':it.cls==='archer'?'bow':'sword'):it.slot==='body'?'body':'boots';}
+      if(id==='mage_hat'){c='#7958ae';trim='#e6bc67';kind='hat';}
+      if(id==='war_helm'){c='#9caeb1';trim='#d5bd82';kind='helm';}
+      if(id==='robin_hat'){c='#588450';trim='#b9c77f';kind='robin';}
+      if(id==='wood_sword'){c='#bd965e';trim='#90693e';kind='sword';}
+      if(id==='toy_bow'){c='#b2864e';trim='#d8bf7e';kind='bow';}
+      if(id==='wand'){c='#a16d48';trim='#e8c568';kind='wand';}
+      if(it.r==='mythic')trim='#deacff';if(it.r==='divine')trim='#fff1b0';
+      it.visualStyle='chibi14';it.visualKind=kind;it.visualColor=c;
+      if(it.slot==='head'){it.draw=cvHeadItem(it,c,trim,kind,detail);it.vb='4 -13 96 106';it.avd=it.draw;}
+      else if(it.slot==='body'){it.draw=cvBodyItem(it,c,trim,detail);it.avd=it.draw;it.vb='21 78 58 64';it.sleeve=cvSleeve(it,c,trim);it.tint=c;
+        it.back=it.cls==='mage'||it.cls==='archer'?cvPath('M28 87 Q50 79 72 87 L79 138 L64 133 L50 139 L36 133 L21 138Z',armorTint(c,-.33),1):'';}
+      else if(it.slot==='legs'){it.draw=cvBoot(it,c,trim);it.vb='-3 0 33 43';it.avd=it.draw;}
+      else{it.draw=cvWeapon(it,c,trim,kind,detail);it.avd=it.draw;it.vb=kind==='bow'?'-9 80 43 79':kind==='staff'||kind==='wand'?'72 55 39 84':'64 98 64 64';it.hand=kind==='bow'?'L':'R';}
+    });
+  }
+  applyChibiItems();
+  function cvHideHelmet(seed){try{return !!(sess&&String(seed)===String(sess.uid)&&localStorage.getItem('roulette_hide_hat_'+sess.uid)==='1');}catch(e){return false;}}
+  function cvLook(seed,race,gear){var L=look(seed,race,gear);if(cvHideHelmet(seed))L.hat='';return L;}
+  function cvFace(L,titleId){
+    var skin=L.skin,hair=L.hair,rc=L.race,covered=!!(L.hat&&ITEMS[L.hat]&&['helm','hood'].indexOf(ITEMS[L.hat].visualKind)>=0),s=cvGradient('skin',skin)+cvGradient('hair',hair),hf=cvFill('hair'),sf=cvFill('skin');
+    s+=covered?cvPath('M18 43 L25 38 L75 38 L82 43 L80 64 L70 68 L28 65 L19 60Z',armorTint(hair,-.2),1):cvPath('M20 46 Q12 16 37 10 Q72 -1 82 31 L83 61 L72 70 L27 66Z',armorTint(hair,-.2),1.1);
+    if(rc==='elf')s+=cvPath('M20 48 L3 35 L13 60 L24 61 M80 48 L97 35 L87 60 L76 61',sf,1.1);
+    else s+=cvEllipse(19,52,7,9,sf,.9)+cvEllipse(81,52,7,9,sf,.9)+cvPath('M17 50 Q22 48 21 57 M83 50 Q78 48 79 57','none',.8,armorTint(skin,-.2));
+    s+=cvPath('M19 40 Q22 20 50 20 Q77 20 81 40 L79 60 Q75 79 51 82 Q25 79 21 62Z',sf,1.15);
+    s+=cvPath('M25 47 Q23 65 38 74 Q52 82 70 72 Q60 83 47 80 Q27 77 23 63Z',armorTint(skin,-.11),0,armorTint(skin,-.11));
+    s+=cvEllipse(30,63,6,2.7,'#df8c7c')+cvEllipse(70,63,6,2.7,'#df8c7c');
+    // Large layered eyes with restrained highlights remain legible in chat avatars.
     s+='<g class="eyes">';
-    if(es===0) s+='<circle cx="40" cy="52" r="3" fill="'+INK+'"/><circle cx="60" cy="52" r="3" fill="'+INK+'"/>';
-    if(es===1) s+='<circle cx="40" cy="51" r="6" fill="#fff" stroke="'+INK+'" stroke-width="2"/><circle cx="41" cy="52" r="3" fill="'+INK+'"/><circle cx="60" cy="51" r="6" fill="#fff" stroke="'+INK+'" stroke-width="2"/><circle cx="61" cy="52" r="3" fill="'+INK+'"/>';
-    if(es===2) s+='<path d="M34 52 q6 5 12 0 M54 52 q6 5 12 0" fill="none" '+OUT+'/>';
-    s+='</g>';
-    if(ms===0) s+='<path d="M42 64 Q50 73 58 64" fill="none" '+OUT+'/>';
-    if(ms===1) s+='<path d="M42 63 Q50 77 58 63Z" fill="#8f2d2d" '+OUT+'/>';
-    if(ms===2) s+='<path d="M43 67 Q50 68 58 62" fill="none" '+OUT+'/>';
-    if(rc==='orc') s+='<path d="M41 70 L43 62 L46 70Z" fill="#fff" stroke="'+INK+'" stroke-width="1.6" stroke-linejoin="round"/><path d="M59 70 L57 62 L54 70Z" fill="#fff" stroke="'+INK+'" stroke-width="1.6" stroke-linejoin="round"/>';
-    s+='<g class="deco">';
-    if(titleId==='newbie'){
-      s+='<path d="M50 27 L50 15" fill="none" stroke="#3b8f3b" stroke-width="3" stroke-linecap="round"/>'
-        +'<ellipse cx="43" cy="13" rx="7" ry="4" transform="rotate(-25 43 13)" fill="#6bbf59" '+OUT+'/>'
-        +'<ellipse cx="57" cy="13" rx="7" ry="4" transform="rotate(25 57 13)" fill="#6bbf59" '+OUT+'/>';
+    [37,63].forEach(function(x){s+=cvEllipse(x,52,7.3,9,'#fff7e8',.85)+cvEllipse(x+.4,53.5,4.8,6.6,'#795138')+cvEllipse(x+.7,54.2,3.2,5,'#332a27')+cvEllipse(x-1.4,49.3,2.2,2.5,'#ffffff')+cvEllipse(x+2,56.5,.9,1.1,'#ffe3ac')+cvPath('M'+(x-7)+' 48 Q'+x+' 41 '+(x+6)+' 47','none',1.6,'#493124');});
+    s+='</g>'+cvPath('M30 39 Q36 35 43 39 M57 39 Q64 35 70 39','none',2.3,armorTint(hair,-.2));
+    s+=cvPath('M49 57 Q47 62 52 62','none',.9,armorTint(skin,-.25))+cvPath('M44 68 Q50 72 57 67','none',1.1,'#7f493a')+cvEllipse(48,64,2,.75,armorTint(skin,.2));
+    if(rc==='dwarf'){s+=cvPath('M25 62 Q26 85 50 91 Q74 85 75 62 L66 67 L61 65 L51 70 L40 65 L34 68Z',hf,.9)+cvPath('M38 76 L41 82 M48 77 V85 M58 76 L57 83','none',1,armorTint(hair,.3))+cvPath('M40 67 Q46 63 50 68 Q54 63 61 67','none',3,hair);}
+    if(rc==='orc')s+=cvPath('M39 71 L40 64 L45 71 M61 71 L60 64 L55 71','#fff8da',.6);
+    // Distinct hand-drawn hair locks, with UID-stable parting and color.
+    var flip=L.hs%2===1;
+    if(covered)s+=cvPath('M22 41 Q50 29 78 41 L74 46 Q60 39 52 43 L50 38 L39 44 L29 42 L23 49Z',hf,.8);
+    else{
+    s+='<g'+(flip?' transform="translate(100 0) scale(-1 1)"':'')+'>';
+    s+=cvPath('M18 46 Q9 26 23 16 L18 11 L35 10 L32 4 L48 9 Q63 2 73 14 L81 12 L79 20 Q91 31 82 48 L73 41 L73 29 Q65 38 52 36 L57 27 Q45 39 29 40 L31 32 L22 47Z',hf,1.2);
+    s+=cvPath('M24 21 Q34 13 47 16 L40 22 L53 19 Q42 30 29 32 L34 24 L24 28Z',armorTint(hair,.28),.25,armorTint(hair,.28));
+    s+=cvPath('M51 15 Q66 10 73 21 L67 22 L72 29 L62 26 L63 19 L54 22Z',armorTint(hair,.18),.2,armorTint(hair,.18));
+    s+=cvPath('M22 33 L20 43 M76 24 L80 35 M47 21 L43 29','none',.85,armorTint(hair,-.22))+'</g>';
     }
-    if(titleId==='luck'){
-      s+='<path d="M34 28 L36 12 L43 20 L50 8 L57 20 L64 12 L66 28Z" fill="#f6c343" '+OUT+'/><circle cx="50" cy="21" r="2.6" fill="#e63946"/>';
-    }
-    if(titleId==='unlucky'){
-      s+='<g fill="#aab4c0"><ellipse cx="38" cy="15" rx="12" ry="8"/><ellipse cx="52" cy="12" rx="12" ry="9"/><ellipse cx="64" cy="17" rx="9" ry="6"/></g>'
-        +'<path d="M40 26 l-2 6 M52 26 l-2 6 M63 26 l-2 6" stroke="#4a90d9" stroke-width="2.6" stroke-linecap="round"/>';
-    }
-    if(titleId==='bum'){
-      s+='<path d="M25 42 C24 18 76 18 75 42Z" fill="#6e5a46" '+OUT+'/><path d="M21 42 L80 42" stroke="'+INK+'" stroke-width="3" stroke-linecap="round"/>'
-        +'<rect x="55" y="25" width="9" height="9" rx="1.5" transform="rotate(12 59 29)" fill="#c58f5a" stroke="'+INK+'" stroke-width="1.5"/>'
-        +'<g fill="'+INK+'" opacity="0.55"><circle cx="40" cy="74" r="1.3"/><circle cx="46" cy="76" r="1.3"/><circle cx="54" cy="76" r="1.3"/><circle cx="60" cy="74" r="1.3"/><circle cx="35" cy="70" r="1.3"/><circle cx="65" cy="70" r="1.3"/></g>';
-    }
-    if(titleId==='hen'){
-      s+='<path d="M38 20 q-7 -3 -5 -9 q6 0 9 6Z" fill="#fff" '+OUT+'/>'
-        +'<ellipse cx="50" cy="22" rx="13" ry="9" fill="#fff" '+OUT+'/>'
-        +'<path d="M46 14 q1 -8 4 -2 q2 -6 4 2Z" fill="#e63946" '+OUT+'/>'
-        +'<path d="M62 21 l7 2 l-7 3Z" fill="#f4a300" '+OUT+'/><circle cx="57" cy="19" r="1.7" fill="'+INK+'"/>';
-    }
-    return s+'</g>';
+    if(rc==='beast'){s+=cvPath('M22 26 L21 2 L41 17 M78 26 L79 2 L59 17',hf,1.2)+cvPath('M26 17 L26 8 L35 17 M74 17 L74 8 L65 17','#dfaa9a',.5)+cvPath('M24 65 L11 62 M24 68 L12 70 M76 65 L89 62 M76 68 L88 70','none',.7,'#7c5340');}
+    if(rc==='drake'){s+=cvPath('M28 22 Q13 10 24 -3 Q22 9 38 17 M72 22 Q87 10 76 -3 Q78 9 62 17','#e5d4a2',1)+cvPath('M28 16 L24 6 M72 16 L76 6','none',1,'#b99a69');}
+    if(L.hat&&ITEMS[L.hat])s+='<g data-equipped="head">'+ITEMS[L.hat].draw+'</g>';
+    else if(titleId==='newbie')s+=cvPath('M50 8 V-2','none',1.8,'#5c8c45')+cvEllipse(45,-2,5,2.6,'#80a85c',.6)+cvEllipse(55,-4,5,2.6,'#67964b',.6);
+    else if(titleId==='luck')s+=cvPath('M31 10 L30 -3 L42 3 L50 -8 L58 3 L70 -3 L69 10Z','#d9af4f',.9)+cvGem(50,5,'#d96b55',2.4);
+    else if(titleId==='unlucky')s+=cvEllipse(41,-2,11,5,'#9ba8b4')+cvEllipse(55,-5,11,6,'#a9b6c0')+cvPath('M40 5 L38 10 M52 4 L50 10 M64 5 L62 10','none',1.3,'#729fc0');
+    else if(titleId==='bum')s+=cvPath('M16 33 Q18 10 50 10 Q81 10 83 34 L86 40 Q48 32 14 42Z','#8b7057',1.1)+cvPath('M20 35 Q49 28 80 36','none',2,'#654b38')+'<rect x="57" y="17" width="11" height="10" rx="1" fill="#b6976c" stroke="#654b38" stroke-width=".8"/>';
+    else if(titleId==='hen')s+=cvEllipse(50,4,10,6,'#fff9e9',.8)+cvPath('M47 -1 L49 -6 L52 -2 L54 -5 L56 0','#c95b48',.5)+cvPath('M60 3 L66 5 L60 7Z','#dba342',.5)+cvEllipse(56,3,.9,.9,'#493124');
+    return s;
   }
-  // маленький портрет для чата и рейтинга: голова и плечи
-  function avatar(seed,titleId,race,cls){
-    var L=look(seed,race,cls);
-    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
-      +'<rect width="100" height="100" fill="'+L.bg+'"/>'
-      +'<path d="M14 100 C16 78 32 74 50 74 C68 74 84 78 86 100Z" fill="'+L.shirt+'" '+OUT+'/>'
-      +(L.body?(ITEMS[L.body].back||'')+(ITEMS[L.body].avd||'')+(ITEMS[L.body].sleeve||'')+'<g transform="translate(100 0) scale(-1 1)">'+(ITEMS[L.body].sleeve||'')+'</g>':'')+headParts(L,titleId)+'</svg>';
+  function cvCharacter(seed,titleId,race,gear,portrait){
+    var L=cvLook(seed,race,gear),s='',body=L.body&&ITEMS[L.body],wp=L.hand&&ITEMS[L.hand],boot=L.legs&&ITEMS[L.legs];
+    if(portrait)s+='<rect x="-12" y="-14" width="124" height="180" rx="18" fill="'+armorTint(L.bg,.45)+'"/>';
+    else s+=cvEllipse(50,153,29,3.5,'rgba(66,44,30,.15)');
+    s+=cvGradient('limb',L.skin)+cvGradient('shirt',L.shirt)+cvGradient('pants',L.pants);
+    s+='<g class="cvIdle">';if(race==='dwarf'&&!portrait)s+='<g transform="translate(50 153) scale(1.03 .88) translate(-50 -153)">';
+    if(race==='beast'||race==='drake'){var tail=race==='beast'?L.hair:'#709a68';s+=cvPath('M64 126 Q93 138 92 111','none',7,'#493124')+cvPath('M64 126 Q93 138 92 111','none',4.8,tail);if(race==='drake')s+=cvPath('M92 102 L86 114 L98 114Z','#ddbb63',.8);}
+    if(body&&body.back)s+=body.back;
+    s+=cvPath('M32 119 L47 119 L46 145 L29 145Z',cvFill('pants'),1)+cvPath('M53 119 L68 119 L71 145 L54 145Z',cvFill('pants'),1);
+    if(boot){s+='<g data-equipped="legs"><g transform="translate(19 117) scale(.88)">'+boot.draw+'</g><g transform="translate(81 117) scale(-.88 .88)">'+boot.draw+'</g></g>';}
+    else{s+=cvPath('M30 137 L45 137 L45 148 Q35 154 23 149 Q22 143 30 141Z','#805b40',1)+cvPath('M55 137 L70 137 L70 141 Q79 142 77 149 Q65 154 55 148Z','#805b40',1)+cvPath('M24 148 Q35 152 44 147 M56 147 Q67 152 76 148','none',2,'#533a2d');}
+    s+=cvPath('M44 77 L56 77 L58 91 L42 91Z',cvFill('limb'),.8)+cvPath('M31 88 Q50 80 69 88 L70 121 Q50 130 30 121Z',cvFill('shirt'),1.1);
+    if(body)s+='<g data-equipped="body">'+body.draw+'</g>';
+    else s+=cvPath('M42 86 L50 92 L58 86 M49 94 V116','none',1,'#dfc495')+cvPath('M31 115 Q50 122 69 115 L69 120 Q50 127 31 120Z','#73513b',.8)+'<rect x="46" y="118" width="8" height="5" rx="1" fill="#c9ab6d" stroke="#63462f" stroke-width=".7"/>';
+    // Both sleeves belong to the equipped chest piece, not a separate invented item.
+    s+=cvPath('M30 89 Q17 93 16 108 L15 115 L24 119 L30 107 L37 93Z',cvFill('limb'),1)+cvPath('M70 89 Q83 93 84 108 L85 115 L76 119 L70 107 L63 93Z',cvFill('limb'),1);
+    if(body&&body.sleeve)s+=body.sleeve+'<g transform="translate(100 0) scale(-1 1)">'+body.sleeve+'</g>';
+    else s+=cvPath('M29 87 Q34 84 38 89 L30 105 L17 102Z',cvFill('shirt'),1)+cvPath('M71 87 Q66 84 62 89 L70 105 L83 102Z',cvFill('shirt'),1);
+    s+=cvPath('M15 107 L26 111 L24 117 L13 114 M85 107 L74 111 L76 117 L87 114','#805b40',.8);
+    if(wp)s+='<g data-equipped="arms">'+wp.draw+'</g>';
+    s+=cvEllipse(18,118,6.2,7,cvFill('limb'),1)+cvEllipse(82,118,6.2,7,cvFill('limb'),1)+cvPath('M15 119 L18 120 M80 120 L84 119','none',.6,armorTint(L.skin,-.2));
+    s+='<g class="cvHead">'+cvFace(L,titleId)+'</g>';if(race==='dwarf'&&!portrait)s+='</g>';s+='</g>';
+    return cvSVG(s,portrait?'2 -13 96 110':'-12 -14 124 180',portrait?'cvPortrait':'cvBody');
   }
-  // персонаж в полный рост с анимацией
-  function avatarBody(seed,titleId,race,cls){
-    var L=look(seed,race,cls), sk=L.skin, rc=L.race;
-    var wp=L.hand?ITEMS[L.hand]:null;
-    var wd=wp?(wp.avd||wp.draw):'', wL=(wp&&wp.hand==='L')?wd:'', wR=(wp&&wp.hand==='R')?wd:'';
-    function legD(right){return L.legs?'<g transform="'+(right?'translate(70 111) scale(-.85 .85)':'translate(30 111) scale(.85)')+'">'+ITEMS[L.legs].draw+'</g>':'';}
-    var s='<svg class="chr" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
-    s+='<rect width="144" height="144" rx="24" fill="'+L.bg+'" opacity="0.65"/><g transform="translate(22 0)">';
-    if(rc==='dwarf') s+='<g transform="translate(50 138) scale(0.84) translate(-50 -138)">';
-    s+='<ellipse class="sh" cx="50" cy="138" rx="24" ry="4" fill="#000" opacity="0.18"/>';
-    s+='<g class="chrBob">';
-    if(rc==='beast'||rc==='drake'){
-      var tc=(rc==='beast')?L.hair:'#5aa469';
-      s+='<g class="tail"><path d="M63 104 Q90 104 88 80" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 104 Q90 104 88 80" fill="none" stroke="'+tc+'" stroke-width="5" stroke-linecap="round"/>';
-      if(rc==='drake') s+='<path d="M88 71 L83 82 L93 82Z" fill="#f2c94c" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/>';
-      s+='</g>';
-    }
-    if(L.body&&ITEMS[L.body].back) s+=ITEMS[L.body].back;
-    s+='<g class="legL"><rect x="37" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="40" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/>'+legD(false)+'</g>';
-    s+='<g class="legR"><rect x="53" y="106" width="10" height="22" rx="4" fill="'+L.pants+'" '+OUT+'/><ellipse cx="60" cy="130" rx="9" ry="5" fill="'+L.shoe+'" '+OUT+'/>'+legD(true)+'</g>';
-    s+='<path d="M36 82 Q50 77 64 82 L65 108 Q50 112 35 108Z" fill="'+L.shirt+'" '+OUT+'/>';
-    if(!L.body&&L.ts===1) s+='<path d="M36.5 94 H63.5 M36 101 H64" stroke="#fff" stroke-width="3" opacity="0.55"/>';
-    if(!L.body&&L.ts===2) s+='<circle cx="50" cy="96" r="5" fill="#fff" opacity="0.75"/>';
-    if(L.body) s+=ITEMS[L.body].avd;
-    s+='<g class="armL"><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M37 86 Q25 94 23 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+(L.body&&ITEMS[L.body].sleeve?ITEMS[L.body].sleeve:'')+wL+'<circle cx="23" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
-    s+='<g class="armR"><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+INK+'" stroke-width="9" stroke-linecap="round"/><path d="M63 86 Q75 94 77 107" fill="none" stroke="'+sk+'" stroke-width="4.5" stroke-linecap="round"/>'+(L.body&&ITEMS[L.body].sleeve?'<g transform="translate(100 0) scale(-1 1)">'+ITEMS[L.body].sleeve+'</g>':'')+wR+'<circle cx="77" cy="108" r="4.6" fill="'+sk+'" '+OUT+'/></g>';
-    s+='<g class="chead"><g transform="translate(50 52) scale(1.1) translate(-50 -52)">'+headParts(L,titleId)+'</g></g>';
-    s+='</g>';
-    if(rc==='dwarf') s+='</g>';
-    return s+'</g></svg>';
-  }
+  function avatar(seed,titleId,race,gear){return cvCharacter(seed,titleId,race,gear,true);}
+  function avatarBody(seed,titleId,race,gear){return cvCharacter(seed,titleId,race,gear,false);}
+  function itemIcon(id){var it=ITEMS[id];return it?cvSVG(it.draw,it.vb,'cvItem'):'';}
+
+
+  $('hatVisible').addEventListener('change',function(){if(!sess)return;try{localStorage.setItem('roulette_hide_hat_'+sess.uid,this.checked?'0':'1');}catch(e){}renderChar();renderChat();if(curTab==='board')loadBoard();});
 
   /* ---------- колесо ---------- */
   var canvas=$('wheel'), ctx=canvas.getContext('2d');
