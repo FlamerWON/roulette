@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="15">
+<meta name="app-version" content="16">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -263,7 +263,6 @@ svg.chr{overflow:visible}
 .minerCollection{display:flex;gap:8px;flex-wrap:wrap}
 .minerCollection button{flex:1;font-size:13px;padding:10px;min-width:120px}
 
-/* Живая физика анимаций (Squash & Stretch + кривые Безье) */
 .minerBuddy .miner-body{transform-origin:50px 116px}
 .minerBuddy .miner-head{transform-origin:50px 56px}
 .minerBuddy .miner-eyes{transform-origin:50px 46px;animation:minerBlink 4.5s infinite}
@@ -290,7 +289,6 @@ svg.chr{overflow:visible}
 .minerBuddy.found .miner-body{animation:minerWaveBounce .5s cubic-bezier(.34,1.56,.64,1) 3}
 .minerBuddy.found .miner-found-stone{animation:minerStone 1.5s cubic-bezier(.22,1,.36,1) both}
 
-/* Анимация броска кирки и ухода */
 .minerBuddy.leave .miner-run-group{transform-origin:50px 116px;animation:minerRunOff .95s cubic-bezier(.4,0,.2,1) forwards}
 .minerBuddy.leave .miner-dropped-pick{transform-origin:48px 104px;animation:minerDropPick .55s cubic-bezier(.34,1.56,.64,1) forwards}
 .minerBuddy.gone .miner-dropped-pick{transform-origin:48px 112px;animation:minerIdlePick 2.5s ease-in-out infinite}
@@ -644,12 +642,7 @@ svg.chr{overflow:visible}
     m.gold=Math.min(m.gold,MINER_GOLD_CAP);m.stones=Math.min(m.stones,MINER_STONE_CAP);m.coinMs%=60000;m.stoneMs%=300000;
     g.miner=m;return m;
   }
-  var minerGoneUntil=0,minerLeaveUntil=0;
-  function minerIsGone(){return Date.now()<minerGoneUntil;}
-  function minerActive(g){
-    if(minerIsGone())return '';
-    return g&&g.miner&&g.miner.owned&&g.miner.owned[g.miner.active]?g.miner.active:'';
-  }
+  function minerActive(g){return g&&g.miner&&g.miner.owned&&g.miner.owned[g.miner.active]?g.miner.active:'';}
   function minerRole(roll){if(!Number.isFinite(roll)||roll<0||roll>=1)throw Error('Нет случайного результата');return roll<.4?'resident':roll<.7?'defender':'gladiator';}
   function minerVictory(){if(!game)return;var m=initMiner(game);m.wins=Math.min(3,m.wins+1);renderMinerPanel();renderMiner();}
   function minerPlan(g,action,role,elapsed,today,draw,id){
@@ -980,14 +973,14 @@ svg.chr{overflow:visible}
     var select=$('forgeItem');if(select)select.onchange=function(){forgeIndex=Number(this.value);renderForge();};var button=$('forgeTry');if(button)button.onclick=function(){confirmForge('enhance',forgeIndex);};
   }
   /* ---------- release notes: acknowledged per account in saved game ---------- */
-  var RELEASE_ID=15;
+  var RELEASE_ID=16;
   var RELEASE_NOTES=[{title:'Шахтёр-спутник',lines:[
     'Первого шахтёра можно получить за 3 победы над монстрами после обновления. Следующие роли открываются контрактами за 1500 монет.',
     'Житель 40%, защитник 30%, гладиатор 30%. Повтор роли возвращает 1000 монет. Активен только один спутник.',
     'Житель добывает 3 монеты в минуту, остальные — 2. Максимум 180 монет в сутки. В бою, данже, фоновой и закрытой вкладке добычи нет.',
     'Каждые 5 минут добычи — 5% шанс на камень улучшения, не больше 2 в сутки. Найденный камень показывается анимацией.',
     'Защитник уменьшает входящий урон на 15% с округлением вниз; гладиатор добавляет 8% атаки, минимум 1, при успешном ударе.',
-    'Шахтёр находится справа от числа, в бою разворачивается влево. На клики машет, а от частых кликов сердится. Скины отложены.'
+    'Новый милый чиби-шахтёр! При кликах поворачивается лицом и машет рукой. Если докучать частыми кликами — обидится, бросит кирку и уйдёт на 1 минуту (без добычи и помощи в бою).'
   ]},{title:'Новый облик персонажей',lines:[
     'Персонажи всех игроков получили новый чиби-стиль: крупная голова, выразительные глаза и обновлённое снаряжение.',
     'Головной убор, одежда, оружие и обувь отображаются на модели. Иконки предметов обновлены в том же стиле.',
@@ -2548,6 +2541,13 @@ svg.chr{overflow:visible}
   setInterval(load,2500);
   document.addEventListener('visibilitychange',load);
   /* Visible-tab clock is not an offline clock. Never derive earnings from wall-clock gaps. */
+  var minerGoneUntil=0,minerLeaveUntil=0;
+  function minerIsGone(){return Date.now()<minerGoneUntil;}
+  function minerActive(g){
+    if(minerIsGone())return '';
+    return g&&g.miner&&g.miner.owned&&g.miner.owned[g.miner.active]?g.miner.active:'';
+  }
+  /* Visible-tab clock is not an offline clock. Never derive earnings from wall-clock gaps. */
   var minerPendingMs=0,minerTickAt=performance.now(),minerWasEligible=false,minerLastFlush=performance.now();
   var minerFaceKey='',minerEmote='',minerEmoteUntil=0,minerClicks=[],minerGainTimer=0;
   function minerResetClock(){minerPendingMs=0;minerTickAt=performance.now();minerLastFlush=minerTickAt;minerWasEligible=false;minerEmote='';minerFaceKey='';minerGoneUntil=0;minerLeaveUntil=0;minerClicks=[];}
@@ -2581,36 +2581,28 @@ svg.chr{overflow:visible}
 
     s+='<ellipse cx="52" cy="121" rx="26" ry="3.5" fill="#796246" opacity=".18"/><g class="miner-body">';
 
-    /* Ножки и пухлое тельце */
     if(state==='cower'){
       s+=cvPath('M31 102 Q22 112 29 118 L45 118 L50 110 L58 118 L75 118 Q79 108 67 101Z',pants,1.2)
         +cvPath('M29 80 Q50 73 70 81 L73 104 Q50 114 28 104Z',shirt,1.2);
     }else{
       s+=cvPath('M35 94 L48 94 L46 113 L33 113Z',pants,1.1)+cvPath('M52 94 L65 94 L68 113 L54 113Z',pants,1.1);
-      /* Заплатка на штанишках */
       s+='<rect x="36" y="101" width="6" height="5" rx="1" fill="#8c694f" stroke="#493124" stroke-width=".8"/>';
       s+=cvPath('M30 110 L46 110 L46 118 Q36 122 28 118Z','#593a27',1.1)+cvPath('M54 110 L69 110 L73 117 Q64 122 54 118Z','#593a27',1.1);
       s+=cvPath('M29 70 Q50 63 71 70 L73 98 Q50 106 27 98Z',shirt,1.2);
-      /* Подтяжки и ремень с большой пряжкой */
       s+=cvPath('M35 72 L41 70 L44 96 L37 96Z','#754c34',.9)+cvPath('M65 72 L59 70 L56 96 L63 96Z','#754c34',.9);
       s+=cvPath('M28 93 Q50 98 72 93 L73 98 Q50 104 27 98Z',belt,1);
       s+='<rect x="45" y="93.5" width="10" height="6.5" rx="1.6" fill="'+gold+'" stroke="#493124" stroke-width=".9"/><rect x="47.5" y="95.2" width="5" height="3" rx=".7" fill="'+belt+'"/>';
     }
 
-    /* Голова: анфас для эмоций/кликов, полупрофиль для копания и боя */
     s+='<g class="miner-head">';
     if(front){
-      /* Ушки и пуглое лицо анфас */
       s+=cvEllipse(22,49,6,7.5,skin,1)+cvEllipse(78,49,6,7.5,skin,1);
       s+=cvPath('M24 34 Q26 18 50 18 Q74 18 76 34 L77 54 Q74 71 50 73 Q26 71 23 54Z',skin,1.2);
-      /* Румянец (ярче, когда злится) */
       var cheekCol=state==='angry'?'#e86f5c':'#ea9684';
       s+=cvEllipse(31,53,5.5,2.6,cheekCol)+cvEllipse(69,53,5.5,2.6,cheekCol);
 
-      /* Большие чиби-глазки */
       s+='<g class="miner-eyes">';
       if(state==='wave'||state==='found'){
-        /* Счастливые глазки-дуги ^ ^ */
         s+=cvPath('M32 46 Q38 39 44 46','none',2.4,'#493124')+cvPath('M56 46 Q62 39 68 46','none',2.4,'#493124');
       }else{
         [38,62].forEach(function(x){
@@ -2620,27 +2612,22 @@ svg.chr{overflow:visible}
       }
       s+='</g>';
 
-      /* Брови по эмоциям */
       if(state==='angry'||state==='leave'){
         s+=cvPath('M30 37 L44 42 M70 37 L56 42','none',2.5,'#5c331c');
       }else{
         s+=cvPath('M31 37 Q38 33 44 37 M56 37 Q62 33 69 37','none',2.2,'#6e4127');
       }
 
-      /* Пышная мягкая борода, круглый носик и усы */
       s+=cvPath('M22 52 Q18 72 34 82 Q42 88 50 89 Q58 88 66 82 Q82 72 78 52 L69 56 Q50 64 31 56Z',beard,1.2);
       s+=cvPath('M31 64 Q40 78 50 82 Q60 78 69 64','none',1.2,beardLight);
-      /* Ротик */
       if(state==='angry'||state==='leave'){
         s+=cvPath('M45 63 Q50 59 55 63','none',1.6,'#493124');
       }else{
         s+=cvPath('M44 60 Q50 67 56 60Z','#8c3b32',.9);
       }
-      /* Пышные усы и круглый чиби-нос */
       s+=cvPath('M50 55 Q38 52 29 59 Q38 65 50 59 Q62 65 71 59 Q62 52 50 55Z',beardLight,1.1);
       s+=cvEllipse(50,51,5.2,4.2,'#f09d7e',1)+cvEllipse(48.5,49.5,1.6,1.1,'#ffd4c2');
 
-      /* Каска шахтёра анфас с большим фонариком по центру */
       s+=cvPath('M20 35 Q20 7 50 7 Q80 7 80 35 L85 39 Q50 31 15 39Z',helm,1.3);
       s+=cvPath('M22 31 Q50 24 78 31 L81 36 Q50 29 19 36Z',helmDark,1);
       s+=cvEllipse(50,21,9,9,'#8c9aa1',1.2)+cvEllipse(50,21,6.2,6.2,'#fff3b0',.8)+cvEllipse(48,19,2.2,2.2,'#ffffff');
@@ -2648,7 +2635,6 @@ svg.chr{overflow:visible}
         s+='<g class="miner-steam">'+cvPath('M78 14 L84 9 M82 20 L89 18','none',2,'#e0533c')+'</g>';
       }
     }else{
-      /* Полупрофиль для копания и боя */
       s+=cvEllipse(30,48,5.5,7,skin,1);
       s+=cvPath('M26 34 Q34 16 56 18 Q73 22 74 42 L74 56 Q66 71 46 69 Q29 66 27 52Z',skin,1.2);
       s+=cvEllipse(55,53,5,2.5,'#ea9684');
@@ -2661,19 +2647,16 @@ svg.chr{overflow:visible}
           +'</g>';
       }
       s+=cvPath('M53 36 Q61 33 67 37','none',2.1,'#6e4127');
-      /* Пушистая борода и усы в полупрофиль */
       s+=cvPath('M26 50 Q22 70 39 81 Q54 88 68 78 Q78 68 74 53 L64 56 Q46 62 32 52Z',beard,1.2);
       s+=cvPath('M38 63 Q51 76 63 72','none',1.2,beardLight);
       s+=cvPath('M48 55 Q61 52 75 58 Q64 64 50 59Z',beardLight,1.1);
       s+=cvEllipse(69,50,5.2,4.2,'#f09d7e',1)+cvEllipse(68,48.6,1.6,1.1,'#ffd4c2');
-      /* Каска в полупрофиль */
       s+=cvPath('M22 35 Q23 7 51 7 Q77 8 78 34 L83 38 Q52 30 18 39Z',helm,1.3);
       s+=cvPath('M23 31 Q52 23 78 31 L81 36 Q51 28 20 37Z',helmDark,1);
       s+=cvEllipse(71,22,7.5,8.8,'#8c9aa1',1.1)+cvEllipse(72,22,5,6.2,'#fff3b0',.7);
     }
-    s+='</g>'; /* конец .miner-head */
+    s+='</g>';
 
-    /* Ручки и инструменты по состояниям */
     if(state==='mine'){
       s+='<g class="miner-pick">'
         +cvPath('M44 84 L82 68','none',5.2,'#493124')+cvPath('M44 84 L82 68','none',3.2,wood)
@@ -2688,11 +2671,9 @@ svg.chr{overflow:visible}
         +'<g class="miner-wave">'+cvPath('M70 75 Q82 63 83 48','none',7.5,shirt)+cvEllipse(83,46,6,6,skin,1)
         +cvPath('M77 36 L75 31 M83 35 V29 M89 36 L91 31','none',1.6,'#d9a74a')+'</g>';
     }else if(state==='angry'){
-      /* Руки в боки от возмущения */
       s+=cvPath('M28 74 Q16 83 27 92','none',7.5,shirt)+cvEllipse(29,92,5.2,5.2,skin,1)
         +cvPath('M72 74 Q84 83 73 92','none',7.5,shirt)+cvEllipse(71,92,5.2,5.2,skin,1);
     }else if(state==='leave'){
-      /* Взмахивает ручками, убегая */
       s+=cvPath('M28 74 Q14 66 16 56','none',7.5,shirt)+cvEllipse(16,55,5.2,5.2,skin,1)
         +cvPath('M72 74 Q86 66 84 56','none',7.5,shirt)+cvEllipse(84,55,5.2,5.2,skin,1);
     }else if(state==='shield'){
@@ -2712,14 +2693,13 @@ svg.chr{overflow:visible}
         +cvPath('M72 74 Q82 64 79 53','none',7.5,shirt)+cvEllipse(79,52,5.2,5.2,skin,1)
         +'<g class="miner-found-stone">'+cvGem(84,38,'#b57cff',8.5)+cvPath('M73 30 L69 26 M92 28 L96 23','none',1.5,'#f6c343')+'</g>';
     }else{
-      /* Спокойно держит кирку в руках */
       s+=cvPath('M28 75 Q22 86 28 93','none',7.5,shirt)+cvEllipse(29,93,5.2,5.2,skin,1)
         +cvPath('M72 75 Q78 86 72 93','none',7.5,shirt)+cvEllipse(71,93,5.2,5.2,skin,1)
         +cvPath('M32 96 L78 64','none',4.8,'#493124')+cvPath('M32 96 L78 64','none',2.8,wood)
         +cvPath('M69 49 Q86 56 83 78 L78 71 Q80 59 66 54Z','#b8c4c8',1.1);
     }
 
-    s+='</g>'; /* конец .miner-body */
+    s+='</g>';
     if(state==='leave')s+='</g>';
     if(combat)s+='</g>';
     return cvSVG(s,'8 -1 104 128','miner-art');
@@ -2741,7 +2721,7 @@ svg.chr{overflow:visible}
     var button=$('minerBuddy');if(!button)return;
     var hasRole=minerHasRole(game),role=minerActive(game),pose=minerPose(),key=pose+':'+(game&&game.miner?game.miner.active:'');
     if(key!==minerFaceKey){button.innerHTML=minerSvg(pose);minerFaceKey=key;}
-    button.className='minerBuddy '+pose+(!hasRole?' locked':'');
+    button.className='minerBuddy '+pose+(!role?' locked':'');
     var status=$('minerStatus');
     if(minerIsGone()){
       var leftSec=Math.max(1,Math.ceil((minerGoneUntil-Date.now())/1000));
@@ -2802,7 +2782,7 @@ svg.chr{overflow:visible}
     var h='<div class="card"><h3>Шахтёр-спутник</h3><p>Первый спутник бесплатно за 3 победы над монстрами после обновления. Победы в данже тоже считаются. Прежние победы не подставляются.</p>';
     if(!m.claimed)h+='<p><b>Задание: '+m.wins+' / 3</b></p><button id="minerClaim"'+(blocked||m.wins<3?' disabled':'')+'>Получить первого шахтёра</button>';
     else{
-      h+='<div class="minerCollection">';Object.keys(MINER_NAMES).forEach(function(role){var own=!!m.owned[role];h+='<button data-miner-role="'+role+'"'+(!own||blocked||role===m.active?' disabled':'')+'>'+MINER_NAMES[role]+' · '+(!own?'не открыт':role===m.active?'активен':'выбрать')+'</button>';});h+='</div>';
+      h+='<div class="minerCollection">';Object.keys(MINER_NAMES).forEach(otherRole=>{var own=!!m.owned[otherRole];h+='<button data-miner-role="'+otherRole+'"'+(!own||blocked||otherRole===m.active?' disabled':'')+'>'+MINER_NAMES[otherRole]+' · '+(!own?'не открыт':otherRole===m.active?'активен':'выбрать')+'</button>';});h+='</div>';
       h+='<p>Контракт: <b>1500 монет</b>. Житель 40%, защитник 30%, гладиатор 30%. При повторе открытой роли возвращаются 1000 монет — потратишь 500. Уже открытая роль не исчезает.</p><button id="minerHire"'+(blocked||game.coins<1500||count===3?' disabled':'')+'>'+(count===3?'Все роли открыты':'Нанять · 1500 монет')+'</button>';
     }
     h+='<p>Активен один спутник. Житель добывает 3 монеты в минуту; остальные — 2. Общий предел: 180 монет за сутки. Защитник блокирует 15% входящего урона (с округлением вниз, минимум 1 урона проходит). Гладиатор добавляет 8% твоей атаки, минимум 1, только при успешном ударе.</p><p>Не докучай шахтёру частыми кликами: если разозлить его, он бросит кирку и уйдёт на 1 минуту (в это время он не добывает ресурсы и не выходит помогать в бою).</p>';
@@ -2825,7 +2805,6 @@ svg.chr{overflow:visible}
     minerClicks=minerClicks.filter(function(t){return now-t<3500;});
     minerClicks.push(now);
     if(minerClicks.length>=7){
-      /* Бросает кирку и уходит на 1 минуту */
       minerClicks=[];
       minerPendingMs=0;
       minerLeaveUntil=now+950;
@@ -2850,6 +2829,8 @@ svg.chr{overflow:visible}
 
   setInterval(function(){minerClock();renderMiner();var now=performance.now();if(now-minerLastFlush>=15000){minerLastFlush=now;if(minerEligible()&&canSell()&&$('modal').hidden)minerPerform('collect');}},1000);
   document.addEventListener('visibilitychange',function(){minerTickAt=performance.now();minerWasEligible=false;renderMiner();if(document.hidden&&canSell()&&minerPendingMs)minerPerform('collect');});
+
+
   restore();
 })();
 </script>
