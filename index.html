@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="16">
+<meta name="app-version" content="17">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -152,7 +152,7 @@ svg.chr{overflow:visible}
 
 /* монеты */
 #app{padding-top:34px}
-.coinBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:20;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--gold);border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.coinBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:56px;z-index:20;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--gold);border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .coinBox svg{width:28px;height:28px;display:block}
 .coinBox.pop{animation:coinPop .35s ease}
 @keyframes coinPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
@@ -245,7 +245,7 @@ svg.chr{overflow:visible}
 .progressPanel p{font-size:12px;line-height:1.5;color:var(--muted);margin:8px 0 0}.rankRow select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}@media(prefers-reduced-motion:reduce){.xpBar i{transition:none}}
 #toast:empty{display:none}#toast{width:100%;max-width:520px;min-height:0;font-size:14px;line-height:1.5}#toast.on{border-radius:12px}#merchantBody{display:flex;flex-direction:column;gap:14px}.merchantList{display:flex;flex-direction:column;gap:10px}.merchantItem{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px}.merchantIcon{width:52px;height:52px;border:2px solid var(--line);border-radius:10px;padding:5px}.merchantIcon svg{display:block;width:100%;height:100%}.merchantDetails{display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere;min-width:0}.merchantDetails strong{font-size:14px;line-height:1.35}.merchantDetails span{font-size:12px;line-height:1.4;color:var(--muted)}.merchantActions{display:flex;align-items:center;gap:8px}.merchantActions button{font-size:13px;padding:8px 10px;min-height:44px;border-radius:10px}.merchantActions .favoriteButton{min-width:44px;font-size:22px;padding:4px 8px}.favoriteButton[aria-pressed="true"]{color:var(--gold);border-color:var(--gold)}.sellPrices{display:flex;gap:8px;flex-wrap:wrap}.sellPrices>span{display:inline-flex;align-items:center;gap:4px;font-size:12px}.merchantIntro .merchantNote{font-size:12px;line-height:1.5}.huntNote{font-size:13px;line-height:1.5;color:var(--muted);text-align:center;max-width:420px;margin:0}.charPane>.progressPanel{margin:0} @media(max-width:600px){.merchantItem{grid-template-columns:48px minmax(0,1fr);gap:10px}.merchantIcon{width:48px;height:48px}.merchantActions{grid-column:1/-1;justify-content:flex-end}.merchantActions button[data-sell]{min-width:150px}}
 
-#forgeBody{margin-bottom:16px}#forgeItem{width:100%;padding:12px;margin:10px 0;box-sizing:border-box;max-width:100%}.forgeButtons{display:flex;gap:8px;flex-wrap:wrap}.forgeButtons button{flex:1;min-height:44px}.forgePreview{padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0}.forgePreview>svg{width:60px;height:60px;vertical-align:middle;margin-right:12px}.forgePreview strong{overflow-wrap:anywhere}.forgeWarning{color:#ff8a80!important;font-weight:700}#forgeBody table{width:100%;font-size:13px;text-align:left;border-collapse:collapse}#forgeBody td,#forgeBody th{padding:8px;border-bottom:1px solid var(--line)}#newsOpen{padding:8px 12px;min-height:40px;margin:8px 0}#newsModal .mbox{max-height:85vh;overflow:auto;text-align:left;max-width:580px;width:90%;box-sizing:border-box}#newsContent{max-height:55vh;overflow:auto}#newsContent li{margin:12px 0;line-height:1.5}#newsClose{margin-top:12px;width:100%}#newsModal:before{content:'';position:absolute;inset:0}#newsModal .mbox{position:relative}.icell .enhancedBonus{color:#84e3a5;font-size:11px;line-height:1.4}
+#forgeBody{margin-bottom:16px}#forgeItem{width:100%;padding:12px;margin:10px 0;box-sizing:border-box;max-width:100%}.forgeButtons{display:flex;gap:8px;flex-wrap:wrap}.forgeButtons button{flex:1;min-height:44px}.forgePreview{padding:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0}.forgePreview>svg{width:60px;height:60px;vertical-align:middle;margin-right:12px}.forgePreview strong{overflow-wrap:anywhere}.forgeWarning{color:#ff8a80!important;font-weight:700}#forgeBody table{width:100%;font-size:13px;text-align:left;border-collapse:collapse}#forgeBody td,#forgeBody th{padding:8px;border-bottom:1px solid var(--line)}#newsOpen{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:20;width:38px;height:38px;min-height:38px;padding:0;margin:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;line-height:1;background:var(--card);color:var(--gold);border:2px solid var(--gold);box-shadow:0 4px 12px rgba(0,0,0,.18)}.wheelSkinCard{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.wheelSkinCard b{font-size:14px}.wheelSkinBtns{display:flex;gap:6px;flex-wrap:wrap}.wheelSkinBtns button{padding:6px 14px;font-size:13px}.newsGiftBox{margin:12px 0 4px;padding:12px;border:2px dashed var(--gold);border-radius:14px;background:var(--bg);text-align:center;display:flex;flex-direction:column;gap:8px}.newsGiftBox b{color:var(--gold);font-size:15px}#newsModal .mbox{max-height:85vh;overflow:auto;text-align:left;max-width:580px;width:90%;box-sizing:border-box}#newsContent{max-height:55vh;overflow:auto}#newsContent li{margin:12px 0;line-height:1.5}#newsClose{margin-top:12px;width:100%}#newsModal:before{content:'';position:absolute;inset:0}#newsModal .mbox{position:relative}.icell .enhancedBonus{color:#84e3a5;font-size:11px;line-height:1.4}
 
 .hero .charAv{width:210px;height:284px;max-width:100%;margin:0 auto 6px}.equipWrap{grid-template-columns:68px minmax(0,1fr) 68px;gap:8px;align-items:center}.hero{min-width:0}.hero .name{font-size:32px}.hatOption{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);line-height:1.4;min-height:44px;cursor:pointer}.hatOption input{accent-color:var(--gold);width:16px;height:16px;flex:none}.hero .raceTag{font-size:12px}.cvBody,.cvPortrait{overflow:visible}.cvIdle{transform-origin:50px 135px;animation:cvBreath 3s ease-in-out infinite}.cvHead{transform-origin:50px 77px;animation:cvHeadTurn 5s ease-in-out infinite}.cvBody .eyes,.cvPortrait .eyes{transform-origin:50px 52px;animation:cvBlink 5s infinite}.cvItem{overflow:visible}.drop .charAv{height:130px;width:110px}.slot{padding:4px}.slot svg{height:40px;width:40px}.av .cvPortrait{overflow:hidden;border-radius:50%}.icell{min-width:0}.icell>svg{max-width:100%}
 @keyframes cvBreath{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}@keyframes cvHeadTurn{0%,40%,100%{transform:rotate(0)}60%{transform:rotate(-1deg)}}@keyframes cvBlink{0%,93%,97%,100%{transform:scaleY(1)}95%{transform:scaleY(.12)}}
@@ -392,7 +392,7 @@ svg.chr{overflow:visible}
       <button id="tabShop" class="tab">Магазин</button>
       <button id="tabDg" class="tab">Данж</button>
     </div>
-    <button id="newsOpen" class="ghost">Что нового</button>
+    <button id="newsOpen" class="ghost" hidden title="Что нового" aria-label="Что нового">?</button>
     <div id="toast" role="status" aria-live="polite"></div>
     <div class="eventBar" id="eventBar">
       <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
@@ -411,6 +411,7 @@ svg.chr{overflow:visible}
       </div>
       <div class="fight" id="fight" hidden></div>
       <button id="spin">Крутить</button>
+      <div id="wheelSkinBox" class="wheelSkinCard" hidden><b>Скин колеса:</b><div class="wheelSkinBtns"><button type="button" id="skinDefault" class="tab on">Классическое</button><button type="button" id="skinPioneer" class="tab">Первопроходец</button></div></div>
       <p class="huntNote">Вне боя и данжа каждая прокрутка даёт 5% шанс нападения. Сложность выбирается в «Персонаже».</p>
     </section>
 
@@ -462,7 +463,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 16</h2><div id="newsContent" tabindex="0"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 17</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -555,11 +556,11 @@ svg.chr{overflow:visible}
   function start(){
     uid=sess.uid; nick=sess.name;
     $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
-    game=null; gameLoaded=false; showTab('game'); $('coinBox').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); claimSession().then(loadGame);
+    game=null; gameLoaded=false; showTab('game'); $('coinBox').hidden=false; $('newsOpen').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); claimSession().then(loadGame);
   }
   function logout(){
     if(merchantBusy){toast("Дождись завершения сохранения.");return;}minerResetClock();
-    sess=null; game=null; gameLoaded=false; mySid=''; clearTimeout(loadRetry); docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true;
+    sess=null; game=null; gameLoaded=false; mySid=''; clearTimeout(loadRetry); docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true; $('newsOpen').hidden=true;
     try{localStorage.removeItem('roulette_sess');}catch(e){}
     $('app').hidden=true; $('login').hidden=false; setErr('');
   }
@@ -628,7 +629,7 @@ svg.chr{overflow:visible}
   }
   /* v15 companion rules. Client economy: CAS consistency, not server anti-cheat. */
   var MINER_NAMES={resident:'Житель',defender:'Защитник',gladiator:'Гладиатор'};
-  var MINER_GOLD_CAP=180,MINER_STONE_CAP=2,MINER_HIRE_PRICE=1500,MINER_DUPLICATE_REFUND=1000;
+  var MINER_GOLD_CAP=180,MINER_GOLD_MULT=5,MINER_STONE_CAP=2,MINER_HIRE_PRICE=1500,MINER_DUPLICATE_REFUND=1000;
   function minerDay(){return new Date().toISOString().slice(0,10);}
   function defaultMiner(){return {wins:0,claimed:false,owned:{},active:'',day:minerDay(),gold:0,stones:0,coinMs:0,stoneMs:0,lastId:'',lastKind:'',lastRole:'',lastGold:0,lastStone:0,lastDuplicate:false};}
   function initMiner(g){
@@ -639,7 +640,7 @@ svg.chr{overflow:visible}
     m.claimed=m.claimed===true;
     if(!/^\d{4}-\d{2}-\d{2}$/.test(m.day))m.day=minerDay();
     ['gold','stones','coinMs','stoneMs'].forEach(function(k){m[k]=Math.max(0,Math.floor(Number(m[k])||0));});
-    m.gold=Math.min(m.gold,MINER_GOLD_CAP);m.stones=Math.min(m.stones,MINER_STONE_CAP);m.coinMs%=60000;m.stoneMs%=300000;
+    m.gold=Math.min(m.gold,MINER_GOLD_CAP);m.stones=Math.min(m.stones,MINER_STONE_CAP);m.coinMs%=60000;m.stoneMs%=180000;
     g.miner=m;return m;
   }
   function minerActive(g){return g&&g.miner&&g.miner.owned&&g.miner.owned[g.miner.active]?g.miner.active:'';}
@@ -657,8 +658,8 @@ svg.chr{overflow:visible}
     // protected against a modified client; this release deliberately remains client-side.
     if(today>m.day){m.day=today;m.gold=0;m.stones=0;}
     if(active&&elapsed){
-      if(m.gold<MINER_GOLD_CAP){m.coinMs+=elapsed;var minutes=Math.floor(m.coinMs/60000);m.coinMs%=60000;gold=Math.min(MINER_GOLD_CAP-m.gold,minutes*(active==='resident'?3:2));m.gold+=gold;next.coins+=gold;if(m.gold===MINER_GOLD_CAP)m.coinMs=0;}
-      if(m.stones<MINER_STONE_CAP){m.stoneMs+=elapsed;while(m.stoneMs>=300000&&m.stones<MINER_STONE_CAP){m.stoneMs-=300000;if(draw()<.05){m.stones++;stone++;next.stones++;}}if(m.stones===MINER_STONE_CAP)m.stoneMs=0;}
+      if(m.gold<MINER_GOLD_CAP){m.coinMs+=elapsed;var minutes=Math.floor(m.coinMs/60000);m.coinMs%=60000;var units=Math.min(MINER_GOLD_CAP-m.gold,minutes*(active==='resident'?3:2));m.gold+=units;gold=units*MINER_GOLD_MULT;next.coins+=gold;if(m.gold===MINER_GOLD_CAP)m.coinMs=0;}
+      if(m.stones<MINER_STONE_CAP){m.stoneMs+=elapsed;while(m.stoneMs>=180000&&m.stones<MINER_STONE_CAP){m.stoneMs-=180000;if(draw()<.10){m.stones++;stone++;next.stones+=2;}}if(m.stones===MINER_STONE_CAP)m.stoneMs=0;}
     }
     var rolled='',duplicate=false;
     if(action==='claim'){
@@ -882,16 +883,28 @@ svg.chr{overflow:visible}
     if(st.hp)p.push('HP '+st.hp+(n?' (база '+it.hp+', +'+(st.hp-it.hp)+')':''));
     if(st.atk)p.push('урон '+st.atk+(n?' (база '+it.atk+', +'+(st.atk-it.atk)+')':''));return p.join(' · ');
   }
-  function saleCopyIndices(g,id,duplicates){
+  var ENHANCE_SELL_BONUS=[0,125,275,475,750,1150,1700,2450,3400,4700,6500];
+  function copySellPrice(g,i){
+    var id=g.inv&&g.inv[i],it=ITEMS[id];if(!it)return 0;
+    return (SELL_PRICES[it.r]||8)+(ENHANCE_SELL_BONUS[copyLevel(g,i)]||0);
+  }
+  function saleCopyIndices(g,id,duplicates,exactIndex){
     var groups={},remove={};
+    if(Number.isInteger(exactIndex)&&exactIndex>=0&&g.inv&&ITEMS[g.inv[exactIndex]]){
+      var eKey=g.inv[exactIndex],eIt=ITEMS[eKey],eWorn=wornIndex(g,eIt.slot);
+      if(saleProtected(g,eKey)||exactIndex===eWorn)return remove;
+      var totalSame=0;g.inv.forEach(function(k){if(k===eKey)totalSame++;});
+      if(isStarterItem(eKey)&&totalSame<=1)return remove;
+      remove[exactIndex]=true;return remove;
+    }
     (g.inv||[]).forEach(function(key,i){(groups[key]||(groups[key]=[])).push(i);});
     Object.keys(groups).forEach(function(key){
       if(id&&key!==id||saleProtected(g,key))return;
       var indices=groups[key],it=ITEMS[key],worn=wornIndex(g,it.slot),protectedCount=0;
-      var available=indices.filter(function(i){var protect=copyLevel(g,i)>0||i===worn;if(protect)protectedCount++;return !protect;});
+      var available=indices.filter(function(i){var protect=(duplicates&&copyLevel(g,i)>0)||i===worn;if(protect)protectedCount++;return !protect;});
+      available.sort(function(a,b){return copyLevel(g,a)-copyLevel(g,b)||(a-b);});
       var leave=(duplicates||isStarterItem(key))&&protectedCount===0?1:0;
       var n=duplicates?Math.max(0,available.length-leave):Math.min(1,Math.max(0,available.length-leave));
-      // Deterministic choice: sell the last unenhanced copies, retaining earlier ones.
       available.slice(available.length-n).forEach(function(i){remove[i]=true;});
     });return remove;
   }
@@ -958,45 +971,85 @@ svg.chr{overflow:visible}
     var blocked=!canSell();
     var h='<div class="card"><h3>Кузница</h3><p>Камни: <strong>'+game.stones+'</strong> · один камень — '+STONE_PRICE+' монет. Каждая попытка также стоит монеты.</p><div class="forgeButtons">';
     [1,5,10].forEach(function(n){h+='<button data-stones="'+n+'"'+(blocked||game.coins<STONE_PRICE*n?' disabled':'')+'>Купить '+n+' · '+(STONE_PRICE*n)+' мон.</button>';});
-    h+='</div><p>Каждый +1: для существующего урона +1 и 3% от базы; для существующего HP +5 и 3% от базы. Отдельной защиты в игре нет. Новые характеристики не появляются.</p><p>Первые +1 и +2 гарантированы. Далее неудача сбрасывает заточку выбранной копии до +0, но не уничтожает вещь. Заточенные вещи скупщик не продаёт.</p>';
+    h+='</div><p>Каждый +1: для существующего урона +1 и 3% от базы; для существующего HP +5 и 3% от базы. Отдельной защиты в игре нет. Новые характеристики не появляются.</p><p>Первые +1 и +2 гарантированы. Далее неудача сбрасывает заточку выбранной копии до +0, но не уничтожает вещь. Улучшенные вещи можно выгодно продать скупщику с возвратом части вложенных монет и камней.</p>';
     if(indices.length){h+='<label for="forgeItem">Выбери экземпляр</label><select id="forgeItem"'+(blocked?' disabled':'')+'>';indices.forEach(function(i){h+='<option value="'+i+'"'+(i===forgeIndex?' selected':'')+'>'+copyName(game,i)+' · экземпляр №'+(i+1)+'</option>';});h+='</select>';
-      var n=copyLevel(game,forgeIndex),it=ITEMS[game.inv[forgeIndex]],st=enhancedStats(it,n+1);
+      var n=copyLevel(game,forgeIndex),it=ITEMS[game.inv[forgeIndex]],st=enhancedStats(it,n+1),sellPlan=salePlan(game,null,false,forgeIndex);
       h+='<div class="forgePreview">'+itemIcon(game.inv[forgeIndex])+'<strong>'+copyName(game,forgeIndex)+'</strong><p>'+copyStatsLine(game,forgeIndex)+'</p>';
-      if(n<10)h+='<p>Следующий уровень +'+(n+1)+': '+(st.hp?'HP '+st.hp+' ':'')+(st.atk?'урон '+st.atk:'')+'</p><p>Шанс: <b>'+FORGE_CHANCES[n]+'%</b> · '+FORGE_COSTS[n]+' монет + 1 камень.</p>'+(n>=2?'<p class="forgeWarning">При неудаче: сброс до +0.</p>':'<p>Успех гарантирован.</p>')+'<button id="forgeTry"'+(blocked||!game.stones||game.coins<FORGE_COSTS[n]?' disabled':'')+'>Улучшить до +'+(n+1)+'</button>';
-      else h+='<p>Максимальная заточка +10.</p>';
-      h+='</div>';
+      if(n<10)h+='<p>Следующий уровень +'+(n+1)+': '+(st.hp?'HP '+st.hp+' ':'')+(st.atk?'урон '+st.atk:'')+'</p><p>Шанс: <b>'+FORGE_CHANCES[n]+'%</b> · '+FORGE_COSTS[n]+' монет + 1 камень.</p>'+(n>=2?'<p class="forgeWarning">При неудаче: сброс до +0.</p>':'<p>Успех гарантирован.</p>')+'<div class="forgeButtons"><button id="forgeTry"'+(blocked||!game.stones||game.coins<FORGE_COSTS[n]?' disabled':'')+'>Улучшить до +'+(n+1)+'</button><button id="forgeSell" class="ghost"'+(blocked||!sellPlan.amount?' disabled':'')+'>Продать за '+copySellPrice(game,forgeIndex)+' мон.</button></div>';
+      else h+='<p>Максимальная заточка +10.</p><button id="forgeSell" class="ghost"'+(blocked||!sellPlan.amount?' disabled':'')+'>Продать за '+copySellPrice(game,forgeIndex)+' мон.</button>';
+      h+='<p style="font-size:12px;margin-top:6px">Цена продажи этого экземпляра у скупщика: <b>'+copySellPrice(game,forgeIndex)+' мон.</b>'+(n?' (база '+SELL_PRICES[it.r]+' + бонус заточки '+ENHANCE_SELL_BONUS[n]+')':'')+(forgeIndex===wornIndex(game,it.slot)?' · сними предмет, чтобы продать':'')+'</p></div>';
     }else h+='<p>Получите экипировку своего класса.</p>';
     h+='<details><summary>Все шансы и цены</summary><table><tr><th>Уровень</th><th>Шанс</th><th>Монеты + 1 камень</th></tr>';
     FORGE_CHANCES.forEach(function(ch,i){h+='<tr><td>+'+i+' → +'+(i+1)+'</td><td>'+ch+'%</td><td>'+FORGE_COSTS[i]+'</td></tr>';});
     h+='</table></details><p>Во время боя, данжа или сохранения кузница недоступна. Камни сейчас покупаются за монеты; разбор и выпадение камней пока не добавлены.</p></div>';box.innerHTML=h;
     box.querySelectorAll('[data-stones]').forEach(function(b){b.onclick=function(){confirmForge('buy',null,Number(b.dataset.stones));};});
-    var select=$('forgeItem');if(select)select.onchange=function(){forgeIndex=Number(this.value);renderForge();};var button=$('forgeTry');if(button)button.onclick=function(){confirmForge('enhance',forgeIndex);};
+    var select=$('forgeItem');if(select)select.onchange=function(){forgeIndex=Number(this.value);renderForge();};var button=$('forgeTry');if(button)button.onclick=function(){confirmForge('enhance',forgeIndex);};var sbtn=$('forgeSell');if(sbtn)sbtn.onclick=function(){confirmSale(null,false,forgeIndex);};
   }
   /* ---------- release notes: acknowledged per account in saved game ---------- */
-  var RELEASE_ID=16;
-  var RELEASE_NOTES=[{title:'Шахтёр-спутник',lines:[
-    'Первого шахтёра можно получить за 3 победы над монстрами после обновления. Следующие роли открываются контрактами за 1500 монет.',
-    'Житель 40%, защитник 30%, гладиатор 30%. Повтор роли возвращает 1000 монет. Активен только один спутник.',
-    'Житель добывает 3 монеты в минуту, остальные — 2. Максимум 180 монет в сутки. В бою, данже, фоновой и закрытой вкладке добычи нет.',
-    'Каждые 5 минут добычи — 5% шанс на камень улучшения, не больше 2 в сутки. Найденный камень показывается анимацией.',
-    'Защитник уменьшает входящий урон на 15% с округлением вниз; гладиатор добавляет 8% атаки, минимум 1, при успешном ударе.',
-    'Новый милый чиби-шахтёр! При кликах поворачивается лицом и машет рукой. Если докучать частыми кликами — обидится, бросит кирку и уйдёт на 1 минуту (без добычи и помощи в бою).'
-  ]},{title:'Новый облик персонажей',lines:[
-    'Персонажи всех игроков получили новый чиби-стиль: крупная голова, выразительные глаза и обновлённое снаряжение.',
-    'Головной убор, одежда, оружие и обувь отображаются на модели. Иконки предметов обновлены в том же стиле.',
-    'Расы сохраняют отличительные черты. Уровни, предметы, заточка и характеристики не меняются.',
-    'Переключатель под персонажем скрывает головной убор только на этом устройстве, без потери характеристик.'
-  ]},{title:'Заточка и новости обновлений',lines:[
-    'Кузница в магазине: камни по 150 монет, заточка до +10. Первые два уровня гарантированы.',
-    'Каждый уровень усиливает существующий урон на 1 + 3% от базы, HP на 5 + 3% от базы. При неудаче заточка сбрасывается до +0; вещь сохраняется.',
-    'Каждая копия улучшается отдельно. Заточенные экземпляры защищены от продажи скупщику.',
-    'Добавлено окно «Что нового». Оно появляется после входа до подтверждения и всегда доступно по кнопке.',
-    'Сохранены 120 комплектов, мифическая и божественная редкости, 23 титула и исправленные шансы рас.'
+  var RELEASE_ID=17;
+  var RELEASE_NOTES=[{title:'Версия 17 · Колесо Первопроходца и крупный апдейт',lines:[
+    'Эксклюзивный подарок ранним игрокам: скин «Колесо Первопроходца» (вороненая сталь, королевский пурпур, изумрудное зеро и золотая звезда). Забери его по кнопке ниже в этом окне!',
+    'Ускорение шахтёра в 5 раз: Житель теперь приносит 15 монет в минуту, Защитник и Гладиатор — 10 монет в минуту. Суточный лимит увеличен до 900 монет!',
+    'Каждые 3 минуты активной добычи шахтёр имеет 10% шанс найти сразу 2 камня улучшения (до 4 камней в сутки).',
+    'Продажа заточенных вещей: теперь улучшенные предметы (+1…+10) можно продавать скупщику или прямо из Кузницы с возвратом части вложенных монет и камней (+125 мон. за +1 и до +6500 мон. за +10). При кнопке «Продать дубликаты» заточенные вещи защищены.',
+    '12 новых монстров: на поверхности и в засадах появились Гарпия, Мимик, Каменный голем, Василиск, Оборотень и Циклоп, а в Данже — Горгулья, Некромант, Минотавр, Призрачный жнец, Ледяной элементаль и Демон бездны.',
+    'Улучшена посадка брони и рукавов на чиби-модели персонажа, а кнопка «Что нового» перенесена в правый верхний угол в виде компактного знака «?».'
+  ]},{title:'Шахтёр-спутник и чиби-персонажи',lines:[
+    'Первого шахтёра можно получить за 3 победы над монстрами. Следующие роли открываются контрактами за 1500 монет (повтор возвращает 1000 монет).',
+    'Защитник уменьшает входящий урон на 15%; гладиатор добавляет 8% атаки при успешном ударе.',
+    'При кликах шахтёр поворачивается лицом и машет рукой, а если докучать ему частыми кликами — бросит кирку и уйдёт на 1 минуту.',
+    'Переключатель под персонажем скрывает головной убор без потери характеристик.'
   ]}];
+  function hasPioneerSkin(){
+    if(!sess)return false;
+    try{if(localStorage.getItem('roulette_pioneer_unlocked_'+sess.uid)==='1')return true;}catch(e){}
+    return !!(game&&Number(game.releaseSeen||0)>=17);
+  }
+  function currentWheelSkin(){
+    if(!hasPioneerSkin()||!sess)return 'default';
+    try{return localStorage.getItem('roulette_wheel_skin_'+sess.uid)==='pioneer'?'pioneer':'default';}catch(e){return 'default';}
+  }
+  function setWheelSkin(skin){
+    if(!sess)return;
+    try{
+      if(skin==='pioneer')localStorage.setItem('roulette_pioneer_unlocked_'+sess.uid,'1');
+      localStorage.setItem('roulette_wheel_skin_'+sess.uid,skin);
+    }catch(e){}
+    renderWheelSkinBox();draw();
+  }
+  function renderWheelSkinBox(){
+    var box=$('wheelSkinBox');if(!box)return;
+    if(!hasPioneerSkin()){box.hidden=true;return;}
+    box.hidden=false;
+    var cur=currentWheelSkin();
+    $('skinDefault').className='tab'+(cur==='default'?' on':'');
+    $('skinPioneer').className='tab'+(cur==='pioneer'?' on':'');
+  }
+  $('skinDefault').addEventListener('click',function(){setWheelSkin('default');toast('Установлено классическое колесо.');});
+  $('skinPioneer').addEventListener('click',function(){setWheelSkin('pioneer');toast('Установлен скин «Колесо Первопроходца»!');});
   function openNews(){
     if(!gameLoaded||merchantBusy)return;
     var box=$('newsContent');box.textContent='';
     RELEASE_NOTES.forEach(function(release){var title=document.createElement('h3');title.textContent=release.title;box.appendChild(title);var list=document.createElement('ul');release.lines.forEach(function(line){var el=document.createElement('li');el.textContent=line;list.appendChild(el);});box.appendChild(list);});
+    var gift=$('newsGiftArea');
+    if(gift){
+      gift.innerHTML='';
+      if(RELEASE_ID===17&&game){
+        var wrap=document.createElement('div');wrap.className='newsGiftBox';
+        var b=document.createElement('b');b.textContent='🎁 Подарок игрокам версии 17 и ранних версий';
+        var bt=document.createElement('button');
+        var unlocked=hasPioneerSkin()&&currentWheelSkin()==='pioneer';
+        bt.textContent=unlocked?'✓ Скин «Колесо Первопроходца» получен и включён!':'Забрать эксклюзивный скин «Колесо Первопроходца»';
+        bt.onclick=function(){
+          game.releaseSeen=17;
+          setWheelSkin('pioneer');
+          saveGame();
+          bt.textContent='✓ Скин «Колесо Первопроходца» получен и включён!';
+          toast('Поздравляем! Эксклюзивный скин «Колесо Первопроходца» активирован!');
+        };
+        wrap.appendChild(b);wrap.appendChild(bt);gift.appendChild(wrap);
+      }
+    }
     $('newsModal').hidden=false;$('newsClose').focus();
   }
   function maybeNews(){if(gameLoaded&&Number(game.releaseSeen||0)<RELEASE_ID&&!kickedOut)openNews();}
@@ -1009,6 +1062,8 @@ svg.chr{overflow:visible}
   function initV11(g){
     initMiner(g);
     initEnhancement(g);
+    if(RELEASE_ID===17&&sess){try{if(!localStorage.getItem('roulette_pioneer_unlocked_'+sess.uid)){localStorage.setItem('roulette_pioneer_unlocked_'+sess.uid,'1');localStorage.setItem('roulette_wheel_skin_'+sess.uid,'pioneer');}}catch(e){}}
+    renderWheelSkinBox();
     if(!Number.isFinite(g.eventSlot))g.eventSlot=g.fight&&g.fight.kind!=='ambush'?Number(g.fight.s)||0:0;
     if(!g.favorites||typeof g.favorites!=='object'||Array.isArray(g.favorites))g.favorites={};
     Object.keys(g.favorites).forEach(function(id){if(!ITEMS[id]||g.favorites[id]!==true)delete g.favorites[id];});
@@ -1016,15 +1071,19 @@ svg.chr{overflow:visible}
     if(f&&f.on&&f.kind==='ambush'&&(!Number.isInteger(f.mid)||f.mid<0||f.mid>=MONSTERS.length||!Number.isFinite(f.deadline))){f.on=false;f.skip=false;}
   }
   function foeOfFight(f){
-    if(f.kind==='ambush')return makeMonster(MONSTERS[f.mid],f.r,!!f.elite,false);
+    if(f.kind==='ambush'){
+      var idx=(Number(f.mid)%6)+((Number(f.deadline)%2===1)?6:0);
+      return makeMonster(MONSTERS[idx]||MONSTERS[0],f.r,!!f.elite,false);
+    }
     return foeFor(f.s,f.r);
   }
   function maybeAmbush(){
     if(!game||!gameLoaded||merchantBusy||(game.fight&&game.fight.on)||dgOn())return false;
     if(Math.random()>=AMBUSH_CHANCE)return false;
-    var rank=selectedRank(),mid=Math.floor(Math.random()*MONSTERS.length),elite=Math.random()<.1;
-    var mo=makeMonster(MONSTERS[mid],rank,elite,false),st=stats();
-    game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:Date.now()+30*60000,r:rank,m:mo.hp,p:st.hp,ph:st.hp,pa:st.atk,buddy:minerActive(game),on:true,skip:false,dealt:0,taken:0};
+    var rank=selectedRank(),fullMid=Math.floor(Math.random()*MONSTERS.length),mid=fullMid%6,isHigh=fullMid>=6?1:0,elite=Math.random()<.1;
+    var dl=Math.floor((Date.now()+30*60000)/2)*2+isHigh;
+    var mo=makeMonster(MONSTERS[fullMid],rank,elite,false),st=stats();
+    game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:dl,r:rank,m:mo.hp,p:st.hp,ph:st.hp,pa:st.atk,buddy:minerActive(game),on:true,skip:false,dealt:0,taken:0};
     fightLog='Внезапное нападение! '+mo.name+'. Бой начнётся со следующей прокрутки. Можно отступить без штрафа.';
     fightMsg='';fightChest=false;renderProgress();renderFight();renderEvent();
     toast('На тебя напал '+mo.name+'! Следующая прокрутка — ход боя.');return true;
@@ -1034,12 +1093,12 @@ svg.chr{overflow:visible}
   function saleProtected(g,id){return !!(g.favorites&&g.favorites[id])||!ITEMS[id];}
   function saleAvailable(g,id){
     if(saleProtected(g,id))return 0;var it=ITEMS[id],w=wornIndex(g,it.slot),n=0,protectedCount=0;
-    g.inv.forEach(function(key,i){if(key===id){if(copyLevel(g,i)>0||i===w)protectedCount++;else n++;}});
+    g.inv.forEach(function(key,i){if(key===id){if(i===w)protectedCount++;else n++;}});
     return Math.max(0,n-(isStarterItem(id)&&!protectedCount?1:0));
   }
-  function salePlan(g,id,duplicates){
-    var indices=saleCopyIndices(g,id,duplicates),remove={},total=0;
-    Object.keys(indices).forEach(function(i){var key=g.inv[i];remove[key]=(remove[key]||0)+1;total+=SELL_PRICES[ITEMS[key].r];});
+  function salePlan(g,id,duplicates,exactIndex){
+    var indices=saleCopyIndices(g,id,duplicates,exactIndex),remove={},total=0;
+    Object.keys(indices).forEach(function(i){var idx=Number(i),key=g.inv[idx];remove[key]=(remove[key]||0)+1;total+=copySellPrice(g,idx);});
     return {indices:indices,remove:remove,total:total,amount:Object.keys(indices).length};
   }
   function applySale(g,plan){var next=JSON.parse(JSON.stringify(g));filterInventory(next,function(id,i){return !plan.indices[i];});next.coins+=plan.total;return next;}
@@ -1058,11 +1117,9 @@ svg.chr{overflow:visible}
     if(game.favorites[id])delete game.favorites[id];else game.favorites[id]=true;
     saveGame();renderMerchant();renderInv();
   }
-  async function executeSale(id,duplicates){
+  async function executeSale(id,duplicates,exactIndex){
     if(!canSell()){toast('Продажа доступна после загрузки и сохранения прогресса, вне боя и прокрутки.');return false;}
-    var plan=salePlan(game,id,duplicates);if(!plan.amount){toast('Нет подходящих предметов для продажи.');return false;}
-    // Escrow is unnecessary for an NPC sale. A conditional whole-game write atomically
-    // exchanges owned inventory for coins and rejects concurrent writes (HTTP 412).
+    var plan=salePlan(game,id,duplicates,exactIndex);if(!plan.amount){toast('Нет подходящих предметов для продажи.');return false;}
     var session=sess,local=JSON.parse(JSON.stringify(game));local.v=APP_V;local.sid=mySid;
     merchantBusy=true;gameLoaded=false;
     $('mText').textContent='Сохраняем продажу… Не закрывай страницу.';$('mYes').hidden=true;$('mNo').hidden=true;$('modal').hidden=false;
@@ -1073,7 +1130,7 @@ svg.chr{overflow:visible}
       var server=await read.json(),etag=read.headers.get('ETag');
       if(!server||!etag)throw Error('Сервер не подтвердил состояние инвентаря');
       if(canonicalGame(server)!==canonicalGame(local))throw Error('Прогресс изменился. Загружаем актуальное сохранение');
-      plan=salePlan(server,id,duplicates);if(!plan.amount)throw Error('Предметы уже проданы или защищены');
+      plan=salePlan(server,id,duplicates,exactIndex);if(!plan.amount)throw Error('Предметы уже проданы или защищены');
       var next=applySale(server,plan);next.v=APP_V;next.sid=mySid;
       var write=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(next)});
       if(!write.ok)throw Error(write.status===412?'Инвентарь изменился во время продажи':'Продажа не подтверждена сервером');
@@ -1082,8 +1139,6 @@ svg.chr{overflow:visible}
       merchantBusy=false;renderCoins();renderChar();renderMerchant();renderForge();renderEvent();
       toast('Продано '+plan.amount+' шт. Получено '+plan.total+' монет.');return true;
     }catch(e){
-      // A lost response can mean a committed write. Read back instead of retrying
-      // the sale or restoring an old local inventory over the server.
       merchantBusy=false;again=false;
       if(sess===session){gameLoaded=false;await loadGame();toast((e&&e.message?e.message:'Не удалось подтвердить продажу')+'. Проверь обновлённый инвентарь.');}
       return false;
@@ -1091,11 +1146,16 @@ svg.chr{overflow:visible}
       merchantBusy=false;$('mYes').hidden=false;$('mNo').hidden=false;closeModal();
     }
   }
-  function confirmSale(id,duplicates){
+  function confirmSale(id,duplicates,exactIndex){
     if(!canSell()){toast('Дождись окончания боя, прокрутки или сохранения.');return;}
-    var p=salePlan(game,id,duplicates);if(!p.amount)return;
-    var label=duplicates?'Продать '+p.amount+' дубликатов, оставив минимум по одному экземпляру каждого типа':('Продать «'+ITEMS[id].name+'» (1 шт.)');
-    confirmBox(label+' за '+p.total+' монет? Продажу нельзя отменить. Надетый и последний стартовый экземпляры, а также избранное защищены.','Продать',function(){executeSale(id,duplicates);});
+    var p=salePlan(game,id,duplicates,exactIndex);if(!p.amount)return;
+    var label;
+    if(duplicates)label='Продать '+p.amount+' незаточенных дубликатов, оставив минимум по одному экземпляру каждого типа';
+    else if(Number.isInteger(exactIndex)){
+      var lv=copyLevel(game,exactIndex);
+      label='Продать «'+copyName(game,exactIndex)+'» (экземпляр №'+(exactIndex+1)+(lv?', включая бонус заточки +'+ENHANCE_SELL_BONUS[lv]+' мон.':'')+')';
+    }else label='Продать «'+ITEMS[id].name+'» (1 шт.)';
+    confirmBox(label+' за '+p.total+' монет? Продажу нельзя отменить. Надетый и последний стартовый экземпляры, а также избранное защищены.','Продать',function(){executeSale(id,duplicates,exactIndex);});
   }
   function renderMerchant(){
     renderForge();
@@ -1103,14 +1163,16 @@ svg.chr{overflow:visible}
     if(!game){box.textContent='Сначала загрузи персонажа.';return;}
     var counts=saleCounts(game),ids=Object.keys(counts),plan=salePlan(game,null,true);
     var blocked=merchantBusy||!gameLoaded||opening||spinning||!!(game.fight&&game.fight.on)||dgOn();
-    var h='<div class="card merchantIntro"><h3>Скупщик</h3><p>Продай лишний лут за монеты. Надетый и последний стартовый экземпляры не продаются. Звезда защищает все экземпляры выбранного предмета. Копии с заточкой тоже защищены от продажи.</p><div class="sellPrices">';
+    var h='<div class="card merchantIntro"><h3>Скупщик</h3><p>Продай лишний лут или старую заточенную экипировку за монеты! Заточенные вещи (+1…+10) продаются с большой надбавкой (возврат ~50% стоимости вложенных монет и камней + бонус мастерства: от +125 мон. за +1 до +6500 мон. за +10). При нажатии «Продать дубликаты» заточенные вещи не трогаются.</p><div class="sellPrices">';
     Object.keys(SELL_PRICES).forEach(function(r){h+='<span>'+rarPill(r)+' '+SELL_PRICES[r]+' мон.</span>';});
-    h+='</div><button id="sellDuplicates"'+(blocked||!plan.amount?' disabled':'')+'>Продать дубликаты'+(plan.amount?' · '+plan.total+' мон.':'')+'</button><p class="merchantNote">Массовая продажа оставляет минимум один экземпляр каждого типа. Все продажи подтверждаются отдельно.</p>'+(blocked?'<p class="merchantNote">Торговля недоступна во время боя, прокрутки, открытия сундука или загрузки.</p>':'')+'</div>';
+    h+='</div><button id="sellDuplicates"'+(blocked||!plan.amount?' disabled':'')+'>Продать дубликаты (+0)'+(plan.amount?' · '+plan.total+' мон.':'')+'</button><p class="merchantNote">Массовая продажа продаёт только незаточенные (+0) дубликаты. Улучшенные вещи можно продать поштучно ниже или прямо из Кузницы.</p>'+(blocked?'<p class="merchantNote">Торговля недоступна во время боя, прокрутки, открытия сундука или загрузки.</p>':'')+'</div>';
     if(!ids.length)h+='<div class="card"><p>Инвентарь пуст. Добыча появится после побед над монстрами.</p></div>';
     else h+='<div class="merchantList">'+ids.map(function(id){
-      var it=ITEMS[id],fav=!!game.favorites[id],available=saleAvailable(game,id),starter=isStarterItem(id);
-      var status=fav?'Избранное · защищено':starter?'Стартовое · оставляем 1 · можно продать: '+available:'Можно продать: '+available;
-      return '<div class="merchantItem"><div class="merchantIcon" style="border-color:'+RARITY[it.r].color+'">'+itemIcon(id)+'</div><div class="merchantDetails"><strong>'+it.name+'</strong><span>'+RARITY[it.r].name+' · '+counts[id]+' шт.</span><span>'+status+'</span></div><div class="merchantActions"><button class="ghost favoriteButton" data-favorite="'+id+'" aria-pressed="'+fav+'" aria-label="'+(fav?'Убрать из избранного: ':'Защитить: ')+it.name+'"'+(merchantBusy?' disabled':'')+'>'+(fav?'★':'☆')+'</button><button data-sell="'+id+'"'+(blocked||!available?' disabled':'')+'>'+(starter&&!available?'Оставить 1':'Продать · '+SELL_PRICES[it.r])+'</button></div></div>';
+      var it=ITEMS[id],fav=!!game.favorites[id],available=saleAvailable(game,id),starter=isStarterItem(id),p1=salePlan(game,id,false);
+      var enhList=[];game.inv.forEach(function(k,idx){if(k===id&&copyLevel(game,idx)>0)enhList.push('+'+copyLevel(game,idx)+(idx===wornIndex(game,it.slot)?' (надето)':''));});
+      var status=fav?'Избранное · защищено':starter?'Стартовое · оставляем 1 · доступно к продаже: '+available:'Доступно к продаже: '+available;
+      if(enhList.length)status+=' · заточка: '+enhList.join(', ');
+      return '<div class="merchantItem"><div class="merchantIcon" style="border-color:'+RARITY[it.r].color+'">'+itemIcon(id)+'</div><div class="merchantDetails"><strong>'+it.name+'</strong><span>'+RARITY[it.r].name+' · '+counts[id]+' шт.</span><span>'+status+'</span></div><div class="merchantActions"><button class="ghost favoriteButton" data-favorite="'+id+'" aria-pressed="'+fav+'" aria-label="'+(fav?'Убрать из избранного: ':'Защитить: ')+it.name+'"'+(merchantBusy?' disabled':'')+'>'+(fav?'★':'☆')+'</button><button data-sell="'+id+'"'+(blocked||!available?' disabled':'')+'>'+(starter&&!available?'Оставить 1':'Продать · '+(p1.total||SELL_PRICES[it.r]))+'</button></div></div>';
     }).join('')+'</div>';
     box.innerHTML=h;
     var bulk=$('sellDuplicates');if(bulk)bulk.addEventListener('click',function(){confirmSale(null,true);});
@@ -1287,7 +1349,7 @@ svg.chr{overflow:visible}
     return {id:base.id,name:(boss?'Хранитель: ':elite?'Элитный ':'')+base.name,hp:hp,dmg:dmg,rule:base.rule,hit:base.hit,elite:!!elite,boss:!!boss,rank:rank};
   }
   function rewardBase(mo){
-    var weight={goblin:1,kobold:.9,slime:1,skeleton:1.15,wolf:1.2,ogre:1.45,bat:1.05,spider:1.15,mummy:1.15,troll:1.2,knight:1.35,lich:1.15}[mo.id]||1;
+    var weight={goblin:1,kobold:.9,slime:1,skeleton:1.15,wolf:1.2,ogre:1.45,harpy:1.15,mimic:1.25,golem:1.5,basilisk:1.2,werewolf:1.3,cyclops:1.45,bat:1.05,spider:1.15,mummy:1.15,troll:1.2,knight:1.35,lich:1.15,gargoyle:1.2,necromancer:1.25,minotaur:1.35,reaper:1.3,frost:1.25,demon:1.5}[mo.id]||1;
     var special=(mo.elite?1.6:1)*(mo.boss?1.35:1);
     return {xp:Math.round(45*Math.pow(mo.rank,1.65)*weight*special),coins:Math.round(180*Math.pow(mo.rank,.72)*weight*special)};
   }
@@ -1360,7 +1422,13 @@ svg.chr{overflow:visible}
     {id:'slime',name:'Слизень',hp:55,dmg:4,rule:'чётное число',hit:function(n){return n>0&&n%2===0;}},
     {id:'skeleton',name:'Скелет',hp:50,dmg:7,rule:'нечётное число',hit:function(n){return n%2===1;}},
     {id:'wolf',name:'Волк',hp:45,dmg:8,rule:'число от 19 до 36',hit:function(n){return n>=19;}},
-    {id:'ogre',name:'Огр',hp:80,dmg:9,rule:'число от 1 до 18',hit:function(n){return n>=1&&n<=18;}}
+    {id:'ogre',name:'Огр',hp:80,dmg:9,rule:'число от 1 до 18',hit:function(n){return n>=1&&n<=18;}},
+    {id:'harpy',name:'Гарпия',hp:52,dmg:8,rule:'число от 1 до 12 или от 25 до 36',hit:function(n){return (n>=1&&n<=12)||n>=25;}},
+    {id:'mimic',name:'Мимик',hp:65,dmg:9,rule:'красное нечётное или чёрное чётное',hit:function(n){var c=color(n);return (c==='red'&&n%2===1)||(c==='black'&&n%2===0);}},
+    {id:'golem',name:'Каменный голем',hp:95,dmg:10,rule:'число делится на 2 или на 3',hit:function(n){return n>0&&(n%2===0||n%3===0);}},
+    {id:'basilisk',name:'Василиск',hp:58,dmg:9,rule:'число от 10 до 28',hit:function(n){return n>=10&&n<=28;}},
+    {id:'werewolf',name:'Оборотень',hp:72,dmg:10,rule:'красное или число от 25 до 36',hit:function(n){return (n>0&&color(n)==='red')||n>=25;}},
+    {id:'cyclops',name:'Циклоп',hp:90,dmg:11,rule:'число от 1 до 15 или от 30 до 36',hit:function(n){return (n>=1&&n<=15)||n>=30;}}
   ];
   function monsterFor(slot){return MONSTERS[hashStr('m'+slot)%MONSTERS.length];}
   // элитный монстр: шанс 10%, у каждого игрока свой; вдвое больше здоровья и урона
@@ -1465,6 +1533,83 @@ svg.chr{overflow:visible}
         +'<circle cx="42" cy="49" r="2" fill="#66ff99"/><circle cx="58" cy="49" r="2" fill="#66ff99"/>'
         +'<path d="M50 55 L47 62 H53Z" fill="'+i+'"/><path d="M41 68 H59 M45 66 V71 M50 66 V71 M55 66 V71" stroke="'+i+'" stroke-width="2"/>'
         +'<path d="M34 24 L38 10 L45 20 L50 7 L55 20 L62 10 L66 24Z" fill="#f6c343" '+o+'/>';
+    }
+    if(id==='harpy'){
+      h+='<rect width="100" height="100" fill="#f3d9e8"/><path d="M10 42 Q22 22 36 46 Q20 56 12 68Z M90 42 Q78 22 64 46 Q80 56 88 68Z" fill="#9d4edd" '+o+'/>'
+        +'<ellipse cx="50" cy="54" rx="22" ry="23" fill="#f4c2a8" '+o+'/><path d="M26 42 Q50 14 74 42 Q64 28 50 30 Q36 28 26 42Z" fill="#7b2cbf" '+o+'/>'
+        +'<circle cx="41" cy="51" r="4.5" fill="#ffe066" stroke="'+i+'" stroke-width="1.8"/><circle cx="59" cy="51" r="4.5" fill="#ffe066" stroke="'+i+'" stroke-width="1.8"/>'
+        +'<circle cx="41" cy="51" r="2" fill="'+i+'"/><circle cx="59" cy="51" r="2" fill="'+i+'"/>'
+        +'<path d="M46 58 L54 58 L50 67Z" fill="#f6c343" '+o+'/>';
+    }
+    if(id==='mimic'){
+      h+='<rect width="100" height="100" fill="#ecd6c0"/><rect x="18" y="48" width="64" height="36" rx="6" fill="#8d5524" '+o+'/>'
+        +'<path d="M16 48 Q50 18 84 48Z" fill="#a8672d" '+o+'/><path d="M22 48 H78" stroke="'+i+'" stroke-width="4"/>'
+        +'<path d="M26 48 L30 58 L34 48 L38 58 L42 48 M58 48 L62 58 L66 48 L70 58 L74 48" fill="#fff" stroke="'+i+'" stroke-width="1.6"/>'
+        +'<path d="M44 50 Q50 78 58 66 Q54 54 52 50Z" fill="#e63946" '+o+'/>'
+        +'<circle cx="35" cy="38" r="4.5" fill="#ffe066" stroke="'+i+'" stroke-width="1.8"/><circle cx="65" cy="38" r="4.5" fill="#ffe066" stroke="'+i+'" stroke-width="1.8"/>';
+    }
+    if(id==='golem'){
+      h+='<rect width="100" height="100" fill="#d8dde2"/><polygon points="24,26 50,16 76,26 82,62 70,84 30,84 18,62" fill="#8d99ae" '+o+'/>'
+        +'<path d="M30 28 L44 42 L36 58 M70 30 L58 44 L66 64" fill="none" stroke="#4a5568" stroke-width="2.4"/>'
+        +'<rect x="33" y="44" width="11" height="6" rx="2" fill="#00f5d4" stroke="'+i+'" stroke-width="1.6"/><rect x="56" y="44" width="11" height="6" rx="2" fill="#00f5d4" stroke="'+i+'" stroke-width="1.6"/>'
+        +'<path d="M36 68 H64" stroke="'+i+'" stroke-width="4" stroke-linecap="round"/>';
+    }
+    if(id==='basilisk'){
+      h+='<rect width="100" height="100" fill="#d8f3dc"/><path d="M36 26 L42 12 L48 24 L52 10 L58 24 L64 12 L66 28Z" fill="#e63946" '+o+'/>'
+        +'<ellipse cx="50" cy="56" rx="27" ry="23" fill="#40916c" '+o+'/>'
+        +'<circle cx="38" cy="49" r="6" fill="#ffbe0b" stroke="'+i+'" stroke-width="2"/><circle cx="62" cy="49" r="6" fill="#ffbe0b" stroke="'+i+'" stroke-width="2"/>'
+        +'<rect x="37" y="45" width="2" height="8" fill="'+i+'"/><rect x="61" y="45" width="2" height="8" fill="'+i+'"/>'
+        +'<path d="M36 67 Q50 74 64 67" fill="none" stroke="'+i+'" stroke-width="2.5"/><path d="M48 70 L50 82 L53 70" fill="#e63946"/>';
+    }
+    if(id==='werewolf'){
+      h+='<rect width="100" height="100" fill="#d0d6e2"/><path d="M22 44 L20 12 L42 30Z M78 44 L80 12 L58 30Z" fill="#4a3b32" '+o+'/>'
+        +'<ellipse cx="50" cy="56" rx="28" ry="25" fill="#5c4738" '+o+'/><ellipse cx="50" cy="66" rx="16" ry="12" fill="#8d7463" '+o+'/>'
+        +'<circle cx="38" cy="48" r="5" fill="#ff4d4d" stroke="'+i+'" stroke-width="1.8"/><circle cx="62" cy="48" r="5" fill="#ff4d4d" stroke="'+i+'" stroke-width="1.8"/>'
+        +'<ellipse cx="50" cy="60" rx="5.5" ry="4" fill="'+i+'"/><path d="M38 72 L42 65 L46 73 M54 73 L58 65 L62 72" fill="#fff" stroke="'+i+'" stroke-width="1.5"/>';
+    }
+    if(id==='cyclops'){
+      h+='<rect width="100" height="100" fill="#f1dca7"/><path d="M46 24 L50 8 L54 24Z" fill="#e9c46a" '+o+'/>'
+        +'<ellipse cx="50" cy="56" rx="30" ry="28" fill="#d4a373" '+o+'/>'
+        +'<circle cx="50" cy="46" r="12" fill="#fff" '+o+'/><circle cx="50" cy="46" r="6" fill="#e63946"/><circle cx="50" cy="46" r="2.8" fill="'+i+'"/>'
+        +'<path d="M34 32 Q50 38 66 32" fill="none" stroke="'+i+'" stroke-width="4" stroke-linecap="round"/>'
+        +'<path d="M34 70 Q50 64 66 70" fill="none" stroke="'+i+'" stroke-width="3"/><path d="M39 69 L42 61 L45 69 M55 69 L58 61 L61 69" fill="#fff" stroke="'+i+'" stroke-width="1.5"/>';
+    }
+    if(id==='gargoyle'){
+      h+='<rect width="100" height="100" fill="#d4d8dd"/><path d="M12 36 L28 24 L32 52Z M88 36 L72 24 L68 52Z" fill="#6c757d" '+o+'/>'
+        +'<path d="M30 34 L24 14 L40 28Z M70 34 L76 14 L60 28Z" fill="#495057" '+o+'/>'
+        +'<ellipse cx="50" cy="56" rx="25" ry="24" fill="#6c757d" '+o+'/>'
+        +'<circle cx="40" cy="50" r="4" fill="#ff9f1c"/><circle cx="60" cy="50" r="4" fill="#ff9f1c"/>'
+        +'<path d="M38 66 H62 L58 73 H42Z" fill="#343a40" '+o+'/>';
+    }
+    if(id==='necromancer'){
+      h+='<rect width="100" height="100" fill="#d8c8e8"/><path d="M16 86 Q20 14 50 12 Q80 14 84 86Z" fill="#240046" '+o+'/>'
+        +'<ellipse cx="50" cy="54" rx="18" ry="20" fill="#10002b" '+o+'/>'
+        +'<circle cx="42" cy="50" r="4" fill="#72efdd"/><circle cx="58" cy="50" r="4" fill="#72efdd"/>'
+        +'<path d="M36 20 L50 28 L64 20" fill="none" stroke="#c77dff" stroke-width="2.5"/>';
+    }
+    if(id==='minotaur'){
+      h+='<rect width="100" height="100" fill="#f0d5c8"/><path d="M26 36 Q8 22 18 8 Q22 24 34 30Z M74 36 Q92 22 82 8 Q78 24 66 30Z" fill="#e5d4a2" '+o+'/>'
+        +'<ellipse cx="50" cy="54" rx="27" ry="25" fill="#7f4f24" '+o+'/><ellipse cx="50" cy="66" rx="16" ry="11" fill="#582f0e" '+o+'/>'
+        +'<circle cx="38" cy="46" r="4" fill="#ff4d4d"/><circle cx="62" cy="46" r="4" fill="#ff4d4d"/>'
+        +'<circle cx="50" cy="72" r="6" fill="none" stroke="#f6c343" stroke-width="3.2"/>';
+    }
+    if(id==='reaper'){
+      h+='<rect width="100" height="100" fill="#cfd8dc"/><path d="M78 16 Q96 22 86 48 Q84 30 72 26Z" fill="#b0bec5" '+o+'/><path d="M74 20 L66 86" stroke="#5d4037" stroke-width="4"/>'
+        +'<path d="M18 86 Q22 16 50 16 Q76 16 78 86Z" fill="#263238" '+o+'/>'
+        +'<ellipse cx="48" cy="50" rx="15" ry="17" fill="#eceff1" '+o+'/>'
+        +'<circle cx="42" cy="48" r="4.5" fill="'+i+'"/><circle cx="54" cy="48" r="4.5" fill="'+i+'"/>';
+    }
+    if(id==='frost'){
+      h+='<rect width="100" height="100" fill="#caf0f8"/><polygon points="50,12 72,28 80,56 64,84 36,84 20,56 28,28" fill="#48cae4" '+o+'/>'
+        +'<polygon points="50,20 66,34 60,72 40,72 34,34" fill="#90e0ef" opacity="0.7"/>'
+        +'<circle cx="40" cy="48" r="4.5" fill="#fff"/><circle cx="60" cy="48" r="4.5" fill="#fff"/>'
+        +'<path d="M38 64 L46 60 L54 64 L62 60" fill="none" stroke="#03045e" stroke-width="2.8" stroke-linecap="round"/>';
+    }
+    if(id==='demon'){
+      h+='<rect width="100" height="100" fill="#f8d0d0"/><path d="M28 34 Q14 14 28 6 Q28 20 38 28Z M72 34 Q86 14 72 6 Q72 20 62 28Z" fill="#2b2d42" '+o+'/>'
+        +'<ellipse cx="50" cy="56" rx="26" ry="25" fill="#d90429" '+o+'/>'
+        +'<circle cx="39" cy="49" r="5" fill="#ffbe0b" stroke="'+i+'" stroke-width="1.8"/><circle cx="61" cy="49" r="5" fill="#ffbe0b" stroke="'+i+'" stroke-width="1.8"/>'
+        +'<path d="M36 68 Q50 80 64 68" fill="#2b2d42" '+o+'/><path d="M40 69 L43 75 L46 69 M54 69 L57 75 L60 69" fill="#fff"/>';
     }
 
     return h+'</svg>';
@@ -1577,7 +1722,13 @@ svg.chr{overflow:visible}
     {id:'mummy',name:'Мумия',hp:60,dmg:8,rule:'нечётное число',hit:function(n){return n%2===1;}},
     {id:'troll',name:'Пещерный тролль',hp:70,dmg:9,rule:'число от 13 до 24',hit:function(n){return n>=13&&n<=24;}},
     {id:'knight',name:'Тёмный рыцарь',hp:80,dmg:10,rule:'чёрное',hit:function(n){return n>0&&color(n)==='black';}},
-    {id:'lich',name:'Лич',hp:50,dmg:9,rule:'число, кратное трём',hit:function(n){return n>0&&n%3===0;}}
+    {id:'lich',name:'Лич',hp:50,dmg:9,rule:'число, кратное трём',hit:function(n){return n>0&&n%3===0;}},
+    {id:'gargoyle',name:'Горгулья',hp:68,dmg:9,rule:'чётное число',hit:function(n){return n>0&&n%2===0;}},
+    {id:'necromancer',name:'Некромант',hp:58,dmg:10,rule:'красное или кратное 4',hit:function(n){return n>0&&(color(n)==='red'||n%4===0);}},
+    {id:'minotaur',name:'Минотавр',hp:88,dmg:11,rule:'число от 1 до 21',hit:function(n){return n>=1&&n<=21;}},
+    {id:'reaper',name:'Призрачный жнец',hp:64,dmg:11,rule:'число от 16 до 36',hit:function(n){return n>=16&&n<=36;}},
+    {id:'frost',name:'Ледяной элементаль',hp:74,dmg:9,rule:'чёрное или число от 1 до 12',hit:function(n){return (n>0&&color(n)==='black')||(n>=1&&n<=12);}},
+    {id:'demon',name:'Демон бездны',hp:92,dmg:12,rule:'красное или чётное число',hit:function(n){return n>0&&(color(n)==='red'||n%2===0);}}
   ];
   // предмет из сундука данжа: шансы по редкости, и только для твоего класса
   var DROP_D=[['common',9.6],['uncommon',30],['rare',35],['epic',20],['legendary',5],['mythic',.3],['divine',.1]];
@@ -2126,30 +2277,30 @@ svg.chr{overflow:visible}
   function cvBodyItem(it,c,trim,detail){
     var cls=it.cls||'warrior',dark=armorTint(c,-.27),light=armorTint(c,.32),s=cvGradient('body',c),f=cvFill('body');
     if(cls==='mage'){
-      s+=cvPath('M31 87 Q49 80 69 87 L74 132 Q62 138 50 134 Q38 138 26 132Z',f,1.1);
-      s+=cvPath('M39 85 L49 99 L43 133 M61 85 L51 99 L57 133','none',2,trim);
-      s+=cvPath('M31 127 Q49 133 69 127','none',1.6,trim)+cvPath('M35 99 L32 121 M65 99 L68 121','none',1.2,light);
-      s+=cvPath('M45 86 L50 92 L55 86 L54 82 L50 85 L46 82Z',dark,.65);
+      s+=cvPath('M27 83 Q50 76 73 83 L76 134 Q63 140 50 136 Q37 140 24 134Z',f,1.15);
+      s+=cvPath('M38 82 L49 99 L42 135 M62 82 L51 99 L58 135','none',2,trim);
+      s+=cvPath('M27 128 Q50 135 73 128','none',1.6,trim)+cvPath('M34 97 L30 123 M66 97 L70 123','none',1.2,light);
+      s+=cvPath('M43 83 L50 91 L57 83 L55 78 L50 82 L45 78Z',dark,.7);
     }else if(cls==='archer'){
-      s+=cvPath('M31 86 L41 82 L50 88 L59 82 L69 86 L71 126 Q50 135 29 126Z',f,1.1);
-      s+=cvPath('M33 87 L41 84 L47 94 L37 128 L26 130Z',dark,.7)+cvPath('M67 87 L59 84 L53 94 L63 128 L74 130Z',dark,.7);
-      s+=cvPath('M62 85 L68 89 L38 126 L32 121Z','#886047',.8)+cvPath('M62 89 L37 121','none',.8,'#ddbb7c');
-      s+=cvPath('M33 96 L32 117 M67 96 L68 117','none',1,light);
+      s+=cvPath('M27 83 L40 79 L50 86 L60 79 L73 83 L74 128 Q50 137 26 128Z',f,1.15);
+      s+=cvPath('M29 84 L40 81 L47 94 L36 130 L24 132Z',dark,.75)+cvPath('M71 84 L60 81 L53 94 L64 130 L76 132Z',dark,.75);
+      s+=cvPath('M64 82 L70 86 L37 127 L31 122Z','#886047',.85)+cvPath('M64 86 L36 122','none',.85,'#ddbb7c');
+      s+=cvPath('M32 95 L30 119 M68 95 L70 119','none',1,light);
     }else{
-      s+=cvPath('M29 89 L39 82 L50 86 L61 82 L71 89 L68 119 Q50 132 32 119Z',f,1.1);
-      s+=cvPath('M39 85 L48 89 L48 115 L34 111 L33 92Z',light,.65)+cvPath('M52 89 L61 85 L67 92 L65 111 L52 115Z',dark,.65);
-      s+=cvPath('M32 119 L47 123 L44 132 L28 127Z',f,.8)+cvPath('M68 119 L53 123 L56 132 L72 127Z',f,.8);
-      s+=cvPath('M35 111 L50 116 L65 111 L65 117 L50 123 L35 117Z',f,.9);
-      if(detail%3===1){for(var y=94;y<111;y+=4)s+=cvPath('M36 '+y+' H44 M55 '+y+' H63','none',.8,trim);}
+      s+=cvPath('M26 84 L38 79 L50 84 L62 79 L74 84 L72 123 Q50 135 28 123Z',f,1.15);
+      s+=cvPath('M38 82 L48 87 L48 117 L32 113 L30 89Z',light,.7)+cvPath('M52 87 L62 82 L70 89 L68 113 L52 117Z',dark,.7);
+      s+=cvPath('M28 120 L47 124 L44 134 L25 129Z',f,.85)+cvPath('M72 120 L53 124 L56 134 L75 129Z',f,.85);
+      s+=cvPath('M32 112 L50 118 L68 112 L68 119 L50 125 L32 119Z',f,.95);
+      if(detail%3===1){for(var y=93;y<112;y+=4)s+=cvPath('M35 '+y+' H44 M56 '+y+' H65','none',.85,trim);}
     }
-    s+=cvPath('M31 115 Q50 120 69 115 L69 121 Q50 126 31 121Z','#694532',.9);
-    s+='<rect x="46" y="117" width="9" height="6" rx="1" fill="'+trim+'" stroke="#493124" stroke-width=".8"/><path d="M49 119 H53 V121" fill="none" stroke="#79543a" stroke-width=".8"/>';
-    if(['rare','epic','legendary','mythic','divine'].indexOf(it.r)>=0)s+=cvGem(50,100,trim,3.3);
-    if(['legendary','mythic','divine'].indexOf(it.r)>=0)s+=cvPath('M40 95 L44 101 L41 108 M60 95 L56 101 L59 108','none',1.3,trim);
+    s+=cvPath('M28 115 Q50 121 72 115 L72 122 Q50 128 28 122Z','#694532',.95);
+    s+='<rect x="45.5" y="117" width="9" height="6.5" rx="1" fill="'+trim+'" stroke="#493124" stroke-width=".85"/><path d="M48.5 119.2 H52.5 V121.2" fill="none" stroke="#79543a" stroke-width=".85"/>';
+    if(['rare','epic','legendary','mythic','divine'].indexOf(it.r)>=0)s+=cvGem(50,99,trim,3.5);
+    if(['legendary','mythic','divine'].indexOf(it.r)>=0)s+=cvPath('M39 94 L43 100 L40 108 M61 94 L57 100 L60 108','none',1.35,trim);
     return s;
   }
-  function cvSleeve(it,c,trim){var s=cvGradient('sleeve',c);s+=cvPath('M29 87 Q34 84 38 88 L31 105 L18 103 Q20 91 29 87Z',cvFill('sleeve'),1);s+=cvPath('M18 101 L31 104 L29 110 L16 107Z',armorTint(c,-.25),.8)+cvPath('M21 103 L28 105','none',1.2,trim);if(it.cls==='warrior')s+=cvPath('M23 90 L30 87 L34 90 L30 98 L20 97Z',armorTint(c,.28),.8);return s;}
-  function cvBoot(it,c,trim){var s=cvGradient('boot',c),f=cvFill('boot');s+=cvPath('M8 3 L24 3 L23 25 Q27 29 25 35 Q13 39 0 35 Q-1 30 8 26Z',f,1.2);s+=cvPath('M7 3 L25 3 L25 9 L6 9Z',armorTint(c,-.2),.8)+cvPath('M2 34 Q13 38 25 34 L25 37 Q12 40 0 36Z','#4a332b',.7)+cvPath('M10 13 L18 16 L10 19 L18 22','none',1.2,trim)+cvPath('M4 30 Q10 28 15 30','none',1,armorTint(c,.45));if(it.r!=='common')s+=cvGem(18,11,trim,1.6);return s;}
+  function cvSleeve(it,c,trim){var s=cvGradient('sleeve',c);s+=cvPath('M31 83 Q21 86 15 101 L13 111 L26 115 L33 102 L40 87Z',cvFill('sleeve'),1.05);s+=cvPath('M13 107 L27 111 L25 117 L12 113Z',armorTint(c,-.25),.85)+cvPath('M15 110 L24 113','none',1.25,trim);if(it.cls==='warrior')s+=cvPath('M20 88 L31 83 L37 88 L31 99 L17 97Z',armorTint(c,.28),.85);return s;}
+  function cvBoot(it,c,trim){var s=cvGradient('boot',c),f=cvFill('boot');s+=cvPath('M6 1 L26 1 L25 25 Q29 29 27 35 Q13 39 -1 35 Q-2 30 6 25Z',f,1.2);s+=cvPath('M5 1 L27 1 L27 8 L4 8Z',armorTint(c,-.2),.85)+cvPath('M0 34 Q13 38 27 34 L27 37 Q12 40 -1 36Z','#4a332b',.75)+cvPath('M9 12 L19 15 L9 18 L19 21','none',1.2,trim)+cvPath('M3 30 Q10 28 16 30','none',1,armorTint(c,.45));if(it.r!=='common')s+=cvGem(18,10,trim,1.7);return s;}
   function cvWeapon(it,c,trim,kind,detail){
     var s=cvGradient('weapon',c),f=cvFill('weapon'),d=armorTint(c,-.3);
     if(kind==='bow'){
@@ -2240,16 +2391,17 @@ svg.chr{overflow:visible}
     s+='<g class="cvIdle">';if(race==='dwarf'&&!portrait)s+='<g transform="translate(50 153) scale(1.03 .88) translate(-50 -153)">';
     if(race==='beast'||race==='drake'){var tail=race==='beast'?L.hair:'#709a68';s+=cvPath('M64 126 Q93 138 92 111','none',7,'#493124')+cvPath('M64 126 Q93 138 92 111','none',4.8,tail);if(race==='drake')s+=cvPath('M92 102 L86 114 L98 114Z','#ddbb63',.8);}
     if(body&&body.back)s+=body.back;
-    s+=cvPath('M32 119 L47 119 L46 145 L29 145Z',cvFill('pants'),1)+cvPath('M53 119 L68 119 L71 145 L54 145Z',cvFill('pants'),1);
-    if(boot){s+='<g data-equipped="legs"><g transform="translate(19 117) scale(.88)">'+boot.draw+'</g><g transform="translate(81 117) scale(-.88 .88)">'+boot.draw+'</g></g>';}
+    s+=cvPath(boot?'M34 119 L46 119 L45 138 L33 138Z':'M32 119 L47 119 L46 145 L29 145Z',cvFill('pants'),1)+cvPath(boot?'M54 119 L66 119 L67 138 L55 138Z':'M53 119 L68 119 L71 145 L54 145Z',cvFill('pants'),1);
+    if(boot){s+='<g data-equipped="legs"><g transform="translate(19 116) scale(.92)">'+boot.draw+'</g><g transform="translate(81 116) scale(-.92 .92)">'+boot.draw+'</g></g>';}
     else{s+=cvPath('M30 137 L45 137 L45 148 Q35 154 23 149 Q22 143 30 141Z','#805b40',1)+cvPath('M55 137 L70 137 L70 141 Q79 142 77 149 Q65 154 55 148Z','#805b40',1)+cvPath('M24 148 Q35 152 44 147 M56 147 Q67 152 76 148','none',2,'#533a2d');}
-    s+=cvPath('M44 77 L56 77 L58 91 L42 91Z',cvFill('limb'),.8)+cvPath('M31 88 Q50 80 69 88 L70 121 Q50 130 30 121Z',cvFill('shirt'),1.1);
-    if(body)s+='<g data-equipped="body">'+body.draw+'</g>';
-    else s+=cvPath('M42 86 L50 92 L58 86 M49 94 V116','none',1,'#dfc495')+cvPath('M31 115 Q50 122 69 115 L69 120 Q50 127 31 120Z','#73513b',.8)+'<rect x="46" y="118" width="8" height="5" rx="1" fill="#c9ab6d" stroke="#63462f" stroke-width=".7"/>';
-    // Both sleeves belong to the equipped chest piece, not a separate invented item.
-    s+=cvPath('M30 89 Q17 93 16 108 L15 115 L24 119 L30 107 L37 93Z',cvFill('limb'),1)+cvPath('M70 89 Q83 93 84 108 L85 115 L76 119 L70 107 L63 93Z',cvFill('limb'),1);
+    s+=cvPath('M44 77 L56 77 L57 88 L43 88Z',cvFill('limb'),.8);
+    if(!body)s+=cvPath('M31 88 Q50 80 69 88 L70 121 Q50 130 30 121Z',cvFill('shirt'),1.1);
+    // Arms and sleeves are rendered so chest armor cleanly overlaps shoulder seams without body poking out.
+    s+=cvPath('M29 89 Q18 93 16 108 L15 115 L24 119 L29 107 L35 93Z',cvFill('limb'),1)+cvPath('M71 89 Q82 93 84 108 L85 115 L76 119 L71 107 L65 93Z',cvFill('limb'),1);
     if(body&&body.sleeve)s+=body.sleeve+'<g transform="translate(100 0) scale(-1 1)">'+body.sleeve+'</g>';
     else s+=cvPath('M29 87 Q34 84 38 89 L30 105 L17 102Z',cvFill('shirt'),1)+cvPath('M71 87 Q66 84 62 89 L70 105 L83 102Z',cvFill('shirt'),1);
+    if(body)s+='<g data-equipped="body">'+body.draw+'</g>';
+    else s+=cvPath('M42 86 L50 92 L58 86 M49 94 V116','none',1,'#dfc495')+cvPath('M31 115 Q50 122 69 115 L69 120 Q50 127 31 120Z','#73513b',.8)+'<rect x="46" y="118" width="8" height="5" rx="1" fill="#c9ab6d" stroke="#63462f" stroke-width=".7"/>';
     s+=cvPath('M15 107 L26 111 L24 117 L13 114 M85 107 L74 111 L76 117 L87 114','#805b40',.8);
     if(wp)s+='<g data-equipped="arms">'+wp.draw+'</g>';
     s+=cvEllipse(18,118,6.2,7,cvFill('limb'),1)+cvEllipse(82,118,6.2,7,cvFill('limb'),1)+cvPath('M15 119 L18 120 M80 120 L84 119','none',.6,armorTint(L.skin,-.2));
@@ -2269,25 +2421,53 @@ svg.chr{overflow:visible}
   var rot=0, spinning=false;
   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  var FILL_PIONEER={green:'#00a878',red:'#8c1d40',black:'#161b29'};
   function draw(){
     var size=canvas.clientWidth; if(!size) return;
     var dpr=window.devicePixelRatio||1;
     if(canvas.width!==Math.round(size*dpr)){canvas.width=Math.round(size*dpr);canvas.height=Math.round(size*dpr);}
-    var s=canvas.width, r=s/2;
+    var s=canvas.width, r=s/2, pioneer=currentWheelSkin()==='pioneer';
+    var pal=pioneer?FILL_PIONEER:FILL;
+    canvas.style.boxShadow=pioneer?'0 0 0 10px #1b132e,0 0 0 13px #f6c343,0 14px 36px rgba(155,93,229,.42)':'';
     ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,s,s); ctx.translate(r,r);
     for(var i=0;i<N;i++){
       var a=-Math.PI/2+i*SEG+rot;
       ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,a-SEG/2,a+SEG/2); ctx.closePath();
-      ctx.fillStyle=FILL[color(ORDER[i])]; ctx.fill();
-      ctx.strokeStyle='rgba(224,181,80,.55)'; ctx.lineWidth=Math.max(1,s/400); ctx.stroke();
+      ctx.fillStyle=pal[color(ORDER[i])]; ctx.fill();
+      ctx.strokeStyle=pioneer?'rgba(246,195,67,.85)':'rgba(224,181,80,.55)'; ctx.lineWidth=Math.max(1,s/(pioneer?320:400)); ctx.stroke();
       ctx.save(); ctx.rotate(a); ctx.translate(r*0.86,0); ctx.rotate(Math.PI/2);
-      ctx.fillStyle='#fff'; ctx.font='700 '+Math.round(s*0.046)+'px Manrope,system-ui,sans-serif';
+      ctx.fillStyle=pioneer?'#fff6cc':'#fff'; ctx.font='700 '+Math.round(s*0.046)+'px Manrope,system-ui,sans-serif';
       ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(ORDER[i]),0,0); ctx.restore();
     }
-    ctx.beginPath(); ctx.arc(0,0,r*0.62,0,TAU); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fill();
-    ctx.beginPath(); ctx.arc(0,0,r*0.5,0,TAU); ctx.fillStyle='#1f5a3f'; ctx.fill();
-    ctx.lineWidth=Math.max(2,s/160); ctx.strokeStyle='#b8892f'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0,0,r*0.09,0,TAU); ctx.fillStyle='#b8892f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,r*0.62,0,TAU); ctx.fillStyle=pioneer?'rgba(15,10,30,.38)':'rgba(0,0,0,.18)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,r*0.5,0,TAU);
+    if(pioneer){
+      var grd=ctx.createRadialGradient(0,0,r*0.05,0,0,r*0.5);
+      grd.addColorStop(0,'#3c246e'); grd.addColorStop(1,'#18112b');
+      ctx.fillStyle=grd;
+    }else ctx.fillStyle='#1f5a3f';
+    ctx.fill();
+    ctx.lineWidth=Math.max(2,s/140); ctx.strokeStyle=pioneer?'#f6c343':'#b8892f'; ctx.stroke();
+    if(pioneer){
+      ctx.beginPath(); ctx.arc(0,0,r*0.38,0,TAU);
+      ctx.strokeStyle='rgba(246,195,67,.45)'; ctx.lineWidth=Math.max(1.5,s/280); ctx.stroke();
+      for(var j=0;j<8;j++){
+        var ra=rot+j*Math.PI/4;
+        ctx.beginPath(); ctx.moveTo(Math.cos(ra)*r*0.14,Math.sin(ra)*r*0.14);
+        ctx.lineTo(Math.cos(ra)*r*0.38,Math.sin(ra)*r*0.38);
+        ctx.strokeStyle='rgba(246,195,67,.55)'; ctx.lineWidth=Math.max(1.5,s/260); ctx.stroke();
+      }
+      ctx.beginPath();
+      for(var p=0;p<10;p++){
+        var sr=(p%2===0)?r*0.16:r*0.07, sa=rot-Math.PI/2+p*Math.PI/5;
+        if(p===0)ctx.moveTo(Math.cos(sa)*sr,Math.sin(sa)*sr);
+        else ctx.lineTo(Math.cos(sa)*sr,Math.sin(sa)*sr);
+      }
+      ctx.closePath(); ctx.fillStyle='#f6c343'; ctx.fill();
+      ctx.strokeStyle='#2a1f14'; ctx.lineWidth=Math.max(1.5,s/280); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.arc(0,0,r*0.09,0,TAU); ctx.fillStyle='#b8892f'; ctx.fill();
+    }
   }
   function ease(t){return 1-Math.pow(1-t,4);}
 
@@ -2742,7 +2922,7 @@ svg.chr{overflow:visible}
   }
 
   function minerGains(m){
-    if(m.lastStone>0){minerEmote='found';minerEmoteUntil=Date.now()+3000;$('minerGain').textContent='+1 камень улучшения';clearTimeout(minerGainTimer);minerGainTimer=setTimeout(function(){$('minerGain').textContent='';renderMiner();},3200);toast('Шахтёр нашёл камень улучшения! +1.');}
+    if(m.lastStone>0){minerEmote='found';minerEmoteUntil=Date.now()+3000;$('minerGain').textContent='+2 камня улучшения';clearTimeout(minerGainTimer);minerGainTimer=setTimeout(function(){$('minerGain').textContent='';renderMiner();},3200);toast('Шахтёр нашёл жилу: +2 камня улучшения!');}
     else if(m.lastGold>0){$('minerGain').textContent='+'+m.lastGold+' мон.';clearTimeout(minerGainTimer);minerGainTimer=setTimeout(function(){$('minerGain').textContent='';},2200);}
     renderMiner();
   }
@@ -2785,8 +2965,8 @@ svg.chr{overflow:visible}
       h+='<div class="minerCollection">';Object.keys(MINER_NAMES).forEach(otherRole=>{var own=!!m.owned[otherRole];h+='<button data-miner-role="'+otherRole+'"'+(!own||blocked||otherRole===m.active?' disabled':'')+'>'+MINER_NAMES[otherRole]+' · '+(!own?'не открыт':otherRole===m.active?'активен':'выбрать')+'</button>';});h+='</div>';
       h+='<p>Контракт: <b>1500 монет</b>. Житель 40%, защитник 30%, гладиатор 30%. При повторе открытой роли возвращаются 1000 монет — потратишь 500. Уже открытая роль не исчезает.</p><button id="minerHire"'+(blocked||game.coins<1500||count===3?' disabled':'')+'>'+(count===3?'Все роли открыты':'Нанять · 1500 монет')+'</button>';
     }
-    h+='<p>Активен один спутник. Житель добывает 3 монеты в минуту; остальные — 2. Общий предел: 180 монет за сутки. Защитник блокирует 15% входящего урона (с округлением вниз, минимум 1 урона проходит). Гладиатор добавляет 8% твоей атаки, минимум 1, только при успешном ударе.</p><p>Не докучай шахтёру частыми кликами: если разозлить его, он бросит кирку и уйдёт на 1 минуту (в это время он не добывает ресурсы и не выходит помогать в бою).</p>';
-    if(m.claimed)h+='<p>За текущие учтённые сутки: '+m.gold+' / 180 монет · '+m.stones+' / 2 камня. До проверки камня: '+Math.max(1,Math.ceil((300000-m.stoneMs)/1000))+' сек. активной добычи.</p>';
+    h+='<p>Активен один спутник. Житель добывает <b>15 монет в минуту</b>; Защитник и Гладиатор — <b>10 монет в минуту</b>. Суточный лимит увеличен в 5 раз: <b>900 монет за сутки</b>! Каждые 3 минуты активной добычи — 10% шанс найти сразу 2 камня улучшения (до 4 камней в сутки). Защитник блокирует 15% входящего урона, Гладиатор добавляет 8% атаки при ударе.</p><p>Не докучай шахтёру частыми кликами: если разозлить его, он бросит кирку и уйдёт на 1 минуту (в это время он не добывает ресурсы и не выходит помогать в бою).</p>';
+    if(m.claimed)h+='<p>За текущие учтённые сутки: <b>'+(m.gold*MINER_GOLD_MULT)+' / '+(MINER_GOLD_CAP*MINER_GOLD_MULT)+' монет</b> · <b>'+(m.stones*2)+' / '+(MINER_STONE_CAP*2)+' камней</b>. До проверки камня: '+Math.max(1,Math.ceil((180000-m.stoneMs)/1000))+' сек. активной добычи.</p>';
     h+='<p class="merchantNote">Прогресс добычи сохраняется порциями примерно раз в 15 секунд. Последние несохранённые секунды при закрытии могут потеряться; офлайн-дохода нет.</p></div>';box.innerHTML=h;
     var claim=$('minerClaim');if(claim)claim.onclick=function(){minerPerform('claim');};
     var hire=$('minerHire');if(hire)hire.onclick=function(){confirmBox('Контракт за 1500 монет? Житель 40%, защитник 30%, гладиатор 30%. При повторе вернутся 1000 монет, итоговая трата — 500.','Нанять',function(){minerPerform('hire');});};
