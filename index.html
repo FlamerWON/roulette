@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="17">
+<meta name="app-version" content="18">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -356,11 +356,40 @@ svg.chr{overflow:visible}
 @media(max-width:400px){.minerDock{width:88px}.minerBuddy{width:88px;height:104px}.minerStatus{font-size:9px;max-width:88px}.result .num{max-width:calc(100% - 184px);margin-left:auto;margin-right:auto}.result .label{max-width:calc(100% - 180px);margin-left:auto;margin-right:auto;font-size:11px;overflow-wrap:anywhere}.minerGain{font-size:10px;right:0}}
 @media(prefers-reduced-motion:reduce){.minerBuddy *{animation:none!important}}
 
+
+/* --- Update 18 Styles --- */
+.dustBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:175px;z-index:20;display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid #a855f7;border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
+.floatWheel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;z-index:35;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.32);opacity:0;pointer-events:none;transform:translateY(-12px);transition:opacity .3s ease,transform .3s ease}
+.floatWheel.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+.floatWheel canvas{width:46px;height:46px;border-radius:50%;box-shadow:0 0 0 3px var(--felt),0 0 0 4px var(--gold)}
+.floatWheel .finfo{display:flex;flex-direction:column;font-size:11px;line-height:1.2}
+.heroRowWithWheel{display:flex;align-items:center;justify-content:center;gap:10px;position:relative}
+.chibiWheelStand{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.chibiWheelStand canvas{width:54px;height:54px;border-radius:50%;box-shadow:0 0 0 3px var(--felt),0 0 0 4px var(--gold)}
+.chibiWheelStand span{font-size:9px;color:var(--muted);font-weight:700;max-width:64px;text-align:center;line-height:1.1}
+.shopSubTabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%}
+.shopSubTabs button{padding:7px 14px;font-size:13px}
+.spoilerBtn{background:transparent;color:var(--muted);border:1px dashed var(--line);padding:4px 12px;font-size:12px;border-radius:999px;align-self:flex-start;cursor:pointer}
+.spoilerBox{display:none;flex-direction:column;gap:8px;padding-top:4px}
+.spoilerBox.open{display:flex}
+.tavernCard{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.tavernBtns{display:flex;gap:6px;flex-wrap:wrap}
+.tavernBtns button{padding:5px 10px;font-size:12px;border-radius:10px}
+.tavernRow{display:flex;gap:8px;align-items:center}
+.tavernRow input{width:100px;padding:6px 10px;font-size:14px}
+.affixBadge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;color:#fff;display:inline-block;margin-top:1px}
+@media(max-width:520px){.dustBox{top:calc(env(safe-area-inset-top,0px) + 52px);right:12px;font-size:14px}}
+</style>
 </style>
 </head>
 <body>
 
 <div id="coinBox" class="coinBox" hidden aria-label="Монеты"></div>
+<div id="dustBox" class="dustBox" hidden title="Магическая пыль от Скупщика">✨ <span id="dustVal">0</span></div>
+<div id="floatWheelBox" class="floatWheel" aria-live="polite">
+  <canvas id="floatWheelCanvas" width="92" height="92"></canvas>
+  <div class="finfo"><b>Колесо</b><span id="floatWheelTxt">Готово</span></div>
+</div>
 
 <div id="login">
   <h1>Рулетка</h1>
@@ -411,7 +440,31 @@ svg.chr{overflow:visible}
       </div>
       <div class="fight" id="fight" hidden></div>
       <button id="spin">Крутить</button>
-      <div id="wheelSkinBox" class="wheelSkinCard" hidden><b>Скин колеса:</b><div class="wheelSkinBtns"><button type="button" id="skinDefault" class="tab on">Классическое</button><button type="button" id="skinPioneer" class="tab">Первопроходец</button></div></div>
+      <div id="wheelSkinBox" hidden></div>
+      <div id="tavernBox" class="tavernCard">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b>🍺 Ставки в Таверне</b>
+          <span id="tavernLock" style="font-size:12px;color:var(--muted)">Со 2 ранга</span>
+        </div>
+        <div id="tavernControls" hidden style="display:flex;flex-direction:column;gap:8px">
+          <div class="tavernBtns" id="tavernBetTypes">
+            <button type="button" data-bet="none" class="tab on">Без ставки</button>
+            <button type="button" data-bet="red" class="tab">Красное ×1.9</button>
+            <button type="button" data-bet="black" class="tab">Чёрное ×1.9</button>
+            <button type="button" data-bet="even" class="tab">Чёт ×1.9</button>
+            <button type="button" data-bet="odd" class="tab">Нечёт ×1.9</button>
+            <button type="button" data-bet="d1" class="tab">1–12 ×2.8</button>
+            <button type="button" data-bet="d2" class="tab">13–24 ×2.8</button>
+            <button type="button" data-bet="d3" class="tab">25–36 ×2.8</button>
+            <button type="button" data-bet="zero" class="tab">Зеро ×32</button>
+          </div>
+          <div class="tavernRow">
+            <input type="number" id="tavernAmt" min="1" max="500" value="20" aria-label="Сумма ставки">
+            <button type="button" id="tavernMaxBtn" class="ghost" style="padding:6px 12px;font-size:12px">Макс (15%)</button>
+            <span id="tavernHint" style="font-size:11px;color:var(--muted)">Лимит: до 500 мон.</span>
+          </div>
+        </div>
+      </div>
       <p class="huntNote">Вне боя и данжа каждая прокрутка даёт 5% шанс нападения. Сложность выбирается в «Персонаже».</p>
     </section>
 
@@ -427,7 +480,7 @@ svg.chr{overflow:visible}
           <div class="slot" id="slotHead" aria-label="Голова: пусто">Голова</div>
           <div class="slot" id="slotBody" aria-label="Тело: пусто">Тело</div>
         </div>
-        <div class="hero"><div class="charAv" id="charAv"></div><label class="hatOption"><input id="hatVisible" type="checkbox" checked> Показывать головной убор</label><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
+        <div class="hero"><div class="heroRowWithWheel"><div class="charAv" id="charAv"></div><div class="chibiWheelStand" title="Активный скин колеса"><canvas id="charChibiWheel" width="108" height="108"></canvas><span id="charChibiSkinName">Классическое</span></div></div><label class="hatOption"><input id="hatVisible" type="checkbox" checked> Показывать головной убор</label><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
         <div class="eqCol">
           <div class="slot" id="slotArms" aria-label="Руки: пусто">Руки</div>
           <div class="slot" id="slotLegs" aria-label="Ноги: пусто">Ноги</div>
@@ -453,7 +506,20 @@ svg.chr{overflow:visible}
       <button id="boardRefresh" class="ghost">Обновить</button>
     </section>
 
-    <section class="shopPane" id="shopPane" hidden><div id="minerBody"></div><div id="forgeBody"></div><div id="merchantBody"></div><div id="shopBody"></div></section>
+    <section class="shopPane" id="shopPane" hidden>
+      <div class="shopSubTabs" id="shopSubTabs">
+        <button type="button" data-shoptab="races" class="tab on">Расы и Классы</button>
+        <button type="button" data-shoptab="forge" class="tab">Кузница</button>
+        <button type="button" data-shoptab="enchant" class="tab">Зачарование ✨</button>
+        <button type="button" data-shoptab="merchant" class="tab">Скупщик</button>
+        <button type="button" data-shoptab="miner" class="tab">Шахтёр</button>
+      </div>
+      <div id="shopBody"></div>
+      <div id="forgeBody" hidden></div>
+      <div id="enchantBody" hidden></div>
+      <div id="merchantBody" hidden></div>
+      <div id="minerBody" hidden></div>
+    </section>
     <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
     </div>
   </div>
@@ -463,7 +529,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 17</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 18</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -779,7 +845,7 @@ svg.chr{overflow:visible}
   function onSpin(n){
     if(!game||!gameLoaded||merchantBusy) return;
     var wasInCombat=!!(game.fight&&game.fight.on)||dgOn();
-    var prev=game.last, c=color(n);
+    resolveTavernBet(n); var prev=game.last, c=color(n);
     game.spins++; game.coins=(Number(game.coins)||0)+1; game[c==='green'?'zero':c]++;
     game.blackRun=(c==='black')?game.blackRun+1:0;
     game.last=n;
@@ -868,8 +934,9 @@ svg.chr{overflow:visible}
   }
   // Every removal compacts ALL per-copy metadata, including the equipped duplicate.
   function filterInventory(g,keep){
-    var inv=[],levels={},copies={},mapping={};
-    (g.inv||[]).forEach(function(id,i){if(keep(id,i)){var j=inv.length;mapping[i]=j;inv.push(id);var n=copyLevel(g,i);if(n)levels[j]=n;}});
+    var inv=[],levels={},ench={},copies={},mapping={};
+    (g.inv||[]).forEach(function(id,i){if(keep(id,i)){var j=inv.length;mapping[i]=j;inv.push(id);var n=copyLevel(g,i);if(n)levels[j]=n;if(g.enchants&&g.enchants[i])ench[j]=g.enchants[i];}});
+    g.enchants=ench;
     ['head','body','arms','legs'].forEach(function(sl){var i=wornIndex(g,sl);if(Object.prototype.hasOwnProperty.call(mapping,i))copies[sl]=mapping[i];});
     g.inv=inv;g.enhance=levels;g.eqCopies=copies;
   }
@@ -1072,7 +1139,7 @@ svg.chr{overflow:visible}
   }
   function foeOfFight(f){
     if(f.kind==='ambush'){
-      var idx=(Number(f.mid)%6)+((Number(f.deadline)%2===1)?6:0);
+      var idx=Number(f.mid)||0; if(idx<6&&(Number(f.deadline)%2===1)) idx+=6;
       return makeMonster(MONSTERS[idx]||MONSTERS[0],f.r,!!f.elite,false);
     }
     return foeFor(f.s,f.r);
@@ -1080,8 +1147,8 @@ svg.chr{overflow:visible}
   function maybeAmbush(){
     if(!game||!gameLoaded||merchantBusy||(game.fight&&game.fight.on)||dgOn())return false;
     if(Math.random()>=AMBUSH_CHANCE)return false;
-    var rank=selectedRank(),fullMid=Math.floor(Math.random()*MONSTERS.length),mid=fullMid%6,isHigh=fullMid>=6?1:0,elite=Math.random()<.1;
-    var dl=Math.floor((Date.now()+30*60000)/2)*2+isHigh;
+    var rank=selectedRank(),fullMid=Math.floor(Math.random()*MONSTERS.length),mid=fullMid,elite=Math.random()<.1;
+    var dl=Math.floor((Date.now()+30*60000)/2)*2;
     var mo=makeMonster(MONSTERS[fullMid],rank,elite,false),st=stats();
     game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:dl,r:rank,m:mo.hp,p:st.hp,ph:st.hp,pa:st.atk,buddy:minerActive(game),on:true,skip:false,dealt:0,taken:0};
     fightLog='Внезапное нападение! '+mo.name+'. Бой начнётся со следующей прокрутки. Можно отступить без штрафа.';
@@ -1101,7 +1168,7 @@ svg.chr{overflow:visible}
     Object.keys(indices).forEach(function(i){var idx=Number(i),key=g.inv[idx];remove[key]=(remove[key]||0)+1;total+=copySellPrice(g,idx);});
     return {indices:indices,remove:remove,total:total,amount:Object.keys(indices).length};
   }
-  function applySale(g,plan){var next=JSON.parse(JSON.stringify(g));filterInventory(next,function(id,i){return !plan.indices[i];});next.coins+=plan.total;return next;}
+  function applySale(g,plan){var next=JSON.parse(JSON.stringify(g));var dustGain=0;Object.keys(plan.indices).forEach(function(i){var id=g.inv[Number(i)],it=ITEMS[id];if(it)dustGain+=(DUST_YIELD[it.r]||2);});filterInventory(next,function(id,i){return !plan.indices[i];});next.coins+=plan.total;next.dust=Math.min(1000000,(Number(next.dust)||0)+dustGain);next._lastDustGain=dustGain;return next;}
   function canonicalGame(v){
     function clean(x){
       if(x===null||typeof x==='undefined')return undefined;
@@ -1137,7 +1204,7 @@ svg.chr{overflow:visible}
       if(sess!==session)return false;
       game=next;initV11(game);gameLoaded=true;again=false;
       merchantBusy=false;renderCoins();renderChar();renderMerchant();renderForge();renderEvent();
-      toast('Продано '+plan.amount+' шт. Получено '+plan.total+' монет.');return true;
+      var dg=game._lastDustGain||0;delete game._lastDustGain;toast('Продано '+plan.amount+' шт. Получено '+plan.total+' монет и +'+dg+' ✨ Магической пыли!');return true;
     }catch(e){
       merchantBusy=false;again=false;
       if(sess===session){gameLoaded=false;await loadGame();toast((e&&e.message?e.message:'Не удалось подтвердить продажу')+'. Проверь обновлённый инвентарь.');}
@@ -1377,9 +1444,18 @@ svg.chr{overflow:visible}
   }
   function rollLoot(rank,dungeon,elite){
     var w=lootWeights(rank,dungeon,elite),x=Math.random()*100,acc=0,r='common';
-
     for(var i=0;i<w.length;i++){acc+=w[i][1];if(x<acc){r=w[i][0];break;}}
-    var pool=Object.keys(ITEMS).filter(function(id){var it=ITEMS[id];return it.drop&&it.r===r&&(!game.cls||it.cls===game.cls);});
+    var targetCls='';
+    if(dungeon&&game&&game.cls){
+      if(Math.random()<0.5){targetCls=game.cls;}
+      else{var others=Object.keys(CLASSES).filter(function(c){return c!==game.cls;});targetCls=others[Math.floor(Math.random()*others.length)];}
+    }
+    var pool=Object.keys(ITEMS).filter(function(id){
+      var it=ITEMS[id];
+      if(!it.drop||it.r!==r)return false;
+      if(dungeon&&targetCls)return it.cls===targetCls;
+      return true; // Вне данжа выпадают предметы всех классов
+    });
     return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
   }
   function renderProgress(){
@@ -1637,7 +1713,7 @@ svg.chr{overflow:visible}
       var mo=foeOfFight(f), st=battleStats(f);
       var pm=Math.max(0,Math.min(100,Math.round(f.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(f.p/st.hp*100)));
       box.hidden=false;
-      box.className=mo.elite?'fight elite':'fight'; box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+' · '+rankName(mo.rank)+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
+      box.className=mo.elite?'fight elite':'fight'; box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">'+mo.name+' · '+rankName(mo.rank)+'</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача (монстр наносит двойной урон x2). Остальное: монстр бьёт тебя.</div></div></div>'
         +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+f.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
         +'<div><div class="hpl"><span>Ты</span><span>'+f.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
         +'<div class="flog">'+fightLog+'</div><button id="fFlee" class="ghost">Сбежать</button>';
@@ -1676,11 +1752,32 @@ svg.chr{overflow:visible}
   // один удар по правилам боя: зеро это крит x2, единица это неудача и пропуск хода
   function strikeCoreBase(f,mo,st,n){
     if(!Number.isFinite(f.dealt))f.dealt=0;if(!Number.isFinite(f.taken))f.taken=0;
-    if(f.skip){ f.skip=false; f.p-=mo.dmg;f.taken+=mo.dmg; return 'Выпало '+n+': ты пропускаешь ход! '+mo.name+' бьёт на '+mo.dmg+'.'; }
-    if(n===0){ f.m-=st.atk*2;f.dealt+=st.atk*2; return 'Зеро! Критический удар: '+mo.name+' теряет '+(st.atk*2)+' HP (x2).'; }
-    if(n===1){ f.p-=mo.dmg;f.taken+=mo.dmg; f.skip=true; return 'Единица, критическая неудача! '+mo.name+' бьёт на '+mo.dmg+', а следующий ход ты пропускаешь.'; }
-    if(mo.hit(n)){ f.m-=st.atk;f.dealt+=st.atk; return 'Выпало '+n+': попал! '+mo.name+' теряет '+st.atk+' HP.'; }
-    f.p-=mo.dmg;f.taken+=mo.dmg; return 'Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.';
+    f.skip=false;
+    var eqEnch=getEquippedEnchants(game);
+    if(n===0){
+      var d0=st.atk*2; f.m-=d0; f.dealt+=d0;
+      var v0=eqEnch.vamp>0?Math.max(1,Math.round(d0*eqEnch.vamp/100)):0;
+      if(v0){f.p=Math.min(f.ph||st.hp,f.p+v0);}
+      return 'Зеро! Критический удар: '+mo.name+' теряет '+d0+' HP (x2).'+(v0?' Вампиризм +'+v0+' HP.':'');
+    }
+    if(n===1){
+      var dd=mo.dmg*2; f.p-=dd; f.taken+=dd;
+      var th1=eqEnch.thorns>0?Math.min(f.m,eqEnch.thorns):0;
+      if(th1>0){f.m-=th1;f.dealt+=th1;}
+      return 'Единица — критическая неудача! '+mo.name+' наносит ДВОЙНОЙ УРОН ('+dd+' HP)!'+(th1?' Шипы вернули '+th1+' урона.':'');
+    }
+    if(mo.hit(n)){
+      var isCrit=eqEnch.crit>0&&(Math.random()*100<eqEnch.crit);
+      var dmg=isCrit?Math.round(st.atk*1.75):st.atk;
+      f.m-=dmg; f.dealt+=dmg;
+      var vp=eqEnch.vamp>0?Math.max(1,Math.round(dmg*eqEnch.vamp/100)):0;
+      if(vp){f.p=Math.min(f.ph||st.hp,f.p+vp);}
+      return 'Выпало '+n+': попал!'+(isCrit?' КРИТ ЧАР!':'')+' '+mo.name+' теряет '+dmg+' HP.'+(vp?' Вампиризм +'+vp+' HP.':'');
+    }
+    f.p-=mo.dmg; f.taken+=mo.dmg;
+    var th=eqEnch.thorns>0?Math.min(f.m,eqEnch.thorns):0;
+    if(th>0){f.m-=th;f.dealt+=th;}
+    return 'Выпало '+n+': промах. '+mo.name+' бьёт на '+mo.dmg+'.'+(th?' Шипы вернули '+th+' урона.':'');
   }
   function strikeCore(f,mo,st,n){var beforeP=f.p,beforeM=f.m,text=strikeCoreBase(f,mo,st,n);return text+minerCombat(f,beforeP,beforeM,st);}
   function fightStrike(n){
@@ -1704,7 +1801,7 @@ svg.chr{overflow:visible}
 }
   $('evBtn').addEventListener('click',function(){
     if(!game||!gameLoaded)return;var mo=foeFor(slotNow(),selectedRank()),b=rewardBase(mo);
-    confirmBox('Начать бой: '+mo.name+' · '+rankName(mo.rank)+'? '+mo.hp+' HP / '+mo.dmg+' урона. Награда: '+Math.round(b.coins*.8)+'–'+Math.round(b.coins*1.2)+' монет и '+Math.round(b.xp*xpFactor(mo.rank)*.8)+'–'+Math.round(b.xp*xpFactor(mo.rank)*1.2)+' XP. При поражении: 10% монет, максимум '+lossCap(mo.rank)+'. Зеро — крит x2, единица — пропуск хода.','В бой',function(){startFight();showTab('game');});
+    confirmBox('Начать бой: '+mo.name+' · '+rankName(mo.rank)+'? '+mo.hp+' HP / '+mo.dmg+' урона. Награда: '+Math.round(b.coins*.8)+'–'+Math.round(b.coins*1.2)+' монет и '+Math.round(b.xp*xpFactor(mo.rank)*.8)+'–'+Math.round(b.xp*xpFactor(mo.rank)*1.2)+' XP. При поражении: 10% монет, максимум '+lossCap(mo.rank)+'. Зеро — крит x2, единица — двойной урон от монстра.','В бой',function(){startFight();showTab('game');});
   });
   setInterval(function(){
     if(game){
@@ -1776,7 +1873,7 @@ svg.chr{overflow:visible}
     var d=game.dg, mo=dgFoe(), st=battleStats(d);
     var pm=Math.max(0,Math.min(100,Math.round(d.m/mo.hp*100))), pp=Math.max(0,Math.min(100,Math.round(d.p/st.hp*100)));
     box.hidden=false; box.className='fight';
-    box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">Данж: '+mo.name+' ('+(d.st+1)+' из '+DG_STAGES+')</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача, пропуск хода. Остальное: монстр бьёт тебя.</div></div></div>'
+    box.innerHTML='<div class="fhead"><div class="mon">'+monsterSvg(mo.id)+'</div><div style="flex:1;min-width:0"><div class="rn">Данж: '+mo.name+' ('+(d.st+1)+' из '+DG_STAGES+')</div><div class="rd">Бьёшь, если выпало: '+mo.rule+'. Зеро: критический удар x2. Единица: критическая неудача (монстр наносит двойной урон x2). Остальное: монстр бьёт тебя.</div></div></div>'
       +'<div><div class="hpl"><span>'+mo.name+'</span><span>'+d.m+' / '+mo.hp+'</span></div><div class="bar m"><i style="width:'+pm+'%"></i></div></div>'
       +'<div><div class="hpl"><span>Ты</span><span>'+d.p+' / '+st.hp+'</span></div><div class="bar p"><i style="width:'+pp+'%"></i></div></div>'
       +'<div class="flog">'+fightLog+'</div><button id="dgLeave" class="ghost">Покинуть данж</button>';
@@ -2486,7 +2583,7 @@ svg.chr{overflow:visible}
     var dur=reduce?300:5200, t0=performance.now();
     function frame(now){
       var t=Math.min(1,(now-t0)/dur);
-      rot=start+(target-start)*ease(t); draw();
+      rot=start+(target-start)*ease(t); draw(); drawMiniWheels();
       if(t<1) requestAnimationFrame(frame);
       else{rot=target; spinning=false; btn.classList.remove('busy'); btn.removeAttribute('aria-disabled'); guard.freeAt=performance.now(); endSpinGuard(); show(ORDER[k]);}
     }
@@ -3010,6 +3107,377 @@ svg.chr{overflow:visible}
   setInterval(function(){minerClock();renderMiner();var now=performance.now();if(now-minerLastFlush>=15000){minerLastFlush=now;if(minerEligible()&&canSell()&&$('modal').hidden)minerPerform('collect');}},1000);
   document.addEventListener('visibilitychange',function(){minerTickAt=performance.now();minerWasEligible=false;renderMiner();if(document.hidden&&canSell()&&minerPendingMs)minerPerform('collect');});
 
+
+
+  /* ================== МОДУЛЬ UPDATE 18 ================== */
+  RELEASE_ID = 18;
+  RELEASE_NOTES.unshift({
+    title: 'Версия 18 · Зачарование, Таверна, Вкладки и Исправление боёвки',
+    lines: [
+      'Исправлен критический баг в бою: теперь все удары при выпадении условий монстра гарантированно засчитываются. При выпадении 1 игрок больше не пропускает следующий ход — вместо этого монстр сразу наносит двойной урон (x2)!',
+      'Плавающее мини-колесо и Чиби-колесо в профиле: если прокрутить экран вниз так, что основное колесо скроется более чем на 80%, слева вверху появится синхронное мини-колесо. А в профиле рядом с героем (и при просмотре других игроков) теперь красуется чиби-колесо с активным скином!',
+      'Скины колеса перенесены в Инвентарь как коллекционные предметы.',
+      'Магазин разделён на удобные вкладки (Расы и Классы, Кузница, Зачарование, Скупщик, Шахтёр), а длинные описания свёрнуты под кнопки «Подробнее / Свернуть».',
+      'Новый лут: на поверхности с монстров падают предметы всех классов, а в Данжах действует система 50/50 (50% шанс на свой класс, 50% на остальные).',
+      'Магическая пыль и Зачарование: Скупщик при продаже вещей начисляет Магическую пыль ✨. В новой вкладке «Зачарование» можно наложить чары с собственной редкостью (от Обычной до Легендарной). Перековка стоит в 2 раза меньше пыли!',
+      'Ставки в Таверне: открываются со 2-го ранга прямо под колесом рулетки с защитой экономики.'
+    ]
+  });
+
+  var DUST_YIELD = {common:2, uncommon:4, rare:10, epic:25, legendary:60, mythic:120, divine:250};
+  var ENCHANT_COST_COINS = 150, ENCHANT_COST_DUST = 10, ENCHANT_REROLL_DUST = 5;
+  var AFFIX_POOL = [
+    {id:'crit', name:'Шанс крита', base:4, unit:'%'},
+    {id:'vamp', name:'Вампиризм', base:2, unit:'%'},
+    {id:'gold', name:'Бонус монет', base:6, unit:'%'},
+    {id:'thorns', name:'Шипы', base:4, unit:' ед.'},
+    {id:'haste', name:'Рвение шахты', base:4, unit:'%'}
+  ];
+  var AFFIX_RARITIES = [
+    {id:'common', name:'Обычн.', mult:1.0, w:45, color:'#6b7280'},
+    {id:'uncommon', name:'Необычн.', mult:1.3, w:28, color:'#2f8f4e'},
+    {id:'rare', name:'Редк.', mult:1.6, w:16, color:'#2a6fd6'},
+    {id:'epic', name:'Эпич.', mult:2.0, w:8, color:'#7e3fc4'},
+    {id:'legendary', name:'Легенд.', mult:2.5, w:3, color:'#b8610a'}
+  ];
+
+  function parseEnchant(code){
+    if(!code||typeof code!=='string')return null;
+    var p=code.split(':');if(p.length<3)return null;
+    var af=AFFIX_POOL.find(function(a){return a.id===p[0];});
+    var ar=AFFIX_RARITIES.find(function(r){return r.id===p[1];});
+    var val=Number(p[2])||0;
+    if(!af||!ar||val<=0)return null;
+    return {id:af.id, name:af.name, unit:af.unit, rar:ar, val:val};
+  }
+
+  function getEquippedEnchants(g){
+    var res={crit:0,vamp:0,gold:0,thorns:0,haste:0};
+    if(!g||!g.eq)return res;
+    ['head','body','arms','legs'].forEach(function(sl){
+      var idx=wornIndex(g,sl);
+      if(idx>=0&&g.enchants&&g.enchants[idx]){
+        var e=parseEnchant(g.enchants[idx]);
+        if(e&&res[e.id]!==undefined)res[e.id]+=e.val;
+      }
+    });
+    res.crit=Math.min(25,res.crit);
+    res.vamp=Math.min(12,res.vamp);
+    res.gold=Math.min(40,res.gold);
+    res.haste=Math.min(25,res.haste);
+    return res;
+  }
+
+  // Отрисовка чиби-колеса и плавающего мини-колеса
+  function drawWheelOnCanvas(cv, skinName){
+    if(!cv)return;
+    var c=cv.getContext('2d'), s=cv.width, r=s/2, pioneer=(skinName==='pioneer');
+    var pal=pioneer?FILL_PIONEER:FILL;
+    c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,s,s); c.translate(r,r);
+    for(var i=0;i<N;i++){
+      var a=-Math.PI/2+i*SEG+rot;
+      c.beginPath(); c.moveTo(0,0); c.arc(0,0,r,a-SEG/2,a+SEG/2); c.closePath();
+      c.fillStyle=pal[color(ORDER[i])]; c.fill();
+    }
+    c.beginPath(); c.arc(0,0,r*0.48,0,TAU);
+    c.fillStyle=pioneer?'#2a184e':'#1f5a3f'; c.fill();
+    c.lineWidth=2; c.strokeStyle=pioneer?'#f6c343':'#b8892f'; c.stroke();
+    c.beginPath(); c.arc(0,0,r*0.14,0,TAU);
+    c.fillStyle=pioneer?'#f6c343':'#b8892f'; c.fill();
+  }
+
+  function drawMiniWheels(){
+    var sk=currentWheelSkin();
+    drawWheelOnCanvas($('floatWheelCanvas'), sk);
+    drawWheelOnCanvas($('charChibiWheel'), sk);
+    var lbl=$('charChibiSkinName');
+    if(lbl)lbl.textContent=sk==='pioneer'?'Первопроходец':'Классическое';
+    var ftxt=$('floatWheelTxt');
+    if(ftxt)ftxt.textContent=spinning?'Крутится…':(game&&game.last>=0?'Выпало: '+game.last:'Готово');
+  }
+
+  // IntersectionObserver для появления мини-колеса при скрытии >80% (ratio < 0.2)
+  var wheelVisibleRatio=1;
+  if(window.IntersectionObserver && $('wheel')){
+    var wObs=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        wheelVisibleRatio=en.intersectionRatio;
+        updateFloatWheelState();
+      });
+    },{threshold:[0,0.1,0.2,0.5,1]});
+    wObs.observe($('wheel'));
+  }
+  function updateFloatWheelState(){
+    var fw=$('floatWheelBox');if(!fw)return;
+    var show = !$('app').hidden && (curTab!=='game' || wheelVisibleRatio<0.2);
+    fw.className='floatWheel'+(show?' on':'');
+    if(show)drawMiniWheels();
+  }
+  window.addEventListener('scroll', updateFloatWheelState, {passive:true});
+
+  // Под-вкладки Магазина
+  var curShopSub='races';
+  function switchShopSubTab(sub){
+    curShopSub=sub;
+    var map={races:'shopBody',forge:'forgeBody',enchant:'enchantBody',merchant:'merchantBody',miner:'minerBody'};
+    Object.keys(map).forEach(function(k){
+      var el=$(map[k]);if(el)el.hidden=(k!==sub);
+    });
+    var tabs=$('shopSubTabs');
+    if(tabs){
+      tabs.querySelectorAll('button[data-shoptab]').forEach(function(b){
+        b.className='tab'+(b.getAttribute('data-shoptab')===sub?' on':'');
+      });
+    }
+    if(sub==='enchant')renderEnchantPanel();
+  }
+  if($('shopSubTabs')){
+    $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b){
+      b.addEventListener('click',function(){switchShopSubTab(this.getAttribute('data-shoptab'));});
+    });
+  }
+
+  // Спойлеры для длинных описаний в карточках
+  function applySpoilers(root){
+    if(!root)return;
+    root.querySelectorAll('.card').forEach(function(card){
+      if(card.dataset.spoilerReady)return;
+      var ps=Array.prototype.slice.call(card.querySelectorAll(':scope > p'));
+      if(ps.length>=2){
+        card.dataset.spoilerReady='1';
+        var wrap=document.createElement('div');wrap.className='spoilerBox';
+        var btn=document.createElement('button');btn.type='button';btn.className='spoilerBtn';btn.textContent='Подробнее ▾';
+        card.insertBefore(btn, ps[1]);
+        card.insertBefore(wrap, btn.nextSibling);
+        for(var i=1;i<ps.length;i++)wrap.appendChild(ps[i]);
+        btn.onclick=function(){
+          var open=wrap.classList.toggle('open');
+          btn.textContent=open?'Свернуть ▴':'Подробнее ▾';
+        };
+      }
+    });
+  }
+
+  // Вкладка Зачарования (Кузница чар)
+  var enchantIndex=0;
+  function rollAffixCode(){
+    var af=AFFIX_POOL[Math.floor(Math.random()*AFFIX_POOL.length)];
+    var r=Math.random()*100, acc=0, ar=AFFIX_RARITIES[0];
+    for(var i=0;i<AFFIX_RARITIES.length;i++){acc+=AFFIX_RARITIES[i].w;if(r<acc){ar=AFFIX_RARITIES[i];break;}}
+    var val=Math.max(1,Math.round(af.base*ar.mult));
+    return af.id+':'+ar.id+':'+val;
+  }
+
+  function renderEnchantPanel(){
+    var box=$('enchantBody');if(!box||!game)return;
+    var dust=Number(game.dust)||0;
+    var indices=[];
+    (game.inv||[]).forEach(function(id,i){var it=ITEMS[id];if(it&&(!it.cls||it.cls===game.cls))indices.push(i);});
+    if(indices.indexOf(enchantIndex)<0)enchantIndex=indices.length?indices[0]:-1;
+    var blocked=!canSell();
+    var h='<div class="card"><h3>Алтарь Зачарования ✨</h3>';
+    h+='<p>Магическая пыль: <b>'+dust+' ✨</b> · Монеты: <b>'+(game.coins||0)+'</b></p>';
+    h+='<p>Зачарование наделяет вещь случайным бонусным свойством (Шанс крита, Вампиризм, Бонус монет, Шипы или Рвение шахты) со своей редкостью от Обычной (×1.0) до Легендарной (×2.5). Повторная перековка стоит столько же монет (150), но тратит в 2 раза меньше пыли (5 ✨ вместо 10 ✨)!</p>';
+    if(indices.length){
+      h+='<label for="enchantSelect">Выбери предмет</label><select id="enchantSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--card);color:var(--ink);border:1px solid var(--line)"'+(blocked?' disabled':'')+'>';
+      indices.forEach(function(i){
+        var curE=game.enchants&&game.enchants[i]?parseEnchant(game.enchants[i]):null;
+        h+='<option value="'+i+'"'+(i===enchantIndex?' selected':'')+'>'+copyName(game,i)+(curE?' ['+curE.name+' +'+curE.val+curE.unit+']':'')+' · №'+(i+1)+'</option>';
+      });
+      h+='</select>';
+      var curCode=game.enchants&&game.enchants[enchantIndex];
+      var curEnch=parseEnchant(curCode);
+      var dustNeed=curEnch?ENCHANT_REROLL_DUST:ENCHANT_COST_DUST;
+      h+='<div class="forgePreview">'+itemIcon(game.inv[enchantIndex])+'<strong>'+copyName(game,enchantIndex)+'</strong>';
+      if(curEnch){
+        h+='<p>Текущие чары: <span class="rar" style="background:'+curEnch.rar.color+'">'+curEnch.rar.name+' · '+curEnch.name+' +'+curEnch.val+curEnch.unit+'</span></p>';
+      }else{
+        h+='<p>На предмете ещё нет чар.</p>';
+      }
+      var canDo=!blocked&&(game.coins>=ENCHANT_COST_COINS)&&(dust>=dustNeed);
+      h+='<div class="forgeButtons"><button type="button" id="btnDoEnchant"'+(canDo?'':' disabled')+'>'+(curEnch?'Перековать за '+ENCHANT_COST_COINS+' мон. + '+dustNeed+' ✨':'Зачаровать за '+ENCHANT_COST_COINS+' мон. + '+dustNeed+' ✨')+'</button></div></div>';
+    }else{
+      h+='<p>Нет подходящей экипировки твоего класса для зачарования.</p>';
+    }
+    h+='</div>';
+    box.innerHTML=h;
+    applySpoilers(box);
+    var sel=$('enchantSelect');if(sel)sel.onchange=function(){enchantIndex=Number(this.value);renderEnchantPanel();};
+    var bt=$('btnDoEnchant');if(bt)bt.onclick=function(){
+      if(!canSell())return;
+      var curE=game.enchants&&game.enchants[enchantIndex]?parseEnchant(game.enchants[enchantIndex]):null;
+      var dCost=curE?ENCHANT_REROLL_DUST:ENCHANT_COST_DUST;
+      if((game.coins||0)<ENCHANT_COST_COINS||(game.dust||0)<dCost){toast('Не хватает монет или Магической пыли!');return;}
+      game.coins-=ENCHANT_COST_COINS;
+      game.dust=(Number(game.dust)||0)-dCost;
+      if(!game.enchants)game.enchants={};
+      var code=rollAffixCode();
+      game.enchants[enchantIndex]=code;
+      var ne=parseEnchant(code);
+      saveGame();renderCoins();renderChar();renderEnchantPanel();
+      toast('Выбиты чары ('+ne.rar.name+'): '+ne.name+' +'+ne.val+ne.unit+'!');
+    };
+  }
+
+  // Ставки в Таверне (со 2 ранга)
+  var activeBetType='none';
+  function renderTavernUI(){
+    var lock=$('tavernLock'), ctrl=$('tavernControls');
+    if(!lock||!ctrl||!game)return;
+    var rk=maxRank(game);
+    if(rk>=2){
+      lock.textContent='Открыто (Ранг '+rk+')';
+      lock.style.color='var(--green)';
+      ctrl.hidden=false;
+      var maxB=Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15)));
+      var hint=$('tavernHint');if(hint)hint.textContent='Макс. ставка: '+maxB+' мон.';
+    }else{
+      lock.textContent='Открывается со 2 ранга';
+      lock.style.color='var(--muted)';
+      ctrl.hidden=true;
+      activeBetType='none';
+    }
+  }
+  if($('tavernBetTypes')){
+    $('tavernBetTypes').querySelectorAll('button[data-bet]').forEach(function(b){
+      b.addEventListener('click',function(){
+        activeBetType=this.getAttribute('data-bet');
+        $('tavernBetTypes').querySelectorAll('button[data-bet]').forEach(function(x){
+          x.className='tab'+(x===b?' on':'');
+        });
+      });
+    });
+  }
+  if($('tavernMaxBtn')){
+    $('tavernMaxBtn').addEventListener('click',function(){
+      if(!game)return;
+      $('tavernAmt').value=String(Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15))));
+    });
+  }
+  function resolveTavernBet(n){
+    if(!game||maxRank(game)<2||activeBetType==='none')return;
+    var amt=Math.floor(Number($('tavernAmt')&&$('tavernAmt').value)||0);
+    var maxB=Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15)));
+    if(amt<=0)return;
+    if(amt>maxB)amt=maxB;
+    if(amt>(game.coins||0)){toast('Недостаточно монет для ставки в Таверне.');return;}
+    game.coins-=amt;
+    var mult=0, c=color(n);
+    if(activeBetType==='red'&&c==='red')mult=1.9;
+    else if(activeBetType==='black'&&c==='black')mult=1.9;
+    else if(activeBetType==='even'&&n>0&&n%2===0)mult=1.9;
+    else if(activeBetType==='odd'&&n%2===1)mult=1.9;
+    else if(activeBetType==='d1'&&n>=1&&n<=12)mult=2.8;
+    else if(activeBetType==='d2'&&n>=13&&n<=24)mult=2.8;
+    else if(activeBetType==='d3'&&n>=25&&n<=36)mult=2.8;
+    else if(activeBetType==='zero'&&n===0)mult=32;
+    if(mult>0){
+      var win=Math.round(amt*mult);
+      game.coins+=win;
+      toast('🍺 Ставка в Таверне сыграла! Выигрыш: +'+win+' монет!');
+    }else{
+      toast('🍺 Таверна: ставка '+amt+' мон. не сыграла.');
+    }
+  }
+
+  // Расширяем renderInv (добавляем скины колеса в инвентарь + отображаем чары на предметах)
+  var origRenderInv = renderInv;
+  renderInv = function(){
+    origRenderInv();
+    var box=$('inv');if(!box||!game)return;
+    // Добавляем бейджи зачарования к предметам
+    var cells=box.querySelectorAll('.icell');
+    cells.forEach(function(cell, idx){
+      if(game.enchants&&game.enchants[idx]){
+        var e=parseEnchant(game.enchants[idx]);
+        if(e){
+          var sp=document.createElement('span');
+          sp.className='affixBadge';
+          sp.style.background=e.rar.color;
+          sp.textContent='✨ '+e.name+' +'+e.val+e.unit;
+          cell.appendChild(sp);
+        }
+      }
+    });
+    // Добавляем скины колеса прямо в инвентарь
+    var curSk=currentWheelSkin();
+    var skins=[{id:'default',name:'Скин: Классика',r:'common'}];
+    if(hasPioneerSkin())skins.push({id:'pioneer',name:'Скин: Первопроходец',r:'legendary'});
+    skins.forEach(function(sk){
+      var b=document.createElement('button');b.type='button';
+      var on=(curSk===sk.id);
+      b.className='icell'+(on?' on':'');
+      b.style.borderColor=RARITY[sk.r].color;
+      b.title=sk.name+(on?' (Установлен)':' — нажми, чтобы установить скин колеса');
+      var cv=document.createElement('canvas');cv.width=64;cv.height=64;cv.style.width='30px';cv.style.height='30px';
+      b.appendChild(cv);
+      var stxt=document.createElement('span');stxt.textContent=sk.name;b.appendChild(stxt);
+      var ssub=document.createElement('span');ssub.className='enhancedBonus';ssub.textContent=on?'Активен':'Скин колеса';b.appendChild(ssub);
+      b.onclick=function(){
+        setWheelSkin(sk.id);
+        if(game){game.wheelSkin=sk.id;saveGame();}
+        renderInv();drawMiniWheels();
+        toast('Установлен '+sk.name+'!');
+      };
+      box.appendChild(b);
+      drawWheelOnCanvas(cv, sk.id);
+    });
+    drawMiniWheels();
+  };
+
+  // Расширяем showProfile: показываем чиби-колесо другого игрока в его профиле
+  var origShowProfile = showProfile;
+  showProfile = function(x){
+    origShowProfile(x);
+    var pbox=$('pbox');if(!pbox)return;
+    var av=pbox.querySelector('.charAv');
+    if(av){
+      var row=document.createElement('div');row.className='heroRowWithWheel';
+      av.parentNode.insertBefore(row, av);
+      row.appendChild(av);
+      var stand=document.createElement('div');stand.className='chibiWheelStand';
+      var cv=document.createElement('canvas');cv.width=108;cv.height=108;
+      var sp=document.createElement('span');
+      var sk=(x&&x.wheelSkin)==='pioneer'?'pioneer':'default';
+      sp.textContent=sk==='pioneer'?'Первопроходец':'Классическое';
+      stand.appendChild(cv);stand.appendChild(sp);
+      row.appendChild(stand);
+      drawWheelOnCanvas(cv, sk);
+    }
+  };
+
+  // Перехватываем renderCoins, renderShop, renderDg и showTab для обновления пыли, спойлеров и вкладок
+  var origRenderCoins = renderCoins;
+  renderCoins = function(){
+    origRenderCoins();
+    if($('dustBox')&&game){
+      $('dustBox').hidden=$('coinBox').hidden;
+      $('dustVal').textContent=String(Number(game.dust)||0);
+    }
+    renderTavernUI();
+  };
+
+  var origRenderShop = renderShop;
+  renderShop = function(){
+    origRenderShop();
+    renderEnchantPanel();
+    switchShopSubTab(curShopSub);
+    applySpoilers($('shopPane'));
+  };
+
+  var origRenderDg = renderDg;
+  renderDg = function(){
+    origRenderDg();
+    applySpoilers($('dgPane'));
+  };
+
+  var origShowTab = showTab;
+  showTab = function(which){
+    origShowTab(which);
+    updateFloatWheelState();
+    drawMiniWheels();
+  };
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 18 ================== */
 
   restore();
 })();
