@@ -3379,8 +3379,31 @@ svg.chr{overflow:visible}
     };
   }
 
-  // 2) Сворачиваемое окно со ставками в Таверне
-  var activeBetType='none', tavernFolded=false;
+  // 2) Сворачиваемое окно со ставками в Таверне (с защитой от смены ставки во время вращения)
+  var activeBetType='none', tavernFolded=false, lockedTavernBet=null;
+
+  function setTavernDisabled(dis){
+    if($('tavernAmt'))$('tavernAmt').disabled=dis;
+    if($('tavernMaxBtn'))$('tavernMaxBtn').disabled=dis;
+    if($('tavernBetTypes')){
+      $('tavernBetTypes').querySelectorAll('button[data-bet]').forEach(function(b){
+        b.disabled=dis;
+      });
+    }
+  }
+
+  function lockTavernBetOnSpin(){
+    setTavernDisabled(true);
+    lockedTavernBet=null;
+    if(!game||maxRank(game)<2||activeBetType==='none')return;
+    var amt=Math.floor(Number($('tavernAmt')&&$('tavernAmt').value)||0);
+    var maxB=Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15)));
+    if(amt<=0)return;
+    if(amt>maxB){amt=maxB;if($('tavernAmt'))$('tavernAmt').value=String(amt);}
+    if(amt>(game.coins||0)){toast('Недостаточно монет для ставки в Таверне.');return;}
+    lockedTavernBet={type:activeBetType, amt:amt};
+  }
+
   function toggleTavernFold(){
     tavernFolded=!tavernFolded;
     var wrap=$('tavernBodyWrap'), btn=$('tavernFoldBtn');
@@ -3409,10 +3432,12 @@ svg.chr{overflow:visible}
       if(note)note.hidden=false;
       activeBetType='none';
     }
+    setTavernDisabled(spinning);
   }
   if($('tavernBetTypes')){
     $('tavernBetTypes').querySelectorAll('button[data-bet]').forEach(function(b){
       b.addEventListener('click',function(){
+        if(spinning)return; // Защита от клика во время кручения
         activeBetType=this.getAttribute('data-bet');
         $('tavernBetTypes').querySelectorAll('button[data-bet]').forEach(function(x){
           x.className='tab'+(x===b?' on':'');
@@ -3422,27 +3447,35 @@ svg.chr{overflow:visible}
   }
   if($('tavernMaxBtn')){
     $('tavernMaxBtn').addEventListener('click',function(){
-      if(!game)return;
+      if(!game||spinning)return;
       $('tavernAmt').value=String(Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15))));
     });
   }
+
+  // Фиксируем ставку при первом же кадре вращения колеса
+  var origDrawMiniWheels = drawMiniWheels;
+  drawMiniWheels = function(){
+    if(spinning && !$('tavernAmt').disabled) lockTavernBetOnSpin();
+    origDrawMiniWheels();
+  };
+
   function resolveTavernBet(n){
-    if(!game||maxRank(game)<2||activeBetType==='none')return;
-    var amt=Math.floor(Number($('tavernAmt')&&$('tavernAmt').value)||0);
-    var maxB=Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15)));
-    if(amt<=0)return;
-    if(amt>maxB)amt=maxB;
-    if(amt>(game.coins||0)){toast('Недостаточно монет для ставки в Таверне.');return;}
+    setTavernDisabled(false);
+    var bet=lockedTavernBet;
+    lockedTavernBet=null;
+    if(!game||maxRank(game)<2||!bet||bet.type==='none')return;
+    var amt=bet.amt, bType=bet.type;
+    if(amt<=0||amt>(game.coins||0))return;
     game.coins-=amt;
     var mult=0, c=color(n);
-    if(activeBetType==='red'&&c==='red')mult=1.9;
-    else if(activeBetType==='black'&&c==='black')mult=1.9;
-    else if(activeBetType==='even'&&n>0&&n%2===0)mult=1.9;
-    else if(activeBetType==='odd'&&n%2===1)mult=1.9;
-    else if(activeBetType==='d1'&&n>=1&&n<=12)mult=2.8;
-    else if(activeBetType==='d2'&&n>=13&&n<=24)mult=2.8;
-    else if(activeBetType==='d3'&&n>=25&&n<=36)mult=2.8;
-    else if(activeBetType==='zero'&&n===0)mult=32;
+    if(bType==='red'&&c==='red')mult=1.9;
+    else if(bType==='black'&&c==='black')mult=1.9;
+    else if(bType==='even'&&n>0&&n%2===0)mult=1.9;
+    else if(bType==='odd'&&n%2===1)mult=1.9;
+    else if(bType==='d1'&&n>=1&&n<=12)mult=2.8;
+    else if(bType==='d2'&&n>=13&&n<=24)mult=2.8;
+    else if(bType==='d3'&&n>=25&&n<=36)mult=2.8;
+    else if(bType==='zero'&&n===0)mult=32;
     if(mult>0){
       var win=Math.round(amt*mult);
       game.coins+=win;
@@ -3451,7 +3484,7 @@ svg.chr{overflow:visible}
       toast('🍺 Таверна: ставка '+amt+' мон. не сыграла.');
     }
   }
-
+  
   var origRenderInv = renderInv;
   renderInv = function(){
     origRenderInv();
