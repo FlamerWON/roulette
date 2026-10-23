@@ -363,23 +363,36 @@ svg.chr{overflow:visible}
 .floatWheel.on{opacity:1;pointer-events:auto;transform:translateY(0)}
 .floatWheel canvas{width:46px;height:46px;border-radius:50%;box-shadow:0 0 0 3px var(--felt),0 0 0 4px var(--gold)}
 .floatWheel .finfo{display:flex;flex-direction:column;font-size:11px;line-height:1.2}
-.heroRowWithWheel{display:flex;align-items:center;justify-content:center;gap:10px;position:relative}
-.chibiWheelStand{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 3px 8px rgba(0,0,0,.12)}
-.chibiWheelStand canvas{width:54px;height:54px;border-radius:50%;box-shadow:0 0 0 3px var(--felt),0 0 0 4px var(--gold)}
-.chibiWheelStand span{font-size:9px;color:var(--muted);font-weight:700;max-width:64px;text-align:center;line-height:1.1}
+
+/* Лаконичная фигурка чиби-колеса рядом с персонажем */
+.heroStageWrap{position:relative;display:inline-flex;align-items:flex-end;justify-content:center;margin:0 auto 6px}
+.heroStageWrap .charAv{margin:0}
+.chibiWheelFigurine{position:absolute;right:-26px;bottom:10px;display:flex;flex-direction:column;align-items:center;pointer-events:auto;filter:drop-shadow(0 4px 6px rgba(0,0,0,.28));transition:transform .2s ease}
+.chibiWheelFigurine:hover{transform:scale(1.08)}
+.chibiWheelFigurine .cwPtr{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:7px solid var(--gold);margin-bottom:-2px;z-index:2}
+.chibiWheelFigurine canvas{width:44px;height:44px;border-radius:50%;box-shadow:0 0 0 2px var(--felt),0 0 0 3.5px var(--gold)}
+.chibiWheelFigurine .cwPedestal{width:28px;height:7px;background:linear-gradient(180deg,var(--gold),#7a5818);border:1.5px solid #2a1f14;border-radius:4px 4px 2px 2px;margin-top:-2px}
+.chibiWheelFigurine .cwBase{width:36px;height:4px;background:#2a1f14;border-radius:999px;opacity:.65}
+@media(max-width:480px){.chibiWheelFigurine{right:-18px;bottom:8px}.chibiWheelFigurine canvas{width:38px;height:38px}}
+
 .shopSubTabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%}
 .shopSubTabs button{padding:7px 14px;font-size:13px}
+.invSubTabs{display:flex;gap:8px;align-items:center;justify-content:space-between;width:100%;flex-wrap:wrap}
+.invSubBtns{display:flex;gap:6px}
+.invSubBtns button{padding:6px 14px;font-size:13px}
 .spoilerBtn{background:transparent;color:var(--muted);border:1px dashed var(--line);padding:4px 12px;font-size:12px;border-radius:999px;align-self:flex-start;cursor:pointer}
 .spoilerBox{display:none;flex-direction:column;gap:8px;padding-top:4px}
 .spoilerBox.open{display:flex}
-.tavernCard{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.tavernCard{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.tavernHead{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.tavernToggleBtn{padding:4px 10px;font-size:12px;border-radius:999px}
 .tavernBtns{display:flex;gap:6px;flex-wrap:wrap}
 .tavernBtns button{padding:5px 10px;font-size:12px;border-radius:10px}
-.tavernRow{display:flex;gap:8px;align-items:center}
+.tavernRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tavernRow input{width:100px;padding:6px 10px;font-size:14px}
 .affixBadge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;color:#fff;display:inline-block;margin-top:1px}
 @media(max-width:520px){.dustBox{top:calc(env(safe-area-inset-top,0px) + 52px);right:12px;font-size:14px}}
-</style>
+
 </style>
 </head>
 <body>
@@ -440,28 +453,30 @@ svg.chr{overflow:visible}
       </div>
       <div class="fight" id="fight" hidden></div>
       <button id="spin">Крутить</button>
-      <div id="wheelSkinBox" hidden><button type="button" id="skinDefault"></button><button type="button" id="skinPioneer"></button></div>
       <div id="tavernBox" class="tavernCard">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <b>🍺 Ставки в Таверне</b>
-          <span id="tavernLock" style="font-size:12px;color:var(--muted)">Со 2 ранга</span>
+        <div class="tavernHead" id="tavernHeadToggle">
+          <div><b>🍺 Ставки в Таверне</b> <span id="tavernLock" style="font-size:12px;color:var(--muted);margin-left:4px">Со 2 ранга</span></div>
+          <button type="button" id="tavernFoldBtn" class="ghost tavernToggleBtn">Свернуть ▴</button>
         </div>
-        <div id="tavernControls" hidden style="display:flex;flex-direction:column;gap:8px">
-          <div class="tavernBtns" id="tavernBetTypes">
-            <button type="button" data-bet="none" class="tab on">Без ставки</button>
-            <button type="button" data-bet="red" class="tab">Красное ×1.9</button>
-            <button type="button" data-bet="black" class="tab">Чёрное ×1.9</button>
-            <button type="button" data-bet="even" class="tab">Чёт ×1.9</button>
-            <button type="button" data-bet="odd" class="tab">Нечёт ×1.9</button>
-            <button type="button" data-bet="d1" class="tab">1–12 ×2.8</button>
-            <button type="button" data-bet="d2" class="tab">13–24 ×2.8</button>
-            <button type="button" data-bet="d3" class="tab">25–36 ×2.8</button>
-            <button type="button" data-bet="zero" class="tab">Зеро ×32</button>
-          </div>
-          <div class="tavernRow">
-            <input type="number" id="tavernAmt" min="1" max="500" value="20" aria-label="Сумма ставки">
-            <button type="button" id="tavernMaxBtn" class="ghost" style="padding:6px 12px;font-size:12px">Макс (15%)</button>
-            <span id="tavernHint" style="font-size:11px;color:var(--muted)">Лимит: до 500 мон.</span>
+        <div id="tavernBodyWrap" style="display:flex;flex-direction:column;gap:8px">
+          <div id="tavernLockedNote" style="font-size:12px;color:var(--muted)">Достигни 2 ранга сложности, чтобы делать ставки на выпадение секторов колеса.</div>
+          <div id="tavernControls" hidden style="display:flex;flex-direction:column;gap:8px">
+            <div class="tavernBtns" id="tavernBetTypes">
+              <button type="button" data-bet="none" class="tab on">Без ставки</button>
+              <button type="button" data-bet="red" class="tab">Красное ×1.9</button>
+              <button type="button" data-bet="black" class="tab">Чёрное ×1.9</button>
+              <button type="button" data-bet="even" class="tab">Чёт ×1.9</button>
+              <button type="button" data-bet="odd" class="tab">Нечёт ×1.9</button>
+              <button type="button" data-bet="d1" class="tab">1–12 ×2.8</button>
+              <button type="button" data-bet="d2" class="tab">13–24 ×2.8</button>
+              <button type="button" data-bet="d3" class="tab">25–36 ×2.8</button>
+              <button type="button" data-bet="zero" class="tab">Зеро ×32</button>
+            </div>
+            <div class="tavernRow">
+              <input type="number" id="tavernAmt" min="1" max="500" value="20" aria-label="Сумма ставки">
+              <button type="button" id="tavernMaxBtn" class="ghost" style="padding:6px 12px;font-size:12px">Макс (15%)</button>
+              <span id="tavernHint" style="font-size:11px;color:var(--muted)">Лимит: до 500 мон.</span>
+            </div>
           </div>
         </div>
       </div>
@@ -480,14 +495,15 @@ svg.chr{overflow:visible}
           <div class="slot" id="slotHead" aria-label="Голова: пусто">Голова</div>
           <div class="slot" id="slotBody" aria-label="Тело: пусто">Тело</div>
         </div>
-        <div class="hero"><div class="heroRowWithWheel"><div class="charAv" id="charAv"></div><div class="chibiWheelStand" title="Активный скин колеса"><canvas id="charChibiWheel" width="108" height="108"></canvas><span id="charChibiSkinName">Классическое</span></div></div><label class="hatOption"><input id="hatVisible" type="checkbox" checked> Показывать головной убор</label><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
+        <div class="hero"><div class="heroStageWrap"><div class="charAv" id="charAv"></div><div class="chibiWheelFigurine" id="charWheelFigurine" title="Фигурка колеса (активный скин)"><div class="cwPtr"></div><canvas id="charChibiWheel" width="96" height="96"></canvas><div class="cwPedestal"></div><div class="cwBase"></div></div></div><label class="hatOption"><input id="hatVisible" type="checkbox" checked> Показывать головной убор</label><div class="name" id="charName"></div><div class="cur" id="charTitle"></div><div class="raceTag" id="charRace"></div> <div class="raceTag" id="charClass"></div></div>
         <div class="eqCol">
           <div class="slot" id="slotArms" aria-label="Руки: пусто">Руки</div>
           <div class="slot" id="slotLegs" aria-label="Ноги: пусто">Ноги</div>
         </div>
       </div>
-      <div class="invTitle">Инвентарь</div>
+      <div class="invSubTabs"><div class="invTitle">Инвентарь</div><div class="invSubBtns"><button type="button" id="invTabGear" class="tab on">Снаряжение</button><button type="button" id="invTabSkins" class="tab">Скины колеса</button></div></div>
       <div class="inv" id="inv"></div>
+      <div class="inv" id="invSkins" hidden></div>
       <div class="stats">
         <div class="stat"><b id="stSpins">0</b><span>Прокруток</span></div>
         <div class="stat"><b id="stRed">0</b><span>Красное</span></div>
@@ -1089,15 +1105,9 @@ svg.chr{overflow:visible}
     renderWheelSkinBox();draw();
   }
   function renderWheelSkinBox(){
-    var box=$('wheelSkinBox');if(!box)return;
-    if(!hasPioneerSkin()){box.hidden=true;return;}
-    box.hidden=false;
-    var cur=currentWheelSkin();
-    $('skinDefault').className='tab'+(cur==='default'?' on':'');
-    $('skinPioneer').className='tab'+(cur==='pioneer'?' on':'');
+    if(typeof renderInv==='function'&&curTab==='char')renderInv();
+    if(typeof drawMiniWheels==='function')drawMiniWheels();
   }
-  $('skinDefault').addEventListener('click',function(){setWheelSkin('default');toast('Установлено классическое колесо.');});
-  $('skinPioneer').addEventListener('click',function(){setWheelSkin('pioneer');toast('Установлен скин «Колесо Первопроходца»!');});
   function openNews(){
     if(!gameLoaded||merchantBusy)return;
     var box=$('newsContent');box.textContent='';
@@ -3120,17 +3130,17 @@ svg.chr{overflow:visible}
     title: 'Версия 18 · Зачарование, Таверна, Вкладки и Исправление боёвки',
     lines: [
       'Исправлен баг в бою: все удары при выпадении условий монстра гарантированно засчитываются. При выпадении 1 игрок больше не пропускает следующий ход — монстр сразу наносит двойной урон (x2)!',
-      'Плавающее мини-колесо и Чиби-колесо в профиле: если основное колесо скрыто более чем на 80%, слева вверху плавно появляется мини-колесо. В профиле рядом с героем и при просмотре других игроков установлено чиби-колесо!',
-      'Скины колеса перенесены в Инвентарь как коллекционные предметы.',
+      'Плавающее мини-колесо (только на вкладке «Рулетка»): если основное колесо скрыто при прокрутке более чем на 80%, слева вверху плавно появляется мини-колесо.',
+      'Фигурка колеса и вкладка «Скины колеса»: рядом с героем в профиле и при просмотре других игроков теперь стоит аккуратная фигурка колеса на пьедестале, а смена скинов колеса вынесена в отдельную под-вкладку Инвентаря!',
       'Магазин разделён на удобные вкладки (Расы и Классы, Кузница, Зачарование, Скупщик, Шахтёр), а длинные описания свёрнуты под кнопки «Подробнее / Свернуть».',
       'Новый лут: вне данжа выпадают вещи всех классов, а в Данжах действует система 50/50 (50% шанс на свой класс, 50% на остальные).',
-      'Магическая пыль и Зачарование: Скупщик при продаже вещей даёт Магическую пыль ✨. В кузнице чар можно выбить аффиксы от Обычной до Легендарной редкости. Перековка стоит в 2 раза меньше пыли!',
-      'Ставки в Таверне: открываются со 2-го ранга прямо под колесом рулетки.'
+      'Магическая пыль и Зачарование: Скупщик при продаже вещей даёт Магическую пыль ✨. Первое зачарование предмета стоит 20 ✨ пыли (и 150 монет), а повторная перековка — в 2 раза меньше: 10 ✨ пыли!',
+      'Ставки в Таверне: открываются со 2-го ранга прямо под колесом рулетки (окно со ставками можно удобно сворачивать и разворачивать).'
     ]
   });
 
   var DUST_YIELD = {common:2, uncommon:4, rare:10, epic:25, legendary:60, mythic:120, divine:250};
-  var ENCHANT_COST_COINS = 150, ENCHANT_COST_DUST = 10, ENCHANT_REROLL_DUST = 5;
+  var ENCHANT_COST_COINS = 150, ENCHANT_COST_DUST = 20, ENCHANT_REROLL_DUST = 10;
   var AFFIX_POOL = [
     {id:'crit', name:'Шанс крита', base:4, unit:'%'},
     {id:'vamp', name:'Вампиризм', base:2, unit:'%'},
@@ -3194,12 +3204,13 @@ svg.chr{overflow:visible}
     var sk=currentWheelSkin();
     drawWheelOnCanvas($('floatWheelCanvas'), sk);
     drawWheelOnCanvas($('charChibiWheel'), sk);
-    var lbl=$('charChibiSkinName');
-    if(lbl)lbl.textContent=sk==='pioneer'?'Первопроходец':'Классическое';
+    var fig=$('charWheelFigurine');
+    if(fig)fig.title='Фигурка колеса: '+(sk==='pioneer'?'Первопроходец':'Классическое');
     var ftxt=$('floatWheelTxt');
     if(ftxt)ftxt.textContent=spinning?'Крутится…':(game&&game.last>=0?'Выпало: '+game.last:'Готово');
   }
 
+  // 1) Мини-колесо появляется ТОЛЬКО на вкладке «Рулетка», когда основное колесо скрыто >80% (ratio < 0.2)
   var wheelVisibleRatio=1;
   if(window.IntersectionObserver && $('wheel')){
     var wObs=new IntersectionObserver(function(entries){
@@ -3212,18 +3223,63 @@ svg.chr{overflow:visible}
   }
   function updateFloatWheelState(){
     var fw=$('floatWheelBox');if(!fw)return;
-    var show = !$('app').hidden && (curTab!=='game' || wheelVisibleRatio<0.2);
+    var show = !$('app').hidden && (curTab==='game') && (wheelVisibleRatio<0.2);
     fw.className='floatWheel'+(show?' on':'');
     if(show)drawMiniWheels();
   }
   window.addEventListener('scroll', updateFloatWheelState, {passive:true});
 
+  // Под-вкладки Инвентаря в «Персонаже»: Снаряжение vs Скины колеса
+  var curInvSub='gear';
+  function switchInvSubTab(mode){
+    curInvSub=mode;
+    if($('inv'))$('inv').hidden=(mode!=='gear');
+    if($('invSkins'))$('invSkins').hidden=(mode!=='skins');
+    if($('invTabGear'))$('invTabGear').className='tab'+(mode==='gear'?' on':'');
+    if($('invTabSkins'))$('invTabSkins').className='tab'+(mode==='skins'?' on':'');
+    if(mode==='skins')renderInvSkins();
+  }
+  if($('invTabGear'))$('invTabGear').addEventListener('click',function(){switchInvSubTab('gear');});
+  if($('invTabSkins'))$('invTabSkins').addEventListener('click',function(){switchInvSubTab('skins');});
+
+  function renderInvSkins(){
+    var box=$('invSkins');if(!box||!game)return;
+    box.innerHTML='';
+    var curSk=currentWheelSkin();
+    var skins=[{id:'default',name:'Классическое',r:'common'}];
+    if(hasPioneerSkin())skins.push({id:'pioneer',name:'Первопроходец',r:'legendary'});
+    skins.forEach(function(sk){
+      var b=document.createElement('button');b.type='button';
+      var on=(curSk===sk.id);
+      b.className='icell'+(on?' on':'');
+      b.style.borderColor=RARITY[sk.r].color;
+      b.title=sk.name+(on?' (Установлен)':' — нажми, чтобы установить скин колеса');
+      var cv=document.createElement('canvas');cv.width=64;cv.height=64;cv.style.width='32px';cv.style.height='32px';cv.style.borderRadius='50%';
+      b.appendChild(cv);
+      var stxt=document.createElement('span');stxt.textContent=sk.name;b.appendChild(stxt);
+      var ssub=document.createElement('span');ssub.className='enhancedBonus';ssub.textContent=on?'Надет':'Надеть';b.appendChild(ssub);
+      b.onclick=function(){
+        setWheelSkin(sk.id);
+        if(game){game.wheelSkin=sk.id;saveGame();}
+        renderInvSkins();drawMiniWheels();
+        toast('Установлен скин колеса: «'+sk.name+'»!');
+      };
+      box.appendChild(b);
+      drawWheelOnCanvas(cv, sk.id);
+    });
+  }
+
+  // Под-вкладки Магазина (Скупщик, Кузница, Зачарование, Расы и Классы, Шахтёр)
   var curShopSub='races';
   function switchShopSubTab(sub){
     curShopSub=sub;
     var map={races:'shopBody',forge:'forgeBody',enchant:'enchantBody',merchant:'merchantBody',miner:'minerBody'};
     Object.keys(map).forEach(function(k){
-      var el=$(map[k]);if(el)el.hidden=(k!==sub);
+      var el=$(map[k]);
+      if(el){
+        el.hidden=(k!==sub);
+        el.style.display=(k===sub)?(k==='races'?'flex':'block'):'none';
+      }
     });
     var tabs=$('shopSubTabs');
     if(tabs){
@@ -3232,6 +3288,10 @@ svg.chr{overflow:visible}
       });
     }
     if(sub==='enchant')renderEnchantPanel();
+    if(sub==='merchant')renderMerchant();
+    if(sub==='forge')renderForge();
+    if(sub==='miner')renderMinerPanel();
+    applySpoilers($('shopPane'));
   }
   if($('shopSubTabs')){
     $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b){
@@ -3277,7 +3337,7 @@ svg.chr{overflow:visible}
     var blocked=!canSell();
     var h='<div class="card"><h3>Алтарь Зачарования ✨</h3>';
     h+='<p>Магическая пыль: <b>'+dust+' ✨</b> · Монеты: <b>'+(game.coins||0)+'</b></p>';
-    h+='<p>Зачарование наделяет вещь случайным бонусным свойством (Шанс крита, Вампиризм, Бонус монет, Шипы или Рвение шахты) со своей редкостью от Обычной (×1.0) до Легендарной (×2.5). Повторная перековка стоит столько же монет (150), но тратит в 2 раза меньше пыли (5 ✨ вместо 10 ✨)!</p>';
+    h+='<p>Зачарование наделяет вещь случайным бонусным свойством (Шанс крита, Вампиризм, Бонус монет, Шипы или Рвение шахты) со своей редкостью от Обычной (×1.0) до Легендарной (×2.5). Первое зачарование стоит <b>20 ✨ пыли</b> (и 150 монет), а повторная перековка — в 2 раза меньше пыли: <b>10 ✨</b>!</p>';
     if(indices.length){
       h+='<label for="enchantSelect">Выбери предмет</label><select id="enchantSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--card);color:var(--ink);border:1px solid var(--line)"'+(blocked?' disabled':'')+'>';
       indices.forEach(function(i){
@@ -3292,7 +3352,7 @@ svg.chr{overflow:visible}
       if(curEnch){
         h+='<p>Текущие чары: <span class="rar" style="background:'+curEnch.rar.color+'">'+curEnch.rar.name+' · '+curEnch.name+' +'+curEnch.val+curEnch.unit+'</span></p>';
       }else{
-        h+='<p>На предмете ещё нет чар.</p>';
+        h+='<p>На предмете ещё нет чар (первое зачарование: 20 ✨).</p>';
       }
       var canDo=!blocked&&(game.coins>=ENCHANT_COST_COINS)&&(dust>=dustNeed);
       h+='<div class="forgeButtons"><button type="button" id="btnDoEnchant"'+(canDo?'':' disabled')+'>'+(curEnch?'Перековать за '+ENCHANT_COST_COINS+' мон. + '+dustNeed+' ✨':'Зачаровать за '+ENCHANT_COST_COINS+' мон. + '+dustNeed+' ✨')+'</button></div></div>';
@@ -3319,21 +3379,34 @@ svg.chr{overflow:visible}
     };
   }
 
-  var activeBetType='none';
+  // 2) Сворачиваемое окно со ставками в Таверне
+  var activeBetType='none', tavernFolded=false;
+  function toggleTavernFold(){
+    tavernFolded=!tavernFolded;
+    var wrap=$('tavernBodyWrap'), btn=$('tavernFoldBtn');
+    if(wrap)wrap.style.display=tavernFolded?'none':'flex';
+    if(btn)btn.textContent=tavernFolded?'Развернуть ▾':'Свернуть ▴';
+  }
+  if($('tavernHeadToggle')){
+    $('tavernHeadToggle').addEventListener('click',function(){toggleTavernFold();});
+  }
+
   function renderTavernUI(){
-    var lock=$('tavernLock'), ctrl=$('tavernControls');
+    var lock=$('tavernLock'), ctrl=$('tavernControls'), note=$('tavernLockedNote');
     if(!lock||!ctrl||!game)return;
     var rk=maxRank(game);
     if(rk>=2){
       lock.textContent='Открыто (Ранг '+rk+')';
       lock.style.color='var(--green)';
       ctrl.hidden=false;
+      if(note)note.hidden=true;
       var maxB=Math.min(500,Math.max(1,Math.floor((Number(game.coins)||0)*0.15)));
       var hint=$('tavernHint');if(hint)hint.textContent='Макс. ставка: '+maxB+' мон.';
     }else{
-      lock.textContent='Открывается со 2 ранга';
+      lock.textContent='Со 2 ранга';
       lock.style.color='var(--muted)';
       ctrl.hidden=true;
+      if(note)note.hidden=false;
       activeBetType='none';
     }
   }
@@ -3396,28 +3469,7 @@ svg.chr{overflow:visible}
         }
       }
     });
-    var curSk=currentWheelSkin();
-    var skins=[{id:'default',name:'Скин: Классика',r:'common'}];
-    if(hasPioneerSkin())skins.push({id:'pioneer',name:'Скин: Первопроходец',r:'legendary'});
-    skins.forEach(function(sk){
-      var b=document.createElement('button');b.type='button';
-      var on=(curSk===sk.id);
-      b.className='icell'+(on?' on':'');
-      b.style.borderColor=RARITY[sk.r].color;
-      b.title=sk.name+(on?' (Установлен)':' — нажми, чтобы установить скин колеса');
-      var cv=document.createElement('canvas');cv.width=64;cv.height=64;cv.style.width='30px';cv.style.height='30px';
-      b.appendChild(cv);
-      var stxt=document.createElement('span');stxt.textContent=sk.name;b.appendChild(stxt);
-      var ssub=document.createElement('span');ssub.className='enhancedBonus';ssub.textContent=on?'Активен':'Скин колеса';b.appendChild(ssub);
-      b.onclick=function(){
-        setWheelSkin(sk.id);
-        if(game){game.wheelSkin=sk.id;saveGame();}
-        renderInv();drawMiniWheels();
-        toast('Установлен '+sk.name+'!');
-      };
-      box.appendChild(b);
-      drawWheelOnCanvas(cv, sk.id);
-    });
+    renderInvSkins();
     drawMiniWheels();
   };
 
@@ -3427,17 +3479,15 @@ svg.chr{overflow:visible}
     var pbox=$('pbox');if(!pbox)return;
     var av=pbox.querySelector('.charAv');
     if(av){
-      var row=document.createElement('div');row.className='heroRowWithWheel';
-      av.parentNode.insertBefore(row, av);
-      row.appendChild(av);
-      var stand=document.createElement('div');stand.className='chibiWheelStand';
-      var cv=document.createElement('canvas');cv.width=108;cv.height=108;
-      var sp=document.createElement('span');
+      var wrap=document.createElement('div');wrap.className='heroStageWrap';
+      av.parentNode.insertBefore(wrap, av);
+      wrap.appendChild(av);
+      var fig=document.createElement('div');fig.className='chibiWheelFigurine';
       var sk=(x&&x.wheelSkin)==='pioneer'?'pioneer':'default';
-      sp.textContent=sk==='pioneer'?'Первопроходец':'Классическое';
-      stand.appendChild(cv);stand.appendChild(sp);
-      row.appendChild(stand);
-      drawWheelOnCanvas(cv, sk);
+      fig.title='Фигурка колеса: '+(sk==='pioneer'?'Первопроходец':'Классическое');
+      fig.innerHTML='<div class="cwPtr"></div><canvas width="96" height="96"></canvas><div class="cwPedestal"></div><div class="cwBase"></div>';
+      wrap.appendChild(fig);
+      drawWheelOnCanvas(fig.querySelector('canvas'), sk);
     }
   };
 
@@ -3457,6 +3507,24 @@ svg.chr{overflow:visible}
     renderEnchantPanel();
     switchShopSubTab(curShopSub);
     applySpoilers($('shopPane'));
+  };
+
+  var origRenderMerchant = renderMerchant;
+  renderMerchant = function(){
+    origRenderMerchant();
+    applySpoilers($('merchantBody'));
+  };
+
+  var origRenderForge = renderForge;
+  renderForge = function(){
+    origRenderForge();
+    applySpoilers($('forgeBody'));
+  };
+
+  var origRenderMinerPanel = renderMinerPanel;
+  renderMinerPanel = function(){
+    origRenderMinerPanel();
+    applySpoilers($('minerBody'));
   };
 
   var origRenderDg = renderDg;
