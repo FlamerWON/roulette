@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="18">
+<meta name="app-version" content="19">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -357,6 +357,14 @@ svg.chr{overflow:visible}
 @media(prefers-reduced-motion:reduce){.minerBuddy *{animation:none!important}}
 
 
+/* --- Update 19 Styles --- */
+.stoneBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:268px;z-index:20;display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid #38bdf8;border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
+@media(max-width:520px){.stoneBox{top:calc(env(safe-area-inset-top,0px) + 52px);right:110px;font-size:14px}}
+.v19PassiveCard{margin-top:8px;padding:8px 12px;border-radius:12px;background:var(--card);border:1px solid var(--gold);font-size:12px;line-height:1.4;text-align:center;max-width:360px}
+.v19PassiveCard b{color:var(--gold)}
+.v19-paused *{animation-play-state:paused!important}
+#tavernBetTypes button:disabled,#tavernAmt:disabled,#tavernMaxBtn:disabled{opacity:.42!important;cursor:not-allowed!important;pointer-events:none!important}
+
 /* --- Update 18 Styles --- */
 .dustBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:175px;z-index:20;display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid #a855f7;border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
 .floatWheel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;z-index:35;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.32);opacity:0;pointer-events:none;transform:translateY(-12px);transition:opacity .3s ease,transform .3s ease}
@@ -399,6 +407,7 @@ svg.chr{overflow:visible}
 
 <div id="coinBox" class="coinBox" hidden aria-label="Монеты"></div>
 <div id="dustBox" class="dustBox" hidden title="Магическая пыль от Скупщика">✨ <span id="dustVal">0</span></div>
+<div id="stoneBox" class="stoneBox" hidden title="Камни заточки (Кузница)">🪨 <span id="stoneVal">0</span></div>
 <div id="floatWheelBox" class="floatWheel" aria-live="polite">
   <canvas id="floatWheelCanvas" width="92" height="92"></canvas>
   <div class="finfo"><b>Колесо</b><span id="floatWheelTxt">Готово</span></div>
@@ -545,7 +554,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · версия 18</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 19</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -3127,7 +3136,7 @@ svg.chr{overflow:visible}
   /* ================== МОДУЛЬ UPDATE 18 ================== */
   RELEASE_ID = 18;
   RELEASE_NOTES.unshift({
-    title: 'Версия 18 · Зачарование, Таверна, Вкладки и Исправление боёвки',
+    title: 'Версия 19 · Зачарование, Таверна, Вкладки и Исправление боёвки',
     lines: [
       'Исправлен баг в бою: все удары при выпадении условий монстра гарантированно засчитываются. При выпадении 1 игрок больше не пропускает следующий ход — монстр сразу наносит двойной урон (x2)!',
       'Плавающее мини-колесо (только на вкладке «Рулетка»): если основное колесо скрыто при прокрутке более чем на 80%, слева вверху плавно появляется мини-колесо.',
@@ -3574,8 +3583,280 @@ svg.chr{overflow:visible}
   };
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 18 ================== */
 
+  /* ================== МОДУЛЬ UPDATE 19 (ВНУТРИ ЗАМЫКАНИЯ) ================== */
+  RELEASE_ID = 19;
+  RELEASE_NOTES.unshift({
+    title: 'Версия 19 · 10 Рас с пассивками, Счётчик камней 🪨 и Оптимизация',
+    lines: [
+      'Счётчик камней улучшения 🪨: теперь отображается прямо в верхней панели рядом с монетами и Магической пылью ✨!',
+      '10 сбалансированных рас с уникальными пассивными навыками: добавлены Нежить (Редкая, 8%), Демон (Эпическая, 5%), Автоматон (Легендарная, 1%) и Небожитель (Легендарная, 1%), а также обновлены пассивки всех старых рас!',
+      'Честная Таверна без абуза: выбранный сектор и сумма ставки намертво фиксируются и блокируются в момент запуска колеса до его полной остановки.',
+      'Глубокая оптимизация: умное кэширование шапки ресурсов (DOM-diffing) и автоматическая пауза всех фоновых анимаций при сворачивании вкладки.'
+    ]
+  });
+
+  // 1) Обновляем массив RACES на 10 рас с новыми шансами и пассивными навыками
+  RACES = [
+    {id:'human', name:'Человек', r:'common', w:50, skill:'Мастер на все руки', desc:'+15% XP за победы и +10% Магической пыли у Скупщика'},
+    {id:'beast', name:'Зверолюд', r:'uncommon', w:25, skill:'Охотничий азарт', desc:'+7% к шансу крита и +5% к базовому урону'},
+    {id:'dwarf', name:'Дворф', r:'rare', w:8, skill:'Горняцкая жилка', desc:'+25% к скорости шахтёра-спутника и +25 Макс. HP'},
+    {id:'orc', name:'Орк', r:'rare', w:8, skill:'Несокрушимая мощь', desc:'+12% к базовому урону (вампиризм и лечение на 10% слабее)'},
+    {id:'undead', name:'Нежить', r:'rare', w:8, skill:'Холод могилы', desc:'Пассивный Вампиризм +6% с каждого удара и -50% штрафа монет при смерти'},
+    {id:'demon', name:'Демон', r:'epic', w:5, skill:'Сделка с удачей', desc:'+25% к выплатам по ставкам в Таверне и +5% шанс нанести тройной урон при Зеро'},
+    {id:'elf', name:'Эльф', r:'epic', w:4, skill:'Благословение магии', desc:'+20% к силе всех зачарований и аффиксов на экипировке'},
+    {id:'drake', name:'Драконорождённый', r:'legendary', w:2, skill:'Чешуйчатая броня и Пламя', desc:'Пассивные Шипы (+15 ед. урона) и +15% к золоту со всех побед'},
+    {id:'automaton', name:'Автоматон', r:'legendary', w:1, skill:'Стальной механизм', desc:'Иммунитет к критической неудаче (на 1 монстр бьёт обычно, а не х2) + 20% к скорости шахты'},
+    {id:'celestial', name:'Небожитель', r:'legendary', w:1, skill:'Очищение скверны', desc:'+25% урона по боссам в Данжах и +20% Магической пыли при разборе'}
+  ];
+
+  // Визуальные особенности новых рас (цвет кожи + детали на чиби-аватаре)
+  var _origLookV19 = look;
+  look = function(seed, race, cls){
+    var L = _origLookV19(seed, race, cls);
+    if(L.race === 'undead') L.skin = '#b8d0d8';
+    else if(L.race === 'demon') L.skin = '#d96b6b';
+    else if(L.race === 'automaton') L.skin = '#b0bac5';
+    else if(L.race === 'celestial') L.skin = '#fff5d6';
+    return L;
+  };
+
+  var _origCvFaceV19 = cvFace;
+  cvFace = function(L, titleId){
+    var s = _origCvFaceV19(L, titleId);
+    if(L.race === 'demon'){
+      s += cvPath('M26 20 Q12 4 26 -4 Q26 10 38 16 M74 20 Q88 4 74 -4 Q74 10 62 16','#2b2d42',1.2);
+    } else if(L.race === 'celestial'){
+      s += '<ellipse cx="50" cy="-4" rx="22" ry="4.5" fill="none" stroke="#ffd700" stroke-width="3"/>';
+    } else if(L.race === 'automaton'){
+      s += cvPath('M50 10 V-2','none',2.5,'#64748b') + cvEllipse(50,-4,4,4,'#38bdf8',1);
+    } else if(L.race === 'undead'){
+      s += cvEllipse(37,53,3.5,3.5,'#38bdf8') + cvEllipse(63,53,3.5,3.5,'#38bdf8');
+    }
+    return s;
+  };
+
+  // 2) Интеграция пассивок в stats() (Дворф +25 HP, Зверолюд +5% урон, Орк +12% урон)
+  var _origStatsV19 = stats;
+  stats = function(source){
+    var st = _origStatsV19(source);
+    var g = source || game;
+    var r = (g && g.race) || 'human';
+    if(r === 'dwarf') st.hp += 25;
+    if(r === 'beast') st.atk = Math.max(1, Math.round(st.atk * 1.05));
+    if(r === 'orc') st.atk = Math.max(1, Math.round(st.atk * 1.12));
+    return st;
+  };
+
+  // 3) Интеграция Эльфа (+20% к чарам), Зверолюда (+7% крит), Нежити (+6% вамп) и Драконорождённого (+15 шипы)
+  var _origGetEquippedEnchantsV19 = getEquippedEnchants;
+  getEquippedEnchants = function(g){
+    var res = _origGetEquippedEnchantsV19(g);
+    var target = g || game;
+    var r = (target && target.race) || 'human';
+    if(r === 'elf'){
+      res.crit = Math.min(35, Math.round(res.crit * 1.2));
+      res.vamp = Math.min(18, Math.round(res.vamp * 1.2));
+      res.gold = Math.min(50, Math.round(res.gold * 1.2));
+      res.thorns = Math.round(res.thorns * 1.2);
+      res.haste = Math.min(35, Math.round(res.haste * 1.2));
+    }
+    if(r === 'beast') res.crit = Math.min(40, res.crit + 7);
+    if(r === 'undead') res.vamp = Math.min(25, res.vamp + 6);
+    if(r === 'drake') res.thorns += 15;
+    return res;
+  };
+
+  // 4) Интеграция пассивок в боёвку (Автоматон без х2 урона на 1, Демон шанс х3 на Зеро, Небожитель +25% по боссам, Орк -10% отхила)
+  strikeCoreBase = function(f, mo, st, n){
+    if(!Number.isFinite(f.dealt))f.dealt=0;
+    if(!Number.isFinite(f.taken))f.taken=0;
+    f.skip=false;
+    var r = (game && game.race) || 'human';
+    var eqEnch = getEquippedEnchants(game);
+    var healFactor = (r === 'orc') ? 0.9 : 1.0;
+    var bossFactor = (r === 'celestial' && mo && (mo.boss || mo.elite)) ? 1.25 : 1.0;
+    var effAtk = Math.max(1, Math.round(st.atk * bossFactor));
+
+    if(n === 0){
+      var isTriple = (r === 'demon' && Math.random() < 0.05);
+      var mult0 = isTriple ? 3 : 2;
+      var d0 = effAtk * mult0;
+      f.m -= d0; f.dealt += d0;
+      var v0 = eqEnch.vamp > 0 ? Math.max(1, Math.round(d0 * (eqEnch.vamp / 100) * healFactor)) : 0;
+      if(v0) f.p = Math.min(f.ph || st.hp, f.p + v0);
+      return 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Критический удар (x2): ') + mo.name + ' теряет ' + d0 + ' HP.' + (v0 ? ' Вампиризм +' + v0 + ' HP.' : '');
+    }
+    if(n === 1){
+      var autoSaved = (r === 'automaton');
+      var dd = autoSaved ? mo.dmg : (mo.dmg * 2);
+      f.p -= dd; f.taken += dd;
+      var th1 = eqEnch.thorns > 0 ? Math.min(f.m, eqEnch.thorns) : 0;
+      if(th1 > 0){ f.m -= th1; f.dealt += th1; }
+      return (autoSaved ? 'Единица! ⚙️ Стальной механизм Автоматона заблокировал крит-неудачу: ' : 'Единица — критическая неудача! ') + mo.name + ' наносит ' + dd + ' HP!' + (th1 ? ' Шипы вернули ' + th1 + ' урона.' : '');
+    }
+    if(mo.hit(n)){
+      var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      var dmg = isCrit ? Math.round(effAtk * 1.75) : effAtk;
+      f.m -= dmg; f.dealt += dmg;
+      var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100) * healFactor)) : 0;
+      if(vp) f.p = Math.min(f.ph || st.hp, f.p + vp);
+      return 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' ' + mo.name + ' теряет ' + dmg + ' HP.' + (vp ? ' Вампиризм +' + vp + ' HP.' : '');
+    }
+    f.p -= mo.dmg; f.taken += mo.dmg;
+    var th = eqEnch.thorns > 0 ? Math.min(f.m, eqEnch.thorns) : 0;
+    if(th > 0){ f.m -= th; f.dealt += th; }
+    return 'Выпало ' + n + ': промах. ' + mo.name + ' бьёт на ' + mo.dmg + '.' + (th ? ' Шипы вернули ' + th + ' урона.' : '');
+  };
+
+  // 5) Бонусы наград с побед: Человек (+15% XP), Драконорождённый (+15% монет с побед), чары на золото
+  var _origRewardBaseV19 = rewardBase;
+  rewardBase = function(mo){
+    var b = _origRewardBaseV19(mo);
+    var r = (game && game.race) || 'human';
+    var eqEnch = getEquippedEnchants(game);
+    var xpMult = (r === 'human') ? 1.15 : 1.0;
+    var coinMult = ((r === 'drake') ? 1.15 : 1.0) * (1 + (eqEnch.gold || 0) / 100);
+    return {
+      xp: Math.round(b.xp * xpMult),
+      coins: Math.round(b.coins * coinMult)
+    };
+  };
+
+  // Нежить: -50% штрафа монет при поражении
+  var _origLossCapV19 = lossCap;
+  lossCap = function(rank){
+    var cap = _origLossCapV19(rank);
+    if(game && game.race === 'undead') return Math.max(1, Math.round(cap * 0.5));
+    return cap;
+  };
+  var _origLoseFightV19 = loseFight;
+  loseFight = function(prefix, died){
+    if(game && game.race === 'undead'){
+      var rank = game.fight.r || 1;
+      var lost = Math.min(Math.floor((Number(game.coins)||0) * 0.05), lossCap(rank));
+      if(died) battleTitles(0, game.fight, false);
+      game.coins -= lost; game.fight.on = false; game.fight.skip = false;
+      fightMsg = prefix + ' 💀 Пассивка Нежити «Холод могилы» снизила штраф вдвое: потеряно ' + lost + ' монет. Опыт сохранён.';
+      renderCoins(); renderProgress();
+      return;
+    }
+    _origLoseFightV19(prefix, died);
+  };
+
+  // Человек (+10% пыли) и Небожитель (+20% пыли) у Скупщика
+  var _origApplySaleV19 = applySale;
+  applySale = function(g, plan){
+    var next = _origApplySaleV19(g, plan);
+    var r = (g && g.race) || 'human';
+    var mult = (r === 'celestial') ? 1.20 : ((r === 'human') ? 1.10 : 1.0);
+    if(mult > 1 && lastDustEarned > 0){
+      var extra = Math.max(1, Math.round(lastDustEarned * (mult - 1)));
+      next.dust = Math.min(1000000, (Number(next.dust)||0) + extra);
+      lastDustEarned += extra;
+    }
+    return next;
+  };
+
+  // Дворф (+25% скорость шахты), Автоматон (+20% скорость шахты) + Рвение шахты от чар
+  var _origMinerClockV19 = minerClock;
+  minerClock = function(){
+    var before = minerPendingMs;
+    _origMinerClockV19();
+    var diff = minerPendingMs - before;
+    if(diff > 0 && game){
+      var r = game.race || 'human';
+      var eqEnch = getEquippedEnchants(game);
+      var mult = 1 + (eqEnch.haste || 0) / 100;
+      if(r === 'dwarf') mult += 0.25;
+      else if(r === 'automaton') mult += 0.20;
+      if(mult > 1){
+        minerPendingMs = Math.min(60000, before + Math.floor(diff * mult));
+      }
+    }
+  };
+
+  // Демон: +25% к выплатам по ставкам в Таверне + жёсткая блокировка при spin()
+  var _origSpinV19 = spin;
+  spin = function(){
+    if(!spinning) lockTavernBetOnSpin();
+    _origSpinV19();
+  };
+
+  resolveTavernBet = function(n){
+    setTavernDisabled(false);
+    var bet = lockedTavernBet;
+    lockedTavernBet = null;
+    if(!game || maxRank(game) < 2 || !bet || bet.type === 'none') return;
+    var amt = bet.amt, bType = bet.type;
+    if(amt <= 0 || amt > (game.coins || 0)) return;
+    game.coins -= amt;
+    var mult = 0, c = color(n);
+    if(bType === 'red' && c === 'red') mult = 1.9;
+    else if(bType === 'black' && c === 'black') mult = 1.9;
+    else if(bType === 'even' && n > 0 && n % 2 === 0) mult = 1.9;
+    else if(bType === 'odd' && n % 2 === 1) mult = 1.9;
+    else if(bType === 'd1' && n >= 1 && n <= 12) mult = 2.8;
+    else if(bType === 'd2' && n >= 13 && n <= 24) mult = 2.8;
+    else if(bType === 'd3' && n >= 25 && n <= 36) mult = 2.8;
+    else if(bType === 'zero' && n === 0) mult = 32;
+    if(mult > 0){
+      var demonMult = (game.race === 'demon') ? 1.25 : 1.0;
+      var win = Math.round(amt * mult * demonMult);
+      game.coins += win;
+      toast('🍺 Ставка в Таверне сыграла! Выигрыш: +' + win + ' монет!' + (demonMult > 1 ? ' (Бонус Демона +25%!)' : ''));
+    } else {
+      toast('🍺 Таверна: ставка ' + amt + ' мон. не сыграла.');
+    }
+  };
+
+  // 6) Отображение счётчика камней 🪨 в шапке (с кэшированием) и карточки пассивки расы в Персонаже
+  var _cachedDust = -1, _cachedStones = -1;
+  var _origRenderCoinsV19 = renderCoins;
+  renderCoins = function(){
+    _origRenderCoinsV19();
+    if(!game) return;
+    var hide = $('coinBox').hidden;
+    if($('dustBox')){
+      $('dustBox').hidden = hide;
+      var d = Number(game.dust) || 0;
+      if(d !== _cachedDust){ _cachedDust = d; $('dustVal').textContent = String(d); }
+    }
+    if($('stoneBox')){
+      $('stoneBox').hidden = hide;
+      var s = Number(game.stones) || 0;
+      if(s !== _cachedStones){ _cachedStones = s; $('stoneVal').textContent = String(s); }
+    }
+  };
+
+  var _origRenderCharV19 = renderChar;
+  renderChar = function(){
+    _origRenderCharV19();
+    if(!game) return;
+    var rc = raceById(game.race) || RACES[0];
+    var pCard = $('v19PassiveCard');
+    if(!pCard && $('charRace') && $('charRace').parentNode){
+      pCard = document.createElement('div');
+      pCard.id = 'v19PassiveCard';
+      pCard.className = 'v19PassiveCard';
+      $('charRace').parentNode.appendChild(pCard);
+    }
+    if(pCard && rc){
+      pCard.innerHTML = '🧬 Пассивка расы <b>«' + (rc.skill || rc.name) + '»</b>:<br>' + rc.desc;
+    }
+    renderCoins();
+  };
+
+  // Оптимизация: пауза CSS-анимаций при сворачивании вкладки
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) document.body.classList.add('v19-paused');
+    else document.body.classList.remove('v19-paused');
+  });
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
+
   restore();
 })();
 </script>
+
+
 </body>
 </html>
