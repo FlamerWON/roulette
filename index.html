@@ -357,20 +357,21 @@ svg.chr{overflow:visible}
 @media(prefers-reduced-motion:reduce){.minerBuddy *{animation:none!important}}
 
 
-/* --- Update 19 Styles --- */
-.stoneBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:268px;z-index:20;display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid #38bdf8;border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
-@media(max-width:520px){.stoneBox{top:calc(env(safe-area-inset-top,0px) + 52px);right:110px;font-size:14px}}
+/* --- Единая панель ресурсов Версии 19 --- */
+.topResources{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:16px;z-index:25;display:flex;align-items:center;gap:8px}
+.resBadge{display:flex;align-items:center;gap:5px;background:var(--card);border:2px solid var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
+.resBadge svg{width:22px;height:22px;display:block}
+.resBadge.dust{border-color:#a855f7}
+.resBadge.stone{border-color:#38bdf8}
+@media(max-width:520px){
+  .topResources{top:calc(env(safe-area-inset-top,0px) + 52px);right:12px;gap:4px}
+  .resBadge{font-size:14px;padding:3px 8px}
+  .resBadge svg{width:18px;height:18px}
+}
 .v19PassiveCard{margin-top:8px;padding:8px 12px;border-radius:12px;background:var(--card);border:1px solid var(--gold);font-size:12px;line-height:1.4;text-align:center;max-width:360px}
 .v19PassiveCard b{color:var(--gold)}
 .v19-paused *{animation-play-state:paused!important}
 #tavernBetTypes button:disabled,#tavernAmt:disabled,#tavernMaxBtn:disabled{opacity:.42!important;cursor:not-allowed!important;pointer-events:none!important}
-
-/* --- Update 18 Styles --- */
-.dustBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:175px;z-index:20;display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid #a855f7;border-radius:14px;padding:4px 12px 4px 8px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
-.floatWheel{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;z-index:35;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.32);opacity:0;pointer-events:none;transform:translateY(-12px);transition:opacity .3s ease,transform .3s ease}
-.floatWheel.on{opacity:1;pointer-events:auto;transform:translateY(0)}
-.floatWheel canvas{width:46px;height:46px;border-radius:50%;box-shadow:0 0 0 3px var(--felt),0 0 0 4px var(--gold)}
-.floatWheel .finfo{display:flex;flex-direction:column;font-size:11px;line-height:1.2}
 
 /* Лаконичная фигурка чиби-колеса рядом с персонажем */
 .heroStageWrap{position:relative;display:inline-flex;align-items:flex-end;justify-content:center;margin:0 auto 6px}
@@ -405,13 +406,24 @@ svg.chr{overflow:visible}
 </head>
 <body>
 
-<div id="coinBox" class="coinBox" hidden aria-label="Монеты"></div>
-<div id="dustBox" class="dustBox" hidden title="Магическая пыль от Скупщика">✨ <span id="dustVal">0</span></div>
-<div id="stoneBox" class="stoneBox" hidden title="Камни заточки (Кузница)">🪨 <span id="stoneVal">0</span></div>
+<div class="topResources" id="topResources" hidden>
+  <div id="coinBox" class="resBadge" aria-label="Монеты"></div>
+  <div id="dustBox" class="resBadge dust" title="Магическая пыль от Скупщика">✨ <span id="dustVal">0</span></div>
+  <div id="stoneBox" class="resBadge stone" title="Камни заточки (Кузница)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2 L20 8 L17 20 L7 20 L4 8 Z" fill="#78909c" stroke="#2a1f14" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M12 2 L17 8 L12 12 Z" fill="#b0bec5" stroke="#2a1f14" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M4 8 L12 12 L7 20 Z" fill="#546e7a" stroke="#2a1f14" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M8 5 L10 8 M15 6 L13 9" stroke="#eceff1" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span id="stoneVal">0</span>
+  </div>
+</div>
 <div id="floatWheelBox" class="floatWheel" aria-live="polite">
   <canvas id="floatWheelCanvas" width="92" height="92"></canvas>
   <div class="finfo"><b>Колесо</b><span id="floatWheelTxt">Готово</span></div>
 </div>
+
 
 <div id="login">
   <h1>Рулетка</h1>
@@ -647,11 +659,11 @@ svg.chr{overflow:visible}
   function start(){
     uid=sess.uid; nick=sess.name;
     $('login').hidden=true; $('app').hidden=false; $('me').textContent='ты: '+nick; passIn.value='';
-    game=null; gameLoaded=false; showTab('game'); $('coinBox').hidden=false; $('newsOpen').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); claimSession().then(loadGame);
+    game=null; gameLoaded=false; showTab('game'); $('topResources').hidden=false; $('newsOpen').hidden=false; shownCoins=-1; renderCoins(); renderEvent(); draw(); lastSig=''; chatMap={}; chatLast=''; renderChat(); load(); claimSession().then(loadGame);
   }
   function logout(){
     if(merchantBusy){toast("Дождись завершения сохранения.");return;}minerResetClock();
-    sess=null; game=null; gameLoaded=false; mySid=''; clearTimeout(loadRetry); docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true; $('newsOpen').hidden=true;
+    sess=null; game=null; gameLoaded=false; mySid=''; clearTimeout(loadRetry); docs=[]; lastSig=''; chatMap={}; chatLast=''; $('topResources').hidden=true; $('newsOpen').hidden=true;
     try{localStorage.removeItem('roulette_sess');}catch(e){}
     $('app').hidden=true; $('login').hidden=false; setErr('');
   }
