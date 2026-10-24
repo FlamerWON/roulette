@@ -357,16 +357,45 @@ svg.chr{overflow:visible}
 @media(prefers-reduced-motion:reduce){.minerBuddy *{animation:none!important}}
 
 
-/* --- Единая панель ресурсов Версии 19 --- */
-.topResources{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:16px;z-index:25;display:flex;align-items:center;gap:8px}
-.resBadge{display:flex;align-items:center;gap:5px;background:var(--card);border:2px solid var(--gold);border-radius:14px;padding:4px 10px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.18);color:var(--ink)}
-.resBadge svg{width:22px;height:22px;display:block}
-.resBadge.dust{border-color:#a855f7}
-.resBadge.stone{border-color:#38bdf8}
-@media(max-width:520px){
-  .topResources{top:calc(env(safe-area-inset-top,0px) + 52px);right:12px;gap:4px}
-  .resBadge{font-size:14px;padding:3px 8px}
-  .resBadge svg{width:18px;height:18px}
+/* --- Единая панель ресурсов Версии 19 (Исправлено) --- */
+.topResources {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: 16px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.resBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--card);
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  padding: 4px 10px 4px 8px;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  color: var(--ink);
+}
+.resBadge svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.resBadge.dust { border-color: #a855f7; }
+.resBadge.stone { border-color: #38bdf8; }
+
+@media(max-width: 520px) {
+  .topResources {
+    top: calc(env(safe-area-inset-top, 0px) + 52px);
+    right: 12px;
+    gap: 4px;
+  }
+  .resBadge { font-size: 14px; padding: 3px 8px; }
+  .resBadge svg { width: 18px; height: 18px; }
 }
 .v19PassiveCard{margin-top:8px;padding:8px 12px;border-radius:12px;background:var(--card);border:1px solid var(--gold);font-size:12px;line-height:1.4;text-align:center;max-width:360px}
 .v19PassiveCard b{color:var(--gold)}
