@@ -403,7 +403,6 @@ svg.chr{overflow:visible}
 
 
 
-
 /* === UPDATE 20 STYLES === */
 .v20TopBarWrap{
   position:fixed;
@@ -589,7 +588,6 @@ svg.chr{overflow:visible}
   font-size:13px;
   box-shadow:0 2px 5px rgba(0,0,0,.2);
 }
-
 </style>
 
 </head>
@@ -4047,7 +4045,7 @@ svg.chr{overflow:visible}
   });
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
-  /* ================== МОДУЛЬ UPDATE 20 (ВНУТРИ ЗАМЫКАНИЯ) ================== */
+  /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
   APP_V = 20;
   RELEASE_ID = 20;
   RELEASE_NOTES.unshift({
@@ -4058,12 +4056,21 @@ svg.chr{overflow:visible}
       '6 новых уникальных Боссов Экспедиции на 5-м этаже: Король Личей Мал\'Ганис, Архидракон Пиромант, Арахна Мать Роя, Механический Колосс, Кровавый Граф Носферату и Вестник Пустоты Ксалатат!',
       'Статус «При смерти» (1 HP) и Зелье восстановления 🧪: гибель в Экспедиции фиксирует здоровье на 1 HP во всех боях до приёма редкого Зелья восстановления (дроп с Босса Экспедиции, крафт в Кузнице или покупка на Рынке).',
       'Эволюция классов (Престиж на 100-м уровне) и «Счастливая пятёрка»: выбор из 3 элитных подклассов и 5 счастливых чисел (2–36) для ультимативных ударов.',
-      'Онлайн-рынок игроков на Firebase Firestore (в отдельной вкладке «Рынок»), зелёные точки онлайна в Лидерах и единая панель ресурсов в одну строчку!'
+      'Онлайн-рынок игроков на Firebase Firestore (в отдельной вкладке «Рынок»), защита от XSS/дюпов, оптимизация трафика базы и зелёные точки онлайна в Лидерах!'
     ]
   });
 
-  // Все данные V20 хранятся в изолированном объекте v20Data, чтобы не нарушать
-  // строгую проверку canonicalGame() у Шахтёра/Кузницы/Скупщика и правила RTDB!
+  // Защита от XSS при выводе любых пользовательских данных с Рынка/Firestore
+  function escapeHtmlV20(str){
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Изолированное хранилище данных V20 (не засоряет `game`, сохраняя совместимость с canonicalGame и RTDB)
   var v20Data = {
     subcls: '',
     lucky5: [],
@@ -4073,26 +4080,74 @@ svg.chr{overflow:visible}
     exp: null
   };
 
+  function resetV20Data(){
+    v20Data.subcls = '';
+    v20Data.lucky5 = [];
+    v20Data.prestige = 0;
+    v20Data.nearDeath = false;
+    v20Data.potions = 0;
+    v20Data.exp = null;
+  }
+
+  function sanitizeLuckyFiveV20(arr){
+    if(!Array.isArray(arr)) return [];
+    var out = [], seen = {};
+    for(var i = 0; i < arr.length && out.length < 5; i++){
+      var n = Math.floor(Number(arr[i]));
+      if(Number.isInteger(n) && n >= 2 && n <= 36 && !seen[n]){
+        seen[n] = true;
+        out.push(n);
+      }
+    }
+    out.sort(function(a, b){ return a - b; });
+    return out.length === 5 ? out : [];
+  }
+
+  function sanitizeV20Data(){
+    var sub = findSubclassV20(v20Data.subcls);
+    if(!sub || (game && game.cls && SUBCLASSES_V20[game.cls] && !SUBCLASSES_V20[game.cls].some(function(s){ return s.id === sub.id; }))){
+      if(game && game.cls) v20Data.subcls = '';
+    }
+    if(!v20Data.subcls){
+      v20Data.lucky5 = [];
+      v20Data.prestige = 0;
+    } else {
+      v20Data.lucky5 = sanitizeLuckyFiveV20(v20Data.lucky5);
+      if(v20Data.lucky5.length !== 5) v20Data.lucky5 = rollLuckyFiveV20();
+      v20Data.prestige = Math.max(1, Math.min(50, Math.floor(Number(v20Data.prestige) || 1)));
+    }
+    v20Data.nearDeath = Boolean(v20Data.nearDeath);
+    v20Data.potions = Math.max(0, Math.min(10000, Math.floor(Number(v20Data.potions) || 0)));
+    if(v20Data.exp && (!v20Data.exp.on || typeof v20Data.exp.st !== 'number' || v20Data.exp.st < 0 || v20Data.exp.st >= 5)){
+      v20Data.exp = null;
+    }
+  }
+
   function v20StorageKey(){
     return 'roulette_v20_clean_' + (sess && sess.uid ? sess.uid : 'guest');
   }
 
   function loadV20Local(){
+    resetV20Data();
     try{
       var raw = localStorage.getItem(v20StorageKey());
       if(raw){
         var parsed = JSON.parse(raw);
-        v20Data.subcls = typeof parsed.subcls === 'string' ? parsed.subcls : '';
-        v20Data.lucky5 = Array.isArray(parsed.lucky5) ? parsed.lucky5 : [];
-        v20Data.prestige = Number(parsed.prestige) || 0;
-        v20Data.nearDeath = Boolean(parsed.nearDeath);
-        v20Data.potions = Math.max(0, Number(parsed.potions) || 0);
-        v20Data.exp = (parsed.exp && parsed.exp.on) ? parsed.exp : null;
+        if(parsed && typeof parsed === 'object'){
+          v20Data.subcls = typeof parsed.subcls === 'string' ? parsed.subcls : '';
+          v20Data.lucky5 = Array.isArray(parsed.lucky5) ? parsed.lucky5 : [];
+          v20Data.prestige = Number(parsed.prestige) || 0;
+          v20Data.nearDeath = Boolean(parsed.nearDeath);
+          v20Data.potions = Math.max(0, Number(parsed.potions) || 0);
+          v20Data.exp = (parsed.exp && parsed.exp.on) ? parsed.exp : null;
+        }
       }
     }catch(e){}
+    sanitizeV20Data();
   }
 
   function saveV20Local(){
+    sanitizeV20Data();
     try{
       localStorage.setItem(v20StorageKey(), JSON.stringify(v20Data));
     }catch(e){}
@@ -4108,6 +4163,45 @@ svg.chr{overflow:visible}
     if(g.fight && g.fight.trapped !== undefined) delete g.fight.trapped;
     if(g.dg) delete g.dg;
   }
+
+  // --- ОПТИМИЗАЦИЯ O(1) ПУЛА ЛУТА (ВМЕСТО ПЕРЕБОРА 510 ПРЕДМЕТОВ НА КАЖДЫЙ ДРОП) ---
+  var LOOT_POOL_BY_RARITY = {};
+  var LOOT_POOL_BY_RARITY_AND_CLASS = {};
+  function buildLootPoolsCacheV20(){
+    LOOT_POOL_BY_RARITY = {};
+    LOOT_POOL_BY_RARITY_AND_CLASS = {};
+    Object.keys(ITEMS).forEach(function(id){
+      var it = ITEMS[id];
+      if(!it || !it.drop) return;
+      if(!LOOT_POOL_BY_RARITY[it.r]) LOOT_POOL_BY_RARITY[it.r] = [];
+      LOOT_POOL_BY_RARITY[it.r].push(id);
+      if(it.cls){
+        var key = it.r + ':' + it.cls;
+        if(!LOOT_POOL_BY_RARITY_AND_CLASS[key]) LOOT_POOL_BY_RARITY_AND_CLASS[key] = [];
+        LOOT_POOL_BY_RARITY_AND_CLASS[key].push(id);
+      }
+    });
+  }
+  buildLootPoolsCacheV20();
+
+  rollLoot = function(rank, dungeon, elite){
+    var w = lootWeights(rank, dungeon, elite), x = Math.random() * 100, acc = 0, r = 'common';
+    for(var i = 0; i < w.length; i++){
+      acc += w[i][1];
+      if(x < acc){ r = w[i][0]; break; }
+    }
+    var targetCls = '';
+    if(dungeon && game && game.cls){
+      if(Math.random() < 0.5){
+        targetCls = game.cls;
+      } else {
+        var others = Object.keys(CLASSES).filter(function(c){ return c !== game.cls; });
+        targetCls = others[Math.floor(Math.random() * others.length)];
+      }
+    }
+    var pool = (dungeon && targetCls) ? (LOOT_POOL_BY_RARITY_AND_CLASS[r + ':' + targetCls] || []) : (LOOT_POOL_BY_RARITY[r] || []);
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  };
 
   // --- 1. ЕДИНАЯ СТРОКА РЕСУРСОВ НА УРОВНЕ КНОПКИ «ЧТО НОВОГО» ---
   function setupUnifiedTopBarV20(){
@@ -4167,7 +4261,7 @@ svg.chr{overflow:visible}
     if(!subId) return null;
     for(var c in SUBCLASSES_V20){
       var list = SUBCLASSES_V20[c];
-      for(var i=0;i<list.length;i++){
+      for(var i = 0; i < list.length; i++){
         if(list[i].id === subId) return list[i];
       }
     }
@@ -4176,13 +4270,13 @@ svg.chr{overflow:visible}
 
   function rollLuckyFiveV20(){
     var pool = [];
-    for(var n=2; n<=36; n++) pool.push(n);
+    for(var n = 2; n <= 36; n++) pool.push(n);
     var res = [];
     while(res.length < 5 && pool.length){
       var idx = Math.floor(Math.random() * pool.length);
       res.push(pool.splice(idx, 1)[0]);
     }
-    res.sort(function(a,b){return a-b;});
+    res.sort(function(a, b){ return a - b; });
     return res;
   }
 
@@ -4257,9 +4351,36 @@ svg.chr{overflow:visible}
     return st;
   };
 
-  // --- 5. ОГРАНИЧЕНИЯ ВО ВРЕМЯ БОЯ И ЭКСПЕДИЦИИ ---
+  // --- 5. ОГРАНИЧЕНИЯ ВО ВРЕМЯ БОЯ И ЭКСПЕДИЦИИ + ФИКС ШАХТЁРА ---
   dgOn = function(){
     return !!(v20Data.exp && v20Data.exp.on);
+  };
+
+  // Исправление Шахтёра во время Экспедиции (чтобы останавливал добычу и не падал при обращении к game.dg)
+  minerInBattle = function(){
+    return !!(game && ((game.fight && game.fight.on) || dgOn()));
+  };
+
+  minerPose = function(){
+    if(!minerHasRole(game)) return 'idle';
+    if(minerIsGone()) return Date.now() < minerLeaveUntil ? 'leave' : 'gone';
+    if(minerInBattle()){
+      var f = dgOn() ? v20Data.exp : (game && game.fight);
+      if(!f || !f.buddy) return 'idle';
+      return f.buddy === 'defender' ? 'shield' : f.buddy === 'gladiator' ? 'sword' : 'cower';
+    }
+    if(minerEmote && Date.now() < minerEmoteUntil) return minerEmote;
+    return document.hidden || !gameLoaded || merchantBusy ? 'idle' : 'mine';
+  };
+
+  var _origRenderMinerV19 = renderMiner;
+  renderMiner = function(){
+    if(game && dgOn() && !game.dg){
+      game.dg = v20Data.exp;
+      try{ _origRenderMinerV19(); } finally { delete game.dg; }
+    } else {
+      _origRenderMinerV19();
+    }
   };
 
   function isInActiveCombatV20(){
@@ -4293,9 +4414,10 @@ svg.chr{overflow:visible}
     return true;
   }
 
+  var marketBusyV20 = false;
   var _origCanSellV20 = canSell;
   canSell = function(){
-    if(isInActiveCombatV20() || isInExpeditionV20()) return false;
+    if(marketBusyV20 || isInActiveCombatV20() || isInExpeditionV20()) return false;
     return _origCanSellV20();
   };
 
@@ -4317,7 +4439,7 @@ svg.chr{overflow:visible}
   }
 
   function useRecoveryPotionV20(){
-    if(!game || !gameLoaded || merchantBusy) return;
+    if(!game || !gameLoaded || merchantBusy || marketBusyV20) return;
     if(isInActiveCombatV20() || isInExpeditionV20()){
       toast('🚫 Нельзя использовать Зелье восстановления во время боя или внутри Экспедиции!');
       return;
@@ -4342,7 +4464,7 @@ svg.chr{overflow:visible}
 
   function craftRecoveryPotionV20(){
     if(!canUseTownServicesV20()) return;
-    if(!game || !gameLoaded || merchantBusy) return;
+    if(!game || !gameLoaded || merchantBusy || marketBusyV20) return;
     if((game.coins||0) < POTION_CRAFT_COST.coins || (game.stones||0) < POTION_CRAFT_COST.stones || (game.dust||0) < POTION_CRAFT_COST.dust){
       toast('❌ Недостаточно ресурсов! Для крафта нужно: ' + POTION_CRAFT_COST.coins + ' монет, ' + POTION_CRAFT_COST.stones + ' 🪨 камней и ' + POTION_CRAFT_COST.dust + ' ✨ пыли.');
       return;
@@ -4351,6 +4473,7 @@ svg.chr{overflow:visible}
       'Скрафтить «🧪 Зелье восстановления» за ' + POTION_CRAFT_COST.coins + ' монет, ' + POTION_CRAFT_COST.stones + ' 🪨 камней и ' + POTION_CRAFT_COST.dust + ' ✨ Магической пыли?',
       'Скрафтить',
       function(){
+        if((game.coins||0) < POTION_CRAFT_COST.coins || (game.stones||0) < POTION_CRAFT_COST.stones || (game.dust||0) < POTION_CRAFT_COST.dust) return;
         game.coins -= POTION_CRAFT_COST.coins;
         game.stones -= POTION_CRAFT_COST.stones;
         game.dust -= POTION_CRAFT_COST.dust;
@@ -4604,7 +4727,6 @@ svg.chr{overflow:visible}
     var countRoll = r();
     var numPaths = countRoll < 0.25 ? 1 : (countRoll < 0.75 ? 2 : 3);
 
-    // Доступный пул комнат с учётом этажа и лимита на Тайник
     var poolKeys = ['combat', 'elite', 'altar'];
     if(floorIdx >= 1) poolKeys.push('camp'); // Лагерь только со 2-го этажа
     if(floorIdx >= 1 && !cacheUsed) poolKeys.push('cache'); // Тайник только со 2-го этажа и макс 1 за поход
@@ -4615,7 +4737,7 @@ svg.chr{overflow:visible}
       var totalW = 0;
       available.forEach(function(k){ totalW += EXP_ROOM_CATALOG[k].weight; });
       var pickRoll = r() * totalW, acc = 0, pickedKey = available[0];
-      for(var i=0; i<available.length; i++){
+      for(var i = 0; i < available.length; i++){
         acc += EXP_ROOM_CATALOG[available[i]].weight;
         if(pickRoll <= acc){ pickedKey = available[i]; break; }
       }
@@ -4735,7 +4857,6 @@ svg.chr{overflow:visible}
     } else if(picked.type === 'cache'){
       d.cacheUsed = true;
       var rank = d.r || 1;
-      // Золото в тайнике снижено до ~12% от цены входа, чтобы нельзя было абузить в плюс без босса
       var goldGain = Math.max(5, rollReward(dungeonPrice(rank) * 0.12));
       var dustGain = 8 + Math.floor(Math.random() * 11) + rank;
       var dropId = (Math.random() < 0.35) ? rollLoot(rank, true, false) : null;
@@ -4787,10 +4908,10 @@ svg.chr{overflow:visible}
   function rollBossChestLootV20(rank){
     var id = rollLoot(Math.max(3, rank), true, true);
     if(id && ITEMS[id] && (ITEMS[id].r === 'common' || ITEMS[id].r === 'uncommon')){
-      var betterPool = Object.keys(ITEMS).filter(function(k){
-        var it = ITEMS[k];
-        return it.drop && it.cls === game.cls && ['rare','epic','legendary','mythic','divine'].indexOf(it.r) >= 0;
-      });
+      var betterPool = []
+        .concat(LOOT_POOL_BY_RARITY_AND_CLASS['rare:' + game.cls] || [])
+        .concat(LOOT_POOL_BY_RARITY_AND_CLASS['epic:' + game.cls] || [])
+        .concat(LOOT_POOL_BY_RARITY_AND_CLASS['legendary:' + game.cls] || []);
       if(betterPool.length) id = betterPool[Math.floor(Math.random() * betterPool.length)];
     }
     return id;
@@ -4843,7 +4964,7 @@ svg.chr{overflow:visible}
         saveV20Local();
         saveV20ToFirestore();
         updateLockedTabsV20();
-        fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP, +' + bossDust + ' ✨ Магической пыли'
+        fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP' + moreUp + ', +' + bossDust + ' ✨ Магической пыли'
           + (bossItem ? ', предмет «' + ITEMS[bossItem].name + '» (' + RARITY[ITEMS[bossItem].r].name + ')' : '')
           + (gotPotion ? ' и редкое 🧪 ЗЕЛЬЕ ВОССТАНОВЛЕНИЯ!' : '!');
         fightChest = true;
@@ -4928,7 +5049,7 @@ svg.chr{overflow:visible}
     } else {
       var d = v20Data.exp;
       h += '<div class="expFloorBar">';
-      for(var s=0; s<EXP_FLOORS; s++){
+      for(var s = 0; s < EXP_FLOORS; s++){
         var clsStep = s < d.st ? 'expStep done' : (s === d.st ? 'expStep cur' : 'expStep');
         h += '<div class="' + clsStep + '">' + (s === 4 ? '👑 Босс' : 'Этаж ' + (s + 1)) + '</div>';
       }
@@ -5006,7 +5127,7 @@ svg.chr{overflow:visible}
         game.level = 1;
         game.xp = 0;
         v20Data.subcls = sub.id;
-        v20Data.prestige = (Number(v20Data.prestige)||0) + 1;
+        v20Data.prestige = Math.min(50, (Number(v20Data.prestige)||0) + 1);
         v20Data.lucky5 = rollLuckyFiveV20();
         saveV20Local();
         saveV20ToFirestore();
@@ -5021,6 +5142,15 @@ svg.chr{overflow:visible}
   var _origRenderCharBeforeV20 = renderChar;
   renderChar = function(){
     if(game) stripV20FromGameObj(game);
+    // Оптимизация: если вкладка Персонажа скрыта, обновляем только шапку, прогресс и баннер При Смерти,
+    // не перестраивая тяжёлый SVG-аватар и весь DOM инвентаря на каждый прокрут колеса!
+    if(curTab !== 'char' && $('charPane') && $('charPane').hidden){
+      renderProgress();
+      renderCoins();
+      renderNearDeathBannerV20();
+      updateLockedTabsV20();
+      return;
+    }
     _origRenderCharBeforeV20();
     if(!game) return;
 
@@ -5169,13 +5299,14 @@ svg.chr{overflow:visible}
     }
   };
 
-  // --- 10. FIREBASE FIRESTORE: ОНЛАЙН-РЫНОК ИГРОКОВ И ЗЕЛЁНАЯ ТОЧКА ОНЛАЙНА ---
+  // --- 10. FIREBASE FIRESTORE: ЗАЩИЩЁННЫЙ РЫНОК И ОПТИМИЗАЦИЯ КВОТЫ ЧТЕНИЙ ---
   var firestoreDb = null;
   var marketListingsV20 = [];
   var onlinePlayersMapV20 = {};
+  var lastPresenceFetchAtV20 = 0;
   var marketUnsubV20 = null;
-  var presenceUnsubV20 = null;
   var sellerGoldUnsubV20 = null;
+  var claimingMarketGoldBusy = false;
 
   function extractProjectIdV20(){
     if(CFG && CFG.PROJECT_ID) return CFG.PROJECT_ID;
@@ -5201,9 +5332,15 @@ svg.chr{overflow:visible}
     return firestoreDb;
   }
 
+  function stopFirestoreListenersV20(){
+    if(sellerGoldUnsubV20){ try{ sellerGoldUnsubV20(); }catch(e){} sellerGoldUnsubV20 = null; }
+    if(marketUnsubV20){ try{ marketUnsubV20(); }catch(e){} marketUnsubV20 = null; }
+  }
+
   function saveV20ToFirestore(){
     var db = initFirestoreV20();
     if(!db || !sess || !sess.uid || !game) return;
+    sanitizeV20Data();
     db.collection('players').doc(String(sess.uid)).set({
       name: nick || sess.name || 'Игрок',
       level: game.level || 1,
@@ -5214,6 +5351,40 @@ svg.chr{overflow:visible}
       potions: Number(v20Data.potions) || 0,
       lastSeen: Date.now()
     }, {merge: true}).catch(function(){});
+  }
+
+  // Подписка на лоты Рынка запускается ТОЛЬКО когда открыта вкладка «Рынок» (экономит 90% квоты Firestore)
+  function ensureMarketListenerV20(active){
+    var db = initFirestoreV20();
+    if(!db) return;
+    if(!active){
+      if(marketUnsubV20){ try{ marketUnsubV20(); }catch(e){} marketUnsubV20 = null; }
+      return;
+    }
+    if(marketUnsubV20) return;
+    marketUnsubV20 = db.collection('market_listings')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .onSnapshot(function(snap){
+        marketListingsV20 = [];
+        snap.forEach(function(doc){
+          marketListingsV20.push(Object.assign({id: doc.id}, doc.data()));
+        });
+        if(curTab === 'market') renderMarketV20();
+      }, function(){});
+  }
+
+  // Запрос статусов онлайна с кэшем 30 секунд (только при просмотре таблицы Лидеров, без круглосуточного onSnapshot)
+  function refreshOnlinePresenceMapV20(){
+    var db = initFirestoreV20();
+    if(!db || Date.now() - lastPresenceFetchAtV20 < 30000) return Promise.resolve();
+    lastPresenceFetchAtV20 = Date.now();
+    return db.collection('players').limit(100).get().then(function(snap){
+      snap.forEach(function(doc){
+        var data = doc.data() || {};
+        onlinePlayersMapV20[doc.id] = Number(data.lastSeen) || 0;
+      });
+    }).catch(function(){});
   }
 
   function startFirestoreListenersV20(){
@@ -5227,79 +5398,53 @@ svg.chr{overflow:visible}
     sellerGoldUnsubV20 = myRef.onSnapshot(function(doc){
       if(!doc.exists || !game) return;
       var d = doc.data() || {};
-      if(!v20Data.subcls && d.subcls) v20Data.subcls = d.subcls;
-      if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = d.lucky5;
-      if(!v20Data.prestige && d.prestige) v20Data.prestige = Number(d.prestige) || 0;
+      if(!v20Data.subcls && typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
+      if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
+      if(!v20Data.prestige && d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
       if(typeof d.nearDeath === 'boolean' && d.nearDeath) v20Data.nearDeath = true;
-      if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = d.potions;
+      if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = Math.min(10000, Math.floor(d.potions));
       saveV20Local();
 
-      if(d.pendingMarketGold && d.pendingMarketGold > 0){
-        var gain = Math.floor(Number(d.pendingMarketGold) || 0);
-        if(gain > 0){
-          game.coins = (Number(game.coins)||0) + gain;
-          myRef.update({pendingMarketGold: 0}).catch(function(){});
-          saveGame();
-          renderCoins();
-          toast('💰 Ваш лот на Рынке купили! Зачислено +' + gain + ' монет (с учётом комиссии 5%).');
-        }
+      // Атомарная транзакция получения золота за проданный товар (защита от двойного начисления при гонке данных)
+      if(d.pendingMarketGold && d.pendingMarketGold > 0 && !claimingMarketGoldBusy){
+        claimingMarketGoldBusy = true;
+        db.runTransaction(async function(tx){
+          var freshSnap = await tx.get(myRef);
+          if(!freshSnap.exists) return 0;
+          var freshData = freshSnap.data() || {};
+          var pending = Math.floor(Number(freshData.pendingMarketGold) || 0);
+          if(pending <= 0 || pending > 50000000) return 0;
+          tx.update(myRef, {pendingMarketGold: 0});
+          return pending;
+        }).then(function(claimedAmount){
+          if(claimedAmount > 0 && game){
+            game.coins = (Number(game.coins)||0) + claimedAmount;
+            saveGame();
+            renderCoins();
+            toast('💰 Ваш лот на Рынке купили! Зачислено +' + claimedAmount + ' монет (с учётом комиссии 5%).');
+          }
+        }).catch(function(){}).finally(function(){
+          claimingMarketGoldBusy = false;
+        });
       }
     }, function(){});
-
-    if(presenceUnsubV20) presenceUnsubV20();
-    presenceUnsubV20 = db.collection('players').onSnapshot(function(snap){
-      snap.forEach(function(doc){
-        var data = doc.data() || {};
-        onlinePlayersMapV20[doc.id] = Number(data.lastSeen) || 0;
-      });
-      if(curTab === 'board') decorateLeaderboardOnlineDotsV20();
-    }, function(){});
-
-    if(marketUnsubV20) marketUnsubV20();
-    marketUnsubV20 = db.collection('market_listings')
-      .orderBy('createdAt', 'desc')
-      .limit(100)
-      .onSnapshot(function(snap){
-        marketListingsV20 = [];
-        snap.forEach(function(doc){
-          marketListingsV20.push(Object.assign({id: doc.id}, doc.data()));
-        });
-        if(curTab === 'market') renderMarketV20();
-      }, function(){});
   }
 
   setInterval(function(){
     if(sess && sess.uid && game && !document.hidden){
       saveV20ToFirestore();
     }
-  }, 40000);
+  }, 60000);
 
   function isPlayerOnlineV20(playerUid){
     if(sess && String(playerUid) === String(sess.uid)) return true;
     var ts = onlinePlayersMapV20[String(playerUid)] || 0;
-    return (Date.now() - ts) < 120000;
-  }
-
-  function decorateLeaderboardOnlineDotsV20(){
-    var board = $('board');
-    if(!board) return;
-    var rows = board.querySelectorAll('.brow');
-    rows.forEach(function(row){
-      var uidAttr = row.getAttribute('data-uid');
-      var nm = row.querySelector('.bn');
-      if(!nm) return;
-      var oldDot = nm.querySelector('.online-dot');
-      if(oldDot) oldDot.remove();
-      var online = uidAttr ? isPlayerOnlineV20(uidAttr) : row.classList.contains('me');
-      var dot = document.createElement('span');
-      dot.className = 'online-dot ' + (online ? 'is-online' : 'is-offline');
-      dot.title = online ? 'Сейчас онлайн' : 'Не в сети';
-      nm.insertBefore(dot, nm.firstChild);
-    });
+    return (Date.now() - ts) < 150000;
   }
 
   loadBoard = function(){
     var box = $('board');
+    refreshOnlinePresenceMapV20();
     token().then(function(t){
       return fetch(DB_URL + '/users.json?orderBy=%22game%2F' + boardMode + '%22&limitToLast=20&auth=' + encodeURIComponent(t));
     }).then(function(r){ return r.json(); }).then(function(obj){
@@ -5363,11 +5508,11 @@ svg.chr{overflow:visible}
     }).catch(function(){});
   };
 
-  // --- ЛОГИКА ОНЛАЙН-РЫНКА (СТРОГО В ОТДЕЛЬНОЙ ВКЛАДКЕ РЫНОК) ---
+  // --- ЛОГИКА ОНЛАЙН-РЫНКА (С ЗАЩИТОЙ ОТ XSS И ДАБЛ-КЛИК ДЮПОВ) ---
   var selectedMarketInvIdx = 0;
 
   async function listGearOnMarketV20(invIdx, priceCoins){
-    if(!canUseTownServicesV20() || !canSell()) return;
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
     var db = initFirestoreV20();
     if(!db){ toast('Ошибка: Firestore не подключён.'); return; }
     var price = Math.floor(Number(priceCoins) || 0);
@@ -5405,13 +5550,14 @@ svg.chr{overflow:visible}
       enchantCode: enchCode
     };
 
+    marketBusyV20 = true;
     filterInventory(game, function(id, i){ return i !== invIdx; });
     saveGame(); renderChar(); renderInv(); renderMarketV20();
 
     try{
       await db.collection('market_listings').add({
         sellerId: String(sess.uid),
-        sellerName: nick || sess.name || 'Игрок',
+        sellerName: String(nick || sess.name || 'Игрок').slice(0, 20),
         price: price,
         isPotion: false,
         item: itemPayload,
@@ -5423,13 +5569,16 @@ svg.chr{overflow:visible}
       game.inv.push(itemId);
       if(enhLv > 0) game.enhance[newIdx] = enhLv;
       if(enchCode) game.enchants[newIdx] = enchCode;
-      saveGame(); renderChar(); renderMarketV20();
+      saveGame(); renderChar();
       toast('❌ Не удалось выставить лот на Рынок. Проверьте правила Firestore (Rules).');
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
     }
   }
 
   async function listPotionOnMarketV20(priceCoins){
-    if(!canUseTownServicesV20() || !canSell()) return;
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
     var db = initFirestoreV20();
     if(!db){ toast('Ошибка: Firestore не подключён.'); return; }
     if((v20Data.potions || 0) <= 0){
@@ -5441,6 +5590,7 @@ svg.chr{overflow:visible}
       toast('Укажите корректную цену больше 0 монет!');
       return;
     }
+    marketBusyV20 = true;
     v20Data.potions -= 1;
     saveV20Local();
     saveV20ToFirestore();
@@ -5449,7 +5599,7 @@ svg.chr{overflow:visible}
     try{
       await db.collection('market_listings').add({
         sellerId: String(sess.uid),
-        sellerName: nick || sess.name || 'Игрок',
+        sellerName: String(nick || sess.name || 'Игрок').slice(0, 20),
         price: price,
         isPotion: true,
         item: {id:'recovery_potion', name:'🧪 Зелье восстановления', r:'epic'},
@@ -5459,23 +5609,30 @@ svg.chr{overflow:visible}
     }catch(e){
       v20Data.potions += 1;
       saveV20Local();
-      renderCoins(); renderMarketV20();
+      renderCoins();
       toast('❌ Ошибка сети при выставлении зелья на Рынок.');
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
     }
   }
 
   async function buyOrCancelMarketLotV20(lotId){
-    if(!canUseTownServicesV20() || !canSell()) return;
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
     var db = initFirestoreV20();
     if(!db) return;
     var lot = marketListingsV20.find(function(x){ return x.id === lotId; });
     if(!lot){ toast('Этот лот уже куплен или снят с продажи.'); return; }
+    var lotPrice = Math.floor(Number(lot.price) || 0);
+    if(lotPrice <= 0 || lotPrice > 10000000){ toast('Некорректная цена лота.'); return; }
     var isMine = sess && String(lot.sellerId) === String(sess.uid);
-    if(!isMine && (game.coins || 0) < lot.price){
+    if(!isMine && (game.coins || 0) < lotPrice){
       toast('🪙 Не хватает монет для покупки этого лота!');
       return;
     }
 
+    marketBusyV20 = true;
+    renderMarketV20();
     var ref = db.collection('market_listings').doc(lotId);
     try{
       await db.runTransaction(async function(tx){
@@ -5485,7 +5642,7 @@ svg.chr{overflow:visible}
       });
 
       if(!isMine){
-        game.coins -= lot.price;
+        game.coins -= lotPrice;
       }
 
       if(lot.isPotion){
@@ -5495,36 +5652,41 @@ svg.chr{overflow:visible}
       } else if(lot.item && lot.item.id && ITEMS[lot.item.id]){
         var idx = game.inv.length;
         game.inv.push(lot.item.id);
-        if(lot.item.enhanceLv > 0){
+        var safeLv = Math.max(0, Math.min(10, Math.floor(Number(lot.item.enhanceLv) || 0)));
+        if(safeLv > 0){
           if(!game.enhance) game.enhance = {};
-          game.enhance[idx] = Number(lot.item.enhanceLv);
+          game.enhance[idx] = safeLv;
         }
-        if(lot.item.enchantCode){
+        if(lot.item.enchantCode && parseEnchant(String(lot.item.enchantCode))){
           if(!game.enchants) game.enchants = {};
           game.enchants[idx] = String(lot.item.enchantCode);
         }
       }
 
       if(!isMine){
-        var payout = Math.max(1, Math.floor(lot.price * 0.95));
+        var payout = Math.max(1, Math.floor(lotPrice * 0.95));
         await db.collection('players').doc(String(lot.sellerId)).set({
           pendingMarketGold: firebase.firestore.FieldValue.increment(payout)
         }, {merge: true});
-        toast('🎉 Вы купили «' + (lot.item ? lot.item.name : 'Лот') + '» за ' + lot.price + ' монет!');
+        var boughtName = lot.isPotion ? '🧪 Зелье восстановления' : (lot.item && ITEMS[lot.item.id] ? ITEMS[lot.item.id].name : 'Предмет');
+        toast('🎉 Вы купили «' + boughtName + '» за ' + lotPrice + ' монет!');
       } else {
         toast('📦 Вы сняли свой лот с продажи, предмет возвращён в инвентарь.');
       }
 
-      saveGame(); renderCoins(); renderChar(); renderInv(); renderMarketV20();
+      saveGame(); renderCoins(); renderChar(); renderInv();
     }catch(e){
       toast('⚠️ ' + (e && e.message ? e.message : 'Не удалось завершить сделку.'));
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
     }
   }
 
   function renderMarketV20(){
     var box = $('marketBody');
     if(!box || !game) return;
-    var blocked = !canUseTownServicesV20() || !canSell();
+    var blocked = marketBusyV20 || isInActiveCombatV20() || isInExpeditionV20() || !canSell();
 
     var sellableIndices = [];
     (game.inv || []).forEach(function(id, i){
@@ -5547,8 +5709,8 @@ svg.chr{overflow:visible}
       sellableIndices.forEach(function(i){
         var ench = (game.enchants && game.enchants[i]) ? parseEnchant(game.enchants[i]) : null;
         h += '<option value="' + i + '"' + (i === selectedMarketInvIdx ? ' selected' : '') + '>'
-          + copyName(game, i) + ' (' + RARITY[ITEMS[game.inv[i]].r].name + ')'
-          + (ench ? ' · ✨ ' + ench.name + ' +' + ench.val + ench.unit : '')
+          + escapeHtmlV20(copyName(game, i)) + ' (' + RARITY[ITEMS[game.inv[i]].r].name + ')'
+          + (ench ? ' · ✨ ' + escapeHtmlV20(ench.name) + ' +' + ench.val + escapeHtmlV20(ench.unit) : '')
           + '</option>';
       });
       h += '</select>'
@@ -5576,11 +5738,13 @@ svg.chr{overflow:visible}
         var isMine = sess && String(lot.sellerId) === String(sess.uid);
         var itObj = lot.item || {};
         var baseIt = (!lot.isPotion && itObj.id && ITEMS[itObj.id]) ? ITEMS[itObj.id] : null;
-        var rarKey = baseIt ? baseIt.r : (itObj.r || 'epic');
+        if(!lot.isPotion && !baseIt) return; // Игнорируем повреждённые/поддельные лоты
+        var rarKey = baseIt ? baseIt.r : 'epic';
         var rarInfo = RARITY[rarKey] || RARITY.common;
-        var lv = Number(itObj.enhanceLv) || 0;
-        var ench = itObj.enchantCode ? parseEnchant(itObj.enchantCode) : null;
+        var lv = Math.max(0, Math.min(10, Math.floor(Number(itObj.enhanceLv) || 0)));
+        var ench = itObj.enchantCode ? parseEnchant(String(itObj.enchantCode)) : null;
         var stLine = '';
+        var safeTitle = lot.isPotion ? '🧪 Зелье восстановления' : baseIt.name;
         if(lot.isPotion){
           stLine = 'Снимает статус «При смерти» (1 HP)';
         } else if(baseIt){
@@ -5591,20 +5755,21 @@ svg.chr{overflow:visible}
           if(baseIt.cls && CLASSES[baseIt.cls]) parts.push(CLASSES[baseIt.cls].name);
           stLine = parts.join(' · ');
         }
+        var safePrice = Math.max(1, Math.floor(Number(lot.price) || 1));
 
         h += '<div class="market-card" style="border-color:' + rarInfo.color + '">'
           + '<div>'
           + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
-          + '<strong>' + (itObj.name || 'Предмет') + (lv ? ' +' + lv : '') + '</strong>'
+          + '<strong>' + escapeHtmlV20(safeTitle) + (lv ? ' +' + lv : '') + '</strong>'
           + rarPill(rarKey)
           + '</div>'
-          + '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + stLine + '</div>'
-          + (ench ? '<div style="margin-top:4px"><span class="affixBadge" style="background:' + ench.rar.color + '">✨ ' + ench.name + ' +' + ench.val + ench.unit + '</span></div>' : '')
-          + '<div style="font-size:11px;color:var(--muted);margin-top:6px">Продавец: <b>' + (lot.sellerName || 'Игрок') + '</b></div>'
+          + '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + escapeHtmlV20(stLine) + '</div>'
+          + (ench ? '<div style="margin-top:4px"><span class="affixBadge" style="background:' + ench.rar.color + '">✨ ' + escapeHtmlV20(ench.name) + ' +' + ench.val + escapeHtmlV20(ench.unit) + '</span></div>' : '')
+          + '<div style="font-size:11px;color:var(--muted);margin-top:6px">Продавец: <b>' + escapeHtmlV20(String(lot.sellerName || 'Игрок').slice(0, 20)) + '</b></div>'
           + '</div>'
           + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">'
-          + '<span class="price">' + coinSvg() + lot.price + '</span>'
-          + '<button type="button" data-market-buy="' + lot.id + '" style="padding:6px 14px;font-size:13px"' + (blocked || (!isMine && (game.coins||0) < lot.price) ? ' disabled' : '') + '>'
+          + '<span class="price">' + coinSvg() + safePrice + '</span>'
+          + '<button type="button" data-market-buy="' + escapeHtmlV20(lot.id) + '" style="padding:6px 14px;font-size:13px"' + (blocked || (!isMine && (game.coins||0) < safePrice) ? ' disabled' : '') + '>'
           + (isMine ? 'Снять' : 'Купить')
           + '</button>'
           + '</div></div>';
@@ -5640,7 +5805,7 @@ svg.chr{overflow:visible}
     return _origSaveGameV19();
   };
 
-  // --- 12. ОБНОВЛЕНИЕ ШАПКИ И ЖЁСТКАЯ ИЗОЛЯЦИЯ ВКЛАДКИ РЫНКА ---
+  // --- 12. ОБНОВЛЕНИЕ ШАПКИ, ВЫХОДА ИЗ АККАУНТА И ЖЁСТКАЯ ИЗОЛЯЦИЯ ВКЛАДКИ РЫНКА ---
   var _cachedPotionsV20 = -1;
   var _origRenderCoinsBeforeV20 = renderCoins;
   renderCoins = function(){
@@ -5678,6 +5843,7 @@ svg.chr{overflow:visible}
     }
     if($('tabMarket')) $('tabMarket').className = 'tab' + (which === 'market' ? ' on' : '');
     updateLockedTabsV20();
+    ensureMarketListenerV20(which === 'market');
     if(which === 'market') renderMarketV20();
   };
 
@@ -5687,6 +5853,20 @@ svg.chr{overflow:visible}
   if($('marketPane')){
     $('marketPane').hidden = true;
     $('marketPane').style.display = 'none';
+  }
+
+  // Перехват кнопки выхода для полной очистки состояния V20 и отписки от Firestore
+  var logoutBtnEl = $('logout');
+  if(logoutBtnEl){
+    logoutBtnEl.addEventListener('click', function(){
+      if(merchantBusy) return;
+      stopFirestoreListenersV20();
+      resetV20Data();
+      _cachedPotionsV20 = -1;
+      if($('potionBox')) $('potionBox').hidden = true;
+      var banner = $('v20NearDeathBanner');
+      if(banner) banner.remove();
+    });
   }
 
   var _origStartBeforeV20 = start;
@@ -5702,9 +5882,6 @@ svg.chr{overflow:visible}
     }, 600);
   };
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 20 ================== */
-
-
-  
 
 
   restore();
