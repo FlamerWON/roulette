@@ -403,6 +403,7 @@ svg.chr{overflow:visible}
 
 
 
+
 /* === UPDATE 20 STYLES === */
 .v20TopBarWrap{
   position:fixed;
@@ -527,7 +528,10 @@ svg.chr{overflow:visible}
   transition:border-color .2s;
 }
 .expPathCard:hover{border-color:var(--gold)}
-.expPathCard.elite{border-color:#9b5de5}
+.expPathCard.elite{border-color:#2a6fd6}
+.expPathCard.camp{border-color:#2f8f4e}
+.expPathCard.altar{border-color:#7e3fc4}
+.expPathCard.cache{border-color:#b8610a}
 .expPathCard.boss{border-color:#ef4444;background:rgba(239,68,68,.08)}
 .expFloorBar{
   display:flex;
@@ -585,6 +589,7 @@ svg.chr{overflow:visible}
   font-size:13px;
   box-shadow:0 2px 5px rgba(0,0,0,.2);
 }
+
 </style>
 
 </head>
@@ -4046,18 +4051,63 @@ svg.chr{overflow:visible}
   APP_V = 20;
   RELEASE_ID = 20;
   RELEASE_NOTES.unshift({
-    title: 'Версия 20 · 5-этажные Экспедиции, Рынок Firestore, Эволюция классов и «При смерти»',
+    title: 'Версия 20 · 5-этажные Экспедиции, 6 Новых Боссов, Алтарь, Рынок Firestore и Престиж',
     lines: [
-      'Новая система данжей «Экспедиция» (5 этажей): 4 этажа с развилками на выбор (Обычный бой только на золото и опыт, Элитный Страж, Тайник с пылью и сокровищами, Лагерь/Алтарь) и 5-й этаж с Финальным Боссом и гарантированным сундуком снаряжения!',
-      'Ограничения честного боя: во время любого боя и внутри Экспедиции нельзя менять броню и оружие (единственное исключение — комната «Лагерь»), а также заблокированы Рынок, Кузница, Чаровальня и Скупщик.',
-      'Кнопка «Покинуть экспедицию»: в любой момент вне боя можно отступить в город, сохранив всё нафармленное золото, опыт и добычу (теряется только стоимость входа и сундук Босса).',
-      'Статус «При смерти» (1 HP) и Зелье восстановления 🧪: гибель в Экспедиции накладывает перманентный недуг, фиксирующий здоровье на 1 HP во всех боях. Снимается только редким Зельем восстановления (шанс выбить с Босса Экспедиции, дорогой крафт в Кузнице или покупка на Рынке).',
-      'Эволюция классов (Престиж на 100-м уровне) и «Счастливая пятёрка»: на 100-м уровне можно сбросить уровень до 1-го, получить постоянный бонус статов, выбрать одну из 3 элитных специализаций (Ведьмак/Берсерк/Паладин, Леголас/Снайпер/Траппер, Архимаг/Некромант/Хрономаг) и получить 5 счастливых чисел (2–36), активирующих ультимативный удар!',
-      'Онлайн-рынок игроков на Firebase Firestore: выставляйте снаряжение (с сохранением заточки и чар!) и Зелья восстановления на аукцион за золото в реальном времени.',
-      'Ребаланс зачарований: Шанс крита 4–10% (кап 25%), Вампиризм 4–10% (кап 30%), Шипы теперь возвращают 10–25% от урона монстра (кап 50%), Бонус монет 6–15%, Рвение шахты 4–10%.',
-      'Улучшения интерфейса: все ресурсы (монеты, пыль ✨, камни 🪨, зелья 🧪) и кнопка «Что нового» выстроены в одну строчку, а в таблице лидеров появились зелёные точки онлайн-статуса игроков!'
+      'Новая система «Экспедиция» (5 этажей): на этажах 1–4 генерируется от 1 до 3 путей (25% — 1 путь, 50% — 2 пути, 25% — 3 пути). Каждая комната имеет свою редкость: Столкновение (Обычная, 52%), Элитный Страж (Необычная, 22%), Лагерь (Редкая, 12%), Алтарь Древних (Эпическая, 9%) и Тайник (Легендарная, 5% — не более 1 за поход со 2-го этажа)!',
+      'Лагерь и Алтарь разделены: в Лагере ты отдыхаешь (+45% HP) и можешь сменить экипировку, а на Алтаре Древних выбираешь между Благословением Мощи (+15% урона) и Кровавой Жертвой (-20% HP ради +25% урона и +10% крита до конца похода)!',
+      '6 новых уникальных Боссов Экспедиции на 5-м этаже: Король Личей Мал\'Ганис, Архидракон Пиромант, Арахна Мать Роя, Механический Колосс, Кровавый Граф Носферату и Вестник Пустоты Ксалатат!',
+      'Статус «При смерти» (1 HP) и Зелье восстановления 🧪: гибель в Экспедиции фиксирует здоровье на 1 HP во всех боях до приёма редкого Зелья восстановления (дроп с Босса Экспедиции, крафт в Кузнице или покупка на Рынке).',
+      'Эволюция классов (Престиж на 100-м уровне) и «Счастливая пятёрка»: выбор из 3 элитных подклассов и 5 счастливых чисел (2–36) для ультимативных ударов.',
+      'Онлайн-рынок игроков на Firebase Firestore (в отдельной вкладке «Рынок»), зелёные точки онлайна в Лидерах и единая панель ресурсов в одну строчку!'
     ]
   });
+
+  // Все данные V20 хранятся в изолированном объекте v20Data, чтобы не нарушать
+  // строгую проверку canonicalGame() у Шахтёра/Кузницы/Скупщика и правила RTDB!
+  var v20Data = {
+    subcls: '',
+    lucky5: [],
+    prestige: 0,
+    nearDeath: false,
+    potions: 0,
+    exp: null
+  };
+
+  function v20StorageKey(){
+    return 'roulette_v20_clean_' + (sess && sess.uid ? sess.uid : 'guest');
+  }
+
+  function loadV20Local(){
+    try{
+      var raw = localStorage.getItem(v20StorageKey());
+      if(raw){
+        var parsed = JSON.parse(raw);
+        v20Data.subcls = typeof parsed.subcls === 'string' ? parsed.subcls : '';
+        v20Data.lucky5 = Array.isArray(parsed.lucky5) ? parsed.lucky5 : [];
+        v20Data.prestige = Number(parsed.prestige) || 0;
+        v20Data.nearDeath = Boolean(parsed.nearDeath);
+        v20Data.potions = Math.max(0, Number(parsed.potions) || 0);
+        v20Data.exp = (parsed.exp && parsed.exp.on) ? parsed.exp : null;
+      }
+    }catch(e){}
+  }
+
+  function saveV20Local(){
+    try{
+      localStorage.setItem(v20StorageKey(), JSON.stringify(v20Data));
+    }catch(e){}
+  }
+
+  function stripV20FromGameObj(g){
+    if(!g) return;
+    if(g.subcls !== undefined){ if(!v20Data.subcls) v20Data.subcls = g.subcls; delete g.subcls; }
+    if(g.lucky5 !== undefined){ if(!v20Data.lucky5.length && Array.isArray(g.lucky5)) v20Data.lucky5 = g.lucky5; delete g.lucky5; }
+    if(g.prestige !== undefined){ if(!v20Data.prestige) v20Data.prestige = Number(g.prestige)||0; delete g.prestige; }
+    if(g.nearDeath !== undefined){ if(!v20Data.nearDeath) v20Data.nearDeath = Boolean(g.nearDeath); delete g.nearDeath; }
+    if(g.potions !== undefined){ if(!v20Data.potions) v20Data.potions = Number(g.potions)||0; delete g.potions; }
+    if(g.fight && g.fight.trapped !== undefined) delete g.fight.trapped;
+    if(g.dg) delete g.dg;
+  }
 
   // --- 1. ЕДИНАЯ СТРОКА РЕСУРСОВ НА УРОВНЕ КНОПКИ «ЧТО НОВОГО» ---
   function setupUnifiedTopBarV20(){
@@ -4136,56 +4186,7 @@ svg.chr{overflow:visible}
     return res;
   }
 
-  // Хранение и синхронизация расширенных полей V20 (чтобы даже при старых правилах RTDB ничего не сбоило)
-  function v20StorageKey(){
-    return 'roulette_v20_' + (sess && sess.uid ? sess.uid : 'guest');
-  }
-
-  function syncV20FromGame(g){
-    if(!g) return;
-    var saved = {};
-    try{ saved = JSON.parse(localStorage.getItem(v20StorageKey()) || '{}') || {}; }catch(e){}
-    if(typeof g.subcls !== 'string') g.subcls = saved.subcls || '';
-    if(!Array.isArray(g.lucky5)) g.lucky5 = Array.isArray(saved.lucky5) ? saved.lucky5 : [];
-    if(!Number.isInteger(g.prestige) || g.prestige < 0) g.prestige = Number(saved.prestige) || 0;
-    if(typeof g.nearDeath !== 'boolean') g.nearDeath = Boolean(saved.nearDeath);
-    if(!Number.isInteger(g.potions) || g.potions < 0) g.potions = Number(saved.potions) || 0;
-    if(saved.expState && saved.expState.on && (!g.dg || !g.dg.on)){
-      g.dg = saved.expState;
-    }
-    persistV20Local(g);
-  }
-
-  function persistV20Local(g){
-    if(!g) return;
-    try{
-      localStorage.setItem(v20StorageKey(), JSON.stringify({
-        subcls: g.subcls || '',
-        lucky5: Array.isArray(g.lucky5) ? g.lucky5 : [],
-        prestige: Number(g.prestige) || 0,
-        nearDeath: Boolean(g.nearDeath),
-        potions: Number(g.potions) || 0,
-        expState: (g.dg && g.dg.on) ? g.dg : null
-      }));
-    }catch(e){}
-  }
-
-  // Расширяем ранги сложности до 20 для эволюционировавших героев
-  RANK_NAMES = ['Поход','Охота','Ветеран','Герой','Легенда','Кошмар','Кошмар 2','Кошмар 3','Кошмар 4','Кошмар 5','Кошмар 6','Кошмар 7','Кошмар 8','Кошмар 9','Кошмар 10','Миф','Титан','Полубог','Вечность','Абсолют'];
-  var _origMaxRankV20 = maxRank;
-  maxRank = function(source){
-    var g = source || game;
-    if(!g) return 1;
-    var baseMax = _origMaxRankV20(g);
-    if(g.prestige && g.prestige > 0){
-      var st = stats(g), power = st.hp * st.atk;
-      var extra = Math.min(20, Math.max(baseMax, 10 + Math.floor(g.level / 10) + (power >= 120000 ? 3 : 0)));
-      return Math.max(extra, Math.min(20, Math.floor(Number(g.unlockedRank)||1)));
-    }
-    return baseMax;
-  };
-
-  // --- 4. ПЕРЕСЧЁТ СТАТОВ И АФФИКСОВ С УЧЁТОМ ЭВОЛЮЦИИ И РЕБАЛАНСА V20 ---
+  // --- 4. ПЕРЕСЧЁТ СТАТОВ И АФФИКСОВ С УЧЁТОМ ЭВОЛЮЦИИ, АЛТАРЯ И РЕБАЛАНСА V20 ---
   getEquippedEnchants = function(g){
     var target = g || game;
     var res = {crit:0, vamp:0, gold:0, thorns:0, haste:0};
@@ -4197,7 +4198,7 @@ svg.chr{overflow:visible}
         if(e && res[e.id] !== undefined) res[e.id] += e.val;
       }
     });
-    var sub = findSubclassV20(target.subcls);
+    var sub = (target === game) ? findSubclassV20(v20Data.subcls) : null;
     if(sub && sub.enchMult){
       res.crit = Math.round(res.crit * sub.enchMult);
       res.vamp = Math.round(res.vamp * sub.enchMult);
@@ -4205,14 +4206,12 @@ svg.chr{overflow:visible}
       res.gold = Math.round(res.gold * sub.enchMult);
       res.haste = Math.round(res.haste * sub.enchMult);
     }
-    // Капы таблицы зачарований V20
     res.crit = Math.min(25, res.crit);
     res.vamp = Math.min(30, res.vamp);
     res.thorns = Math.min(50, res.thorns);
     res.gold = Math.min(40, res.gold);
     res.haste = Math.min(25, res.haste);
 
-    // Пассивки рас и подклассов
     var r = target.race || 'human';
     if(r === 'elf'){
       res.crit = Math.min(35, Math.round(res.crit * 1.2));
@@ -4231,6 +4230,9 @@ svg.chr{overflow:visible}
       if(sub.thornsBonus) res.thorns = Math.min(65, res.thorns + sub.thornsBonus);
       if(sub.goldBonus) res.gold = Math.min(60, res.gold + sub.goldBonus);
     }
+    if(target === game && v20Data.exp && v20Data.exp.on && v20Data.exp.altarCritBonus){
+      res.crit = Math.min(55, res.crit + v20Data.exp.altarCritBonus);
+    }
     return res;
   };
 
@@ -4238,33 +4240,37 @@ svg.chr{overflow:visible}
   stats = function(source){
     var st = _origStatsBeforeV20(source);
     var g = source || game;
-    if(!g) return st;
-    var prest = Number(g.prestige) || 0;
+    if(!g || g !== game) return st;
+    var prest = Number(v20Data.prestige) || 0;
     if(prest > 0){
       st.hp += prest * 80;
       st.atk += prest * 18;
     }
-    var sub = findSubclassV20(g.subcls);
+    var sub = findSubclassV20(v20Data.subcls);
     if(sub){
       if(sub.hpPct) st.hp = Math.round(st.hp * (1 + sub.hpPct / 100));
       if(sub.atkPct) st.atk = Math.round(st.atk * (1 + sub.atkPct / 100));
     }
-    if(g.dg && g.dg.on && g.dg.campAtkBonus){
-      st.atk = Math.round(st.atk * (1 + g.dg.campAtkBonus / 100));
+    if(v20Data.exp && v20Data.exp.on && v20Data.exp.altarAtkBonus){
+      st.atk = Math.round(st.atk * (1 + v20Data.exp.altarAtkBonus / 100));
     }
     return st;
   };
 
   // --- 5. ОГРАНИЧЕНИЯ ВО ВРЕМЯ БОЯ И ЭКСПЕДИЦИИ ---
+  dgOn = function(){
+    return !!(v20Data.exp && v20Data.exp.on);
+  };
+
   function isInActiveCombatV20(){
     if(!game) return false;
     if(game.fight && game.fight.on) return true;
-    if(game.dg && game.dg.on && game.dg.inCombat) return true;
+    if(v20Data.exp && v20Data.exp.on && v20Data.exp.inCombat) return true;
     return false;
   }
 
   function isInExpeditionV20(){
-    return !!(game && game.dg && game.dg.on);
+    return !!(v20Data.exp && v20Data.exp.on);
   }
 
   function canChangeGearV20(){
@@ -4272,7 +4278,7 @@ svg.chr{overflow:visible}
       toast('⚔️ Во время боя менять броню и оружие строго запрещено!');
       return false;
     }
-    if(isInExpeditionV20() && !game.dg.inCamp){
+    if(isInExpeditionV20() && !v20Data.exp.inCamp){
       toast('🏕️ В Экспедиции менять снаряжение можно только в комнате «Лагерь»!');
       return false;
     }
@@ -4304,7 +4310,7 @@ svg.chr{overflow:visible}
   var POTION_CRAFT_COST = {coins: 2500, stones: 15, dust: 50};
 
   function enforceNearDeathOnFightV20(fObj){
-    if(game && game.nearDeath && fObj){
+    if(v20Data.nearDeath && fObj){
       fObj.p = 1;
       fObj.ph = 1;
     }
@@ -4316,19 +4322,18 @@ svg.chr{overflow:visible}
       toast('🚫 Нельзя использовать Зелье восстановления во время боя или внутри Экспедиции!');
       return;
     }
-    if(!game.nearDeath){
-      toast('✨ У вас нет статуса «При смерти» (в инвентаре зелий: ' + (game.potions||0) + ' 🧪).');
+    if(!v20Data.nearDeath){
+      toast('✨ У вас нет статуса «При смерти» (в запасе зелий: ' + (v20Data.potions||0) + ' 🧪).');
       return;
     }
-    if((game.potions || 0) <= 0){
+    if((v20Data.potions || 0) <= 0){
       toast('🧪 У вас нет Зелья восстановления! Скрафтите его в Кузнице, купите на Рынке или выбейте из Босса Экспедиции.');
       return;
     }
-    game.potions = Math.max(0, (game.potions || 0) - 1);
-    game.nearDeath = false;
-    persistV20Local(game);
+    v20Data.potions = Math.max(0, (v20Data.potions || 0) - 1);
+    v20Data.nearDeath = false;
+    saveV20Local();
     saveV20ToFirestore();
-    saveGame();
     renderNearDeathBannerV20();
     renderCoins();
     renderChar();
@@ -4349,8 +4354,8 @@ svg.chr{overflow:visible}
         game.coins -= POTION_CRAFT_COST.coins;
         game.stones -= POTION_CRAFT_COST.stones;
         game.dust -= POTION_CRAFT_COST.dust;
-        game.potions = (Number(game.potions)||0) + 1;
-        persistV20Local(game);
+        v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        saveV20Local();
         saveV20ToFirestore();
         saveGame();
         renderCoins();
@@ -4363,7 +4368,7 @@ svg.chr{overflow:visible}
 
   function renderNearDeathBannerV20(){
     var existing = $('v20NearDeathBanner');
-    if(!game || !game.nearDeath || $('app').hidden){
+    if(!game || !v20Data.nearDeath || $('app').hidden){
       if(existing) existing.remove();
       return;
     }
@@ -4380,22 +4385,66 @@ svg.chr{overflow:visible}
         rightCol.insertBefore(existing, rightCol.firstChild);
       }
     }
-    var pots = Number(game.potions) || 0;
+    var pots = Number(v20Data.potions) || 0;
     existing.innerHTML = '<span>🩸 Статус «При смерти»: ваше здоровье во всех боях равно 1 HP!</span>'
       + '<button type="button" id="btnDrinkPotionBanner">🧪 Исцелиться (' + pots + ' шт.)</button>';
     var btn = $('btnDrinkPotionBanner');
     if(btn) btn.onclick = useRecoveryPotionV20;
   }
 
-  // --- 7. БОЁВКА V20: ПРОЦЕНТНЫЕ ШИПЫ, 1 HP ПРИ СМЕРТИ И «СЧАСТЛИВАЯ ПЯТЁРКА» ---
+  // --- 7. 6 НОВЫХ ОТДЕЛЬНЫХ БОССОВ ДЛЯ 5-ГО ЭТАЖА ЭКСПЕДИЦИИ + ИХ ИКОНКИ ---
+  var EXP_BOSSES_V20 = [
+    {id:'boss_malganis', name:'Король Личей Мал\'Ганис', hp:105, dmg:13, rule:'чётное число или число от 25 до 36', hit:function(n){return n>0&&(n%2===0||n>=25);}},
+    {id:'boss_pyrodragon', name:'Архидракон Пиромант', hp:120, dmg:12, rule:'красное число или кратное 5', hit:function(n){return n>0&&(color(n)==='red'||n%5===0);}},
+    {id:'boss_arachna', name:'Арахна, Мать Роя', hp:98, dmg:13, rule:'число от 1 до 18', hit:function(n){return n>=1&&n<=18;}},
+    {id:'boss_colossus', name:'Механический Колосс Древних', hp:130, dmg:11, rule:'нечётное число (кроме 1)', hit:function(n){return n>1&&n%2===1;}},
+    {id:'boss_nosferatu', name:'Кровавый Граф Носферату', hp:100, dmg:12, rule:'чёрное число (при промахе лечит себя)', hit:function(n){return n>0&&color(n)==='black';}},
+    {id:'boss_xalatah', name:'Вестник Пустоты Ксалатат', hp:110, dmg:13, rule:'число от 10 до 28', hit:function(n){return n>=10&&n<=28;}}
+  ];
+
+  var _origMonsterSvgV20 = monsterSvg;
+  monsterSvg = function(id){
+    var o = OUT, i = INK;
+    if(id === 'boss_malganis'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#1e1b4b"/><path d="M16 88 L22 30 L50 18 L78 30 L84 88Z" fill="#312e81" '+o+'/><path d="M26 28 L32 8 L42 22 L50 4 L58 22 L68 8 L74 28Z" fill="#38bdf8" '+o+'/><ellipse cx="50" cy="54" rx="20" ry="22" fill="#e0f2fe" '+o+'/><circle cx="41" cy="50" r="5" fill="#0284c7"/><circle cx="59" cy="50" r="5" fill="#0284c7"/><circle cx="41" cy="50" r="2" fill="#fff"/><circle cx="59" cy="50" r="2" fill="#fff"/><path d="M38 68 H62 M43 65 V71 M50 65 V71 M57 65 V71" stroke="'+i+'" stroke-width="2.4"/></svg>';
+    }
+    if(id === 'boss_pyrodragon'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#450a0a"/><path d="M22 38 L8 10 L36 26Z M78 38 L92 10 L64 26Z" fill="#f59e0b" '+o+'/><ellipse cx="50" cy="56" rx="28" ry="25" fill="#dc2626" '+o+'/><ellipse cx="50" cy="66" rx="18" ry="12" fill="#f97316" '+o+'/><circle cx="38" cy="46" r="5" fill="#fef08a" stroke="'+i+'" stroke-width="1.8"/><circle cx="62" cy="46" r="5" fill="#fef08a" stroke="'+i+'" stroke-width="1.8"/><path d="M36 70 L41 62 L46 71 M54 71 L59 62 L64 70" fill="#fff" stroke="'+i+'" stroke-width="1.6"/></svg>';
+    }
+    if(id === 'boss_arachna'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#2e1065"/><path d="M26 48 L4 28 M24 58 L4 58 M26 68 L8 86 M74 48 L96 28 M76 58 L96 58 M74 68 L92 86" stroke="#a855f7" stroke-width="4" stroke-linecap="round"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="#3b0764" '+o+'/><circle cx="38" cy="44" r="3.5" fill="#ef4444"/><circle cx="62" cy="44" r="3.5" fill="#ef4444"/><circle cx="44" cy="52" r="4.5" fill="#ef4444"/><circle cx="56" cy="52" r="4.5" fill="#ef4444"/><path d="M40 66 L45 78 L50 66 M50 66 L55 78 L60 66" fill="#e9d5ff" '+o+'/></svg>';
+    }
+    if(id === 'boss_colossus'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#1e293b"/><polygon points="22,20 78,20 88,50 76,86 24,86 12,50" fill="#94a3b8" '+o+'/><rect x="28" y="42" width="44" height="10" rx="3" fill="#0f172a"/><circle cx="50" cy="47" r="5" fill="#f59e0b"/><path d="M32 68 H68 M40 64 V72 M50 64 V72 M60 64 V72" stroke="#0f172a" stroke-width="3"/></svg>';
+    }
+    if(id === 'boss_nosferatu'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#31102f"/><path d="M12 88 L20 26 L50 38 L80 26 L88 88Z" fill="#881337" '+o+'/><path d="M22 46 L10 34 L24 58Z M78 46 L90 34 L76 58Z" fill="#f1f5f9" '+o+'/><ellipse cx="50" cy="52" rx="22" ry="24" fill="#f1f5f9" '+o+'/><circle cx="40" cy="48" r="4.5" fill="#e11d48"/><circle cx="60" cy="48" r="4.5" fill="#e11d48"/><path d="M40 64 L44 74 L48 64 M52 64 L56 74 L60 64" fill="#fff" stroke="'+i+'" stroke-width="1.6"/></svg>';
+    }
+    if(id === 'boss_xalatah'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#090d16"/><circle cx="50" cy="50" r="36" fill="#4c1d95" opacity="0.5"/><polygon points="50,10 78,34 68,84 32,84 22,34" fill="#581c87" '+o+'/><circle cx="50" cy="48" r="12" fill="#fde047" '+o+'/><ellipse cx="50" cy="48" rx="4" ry="10" fill="#090d16"/><path d="M30 24 L50 34 L70 24" fill="none" stroke="#c084fc" stroke-width="3"/></svg>';
+    }
+    return _origMonsterSvgV20(id);
+  };
+
+  var _origRewardBaseV20 = rewardBase;
+  rewardBase = function(mo){
+    var b = _origRewardBaseV20(mo);
+    if(mo && String(mo.id).indexOf('boss_') === 0){
+      return {xp: Math.round(b.xp * 1.45), coins: Math.round(b.coins * 1.45)};
+    }
+    return b;
+  };
+
+  // --- БОЁВКА V20 ---
+  var currentFightTrapped = false;
   strikeCoreBase = function(f, mo, st, n){
     if(!Number.isFinite(f.dealt)) f.dealt = 0;
     if(!Number.isFinite(f.taken)) f.taken = 0;
     f.skip = false;
-    if(game && game.nearDeath && f.p > 1){ f.p = 1; f.ph = 1; }
+    if(v20Data.nearDeath && f.p > 1){ f.p = 1; f.ph = 1; }
 
     var r = (game && game.race) || 'human';
-    var sub = findSubclassV20(game && game.subcls);
+    var sub = findSubclassV20(v20Data.subcls);
     var eqEnch = getEquippedEnchants(game);
     var healFactor = (r === 'orc') ? 0.9 : 1.0;
     var bossFactor = (r === 'celestial' && mo && (mo.boss || mo.elite)) ? 1.25 : 1.0;
@@ -4405,23 +4454,21 @@ svg.chr{overflow:visible}
       berserkMult = 1 + missingRatio * 0.35;
     }
     var effAtk = Math.max(1, Math.round(st.atk * bossFactor * berserkMult));
-    var maxPlayerHp = (game && game.nearDeath) ? 1 : (f.ph || st.hp);
+    var maxPlayerHp = v20Data.nearDeath ? 1 : (f.ph || st.hp);
 
-    // 1) Зеро — крит х2 (у Демона шанс х3)
     if(n === 0){
       var isTriple = (r === 'demon' && Math.random() < 0.05);
       var mult0 = isTriple ? 3 : 2;
       var d0 = effAtk * mult0;
       f.m -= d0; f.dealt += d0;
       var v0 = eqEnch.vamp > 0 ? Math.max(1, Math.round(d0 * (eqEnch.vamp / 100) * healFactor)) : 0;
-      if(v0 && !(game && game.nearDeath)) f.p = Math.min(maxPlayerHp, f.p + v0);
-      return 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Критический удар (x2): ') + mo.name + ' теряет ' + d0 + ' HP.' + (v0 && !(game && game.nearDeath) ? ' Вампиризм +' + v0 + ' HP.' : '');
+      if(v0 && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + v0);
+      return 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Критический удар (x2): ') + mo.name + ' теряет ' + d0 + ' HP.' + (v0 && !v20Data.nearDeath ? ' Вампиризм +' + v0 + ' HP.' : '');
     }
 
-    // 2) Единица — критическая неудача (монстр бьёт х2, Шипы возвращают % от урона монстра)
     if(n === 1){
       var autoSaved = (r === 'automaton');
-      var monBaseDmg = f.trapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+      var monBaseDmg = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
       var dd = autoSaved ? monBaseDmg : (monBaseDmg * 2);
       f.p -= dd; f.taken += dd;
       var th1 = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(dd * eqEnch.thorns / 100))) : 0;
@@ -4429,8 +4476,7 @@ svg.chr{overflow:visible}
       return (autoSaved ? 'Единица! ⚙️ Стальной механизм Автоматона заблокировал крит-неудачу: ' : 'Единица — критическая неудача! ') + mo.name + ' наносит ' + dd + ' HP!' + (th1 ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th1 + ' урона.' : '');
     }
 
-    // 3) Проверка «Счастливой пятёрки» элитного подкласса (числа от 2 до 36)
-    var isLuckyFive = sub && game && Array.isArray(game.lucky5) && game.lucky5.indexOf(n) !== -1;
+    var isLuckyFive = sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.indexOf(n) !== -1;
     if(isLuckyFive){
       var lMult = 2.5, extraEffect = '';
       if(sub.id === 'witcher'){
@@ -4440,14 +4486,14 @@ svg.chr{overflow:visible}
         extraEffect = ' 🔥 Игни сжёг ещё ' + burn + ' HP!';
       } else if(sub.id === 'berserk'){
         lMult = 2.8;
-        if(!(game && game.nearDeath)){
+        if(!v20Data.nearDeath){
           var bHeal = Math.max(1, Math.round(maxPlayerHp * 0.15));
           f.p = Math.min(maxPlayerHp, f.p + bHeal);
           extraEffect = ' 🩸 Ярость исцелила +' + bHeal + ' HP!';
         }
       } else if(sub.id === 'paladin'){
         lMult = 2.2;
-        if(!(game && game.nearDeath)){
+        if(!v20Data.nearDeath){
           var pHeal = Math.max(1, Math.round(maxPlayerHp * 0.20));
           f.p = Math.min(maxPlayerHp, f.p + pHeal);
           extraEffect = ' 🛡️ Святой щит +' + pHeal + ' HP!';
@@ -4460,7 +4506,7 @@ svg.chr{overflow:visible}
         extraEffect = ' 🎯 Смертельный выстрел (x3.0)!';
       } else if(sub.id === 'trapper'){
         lMult = 2.3;
-        f.trapped = true;
+        currentFightTrapped = true;
         extraEffect = ' 🪤 Враг в капкане (-20% к атаке)!';
       } else if(sub.id === 'archmage'){
         lMult = 2.8;
@@ -4469,7 +4515,7 @@ svg.chr{overflow:visible}
         lMult = 2.4;
       } else if(sub.id === 'chronomage'){
         lMult = 2.5;
-        if(!(game && game.nearDeath)){
+        if(!v20Data.nearDeath){
           var cHeal = Math.max(1, Math.round(maxPlayerHp * 0.20));
           f.p = Math.min(maxPlayerHp, f.p + cHeal);
           extraEffect = ' ⏳ Возврат во времени +' + cHeal + ' HP!';
@@ -4479,36 +4525,41 @@ svg.chr{overflow:visible}
       f.m -= lDmg; f.dealt += lDmg;
       var lVampPct = eqEnch.vamp + (sub.id === 'necromancer' ? 50 : 0);
       var lVp = lVampPct > 0 ? Math.max(1, Math.round(lDmg * (lVampPct / 100) * healFactor)) : 0;
-      if(lVp && !(game && game.nearDeath)) f.p = Math.min(maxPlayerHp, f.p + lVp);
-      return '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + '! [' + sub.name + ' · ' + sub.skill + '] наносит ' + lDmg + ' урона!' + extraEffect + (lVp && !(game && game.nearDeath) ? ' Вампиризм +' + lVp + ' HP.' : '');
+      if(lVp && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + lVp);
+      return '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + '! [' + sub.name + ' · ' + sub.skill + '] наносит ' + lDmg + ' урона!' + extraEffect + (lVp && !v20Data.nearDeath ? ' Вампиризм +' + lVp + ' HP.' : '');
     }
 
-    // 4) Стандартное попадание по правилу монстра
     if(mo.hit(n)){
       var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
       var critMult = (sub && sub.id === 'sniper') ? 2.25 : 1.75;
       var dmg = isCrit ? Math.round(effAtk * critMult) : effAtk;
       f.m -= dmg; f.dealt += dmg;
       var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100) * healFactor)) : 0;
-      if(vp && !(game && game.nearDeath)) f.p = Math.min(maxPlayerHp, f.p + vp);
-      return 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' ' + mo.name + ' теряет ' + dmg + ' HP.' + (vp && !(game && game.nearDeath) ? ' Вампиризм +' + vp + ' HP.' : '');
+      if(vp && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + vp);
+      return 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' ' + mo.name + ' теряет ' + dmg + ' HP.' + (vp && !v20Data.nearDeath ? ' Вампиризм +' + vp + ' HP.' : '');
     }
 
-    // 5) Промах — монстр бьёт игрока, Шипы возвращают % от урона монстра
-    var incomingDmg = f.trapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+    var incomingDmg = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
     f.p -= incomingDmg; f.taken += incomingDmg;
     var th = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(incomingDmg * eqEnch.thorns / 100))) : 0;
     if(th > 0){ f.m -= th; f.dealt += th; }
-    return 'Выпало ' + n + ': промах. ' + mo.name + ' бьёт на ' + incomingDmg + '.' + (th ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th + ' урона.' : '');
+    var drainMsg = '';
+    if(mo.id === 'boss_nosferatu' && f.m > 0){
+      var healBoss = Math.max(1, Math.round(mo.hp * 0.05));
+      f.m = Math.min(mo.hp, f.m + healBoss);
+      drainMsg = ' 🩸 Носферату выпил кровь (+' + healBoss + ' HP)!';
+    }
+    return 'Выпало ' + n + ': промах. ' + mo.name + ' бьёт на ' + incomingDmg + '.' + drainMsg + (th ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th + ' урона.' : '');
   };
 
-  // Применяем 1 HP при старте любого обычного боя или засады, если активен статус «При смерти»
   var _origStartFightV20 = startFight;
   startFight = function(){
+    currentFightTrapped = false;
     _origStartFightV20();
     if(game && game.fight && game.fight.on){
       enforceNearDeathOnFightV20(game.fight);
       updateLockedTabsV20();
+      saveGame();
       renderFight();
     }
   };
@@ -4517,6 +4568,7 @@ svg.chr{overflow:visible}
   maybeAmbush = function(){
     var res = _origMaybeAmbushV20();
     if(res && game && game.fight && game.fight.on){
+      currentFightTrapped = false;
       enforceNearDeathOnFightV20(game.fight);
       updateLockedTabsV20();
       renderFight();
@@ -4524,35 +4576,68 @@ svg.chr{overflow:visible}
     return res;
   };
 
-  // --- 8. 5-ЭТАЖНАЯ ЭКСПЕДИЦИЯ С РАЗВИЛКАМИ (ЗАМЕНА СТАРОГО ДАНЖА) ---
+  // --- 8. 5-ЭТАЖНАЯ ЭКСПЕДИЦИЯ: 1-3 ПУТИ, РЕДКОСТЬ КОМНАТ, ОТДЕЛЬНЫЕ ЛАГЕРЬ И АЛТАРЬ, 6 БОССОВ ---
   var EXP_FLOORS = 5;
+  var EXP_ROOM_CATALOG = {
+    combat: {type:'combat', r:'common', weight:52, title:'⚔️ Столкновение', desc:'Обычный монстр ранга. Награда: только золото и опыт (без лишнего мусора).'},
+    elite:  {type:'elite',  r:'uncommon', weight:22, title:'🛡️ Элитный Страж', desc:'Усиленный противник (+40% HP, +20% атаки). Награда: повышенное золото и XP, 5–12 ✨ пыли и 50% шанс выбить предмет!'},
+    camp:   {type:'camp',   r:'rare', weight:12, title:'🏕️ Походный Лагерь', desc:'Безопасный привал: восстанавливает +45% макс. HP и временно открывает смену брони/оружия во вкладке «Персонаж».'},
+    altar:  {type:'altar',  r:'epic', weight:9, title:'⛩️ Алтарь Древних', desc:'Мистическое святилище: выбор между Благословением Мощи (+15% к урону) и Кровавой Жертвой (-20% HP ради +25% к урону и +10% к криту)!'},
+    cache:  {type:'cache',  r:'legendary', weight:5, title:'📦 Древний Тайник', desc:'Редкая сокровищница без боя: 8–18 ✨ Магической пыли, немного монет и 35% шанс найти экипировку (макс. 1 за поход).'}
+  };
 
-  function generateExpChoicesV20(floorIdx, seed){
+  function generateExpChoicesV20(floorIdx, seed, cacheUsed){
+    var r = rng(hashStr('exp_v20:' + seed + ':' + floorIdx));
     if(floorIdx >= 4){
-      return [{type:'boss', title:'👑 Логово Хранителя (Финальный Босс)', desc:'Решающая схватка 5-го этажа! Награда: Сундук Босса с редким/эпическим предметом класса, порцией Магической пыли ✨ и шансом выбить Зелье восстановления 🧪.'}];
+      var bIdx = Math.floor(r() * EXP_BOSSES_V20.length);
+      var bossBase = EXP_BOSSES_V20[bIdx];
+      return [{
+        type:'boss',
+        r:'divine',
+        bossId: bossBase.id,
+        title:'👑 Финальный Босс: ' + bossBase.name,
+        desc:'Условие удара: ' + bossBase.rule + '. Награда: Сундук Босса (редкий/эпический+ предмет класса, Магическая пыль ✨ и 8% шанс на 🧪 Зелье восстановления)!'
+      }];
     }
-    var r = rng(hashStr('exp:' + seed + ':' + floorIdx));
-    var options = [
-      {type:'combat', title:'⚔️ Столкновение', desc:'Обычный монстр ранга. Награда: только золото и опыт (без лишнего мусора).'},
-      {type:'elite', title:'🛡️ Элитный Страж', desc:'Усиленный противник (+40% HP, +20% урона). Награда: +60% золота и XP, Магическая пыль ✨ и 50% шанс выбить снаряжение!'}
-    ];
-    if(floorIdx === 0){
-      options.push({type:'cache', title:'📦 Забытый Тайник', desc:'Безопасная комната без боя: золото, Магическая пыль ✨ и 35% шанс найти экипировку.'});
-    } else if(r() < 0.55){
-      options.push({type:'camp', title:'🔥 Лагерь и Алтарь', desc:'Безопасный привал: восстанавливает +50% HP, даёт +10% к урону до конца похода и позволяет сменить броню/оружие!'});
-    } else {
-      options.push({type:'cache', title:'📦 Древний Тайник', desc:'Безопасная сокровищница без боя: золото, Магическая пыль ✨ и 35% шанс найти экипировку.'});
+
+    // Определяем количество комнат на развилке: 25% -> 1 путь, 50% -> 2 пути, 25% -> 3 пути
+    var countRoll = r();
+    var numPaths = countRoll < 0.25 ? 1 : (countRoll < 0.75 ? 2 : 3);
+
+    // Доступный пул комнат с учётом этажа и лимита на Тайник
+    var poolKeys = ['combat', 'elite', 'altar'];
+    if(floorIdx >= 1) poolKeys.push('camp'); // Лагерь только со 2-го этажа
+    if(floorIdx >= 1 && !cacheUsed) poolKeys.push('cache'); // Тайник только со 2-го этажа и макс 1 за поход
+
+    var chosen = [];
+    var available = poolKeys.slice();
+    while(chosen.length < numPaths && available.length > 0){
+      var totalW = 0;
+      available.forEach(function(k){ totalW += EXP_ROOM_CATALOG[k].weight; });
+      var pickRoll = r() * totalW, acc = 0, pickedKey = available[0];
+      for(var i=0; i<available.length; i++){
+        acc += EXP_ROOM_CATALOG[available[i]].weight;
+        if(pickRoll <= acc){ pickedKey = available[i]; break; }
+      }
+      var info = EXP_ROOM_CATALOG[pickedKey];
+      chosen.push({type: info.type, r: info.r, title: info.title, desc: info.desc});
+      available.splice(available.indexOf(pickedKey), 1);
     }
-    return options;
+    return chosen;
   }
 
   dgFoe = function(){
-    var d = game && game.dg;
+    var d = v20Data.exp;
     if(!d) return makeMonster(DG_MONSTERS[0], 1, false, false, true);
+    if(d.st >= 4 || d.roomType === 'boss'){
+      var bossObj = EXP_BOSSES_V20.find(function(b){ return b.id === d.bossId; }) || EXP_BOSSES_V20[0];
+      var m = makeMonster(bossObj, d.r || 1, true, true, true);
+      m.name = '👑 ' + bossObj.name;
+      return m;
+    }
     var mIdx = Math.abs(hashStr('dgfoe:' + d.seed + ':' + d.st + ':' + (d.roomType||'combat'))) % DG_MONSTERS.length;
-    var isBoss = (d.st >= 4 || d.roomType === 'boss');
-    var isElite = (d.roomType === 'elite' || isBoss);
-    return makeMonster(DG_MONSTERS[mIdx], d.r || 1, isElite, isBoss, true);
+    var isElite = (d.roomType === 'elite');
+    return makeMonster(DG_MONSTERS[mIdx], d.r || 1, isElite, false, true);
   };
 
   dgEnter = function(){
@@ -4561,9 +4646,9 @@ svg.chr{overflow:visible}
     if((game.coins || 0) < price) return;
     var st = stats();
     game.coins -= price;
-    var startHp = game.nearDeath ? 1 : st.hp;
+    var startHp = v20Data.nearDeath ? 1 : st.hp;
     var seed = Math.floor(Math.random() * 1000000000);
-    game.dg = {
+    v20Data.exp = {
       on: true,
       st: 0,
       seed: seed,
@@ -4579,34 +4664,63 @@ svg.chr{overflow:visible}
       taken: 0,
       inCombat: false,
       inCamp: false,
+      inAltar: false,
+      cacheUsed: false,
       roomType: '',
-      campAtkBonus: 0,
-      choices: generateExpChoicesV20(0, seed)
+      bossId: '',
+      altarAtkBonus: 0,
+      altarCritBonus: 0,
+      choices: generateExpChoicesV20(0, seed, false)
     };
-    fightLog = '🗺️ Ты начал Экспедицию (' + rankName(rank) + '). Этаж 1 из 5: выбери путь на развилке!';
+    fightLog = '🗺️ Ты начал Экспедицию (' + rankName(rank) + '). Этаж 1 из 5: выбери путь!';
     fightMsg = ''; fightChest = false;
-    persistV20Local(game);
+    saveV20Local();
+    saveV20ToFirestore();
     updateLockedTabsV20();
     saveGame(); renderCoins(); renderProgress(); renderFight(); renderEvent(); renderDg();
     showTab('dg');
   };
 
+  function applyAltarChoiceV20(mode){
+    if(!dgOn() || !v20Data.exp.inAltar) return;
+    var d = v20Data.exp;
+    d.inAltar = false;
+    if(mode === 'sacrifice'){
+      var loss = v20Data.nearDeath ? 0 : Math.max(1, Math.round(d.p * 0.20));
+      d.p = v20Data.nearDeath ? 1 : Math.max(1, d.p - loss);
+      d.altarAtkBonus = (Number(d.altarAtkBonus)||0) + 25;
+      d.altarCritBonus = (Number(d.altarCritBonus)||0) + 10;
+      toast('🩸 Кровавая Жертва принята! Потеряно ' + loss + ' HP, получено +25% к урону и +10% к криту до конца Экспедиции!');
+    } else {
+      d.altarAtkBonus = (Number(d.altarAtkBonus)||0) + 15;
+      toast('⛩️ Благословение Мощи получено! +15% к урону до конца Экспедиции!');
+    }
+    d.pa = stats().atk;
+    d.st++;
+    d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    saveV20Local();
+    renderChar(); renderDg();
+  }
+
   function selectExpeditionPathV20(choiceIdx){
     if(!dgOn() || merchantBusy) return;
-    var d = game.dg;
-    if(d.inCombat) return;
-    var choices = d.choices || generateExpChoicesV20(d.st, d.seed);
+    var d = v20Data.exp;
+    if(d.inCombat || d.inAltar) return;
+    var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
     var picked = choices[choiceIdx];
     if(!picked) return;
 
     d.roomType = picked.type;
+    if(picked.bossId) d.bossId = picked.bossId;
     d.inCamp = false;
+    d.inAltar = false;
 
     if(picked.type === 'combat' || picked.type === 'elite' || picked.type === 'boss'){
+      currentFightTrapped = false;
       var stNow = stats();
       d.pa = stNow.atk;
-      d.ph = game.nearDeath ? 1 : stNow.hp;
-      if(game.nearDeath) d.p = 1;
+      d.ph = v20Data.nearDeath ? 1 : stNow.hp;
+      if(v20Data.nearDeath) d.p = 1;
       else d.p = Math.min(d.ph, Math.max(1, d.p));
       var mo = dgFoe();
       d.m = mo.hp;
@@ -4614,49 +4728,55 @@ svg.chr{overflow:visible}
       d.dealt = 0; d.taken = 0;
       fightLog = 'Этаж ' + (d.st + 1) + '/5 · ' + picked.title + ': ' + mo.name + '! Крути колесо для боя.';
       fightMsg = ''; fightChest = false;
-      persistV20Local(game);
+      saveV20Local();
       updateLockedTabsV20();
-      saveGame(); renderFight(); renderDg(); showTab('game');
+      renderFight(); renderDg(); showTab('game');
       toast('⚔️ Бой начался: ' + mo.name + '!');
     } else if(picked.type === 'cache'){
+      d.cacheUsed = true;
       var rank = d.r || 1;
-      var goldGain = rollReward(dungeonPrice(rank) * 0.28);
-      var dustGain = 8 + Math.floor(Math.random() * 13) + rank * 2;
+      // Золото в тайнике снижено до ~12% от цены входа, чтобы нельзя было абузить в плюс без босса
+      var goldGain = Math.max(5, rollReward(dungeonPrice(rank) * 0.12));
+      var dustGain = 8 + Math.floor(Math.random() * 11) + rank;
       var dropId = (Math.random() < 0.35) ? rollLoot(rank, true, false) : null;
       game.coins += goldGain;
       game.dust = Math.min(1000000, (Number(game.dust)||0) + dustGain);
       if(dropId) game.inv.push(dropId);
 
       d.st++;
-      d.choices = generateExpChoicesV20(d.st, d.seed);
-      persistV20Local(game);
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      saveV20Local();
       saveGame(); renderCoins(); renderChar(); renderDg();
-      toast('📦 Тайник открыт! +' + goldGain + ' монет, +' + dustGain + ' ✨ пыли' + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
+      toast('📦 Древний Тайник открыт! +' + goldGain + ' монет, +' + dustGain + ' ✨ пыли' + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
     } else if(picked.type === 'camp'){
       var stCamp = stats();
-      d.ph = game.nearDeath ? 1 : stCamp.hp;
-      var healAmt = game.nearDeath ? 0 : Math.round(d.ph * 0.50);
-      d.p = game.nearDeath ? 1 : Math.min(d.ph, d.p + healAmt);
-      d.campAtkBonus = (Number(d.campAtkBonus)||0) + 10;
-      d.pa = stats().atk;
+      d.ph = v20Data.nearDeath ? 1 : stCamp.hp;
+      var healAmt = v20Data.nearDeath ? 0 : Math.round(d.ph * 0.45);
+      d.p = v20Data.nearDeath ? 1 : Math.min(d.ph, d.p + healAmt);
       d.inCamp = true;
       d.st++;
-      d.choices = generateExpChoicesV20(d.st, d.seed);
-      persistV20Local(game);
-      saveGame(); renderChar(); renderDg();
-      toast('🔥 Привал в Лагере! Восстановлено +50% HP, получено благословение +10% к урону. Пока вы в Лагере, можно сменить экипировку во вкладке «Персонаж»!');
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      saveV20Local();
+      renderChar(); renderDg();
+      toast('🏕️ Привал в Лагере! Восстановлено +45% HP (' + healAmt + ' HP). Пока вы в Лагере, смена экипировки во вкладке «Персонаж» разблокирована!');
+    } else if(picked.type === 'altar'){
+      d.inAltar = true;
+      saveV20Local();
+      renderDg();
+      toast('⛩️ Вы подошли к Алтарю Древних! Выберите дар Алтаря.');
     }
   }
 
   dgLeave = function(){
     if(!dgOn()) return;
-    if(game.dg.inCombat){
+    if(v20Data.exp.inCombat){
       toast('⚔️ Нельзя покинуть Экспедицию прямо посреди боя с монстром! Сначала завершите схватку.');
       return;
     }
-    var fee = game.dg.fee;
-    delete game.dg;
-    persistV20Local(game);
+    var fee = v20Data.exp.fee;
+    v20Data.exp = null;
+    saveV20Local();
+    saveV20ToFirestore();
     updateLockedTabsV20();
     fightMsg = '🏳️ Ты организованно отступил из Экспедиции в город. Взнос (' + fee + ' монет) не возвращается, но все добытые монеты, опыт, пыль и снаряжение сохранены!';
     fightChest = false;
@@ -4665,7 +4785,6 @@ svg.chr{overflow:visible}
   };
 
   function rollBossChestLootV20(rank){
-    // Гарантированный редкий/эпический+ предмет своего класса
     var id = rollLoot(Math.max(3, rank), true, true);
     if(id && ITEMS[id] && (ITEMS[id].r === 'common' || ITEMS[id].r === 'uncommon')){
       var betterPool = Object.keys(ITEMS).filter(function(k){
@@ -4678,7 +4797,7 @@ svg.chr{overflow:visible}
   }
 
   dgStrike = function(n){
-    var d = game && game.dg;
+    var d = v20Data.exp;
     if(!d || !d.on || !d.inCombat) return;
     var mo = dgFoe(), st = battleStats(d);
     fightLog = strikeCore(d, mo, st, n);
@@ -4687,17 +4806,17 @@ svg.chr{overflow:visible}
       d.m = 0;
       d.inCombat = false;
       var base = rewardBase(mo);
-      var sub = findSubclassV20(game.subcls);
+      var sub = findSubclassV20(v20Data.subcls);
       var xpMult = (sub && sub.xpBonus) ? (1 + sub.xpBonus / 100) : 1;
       var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(d.r) * xpMult);
-      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.36 : 0.24));
+      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.34 : 0.18));
       game.coins += coins;
       var up = gainXP(xp);
       var wonState = {dealt: d.dealt, taken: d.taken};
       var extraLootMsg = '';
 
       if(d.roomType === 'elite' && d.st < 4){
-        var eliteDust = 5 + Math.floor(Math.random() * 11) + d.r;
+        var eliteDust = 5 + Math.floor(Math.random() * 8) + d.r;
         game.dust = Math.min(1000000, (Number(game.dust)||0) + eliteDust);
         extraLootMsg += ' +' + eliteDust + ' ✨ пыли.';
         if(Math.random() < 0.50){
@@ -4714,14 +4833,15 @@ svg.chr{overflow:visible}
       if(d.st + 1 >= EXP_FLOORS || d.roomType === 'boss'){
         var bossItem = rollBossChestLootV20(d.r);
         var bossDust = 15 + d.r * 5 + Math.floor(Math.random() * 15);
-        var gotPotion = Math.random() < 0.08; // 8% шанс на Зелье восстановления из комнаты Босса
+        var gotPotion = Math.random() < 0.08;
         var bonusXp = game.level >= LEVEL_CAP ? 0 : rollReward(75 * Math.pow(d.r, 1.65) * xpFactor(d.r) * xpMult);
         if(bossItem) game.inv.push(bossItem);
         game.dust = Math.min(1000000, (Number(game.dust)||0) + bossDust);
-        if(gotPotion) game.potions = (Number(game.potions)||0) + 1;
+        if(gotPotion) v20Data.potions = (Number(v20Data.potions)||0) + 1;
         var moreUp = gainXP(bonusXp);
-        delete game.dg;
-        persistV20Local(game);
+        v20Data.exp = null;
+        saveV20Local();
+        saveV20ToFirestore();
         updateLockedTabsV20();
         fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP, +' + bossDust + ' ✨ Магической пыли'
           + (bossItem ? ', предмет «' + ITEMS[bossItem].name + '» (' + RARITY[ITEMS[bossItem].r].name + ')' : '')
@@ -4731,10 +4851,10 @@ svg.chr{overflow:visible}
         $('dot').hidden = false;
       } else {
         d.st++;
-        d.p = game.nearDeath ? 1 : healBetween(d.p, d.ph);
+        d.p = v20Data.nearDeath ? 1 : healBetween(d.p, d.ph);
         d.skip = false; d.dealt = 0; d.taken = 0;
-        d.choices = generateExpChoicesV20(d.st, d.seed);
-        persistV20Local(game);
+        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        saveV20Local();
         fightMsg = fightLog + ' Враг повержен!' + earned + ' Восстановлено 25% HP. Перейди во вкладку «Экспедиция» для выбора пути на Этаже ' + (d.st + 1) + '!';
         toast('✅ Этаж ' + d.st + ' пройден! Выбери развилку следующего этажа.');
       }
@@ -4745,9 +4865,9 @@ svg.chr{overflow:visible}
       var rankLost = d.r || 1;
       var lostGold = Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rankLost));
       game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
-      game.nearDeath = true;
-      delete game.dg;
-      persistV20Local(game);
+      v20Data.nearDeath = true;
+      v20Data.exp = null;
+      saveV20Local();
       saveV20ToFirestore();
       updateLockedTabsV20();
       renderNearDeathBannerV20();
@@ -4759,7 +4879,7 @@ svg.chr{overflow:visible}
   };
 
   renderDgFight = function(box){
-    var d = game.dg;
+    var d = v20Data.exp;
     if(!d || !d.on){ box.hidden = true; return; }
     if(!d.inCombat){
       box.hidden = false;
@@ -4783,7 +4903,7 @@ svg.chr{overflow:visible}
     box.className = (mo.elite || mo.boss) ? 'fight elite' : 'fight';
     box.innerHTML = '<div class="fhead"><div class="mon">' + monsterSvg(mo.id) + '</div><div style="flex:1;min-width:0"><div class="rn">Экспедиция (Этаж ' + (d.st + 1) + '/' + EXP_FLOORS + '): ' + mo.name + '</div><div class="rd">Бьёшь, если выпало: ' + mo.rule + '. Зеро: крит x2. Единица: двойной урон от врага.</div></div></div>'
       + '<div><div class="hpl"><span>' + mo.name + '</span><span>' + d.m + ' / ' + mo.hp + '</span></div><div class="bar m"><i style="width:' + pm + '%"></i></div></div>'
-      + '<div><div class="hpl"><span>Ты' + (game.nearDeath ? ' [ПРИ СМЕРТИ]' : '') + '</span><span>' + d.p + ' / ' + st.hp + '</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
+      + '<div><div class="hpl"><span>Ты' + (v20Data.nearDeath ? ' [ПРИ СМЕРТИ]' : '') + '</span><span>' + d.p + ' / ' + st.hp + '</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
       + '<div class="flog">' + fightLog + '</div>';
   };
 
@@ -4791,20 +4911,22 @@ svg.chr{overflow:visible}
     var box = $('dgBody');
     if(!box || !game){ if(box) box.innerHTML = ''; return; }
     var coins = Number(game.coins) || 0, on = dgOn(), busy = !!(game.fight && game.fight.on);
-    var rank = on ? game.dg.r : selectedRank(), price = on ? game.dg.fee : dungeonPrice(rank);
+    var rank = on ? v20Data.exp.r : selectedRank(), price = on ? v20Data.exp.fee : dungeonPrice(rank);
 
     var h = '<div class="card"><h3>🗺️ Экспедиция · ' + rankName(rank) + '</h3>';
     if(!on){
-      h += '<p>Многоэтажный поход из <b>5 этажей</b>: на этажах 1–4 ты сам выбираешь путь на развилках (⚔️ Столкновение, 🛡️ Элитный Страж, 📦 Тайник или 🔥 Лагерь), а на 5-м этаже сражаешься с <b>Финальным Боссом</b> за главный сундук!</p>'
-        + '<p>• С обычных монстров в Экспедиции падает только золото и опыт.<br>'
-        + '• Снаряжение и Магическая пыль ✨ добываются со Стражей, в Тайниках и из Сундука Босса (плюс шанс выбить 🧪 Зелье восстановления).<br>'
-        + '• Во время похода нельзя менять броню (кроме комнаты «Лагерь») и пользоваться рынком/кузницей.<br>'
-        + '• При гибели в Экспедиции теряется часть монет и накладывается статус <b>«При смерти» (1 HP)</b>.</p>'
+      h += '<p>Многоэтажный поход из <b>5 этажей</b>: на этажах 1–4 генерируется <b>от 1 до 3 путей</b> с разной редкостью комнат, а на 5-м этаже ждёт один из <b>6 уникальных Боссов Экспедиции</b>!</p>'
+        + '<p>• <b>⚔️ Столкновение (Обычная, 52%):</b> только золото и опыт.<br>'
+        + '• <b>🛡️ Элитный Страж (Необычная, 22%):</b> повышенный опыт, золото, Магическая пыль ✨ и 50% шанс на вещь.<br>'
+        + '• <b>🏕️ Походный Лагерь (Редкая, 12%):</b> лечит +45% HP и открывает смену брони/оружия.<br>'
+        + '• <b>⛩️ Алтарь Древних (Эпическая, 9%):</b> выбор между Благословением (+15% к урону) и Кровавой Жертвой (-20% HP ради +25% к урону и +10% к криту).<br>'
+        + '• <b>📦 Древний Тайник (Легендарная, 5%):</b> пыль ✨ и сокровища без боя (макс. 1 за поход, начиная со 2-го этажа).<br>'
+        + '• При гибели в Экспедиции накладывается статус <b>«При смерти» (1 HP)</b> до приёма 🧪 Зелья восстановления.</p>'
         + '<span class="price">' + coinSvg() + price + '</span>';
       var lab = !game.cls ? 'Сначала выбери класс в Магазине' : busy ? 'Сначала закончи текущий бой' : coins < price ? 'Не хватает ' + (price - coins) + ' монет' : 'Отправиться в Экспедицию';
       h += '<button type="button" id="dgIn"' + ((!gameLoaded || !game.cls || busy || coins < price) ? ' disabled' : '') + '>' + lab + '</button>';
     } else {
-      var d = game.dg;
+      var d = v20Data.exp;
       h += '<div class="expFloorBar">';
       for(var s=0; s<EXP_FLOORS; s++){
         var clsStep = s < d.st ? 'expStep done' : (s === d.st ? 'expStep cur' : 'expStep');
@@ -4812,20 +4934,30 @@ svg.chr{overflow:visible}
       }
       h += '</div>';
       h += '<p>Здоровье в походе: <b>' + d.p + ' / ' + d.ph + ' HP</b>'
-        + (d.campAtkBonus ? ' · Благословение Лагеря: <b>+' + d.campAtkBonus + '% к урону</b>' : '')
+        + (d.altarAtkBonus ? ' · Дары Алтаря: <b>+' + d.altarAtkBonus + '% урон' + (d.altarCritBonus ? ', +' + d.altarCritBonus + '% крит' : '') + '</b>' : '')
         + (d.inCamp ? ' · <span style="color:var(--green);font-weight:700">🏕️ Вы в Лагере (смена брони разблокирована!)</span>' : ' · 🔒 Экипировка зафиксирована')
         + '</p>';
 
       if(d.inCombat){
         h += '<p>⚔️ Сейчас идёт бой на Этаже ' + (d.st + 1) + '! Перейдите на вкладку «Рулетка», чтобы крутить колесо.</p>'
           + '<button type="button" id="dgGo">Перейти к бою</button>';
+      } else if(d.inAltar){
+        h += '<div class="card" style="border-color:#7e3fc4;background:var(--bg)">'
+          + '<h3>⛩️ Алтарь Древних · Выбери дар</h3>'
+          + '<p>Древнее святилище излучает мистическую силу. Какой дар ты примешь перед следующим этажом?</p>'
+          + '<div class="expPathsGrid">'
+          + '<div class="expPathCard altar"><div><div class="rn">✨ Благословение Мощи</div><div class="rd">Безопасно дарует <b>+15% к урону</b> до конца Экспедиции.</div></div><button type="button" id="btnAltarSafe">Принять</button></div>'
+          + '<div class="expPathCard boss"><div><div class="rn">🩸 Кровавая Жертва</div><div class="rd">Отнимает <b>20% текущего HP</b>, но дарует <b>+25% к урону и +10% к шансу крита</b> до конца Экспедиции!</div></div><button type="button" id="btnAltarSacrifice">Пожертвовать</button></div>'
+          + '</div></div>';
       } else {
-        var choices = d.choices || generateExpChoicesV20(d.st, d.seed);
+        var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        h += '<p style="font-size:13px;color:var(--muted)">Развилка Этажа ' + (d.st + 1) + ' (доступно путей: <b>' + choices.length + '</b>):</p>';
         h += '<div class="expPathsGrid">';
         choices.forEach(function(ch, idx){
-          var cCls = 'expPathCard' + (ch.type === 'elite' ? ' elite' : (ch.type === 'boss' ? ' boss' : ''));
+          var cCls = 'expPathCard ' + (ch.type || '');
+          var rarBadge = ch.r ? rarPill(ch.r) : '';
           h += '<div class="' + cCls + '">'
-            + '<div><div class="rn">' + ch.title + '</div><div class="rd">' + ch.desc + '</div></div>'
+            + '<div><div class="rn">' + ch.title + ' ' + rarBadge + '</div><div class="rd" style="margin-top:4px">' + ch.desc + '</div></div>'
             + '<button type="button" data-exp-path="' + idx + '">Выбрать</button>'
             + '</div>';
         });
@@ -4844,7 +4976,7 @@ svg.chr{overflow:visible}
     box.innerHTML = h;
     var a = $('dgIn');
     if(a) a.onclick = function(){
-      confirmBox('Отправиться в 5-этажную Экспедицию «' + rankName(rank) + '» за ' + price + ' монет?' + (game.nearDeath ? ' ⚠️ ВНИМАНИЕ: у вас активен статус «При смерти» (1 HP)!' : ''), 'В поход!', dgEnter);
+      confirmBox('Отправиться в 5-этажную Экспедицию «' + rankName(rank) + '» за ' + price + ' монет?' + (v20Data.nearDeath ? ' ⚠️ ВНИМАНИЕ: у вас активен статус «При смерти» (1 HP)!' : ''), 'В поход!', dgEnter);
     };
     var go = $('dgGo');
     if(go) go.onclick = function(){ showTab('game'); };
@@ -4852,12 +4984,16 @@ svg.chr{overflow:visible}
     if(ab) ab.onclick = function(){
       confirmBox('Покинуть Экспедицию досрочно? Взнос (' + price + ' монет) не вернётся, но всё заработанное золото, опыт, пыль и предметы останутся у вас.', 'Отступить', dgLeave);
     };
+    var bSafe = $('btnAltarSafe');
+    if(bSafe) bSafe.onclick = function(){ applyAltarChoiceV20('safe'); };
+    var bSac = $('btnAltarSacrifice');
+    if(bSac) bSac.onclick = function(){ applyAltarChoiceV20('sacrifice'); };
     box.querySelectorAll('[data-exp-path]').forEach(function(b){
       b.onclick = function(){ selectExpeditionPathV20(Number(this.getAttribute('data-exp-path'))); };
     });
   };
 
-  // --- 9. БЛОКИРОВКА СМЕНЫ БРОНИ В БОЮ/ЭКСПЕДИЦИИ + ЭВОЛЮЦИЯ КЛАССА В ПРОФИЛЕ + БАГФИКС ЧАР ---
+  // --- 9. БЛОКИРОВКА СМЕНЫ БРОНИ В БОЮ/ЭКСПЕДИЦИИ + ЭВОЛЮЦИЯ КЛАССА В ПРОФИЛЕ ---
   function evolveClassV20(subId){
     if(!canUseTownServicesV20()) return;
     if(!game || !gameLoaded || merchantBusy || game.level < 100 || !game.cls) return;
@@ -4869,27 +5005,25 @@ svg.chr{overflow:visible}
       function(){
         game.level = 1;
         game.xp = 0;
-        game.subcls = sub.id;
-        game.prestige = (Number(game.prestige)||0) + 1;
-        game.lucky5 = rollLuckyFiveV20();
-        persistV20Local(game);
+        v20Data.subcls = sub.id;
+        v20Data.prestige = (Number(v20Data.prestige)||0) + 1;
+        v20Data.lucky5 = rollLuckyFiveV20();
+        saveV20Local();
         saveV20ToFirestore();
         saveGame();
         renderChar();
         renderShop();
-        toast('👑 Эволюция завершена! Вы стали «' + sub.name + '»! Счастливая пятёрка: ' + game.lucky5.join(', '));
+        toast('👑 Эволюция завершена! Вы стали «' + sub.name + '»! Счастливая пятёрка: ' + v20Data.lucky5.join(', '));
       }
     );
   }
 
   var _origRenderCharBeforeV20 = renderChar;
   renderChar = function(){
-    if(game) syncV20FromGame(game);
+    if(game) stripV20FromGameObj(game);
     _origRenderCharBeforeV20();
     if(!game) return;
 
-    // Перехватываем клики по слотам брони для проверки запрета смены в бою/экспедиции
-    var gear = equipped();
     [['slotHead','head'],['slotBody','body'],['slotArms','arms'],['slotLegs','legs']].forEach(function(sl){
       var el = $(sl[0]);
       if(el && game.eq && game.eq[sl[1]]){
@@ -4904,11 +5038,10 @@ svg.chr{overflow:visible}
       }
     });
 
-    // Отображение подкласса и Счастливой пятёрки
-    var sub = findSubclassV20(game.subcls);
+    var sub = findSubclassV20(v20Data.subcls);
     var ct = $('charClass');
     if(ct && sub){
-      ct.textContent = CLASSES[game.cls].name + ' · ' + sub.name + (game.prestige ? ' (Престиж ' + game.prestige + ')' : '');
+      ct.textContent = CLASSES[game.cls].name + ' · ' + sub.name + (v20Data.prestige ? ' (Престиж ' + v20Data.prestige + ')' : '');
       ct.style.background = '#7e3fc4';
     }
 
@@ -4926,11 +5059,11 @@ svg.chr{overflow:visible}
     }
     if(evoBox){
       var eh = '';
-      if(sub && Array.isArray(game.lucky5) && game.lucky5.length){
+      if(sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.length){
         eh += '<div class="v19PassiveCard" style="max-width:100%;margin-bottom:8px;border-color:#9b5de5">'
           + '👑 Специализация <b>«' + sub.name + '»</b> (' + sub.skill + '):<br>' + sub.desc
           + '<div style="margin-top:6px;font-weight:700;color:var(--gold)">🎯 Твоя «Счастливая пятёрка» чисел на рулетке:</div>'
-          + '<div class="luckyFiveWrap">' + game.lucky5.map(function(num){ return '<span class="luckyBall">' + num + '</span>'; }).join('') + '</div>'
+          + '<div class="luckyFiveWrap">' + v20Data.lucky5.map(function(num){ return '<span class="luckyBall">' + num + '</span>'; }).join('') + '</div>'
           + '</div>';
       }
       if(game.level >= 100 && game.cls && SUBCLASSES_V20[game.cls]){
@@ -4954,7 +5087,6 @@ svg.chr{overflow:visible}
     updateLockedTabsV20();
   };
 
-  // Защита смены брони в renderInv()
   var _origRenderInvBeforeV20 = renderInv;
   renderInv = function(){
     _origRenderInvBeforeV20();
@@ -4977,13 +5109,15 @@ svg.chr{overflow:visible}
     });
   };
 
-  // Добавляем крафт Зелья восстановления в Кузницу (renderForge)
   var _origRenderForgeBeforeV20 = renderForge;
   renderForge = function(){
     _origRenderForgeBeforeV20();
     var box = $('forgeBody');
     if(!box || !game) return;
+    var oldPotCard = $('v20PotionCraftCard');
+    if(oldPotCard) oldPotCard.remove();
     var potCard = document.createElement('div');
+    potCard.id = 'v20PotionCraftCard';
     potCard.className = 'card';
     potCard.style.marginTop = '12px';
     potCard.style.borderColor = '#ef4444';
@@ -4993,18 +5127,17 @@ svg.chr{overflow:visible}
       && (game.dust||0) >= POTION_CRAFT_COST.dust;
     potCard.innerHTML = '<h3>🧪 Алхимия Кузницы: Зелье восстановления</h3>'
       + '<p>Единственное средство, снимающее смертельный недуг <b>«При смерти» (1 HP)</b> после гибели в Экспедиции. Также выпадает с Босса 5-го этажа Экспедиции или покупается у игроков на Рынке.</p>'
-      + '<p>У тебя в запасе: <b>' + (game.potions||0) + ' 🧪</b>' + (game.nearDeath ? ' · <span style="color:#ef4444;font-weight:700">Статус «При смерти» активен!</span>' : '') + '</p>'
+      + '<p>У тебя в запасе: <b>' + (v20Data.potions||0) + ' 🧪</b>' + (v20Data.nearDeath ? ' · <span style="color:#ef4444;font-weight:700">Статус «При смерти» активен!</span>' : '') + '</p>'
       + '<p>Стоимость создания: <b>' + POTION_CRAFT_COST.coins + ' монет + ' + POTION_CRAFT_COST.stones + ' 🪨 камней + ' + POTION_CRAFT_COST.dust + ' ✨ Магической пыли</b>.</p>'
       + '<div class="forgeButtons">'
       + '<button type="button" id="btnCraftPotionV20"' + (canCraftPot ? '' : ' disabled') + '>Скрафтить Зелье 🧪</button>'
-      + (game.nearDeath && (game.potions||0) > 0 ? '<button type="button" id="btnDrinkPotionForgeV20" class="ghost">Выпить зелье (Снять 1 HP)</button>' : '')
+      + (v20Data.nearDeath && (v20Data.potions||0) > 0 ? '<button type="button" id="btnDrinkPotionForgeV20" class="ghost">Выпить зелье (Снять 1 HP)</button>' : '')
       + '</div>';
     box.appendChild(potCard);
     var cBtn = $('btnCraftPotionV20'); if(cBtn) cBtn.onclick = craftRecoveryPotionV20;
     var dBtn = $('btnDrinkPotionForgeV20'); if(dBtn) dBtn.onclick = useRecoveryPotionV20;
   };
 
-  // Фикс мгновенного обновления инвентаря/скупщика после зачарования
   var _origRenderEnchantPanelV20 = renderEnchantPanel;
   renderEnchantPanel = function(){
     _origRenderEnchantPanelV20();
@@ -5074,11 +5207,11 @@ svg.chr{overflow:visible}
     db.collection('players').doc(String(sess.uid)).set({
       name: nick || sess.name || 'Игрок',
       level: game.level || 1,
-      subcls: game.subcls || '',
-      lucky5: Array.isArray(game.lucky5) ? game.lucky5 : [],
-      prestige: Number(game.prestige) || 0,
-      nearDeath: Boolean(game.nearDeath),
-      potions: Number(game.potions) || 0,
+      subcls: v20Data.subcls || '',
+      lucky5: Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [],
+      prestige: Number(v20Data.prestige) || 0,
+      nearDeath: Boolean(v20Data.nearDeath),
+      potions: Number(v20Data.potions) || 0,
       lastSeen: Date.now()
     }, {merge: true}).catch(function(){});
   }
@@ -5089,12 +5222,18 @@ svg.chr{overflow:visible}
 
     saveV20ToFirestore();
 
-    // Подписка на профиль игрока в Firestore (восстановление V20-полей и получение золота с продаж на Рынке)
     if(sellerGoldUnsubV20) sellerGoldUnsubV20();
     var myRef = db.collection('players').doc(String(sess.uid));
     sellerGoldUnsubV20 = myRef.onSnapshot(function(doc){
       if(!doc.exists || !game) return;
       var d = doc.data() || {};
+      if(!v20Data.subcls && d.subcls) v20Data.subcls = d.subcls;
+      if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = d.lucky5;
+      if(!v20Data.prestige && d.prestige) v20Data.prestige = Number(d.prestige) || 0;
+      if(typeof d.nearDeath === 'boolean' && d.nearDeath) v20Data.nearDeath = true;
+      if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = d.potions;
+      saveV20Local();
+
       if(d.pendingMarketGold && d.pendingMarketGold > 0){
         var gain = Math.floor(Number(d.pendingMarketGold) || 0);
         if(gain > 0){
@@ -5107,7 +5246,6 @@ svg.chr{overflow:visible}
       }
     }, function(){});
 
-    // Подписка на онлайн-статусы игроков для зелёной точки в таблице лидеров
     if(presenceUnsubV20) presenceUnsubV20();
     presenceUnsubV20 = db.collection('players').onSnapshot(function(snap){
       snap.forEach(function(doc){
@@ -5117,7 +5255,6 @@ svg.chr{overflow:visible}
       if(curTab === 'board') decorateLeaderboardOnlineDotsV20();
     }, function(){});
 
-    // Подписка на лоты Рынка игроков
     if(marketUnsubV20) marketUnsubV20();
     marketUnsubV20 = db.collection('market_listings')
       .orderBy('createdAt', 'desc')
@@ -5128,9 +5265,7 @@ svg.chr{overflow:visible}
           marketListingsV20.push(Object.assign({id: doc.id}, doc.data()));
         });
         if(curTab === 'market') renderMarketV20();
-      }, function(err){
-        console.warn('[V20] Ошибка чтения лотов рынка:', err);
-      });
+      }, function(){});
   }
 
   setInterval(function(){
@@ -5139,11 +5274,10 @@ svg.chr{overflow:visible}
     }
   }, 40000);
 
-  // Зелёная точка онлайн-статуса в Лидерах
   function isPlayerOnlineV20(playerUid){
     if(sess && String(playerUid) === String(sess.uid)) return true;
     var ts = onlinePlayersMapV20[String(playerUid)] || 0;
-    return (Date.now() - ts) < 120000; // 2 минуты
+    return (Date.now() - ts) < 120000;
   }
 
   function decorateLeaderboardOnlineDotsV20(){
@@ -5164,7 +5298,6 @@ svg.chr{overflow:visible}
     });
   }
 
-  // Переопределяем loadBoard для проставления data-uid и зелёных точек онлайна
   loadBoard = function(){
     var box = $('board');
     token().then(function(t){
@@ -5230,7 +5363,7 @@ svg.chr{overflow:visible}
     }).catch(function(){});
   };
 
-  // --- ЛОГИКА ОНЛАЙН-РЫНКА (FIRESTORE) ---
+  // --- ЛОГИКА ОНЛАЙН-РЫНКА (СТРОГО В ОТДЕЛЬНОЙ ВКЛАДКЕ РЫНОК) ---
   var selectedMarketInvIdx = 0;
 
   async function listGearOnMarketV20(invIdx, priceCoins){
@@ -5286,7 +5419,6 @@ svg.chr{overflow:visible}
       });
       toast('✅ Лот «' + it.name + (enhLv ? ' +' + enhLv : '') + '» выставлен на Рынок за ' + price + ' монет!');
     }catch(e){
-      // Возвращаем предмет при сбое сети
       var newIdx = game.inv.length;
       game.inv.push(itemId);
       if(enhLv > 0) game.enhance[newIdx] = enhLv;
@@ -5300,7 +5432,7 @@ svg.chr{overflow:visible}
     if(!canUseTownServicesV20() || !canSell()) return;
     var db = initFirestoreV20();
     if(!db){ toast('Ошибка: Firestore не подключён.'); return; }
-    if((game.potions || 0) <= 0){
+    if((v20Data.potions || 0) <= 0){
       toast('🧪 У вас нет Зелья восстановления для продажи!');
       return;
     }
@@ -5309,10 +5441,10 @@ svg.chr{overflow:visible}
       toast('Укажите корректную цену больше 0 монет!');
       return;
     }
-    game.potions -= 1;
-    persistV20Local(game);
+    v20Data.potions -= 1;
+    saveV20Local();
     saveV20ToFirestore();
-    saveGame(); renderCoins(); renderMarketV20();
+    renderCoins(); renderMarketV20();
 
     try{
       await db.collection('market_listings').add({
@@ -5325,9 +5457,9 @@ svg.chr{overflow:visible}
       });
       toast('✅ Зелье восстановления выставлено на Рынок за ' + price + ' монет!');
     }catch(e){
-      game.potions += 1;
-      persistV20Local(game);
-      saveGame(); renderCoins(); renderMarketV20();
+      v20Data.potions += 1;
+      saveV20Local();
+      renderCoins(); renderMarketV20();
       toast('❌ Ошибка сети при выставлении зелья на Рынок.');
     }
   }
@@ -5357,8 +5489,8 @@ svg.chr{overflow:visible}
       }
 
       if(lot.isPotion){
-        game.potions = (Number(game.potions)||0) + 1;
-        persistV20Local(game);
+        v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        saveV20Local();
         saveV20ToFirestore();
       } else if(lot.item && lot.item.id && ITEMS[lot.item.id]){
         var idx = game.inv.length;
@@ -5429,10 +5561,10 @@ svg.chr{overflow:visible}
     }
 
     h += '<div style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
-      + '<span>🧪 Зелья восстановления в запасе: <b>' + (game.potions||0) + ' шт.</b></span>'
+      + '<span>🧪 Зелья восстановления в запасе: <b>' + (v20Data.potions||0) + ' шт.</b></span>'
       + '<div style="display:flex;gap:6px;align-items:center">'
       + '<input type="number" id="marketPotionPrice" min="100" max="10000000" value="3000" style="width:110px;padding:6px 10px">'
-      + '<button type="button" id="btnListPotionMarket" class="ghost"' + (blocked || (game.potions||0) <= 0 ? ' disabled' : '') + '>Продать зелье 🧪</button>'
+      + '<button type="button" id="btnListPotionMarket" class="ghost"' + (blocked || (v20Data.potions||0) <= 0 ? ' disabled' : '') + '>Продать зелье 🧪</button>'
       + '</div></div></div>';
 
     h += '<div class="card"><h3>📦 Активные лоты (' + marketListingsV20.length + ')</h3>';
@@ -5499,54 +5631,16 @@ svg.chr{overflow:visible}
     });
   }
 
-  // --- 11. УСТОЙЧИВОЕ СОХРАНЕНИЕ (РАБОТАЕТ И С НОВЫМИ, И СО СТАРЫМИ ПРАВИЛАМИ RTDB) ---
-  function buildStrictRtdbCompatibleGameV20(g){
-    var copy = JSON.parse(JSON.stringify(g));
-    delete copy.subcls;
-    delete copy.lucky5;
-    delete copy.prestige;
-    delete copy.nearDeath;
-    delete copy.potions;
-    copy.rank = Math.min(15, Math.max(1, Number(copy.rank)||1));
-    copy.unlockedRank = Math.min(15, Math.max(copy.rank, Number(copy.unlockedRank)||1));
-    if(copy.dg){
-      // В старых правилах RTDB st < 3 и запрещены новые поля в dg
-      delete copy.dg;
-    }
-    return copy;
-  }
-
+  // --- 11. ЧИСТОЕ СОХРАНЕНИЕ БЕЗ КОНФЛИКТА С ПРАВИЛАМИ RTDB И ШАХТЁРОМ ---
+  var _origSaveGameV19 = saveGame;
   saveGame = function(){
     if(!game || !sess || !gameLoaded || merchantBusy) return Promise.resolve();
-    persistV20Local(game);
-    if(saving){ again = true; return Promise.resolve(); }
-    saving = true;
-    return token().then(function(t){
-      game.v = APP_V;
-      if(mySid) game.sid = mySid; else delete game.sid;
-      return fetch(gameUrl(t), {method:'PUT', body:JSON.stringify(game)}).then(function(r){
-        if(r.ok) return r;
-        // Если правила Realtime Database ещё не обновлены под новые поля V20, сохраняем совместимый пакет + Firestore
-        var compat = buildStrictRtdbCompatibleGameV20(game);
-        compat.v = APP_V;
-        if(mySid) compat.sid = mySid; else delete compat.sid;
-        saveV20ToFirestore();
-        return fetch(gameUrl(t), {method:'PUT', body:JSON.stringify(compat)});
-      });
-    }).then(function(r){
-      if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ ' + r.status + ': ' + String(tx).slice(0,90)); });
-    }).catch(function(e){
-      if(!kickedOut) toast('Прогресс не сохранился (' + ((e && e.message) || 'нет связи') + ').');
-      checkSession();
-    }).then(function(){
-      saving = false;
-      if(again){ again = false; return saveGame(); }
-      if(curTab === 'shop'){ renderForge(); renderMinerPanel(); }
-      renderMiner();
-    });
+    stripV20FromGameObj(game);
+    saveV20Local();
+    return _origSaveGameV19();
   };
 
-  // --- 12. ОБНОВЛЕНИЕ ШАПКИ И ВКЛАДОК V20 ---
+  // --- 12. ОБНОВЛЕНИЕ ШАПКИ И ЖЁСТКАЯ ИЗОЛЯЦИЯ ВКЛАДКИ РЫНКА ---
   var _cachedPotionsV20 = -1;
   var _origRenderCoinsBeforeV20 = renderCoins;
   renderCoins = function(){
@@ -5556,13 +5650,13 @@ svg.chr{overflow:visible}
     var pBox = $('potionBox');
     if(pBox){
       pBox.hidden = hide;
-      var p = Number(game.potions) || 0;
+      var p = Number(v20Data.potions) || 0;
       if(p !== _cachedPotionsV20){
         _cachedPotionsV20 = p;
         var pv = $('potionVal');
         if(pv) pv.textContent = String(p);
       }
-      pBox.style.borderColor = game.nearDeath ? '#ef4444' : 'var(--line)';
+      pBox.style.borderColor = v20Data.nearDeath ? '#ef4444' : 'var(--line)';
     }
     renderNearDeathBannerV20();
   };
@@ -5573,7 +5667,15 @@ svg.chr{overflow:visible}
       return;
     }
     _origShowTabBeforeV20(which);
-    if($('marketPane')) $('marketPane').hidden = (which !== 'market');
+    var mp = $('marketPane');
+    if(mp){
+      mp.hidden = (which !== 'market');
+      mp.style.display = (which === 'market') ? 'flex' : 'none';
+    }
+    if($('shopPane')){
+      $('shopPane').hidden = (which !== 'shop');
+      $('shopPane').style.display = (which === 'shop') ? 'flex' : 'none';
+    }
     if($('tabMarket')) $('tabMarket').className = 'tab' + (which === 'market' ? ' on' : '');
     updateLockedTabsV20();
     if(which === 'market') renderMarketV20();
@@ -5582,18 +5684,27 @@ svg.chr{overflow:visible}
   if($('tabMarket')){
     $('tabMarket').addEventListener('click', function(){ showTab('market'); });
   }
+  if($('marketPane')){
+    $('marketPane').hidden = true;
+    $('marketPane').style.display = 'none';
+  }
 
   var _origStartBeforeV20 = start;
   start = function(){
+    loadV20Local();
     _origStartBeforeV20();
     setTimeout(function(){
-      if(game) syncV20FromGame(game);
+      loadV20Local();
+      if(game) stripV20FromGameObj(game);
       startFirestoreListenersV20();
       renderCoins();
       renderNearDeathBannerV20();
     }, 600);
   };
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 20 ================== */
+
+
+  
 
 
   restore();
