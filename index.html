@@ -403,6 +403,7 @@ svg.chr{overflow:visible}
 
 
 
+
 /* === UPDATE 20 STYLES === */
 .v20TopBarWrap{
   position:fixed;
@@ -527,7 +528,10 @@ svg.chr{overflow:visible}
   transition:border-color .2s;
 }
 .expPathCard:hover{border-color:var(--gold)}
-.expPathCard.elite{border-color:#9b5de5}
+.expPathCard.elite{border-color:#2a6fd6}
+.expPathCard.camp{border-color:#2f8f4e}
+.expPathCard.altar{border-color:#7e3fc4}
+.expPathCard.cache{border-color:#b8610a}
 .expPathCard.boss{border-color:#ef4444;background:rgba(239,68,68,.08)}
 .expFloorBar{
   display:flex;
@@ -585,6 +589,7 @@ svg.chr{overflow:visible}
   font-size:13px;
   box-shadow:0 2px 5px rgba(0,0,0,.2);
 }
+
 </style>
 
 </head>
@@ -4042,32 +4047,30 @@ svg.chr{overflow:visible}
   });
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
-  //* ================== МОДУЛЬ UPDATE 20 (ИСПРАВЛЕННЫЙ) ================== */
+  /* ================== МОДУЛЬ UPDATE 20 (ВНУТРИ ЗАМЫКАНИЯ) ================== */
   APP_V = 20;
   RELEASE_ID = 20;
   RELEASE_NOTES.unshift({
-    title: 'Версия 20 · 5-этажные Экспедиции, Рынок Firestore, Эволюция классов и «При смерти»',
+    title: 'Версия 20 · 5-этажные Экспедиции, 6 Новых Боссов, Алтарь, Рынок Firestore и Престиж',
     lines: [
-      'Новая система данжей «Экспедиция» (5 этажей): 4 этажа с развилками на выбор (Обычный бой только на золото и опыт, Элитный Страж, Тайник с пылью и сокровищами, Лагерь/Алтарь) и 5-й этаж с Финальным Боссом и гарантированным сундуком снаряжения!',
-      'Ограничения честного боя: во время любого боя и внутри Экспедиции нельзя менять броню и оружие (единственное исключение — комната «Лагерь»), а также заблокированы Рынок, Кузница, Чаровальня и Скупщик.',
-      'Кнопка «Покинуть экспедицию»: в любой момент вне боя можно отступить в город, сохранив всё нафармленное золото, опыт и добычу (теряется только стоимость входа и сундук Босса).',
-      'Статус «При смерти» (1 HP) и Зелье восстановления 🧪: гибель в Экспедиции накладывает перманентный недуг, фиксирующий здоровье на 1 HP во всех боях. Снимается только редким Зельем восстановления (шанс выбить с Босса Экспедиции, дорогой крафт в Кузнице или покупка на Рынке).',
-      'Эволюция классов (Престиж на 100-м уровне) и «Счастливая пятёрка»: на 100-м уровне можно сбросить уровень до 1-го, получить постоянный бонус статов, выбрать одну из 3 элитных специализаций и получить 5 счастливых чисел (2–36), активирующих ультимативный удар!',
-      'Онлайн-рынок игроков на Firebase Firestore: выставляйте снаряжение (с сохранением заточки и чар!) и Зелья восстановления на аукцион за золото в реальном времени.',
-      'Ребаланс зачарований: Шанс крита 4–10% (кап 25%), Вампиризм 4–10% (кап 30%), Шипы возвращают 10–25% от урона монстра (кап 50%), Бонус монет 6–15%, Рвение шахты 4–10%.',
-      'Улучшения интерфейса: все ресурсы (монеты, пыль ✨, камни 🪨, зелья 🧪) и кнопка «Что нового» выстроены в одну строчку, а в таблице лидеров появились зелёные точки онлайн-статуса игроков!'
+      'Новая система «Экспедиция» (5 этажей): на этажах 1–4 генерируется от 1 до 3 путей (25% — 1 путь, 50% — 2 пути, 25% — 3 пути). Каждая комната имеет свою редкость: Столкновение (Обычная, 52%), Элитный Страж (Необычная, 22%), Лагерь (Редкая, 12%), Алтарь Древних (Эпическая, 9%) и Тайник (Легендарная, 5% — не более 1 за поход со 2-го этажа)!',
+      'Лагерь и Алтарь разделены: в Лагере ты отдыхаешь (+45% HP) и можешь сменить экипировку, а на Алтаре Древних выбираешь между Благословением Мощи (+15% урона) и Кровавой Жертвой (-20% HP ради +25% урона и +10% крита до конца похода)!',
+      '6 новых уникальных Боссов Экспедиции на 5-м этаже: Король Личей Мал\'Ганис, Архидракон Пиромант, Арахна Мать Роя, Механический Колосс, Кровавый Граф Носферату и Вестник Пустоты Ксалатат!',
+      'Статус «При смерти» (1 HP) и Зелье восстановления 🧪: гибель в Экспедиции фиксирует здоровье на 1 HP во всех боях до приёма редкого Зелья восстановления (дроп с Босса Экспедиции, крафт в Кузнице или покупка на Рынке).',
+      'Эволюция классов (Престиж на 100-м уровне) и «Счастливая пятёрка»: выбор из 3 элитных подклассов и 5 счастливых чисел (2–36) для ультимативных ударов.',
+      'Онлайн-рынок игроков на Firebase Firestore (в отдельной вкладке «Рынок»), зелёные точки онлайна в Лидерах и единая панель ресурсов в одну строчку!'
     ]
   });
 
-  // Храним данные V20 в отдельном объекте v20Data, чтобы НЕ засорять объект `game`
-  // и не ломать строгую проверку canonicalGame() у Шахтёра, Кузницы, Скупщика и Realtime Database!
+  // Все данные V20 хранятся в изолированном объекте v20Data, чтобы не нарушать
+  // строгую проверку canonicalGame() у Шахтёра/Кузницы/Скупщика и правила RTDB!
   var v20Data = {
     subcls: '',
     lucky5: [],
     prestige: 0,
     nearDeath: false,
     potions: 0,
-    exp: null // состояние 5-этажной экспедиции
+    exp: null
   };
 
   function v20StorageKey(){
@@ -4095,7 +4098,6 @@ svg.chr{overflow:visible}
     }catch(e){}
   }
 
-  // На всякий случай очищаем объект game от старых полей V20, если они попали туда ранее
   function stripV20FromGameObj(g){
     if(!g) return;
     if(g.subcls !== undefined){ if(!v20Data.subcls) v20Data.subcls = g.subcls; delete g.subcls; }
@@ -4184,7 +4186,7 @@ svg.chr{overflow:visible}
     return res;
   }
 
-  // --- 4. ПЕРЕСЧЁТ СТАТОВ И АФФИКСОВ С УЧЁТОМ ЭВОЛЮЦИИ И РЕБАЛАНСА V20 ---
+  // --- 4. ПЕРЕСЧЁТ СТАТОВ И АФФИКСОВ С УЧЁТОМ ЭВОЛЮЦИИ, АЛТАРЯ И РЕБАЛАНСА V20 ---
   getEquippedEnchants = function(g){
     var target = g || game;
     var res = {crit:0, vamp:0, gold:0, thorns:0, haste:0};
@@ -4228,6 +4230,9 @@ svg.chr{overflow:visible}
       if(sub.thornsBonus) res.thorns = Math.min(65, res.thorns + sub.thornsBonus);
       if(sub.goldBonus) res.gold = Math.min(60, res.gold + sub.goldBonus);
     }
+    if(target === game && v20Data.exp && v20Data.exp.on && v20Data.exp.altarCritBonus){
+      res.crit = Math.min(55, res.crit + v20Data.exp.altarCritBonus);
+    }
     return res;
   };
 
@@ -4246,8 +4251,8 @@ svg.chr{overflow:visible}
       if(sub.hpPct) st.hp = Math.round(st.hp * (1 + sub.hpPct / 100));
       if(sub.atkPct) st.atk = Math.round(st.atk * (1 + sub.atkPct / 100));
     }
-    if(v20Data.exp && v20Data.exp.on && v20Data.exp.campAtkBonus){
-      st.atk = Math.round(st.atk * (1 + v20Data.exp.campAtkBonus / 100));
+    if(v20Data.exp && v20Data.exp.on && v20Data.exp.altarAtkBonus){
+      st.atk = Math.round(st.atk * (1 + v20Data.exp.altarAtkBonus / 100));
     }
     return st;
   };
@@ -4387,7 +4392,50 @@ svg.chr{overflow:visible}
     if(btn) btn.onclick = useRecoveryPotionV20;
   }
 
-  // --- 7. БОЁВКА V20: ПРОЦЕНТНЫЕ ШИПЫ, 1 HP ПРИ СМЕРТИ И «СЧАСТЛИВАЯ ПЯТЁРКА» ---
+  // --- 7. 6 НОВЫХ ОТДЕЛЬНЫХ БОССОВ ДЛЯ 5-ГО ЭТАЖА ЭКСПЕДИЦИИ + ИХ ИКОНКИ ---
+  var EXP_BOSSES_V20 = [
+    {id:'boss_malganis', name:'Король Личей Мал\'Ганис', hp:105, dmg:13, rule:'чётное число или число от 25 до 36', hit:function(n){return n>0&&(n%2===0||n>=25);}},
+    {id:'boss_pyrodragon', name:'Архидракон Пиромант', hp:120, dmg:12, rule:'красное число или кратное 5', hit:function(n){return n>0&&(color(n)==='red'||n%5===0);}},
+    {id:'boss_arachna', name:'Арахна, Мать Роя', hp:98, dmg:13, rule:'число от 1 до 18', hit:function(n){return n>=1&&n<=18;}},
+    {id:'boss_colossus', name:'Механический Колосс Древних', hp:130, dmg:11, rule:'нечётное число (кроме 1)', hit:function(n){return n>1&&n%2===1;}},
+    {id:'boss_nosferatu', name:'Кровавый Граф Носферату', hp:100, dmg:12, rule:'чёрное число (при промахе лечит себя)', hit:function(n){return n>0&&color(n)==='black';}},
+    {id:'boss_xalatah', name:'Вестник Пустоты Ксалатат', hp:110, dmg:13, rule:'число от 10 до 28', hit:function(n){return n>=10&&n<=28;}}
+  ];
+
+  var _origMonsterSvgV20 = monsterSvg;
+  monsterSvg = function(id){
+    var o = OUT, i = INK;
+    if(id === 'boss_malganis'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#1e1b4b"/><path d="M16 88 L22 30 L50 18 L78 30 L84 88Z" fill="#312e81" '+o+'/><path d="M26 28 L32 8 L42 22 L50 4 L58 22 L68 8 L74 28Z" fill="#38bdf8" '+o+'/><ellipse cx="50" cy="54" rx="20" ry="22" fill="#e0f2fe" '+o+'/><circle cx="41" cy="50" r="5" fill="#0284c7"/><circle cx="59" cy="50" r="5" fill="#0284c7"/><circle cx="41" cy="50" r="2" fill="#fff"/><circle cx="59" cy="50" r="2" fill="#fff"/><path d="M38 68 H62 M43 65 V71 M50 65 V71 M57 65 V71" stroke="'+i+'" stroke-width="2.4"/></svg>';
+    }
+    if(id === 'boss_pyrodragon'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#450a0a"/><path d="M22 38 L8 10 L36 26Z M78 38 L92 10 L64 26Z" fill="#f59e0b" '+o+'/><ellipse cx="50" cy="56" rx="28" ry="25" fill="#dc2626" '+o+'/><ellipse cx="50" cy="66" rx="18" ry="12" fill="#f97316" '+o+'/><circle cx="38" cy="46" r="5" fill="#fef08a" stroke="'+i+'" stroke-width="1.8"/><circle cx="62" cy="46" r="5" fill="#fef08a" stroke="'+i+'" stroke-width="1.8"/><path d="M36 70 L41 62 L46 71 M54 71 L59 62 L64 70" fill="#fff" stroke="'+i+'" stroke-width="1.6"/></svg>';
+    }
+    if(id === 'boss_arachna'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#2e1065"/><path d="M26 48 L4 28 M24 58 L4 58 M26 68 L8 86 M74 48 L96 28 M76 58 L96 58 M74 68 L92 86" stroke="#a855f7" stroke-width="4" stroke-linecap="round"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="#3b0764" '+o+'/><circle cx="38" cy="44" r="3.5" fill="#ef4444"/><circle cx="62" cy="44" r="3.5" fill="#ef4444"/><circle cx="44" cy="52" r="4.5" fill="#ef4444"/><circle cx="56" cy="52" r="4.5" fill="#ef4444"/><path d="M40 66 L45 78 L50 66 M50 66 L55 78 L60 66" fill="#e9d5ff" '+o+'/></svg>';
+    }
+    if(id === 'boss_colossus'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#1e293b"/><polygon points="22,20 78,20 88,50 76,86 24,86 12,50" fill="#94a3b8" '+o+'/><rect x="28" y="42" width="44" height="10" rx="3" fill="#0f172a"/><circle cx="50" cy="47" r="5" fill="#f59e0b"/><path d="M32 68 H68 M40 64 V72 M50 64 V72 M60 64 V72" stroke="#0f172a" stroke-width="3"/></svg>';
+    }
+    if(id === 'boss_nosferatu'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#31102f"/><path d="M12 88 L20 26 L50 38 L80 26 L88 88Z" fill="#881337" '+o+'/><path d="M22 46 L10 34 L24 58Z M78 46 L90 34 L76 58Z" fill="#f1f5f9" '+o+'/><ellipse cx="50" cy="52" rx="22" ry="24" fill="#f1f5f9" '+o+'/><circle cx="40" cy="48" r="4.5" fill="#e11d48"/><circle cx="60" cy="48" r="4.5" fill="#e11d48"/><path d="M40 64 L44 74 L48 64 M52 64 L56 74 L60 64" fill="#fff" stroke="'+i+'" stroke-width="1.6"/></svg>';
+    }
+    if(id === 'boss_xalatah'){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#090d16"/><circle cx="50" cy="50" r="36" fill="#4c1d95" opacity="0.5"/><polygon points="50,10 78,34 68,84 32,84 22,34" fill="#581c87" '+o+'/><circle cx="50" cy="48" r="12" fill="#fde047" '+o+'/><ellipse cx="50" cy="48" rx="4" ry="10" fill="#090d16"/><path d="M30 24 L50 34 L70 24" fill="none" stroke="#c084fc" stroke-width="3"/></svg>';
+    }
+    return _origMonsterSvgV20(id);
+  };
+
+  var _origRewardBaseV20 = rewardBase;
+  rewardBase = function(mo){
+    var b = _origRewardBaseV20(mo);
+    if(mo && String(mo.id).indexOf('boss_') === 0){
+      return {xp: Math.round(b.xp * 1.45), coins: Math.round(b.coins * 1.45)};
+    }
+    return b;
+  };
+
+  // --- БОЁВКА V20 ---
   var currentFightTrapped = false;
   strikeCoreBase = function(f, mo, st, n){
     if(!Number.isFinite(f.dealt)) f.dealt = 0;
@@ -4495,7 +4543,13 @@ svg.chr{overflow:visible}
     f.p -= incomingDmg; f.taken += incomingDmg;
     var th = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(incomingDmg * eqEnch.thorns / 100))) : 0;
     if(th > 0){ f.m -= th; f.dealt += th; }
-    return 'Выпало ' + n + ': промах. ' + mo.name + ' бьёт на ' + incomingDmg + '.' + (th ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th + ' урона.' : '');
+    var boss drainMsg = '';
+    if(mo.id === 'boss_nosferatu' && f.m > 0){
+      var healBoss = Math.max(1, Math.round(mo.hp * 0.05));
+      f.m = Math.min(mo.hp, f.m + healBoss);
+      drainMsg = ' 🩸 Носферату выпил кровь (+' + healBoss + ' HP)!';
+    }
+    return 'Выпало ' + n + ': промах. ' + mo.name + ' бьёт на ' + incomingDmg + '.' + drainMsg + (th ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th + ' урона.' : '');
   };
 
   var _origStartFightV20 = startFight;
@@ -4522,35 +4576,68 @@ svg.chr{overflow:visible}
     return res;
   };
 
-  // --- 8. 5-ЭТАЖНАЯ ЭКСПЕДИЦИЯ С РАЗВИЛКАМИ (ХРАНИТСЯ В v20Data.exp, НЕ ЛОМАЯ RTDB!) ---
+  // --- 8. 5-ЭТАЖНАЯ ЭКСПЕДИЦИЯ: 1-3 ПУТИ, РЕДКОСТЬ КОМНАТ, ОТДЕЛЬНЫЕ ЛАГЕРЬ И АЛТАРЬ, 6 БОССОВ ---
   var EXP_FLOORS = 5;
+  var EXP_ROOM_CATALOG = {
+    combat: {type:'combat', r:'common', weight:52, title:'⚔️ Столкновение', desc:'Обычный монстр ранга. Награда: только золото и опыт (без лишнего мусора).'},
+    elite:  {type:'elite',  r:'uncommon', weight:22, title:'🛡️ Элитный Страж', desc:'Усиленный противник (+40% HP, +20% атаки). Награда: повышенное золото и XP, 5–12 ✨ пыли и 50% шанс выбить предмет!'},
+    camp:   {type:'camp',   r:'rare', weight:12, title:'🏕️ Походный Лагерь', desc:'Безопасный привал: восстанавливает +45% макс. HP и временно открывает смену брони/оружия во вкладке «Персонаж».'},
+    altar:  {type:'altar',  r:'epic', weight:9, title:'⛩️ Алтарь Древних', desc:'Мистическое святилище: выбор между Благословением Мощи (+15% к урону) и Кровавой Жертвой (-20% HP ради +25% к урону и +10% к криту)!'},
+    cache:  {type:'cache',  r:'legendary', weight:5, title:'📦 Древний Тайник', desc:'Редкая сокровищница без боя: 8–18 ✨ Магической пыли, немного монет и 35% шанс найти экипировку (макс. 1 за поход).'}
+  };
 
-  function generateExpChoicesV20(floorIdx, seed){
+  function generateExpChoicesV20(floorIdx, seed, cacheUsed){
+    var r = rng(hashStr('exp_v20:' + seed + ':' + floorIdx));
     if(floorIdx >= 4){
-      return [{type:'boss', title:'👑 Логово Хранителя (Финальный Босс)', desc:'Решающая схватка 5-го этажа! Награда: Сундук Босса с редким/эпическим предметом класса, порцией Магической пыли ✨ и шансом выбить Зелье восстановления 🧪.'}];
+      var bIdx = Math.floor(r() * EXP_BOSSES_V20.length);
+      var bossBase = EXP_BOSSES_V20[bIdx];
+      return [{
+        type:'boss',
+        r:'divine',
+        bossId: bossBase.id,
+        title:'👑 Финальный Босс: ' + bossBase.name,
+        desc:'Условие удара: ' + bossBase.rule + '. Награда: Сундук Босса (редкий/эпический+ предмет класса, Магическая пыль ✨ и 8% шанс на 🧪 Зелье восстановления)!'
+      }];
     }
-    var r = rng(hashStr('exp:' + seed + ':' + floorIdx));
-    var options = [
-      {type:'combat', title:'⚔️ Столкновение', desc:'Обычный монстр ранга. Награда: только золото и опыт (без лишнего мусора).'},
-      {type:'elite', title:'🛡️ Элитный Страж', desc:'Усиленный противник (+40% HP, +20% урона). Награда: +60% золота и XP, Магическая пыль ✨ и 50% шанс выбить снаряжение!'}
-    ];
-    if(floorIdx === 0){
-      options.push({type:'cache', title:'📦 Забытый Тайник', desc:'Безопасная комната без боя: золото, Магическая пыль ✨ и 35% шанс найти экипировку.'});
-    } else if(r() < 0.55){
-      options.push({type:'camp', title:'🔥 Лагерь и Алтарь', desc:'Безопасный привал: восстанавливает +50% HP, даёт +10% к урону до конца похода и позволяет сменить броню/оружие!'});
-    } else {
-      options.push({type:'cache', title:'📦 Древний Тайник', desc:'Безопасная сокровищница без боя: золото, Магическая пыль ✨ и 35% шанс найти экипировку.'});
+
+    // Определяем количество комнат на развилке: 25% -> 1 путь, 50% -> 2 пути, 25% -> 3 пути
+    var countRoll = r();
+    var numPaths = countRoll < 0.25 ? 1 : (countRoll < 0.75 ? 2 : 3);
+
+    // Доступный пул комнат с учётом этажа и лимита на Тайник
+    var poolKeys = ['combat', 'elite', 'altar'];
+    if(floorIdx >= 1) poolKeys.push('camp'); // Лагерь только со 2-го этажа
+    if(floorIdx >= 1 && !cacheUsed) poolKeys.push('cache'); // Тайник только со 2-го этажа и макс 1 за поход
+
+    var chosen = [];
+    var available = poolKeys.slice();
+    while(chosen.length < numPaths && available.length > 0){
+      var totalW = 0;
+      available.forEach(function(k){ totalW += EXP_ROOM_CATALOG[k].weight; });
+      var pickRoll = r() * totalW, acc = 0, pickedKey = available[0];
+      for(var i=0; i<available.length; i++){
+        acc += EXP_ROOM_CATALOG[available[i]].weight;
+        if(pickRoll <= acc){ pickedKey = available[i]; break; }
+      }
+      var info = EXP_ROOM_CATALOG[pickedKey];
+      chosen.push({type: info.type, r: info.r, title: info.title, desc: info.desc});
+      available.splice(available.indexOf(pickedKey), 1);
     }
-    return options;
+    return chosen;
   }
 
   dgFoe = function(){
     var d = v20Data.exp;
     if(!d) return makeMonster(DG_MONSTERS[0], 1, false, false, true);
+    if(d.st >= 4 || d.roomType === 'boss'){
+      var bossObj = EXP_BOSSES_V20.find(function(b){ return b.id === d.bossId; }) || EXP_BOSSES_V20[0];
+      var m = makeMonster(bossObj, d.r || 1, true, true, true);
+      m.name = '👑 ' + bossObj.name;
+      return m;
+    }
     var mIdx = Math.abs(hashStr('dgfoe:' + d.seed + ':' + d.st + ':' + (d.roomType||'combat'))) % DG_MONSTERS.length;
-    var isBoss = (d.st >= 4 || d.roomType === 'boss');
-    var isElite = (d.roomType === 'elite' || isBoss);
-    return makeMonster(DG_MONSTERS[mIdx], d.r || 1, isElite, isBoss, true);
+    var isElite = (d.roomType === 'elite');
+    return makeMonster(DG_MONSTERS[mIdx], d.r || 1, isElite, false, true);
   };
 
   dgEnter = function(){
@@ -4577,11 +4664,15 @@ svg.chr{overflow:visible}
       taken: 0,
       inCombat: false,
       inCamp: false,
+      inAltar: false,
+      cacheUsed: false,
       roomType: '',
-      campAtkBonus: 0,
-      choices: generateExpChoicesV20(0, seed)
+      bossId: '',
+      altarAtkBonus: 0,
+      altarCritBonus: 0,
+      choices: generateExpChoicesV20(0, seed, false)
     };
-    fightLog = '🗺️ Ты начал Экспедицию (' + rankName(rank) + '). Этаж 1 из 5: выбери путь на развилке!';
+    fightLog = '🗺️ Ты начал Экспедицию (' + rankName(rank) + '). Этаж 1 из 5: выбери путь!';
     fightMsg = ''; fightChest = false;
     saveV20Local();
     saveV20ToFirestore();
@@ -4590,16 +4681,39 @@ svg.chr{overflow:visible}
     showTab('dg');
   };
 
+  function applyAltarChoiceV20(mode){
+    if(!dgOn() || !v20Data.exp.inAltar) return;
+    var d = v20Data.exp;
+    d.inAltar = false;
+    if(mode === 'sacrifice'){
+      var loss = v20Data.nearDeath ? 0 : Math.max(1, Math.round(d.p * 0.20));
+      d.p = v20Data.nearDeath ? 1 : Math.max(1, d.p - loss);
+      d.altarAtkBonus = (Number(d.altarAtkBonus)||0) + 25;
+      d.altarCritBonus = (Number(d.altarCritBonus)||0) + 10;
+      toast('🩸 Кровавая Жертва принята! Потеряно ' + loss + ' HP, получено +25% к урону и +10% к криту до конца Экспедиции!');
+    } else {
+      d.altarAtkBonus = (Number(d.altarAtkBonus)||0) + 15;
+      toast('⛩️ Благословение Мощи получено! +15% к урону до конца Экспедиции!');
+    }
+    d.pa = stats().atk;
+    d.st++;
+    d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    saveV20Local();
+    renderChar(); renderDg();
+  }
+
   function selectExpeditionPathV20(choiceIdx){
     if(!dgOn() || merchantBusy) return;
     var d = v20Data.exp;
-    if(d.inCombat) return;
-    var choices = d.choices || generateExpChoicesV20(d.st, d.seed);
+    if(d.inCombat || d.inAltar) return;
+    var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
     var picked = choices[choiceIdx];
     if(!picked) return;
 
     d.roomType = picked.type;
+    if(picked.bossId) d.bossId = picked.bossId;
     d.inCamp = false;
+    d.inAltar = false;
 
     if(picked.type === 'combat' || picked.type === 'elite' || picked.type === 'boss'){
       currentFightTrapped = false;
@@ -4619,32 +4733,37 @@ svg.chr{overflow:visible}
       renderFight(); renderDg(); showTab('game');
       toast('⚔️ Бой начался: ' + mo.name + '!');
     } else if(picked.type === 'cache'){
+      d.cacheUsed = true;
       var rank = d.r || 1;
-      var goldGain = rollReward(dungeonPrice(rank) * 0.28);
-      var dustGain = 8 + Math.floor(Math.random() * 13) + rank * 2;
+      // Золото в тайнике снижено до ~12% от цены входа, чтобы нельзя было абузить в плюс без босса
+      var goldGain = Math.max(5, rollReward(dungeonPrice(rank) * 0.12));
+      var dustGain = 8 + Math.floor(Math.random() * 11) + rank;
       var dropId = (Math.random() < 0.35) ? rollLoot(rank, true, false) : null;
       game.coins += goldGain;
       game.dust = Math.min(1000000, (Number(game.dust)||0) + dustGain);
       if(dropId) game.inv.push(dropId);
 
       d.st++;
-      d.choices = generateExpChoicesV20(d.st, d.seed);
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
       saveV20Local();
       saveGame(); renderCoins(); renderChar(); renderDg();
-      toast('📦 Тайник открыт! +' + goldGain + ' монет, +' + dustGain + ' ✨ пыли' + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
+      toast('📦 Древний Тайник открыт! +' + goldGain + ' монет, +' + dustGain + ' ✨ пыли' + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
     } else if(picked.type === 'camp'){
       var stCamp = stats();
       d.ph = v20Data.nearDeath ? 1 : stCamp.hp;
-      var healAmt = v20Data.nearDeath ? 0 : Math.round(d.ph * 0.50);
+      var healAmt = v20Data.nearDeath ? 0 : Math.round(d.ph * 0.45);
       d.p = v20Data.nearDeath ? 1 : Math.min(d.ph, d.p + healAmt);
-      d.campAtkBonus = (Number(d.campAtkBonus)||0) + 10;
-      d.pa = stats().atk;
       d.inCamp = true;
       d.st++;
-      d.choices = generateExpChoicesV20(d.st, d.seed);
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
       saveV20Local();
       renderChar(); renderDg();
-      toast('🔥 Привал в Лагере! Восстановлено +50% HP, получено благословение +10% к урону. Пока вы в Лагере, можно сменить экипировку во вкладке «Персонаж»!');
+      toast('🏕️ Привал в Лагере! Восстановлено +45% HP (' + healAmt + ' HP). Пока вы в Лагере, смена экипировки во вкладке «Персонаж» разблокирована!');
+    } else if(picked.type === 'altar'){
+      d.inAltar = true;
+      saveV20Local();
+      renderDg();
+      toast('⛩️ Вы подошли к Алтарю Древних! Выберите дар Алтаря.');
     }
   }
 
@@ -4690,14 +4809,14 @@ svg.chr{overflow:visible}
       var sub = findSubclassV20(v20Data.subcls);
       var xpMult = (sub && sub.xpBonus) ? (1 + sub.xpBonus / 100) : 1;
       var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(d.r) * xpMult);
-      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.36 : 0.24));
+      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.34 : 0.18));
       game.coins += coins;
       var up = gainXP(xp);
       var wonState = {dealt: d.dealt, taken: d.taken};
       var extraLootMsg = '';
 
       if(d.roomType === 'elite' && d.st < 4){
-        var eliteDust = 5 + Math.floor(Math.random() * 11) + d.r;
+        var eliteDust = 5 + Math.floor(Math.random() * 8) + d.r;
         game.dust = Math.min(1000000, (Number(game.dust)||0) + eliteDust);
         extraLootMsg += ' +' + eliteDust + ' ✨ пыли.';
         if(Math.random() < 0.50){
@@ -4734,7 +4853,7 @@ svg.chr{overflow:visible}
         d.st++;
         d.p = v20Data.nearDeath ? 1 : healBetween(d.p, d.ph);
         d.skip = false; d.dealt = 0; d.taken = 0;
-        d.choices = generateExpChoicesV20(d.st, d.seed);
+        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
         saveV20Local();
         fightMsg = fightLog + ' Враг повержен!' + earned + ' Восстановлено 25% HP. Перейди во вкладку «Экспедиция» для выбора пути на Этаже ' + (d.st + 1) + '!';
         toast('✅ Этаж ' + d.st + ' пройден! Выбери развилку следующего этажа.');
@@ -4796,11 +4915,13 @@ svg.chr{overflow:visible}
 
     var h = '<div class="card"><h3>🗺️ Экспедиция · ' + rankName(rank) + '</h3>';
     if(!on){
-      h += '<p>Многоэтажный поход из <b>5 этажей</b>: на этажах 1–4 ты сам выбираешь путь на развилках (⚔️ Столкновение, 🛡️ Элитный Страж, 📦 Тайник или 🔥 Лагерь), а на 5-м этаже сражаешься с <b>Финальным Боссом</b> за главный сундук!</p>'
-        + '<p>• С обычных монстров в Экспедиции падает только золото и опыт.<br>'
-        + '• Снаряжение и Магическая пыль ✨ добываются со Стражей, в Тайниках и из Сундука Босса (плюс шанс выбить 🧪 Зелье восстановления).<br>'
-        + '• Во время похода нельзя менять броню (кроме комнаты «Лагерь») и пользоваться рынком/кузницей.<br>'
-        + '• При гибели в Экспедиции теряется часть монет и накладывается статус <b>«При смерти» (1 HP)</b>.</p>'
+      h += '<p>Многоэтажный поход из <b>5 этажей</b>: на этажах 1–4 генерируется <b>от 1 до 3 путей</b> с разной редкостью комнат, а на 5-м этаже ждёт один из <b>6 уникальных Боссов Экспедиции</b>!</p>'
+        + '<p>• <b>⚔️ Столкновение (Обычная, 52%):</b> только золото и опыт.<br>'
+        + '• <b>🛡️ Элитный Страж (Необычная, 22%):</b> повышенный опыт, золото, Магическая пыль ✨ и 50% шанс на вещь.<br>'
+        + '• <b>🏕️ Походный Лагерь (Редкая, 12%):</b> лечит +45% HP и открывает смену брони/оружия.<br>'
+        + '• <b>⛩️ Алтарь Древних (Эпическая, 9%):</b> выбор между Благословением (+15% к урону) и Кровавой Жертвой (-20% HP ради +25% к урону и +10% к криту).<br>'
+        + '• <b>📦 Древний Тайник (Легендарная, 5%):</b> пыль ✨ и сокровища без боя (макс. 1 за поход, начиная со 2-го этажа).<br>'
+        + '• При гибели в Экспедиции накладывается статус <b>«При смерти» (1 HP)</b> до приёма 🧪 Зелья восстановления.</p>'
         + '<span class="price">' + coinSvg() + price + '</span>';
       var lab = !game.cls ? 'Сначала выбери класс в Магазине' : busy ? 'Сначала закончи текущий бой' : coins < price ? 'Не хватает ' + (price - coins) + ' монет' : 'Отправиться в Экспедицию';
       h += '<button type="button" id="dgIn"' + ((!gameLoaded || !game.cls || busy || coins < price) ? ' disabled' : '') + '>' + lab + '</button>';
@@ -4813,20 +4934,30 @@ svg.chr{overflow:visible}
       }
       h += '</div>';
       h += '<p>Здоровье в походе: <b>' + d.p + ' / ' + d.ph + ' HP</b>'
-        + (d.campAtkBonus ? ' · Благословение Лагеря: <b>+' + d.campAtkBonus + '% к урону</b>' : '')
+        + (d.altarAtkBonus ? ' · Дары Алтаря: <b>+' + d.altarAtkBonus + '% урон' + (d.altarCritBonus ? ', +' + d.altarCritBonus + '% крит' : '') + '</b>' : '')
         + (d.inCamp ? ' · <span style="color:var(--green);font-weight:700">🏕️ Вы в Лагере (смена брони разблокирована!)</span>' : ' · 🔒 Экипировка зафиксирована')
         + '</p>';
 
       if(d.inCombat){
         h += '<p>⚔️ Сейчас идёт бой на Этаже ' + (d.st + 1) + '! Перейдите на вкладку «Рулетка», чтобы крутить колесо.</p>'
           + '<button type="button" id="dgGo">Перейти к бою</button>';
+      } else if(d.inAltar){
+        h += '<div class="card" style="border-color:#7e3fc4;background:var(--bg)">'
+          + '<h3>⛩️ Алтарь Древних · Выбери дар</h3>'
+          + '<p>Древнее святилище излучает мистическую силу. Какой дар ты примешь перед следующим этажом?</p>'
+          + '<div class="expPathsGrid">'
+          + '<div class="expPathCard altar"><div><div class="rn">✨ Благословение Мощи</div><div class="rd">Безопасно дарует <b>+15% к урону</b> до конца Экспедиции.</div></div><button type="button" id="btnAltarSafe">Принять</button></div>'
+          + '<div class="expPathCard boss"><div><div class="rn">🩸 Кровавая Жертва</div><div class="rd">Отнимает <b>20% текущего HP</b>, но дарует <b>+25% к урону и +10% к шансу крита</b> до конца Экспедиции!</div></div><button type="button" id="btnAltarSacrifice">Пожертвовать</button></div>'
+          + '</div></div>';
       } else {
-        var choices = d.choices || generateExpChoicesV20(d.st, d.seed);
+        var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        h += '<p style="font-size:13px;color:var(--muted)">Развилка Этажа ' + (d.st + 1) + ' (доступно путей: <b>' + choices.length + '</b>):</p>';
         h += '<div class="expPathsGrid">';
         choices.forEach(function(ch, idx){
-          var cCls = 'expPathCard' + (ch.type === 'elite' ? ' elite' : (ch.type === 'boss' ? ' boss' : ''));
+          var cCls = 'expPathCard ' + (ch.type || '');
+          var rarBadge = ch.r ? rarPill(ch.r) : '';
           h += '<div class="' + cCls + '">'
-            + '<div><div class="rn">' + ch.title + '</div><div class="rd">' + ch.desc + '</div></div>'
+            + '<div><div class="rn">' + ch.title + ' ' + rarBadge + '</div><div class="rd" style="margin-top:4px">' + ch.desc + '</div></div>'
             + '<button type="button" data-exp-path="' + idx + '">Выбрать</button>'
             + '</div>';
         });
@@ -4853,6 +4984,10 @@ svg.chr{overflow:visible}
     if(ab) ab.onclick = function(){
       confirmBox('Покинуть Экспедицию досрочно? Взнос (' + price + ' монет) не вернётся, но всё заработанное золото, опыт, пыль и предметы останутся у вас.', 'Отступить', dgLeave);
     };
+    var bSafe = $('btnAltarSafe');
+    if(bSafe) bSafe.onclick = function(){ applyAltarChoiceV20('safe'); };
+    var bSac = $('btnAltarSacrifice');
+    if(bSac) bSac.onclick = function(){ applyAltarChoiceV20('sacrifice'); };
     box.querySelectorAll('[data-exp-path]').forEach(function(b){
       b.onclick = function(){ selectExpeditionPathV20(Number(this.getAttribute('data-exp-path'))); };
     });
@@ -5567,6 +5702,9 @@ svg.chr{overflow:visible}
     }, 600);
   };
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 20 ================== */
+
+
+
 
 
   restore();
