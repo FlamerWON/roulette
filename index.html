@@ -4614,219 +4614,187 @@ svg.chr{overflow:visible}
 
   
   // --- НОВЫЙ ВЫСОКОДЕТАЛИЗИРОВАННЫЙ АРТ-ДВИЖОК ДЛЯ МОНСТРОВ V21 ---
-  monsterSvg = function(id){
-    var o = 'stroke="#0f0f0f" stroke-width="1.5" stroke-linejoin="round"';
+  
+    var o = 'stroke="#0f0f0f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"';
     var ds = 'filter="url(#ds)"', gl = 'filter="url(#gl)"', glL = 'filter="url(#glL)"';
     var s = '<svg viewBox="0 0 100 100" aria-hidden="true"><defs>'
-      + '<filter id="ds" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/></filter>'
-      + '<filter id="gl"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
-      + '<filter id="glL"><feGaussianBlur stdDeviation="4.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+      + '<filter id="ds" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/></filter>'
+      + '<filter id="gl"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+      + '<filter id="glL"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
       
     function g(id, c1, c2){ return '<linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+c1+'"/><stop offset="100%" stop-color="'+c2+'"/></linearGradient>'; }
     function r(id, c1, c2){ return '<radialGradient id="'+id+'" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="'+c1+'"/><stop offset="100%" stop-color="'+c2+'"/></radialGradient>'; }
     
     // Core palettes
-    s += g('c_gob','#86efac','#166534') + g('c_kob','#fca5a5','#7f1d1d') + r('c_sli','#67e8f9','#0e7490') + g('c_ske','#e2e8f0','#475569');
-    s += g('c_wol','#94a3b8','#1e293b') + g('c_ogr','#fde047','#854d0e') + g('c_har','#fbcfe8','#9d174d') + g('c_mim','#fcd34d','#78350f');
-    s += g('c_gol','#cbd5e1','#334155') + g('c_bas','#6ee7b7','#064e3b') + g('c_wer','#78716c','#292524') + g('c_cyc','#fcd34d','#9a3412');
-    s += g('c_bat','#c4b5fd','#4c1d95') + g('c_spi','#a8a29e','#1c1917') + g('c_mum','#fef08a','#713f12') + g('c_tro','#a3e635','#3f6212');
-    s += g('c_kni','#94a3b8','#0f172a') + g('c_lic','#e9d5ff','#4c1d95') + g('c_gar','#a8a29e','#44403c') + g('c_nec','#c4b5fd','#2e1065');
-    s += g('c_min','#fdba74','#7c2d12') + g('c_rea','#cbd5e1','#0f172a') + g('c_fro','#bae6fd','#0284c7') + g('c_dem','#fda4af','#881337');
-    s += g('c_mal','#c7d2fe','#1e1b4b') + g('c_pyr','#fca5a5','#450a0a') + g('c_ara','#e9d5ff','#3b0764');
-    s += g('c_col','#fef08a','#713f12') + g('c_nos','#f1f5f9','#881337') + g('c_xal','#d8b4fe','#2e1065');
-    s += g('met','#e2e8f0','#64748b') + g('gold','#fef08a','#b45309') + g('wood','#a16207','#451a03');
+    s += g('c_gob','#a3e635','#15803d') + g('c_kob','#ef4444','#7f1d1d') + r('c_sli','#22d3ee','#0891b2') + g('c_ske','#f8fafc','#64748b');
+    s += g('c_wol','#94a3b8','#1e293b') + g('c_ogr','#fde047','#a16207') + g('c_har','#f472b6','#9d174d') + g('c_mim','#fcd34d','#92400e');
+    s += g('c_gol','#94a3b8','#334155') + g('c_bas','#34d399','#065f46') + g('c_wer','#78716c','#292524') + g('c_cyc','#fcd34d','#c2410c');
+    s += g('c_bat','#a78bfa','#4c1d95') + g('c_spi','#78716c','#1c1917') + g('c_mum','#fef08a','#854d0e') + g('c_tro','#65a30d','#14532d');
+    s += g('c_kni','#94a3b8','#020617') + g('c_lic','#d8b4fe','#4c1d95') + g('c_gar','#a8a29e','#44403c') + g('c_nec','#a78bfa','#2e1065');
+    s += g('c_min','#fb923c','#7c2d12') + g('c_rea','#94a3b8','#020617') + g('c_fro','#7dd3fc','#0284c7') + g('c_dem','#fb7185','#881337');
+    
+    s += g('c_mal','#818cf8','#1e1b4b') + g('c_pyr','#f87171','#450a0a') + g('c_ara','#c084fc','#3b0764');
+    s += g('c_col','#fbbf24','#713f12') + g('c_nos','#e2e8f0','#881337') + g('c_xal','#c084fc','#2e1065');
     s += '</defs>';
 
-    function bg(c1,c2){ return '<rect width="100" height="100" fill="'+c2+'"/><circle cx="50" cy="50" r="70" fill="url(#bg_'+id+')" opacity="0.5"/><defs>'+r('bg_'+id,c1,c2)+'</defs>'; }
-    function eye(x,y,r,c){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+c+'" '+o+' '+gl+'/>'; }
-    function pupil(x,y,r){ return '<circle cx="'+x+'" cy="'+y+'" r="'+(r||2)+'" fill="#000"/>'; }
+    function bg(c1,c2){ return '<rect width="100" height="100" fill="'+c2+'"/><circle cx="50" cy="50" r="70" fill="url(#bg_'+id+')" opacity="0.6"/><defs>'+r('bg_'+id,c1,c2)+'</defs>'; }
+    function eye(x,y,r,c, pupilSize){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#fff" stroke="#111" stroke-width="1.5"/><circle cx="'+x+'" cy="'+y+'" r="'+(r*0.7)+'" fill="'+c+'"/><circle cx="'+x+'" cy="'+y+'" r="'+(pupilSize||(r*0.4))+'" fill="#000"/><circle cx="'+(x-r*0.2)+'" cy="'+(y-r*0.2)+'" r="'+(r*0.25)+'" fill="#fff"/>'; }
+    function glowEye(x,y,r,c){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+c+'" '+gl+'/><circle cx="'+x+'" cy="'+y+'" r="'+(r*0.4)+'" fill="#fff"/>'; }
 
-    if(id==='goblin'){
-       s+=bg('#4ade80','#064e3b') + '<path d="M15 55 Q5 35 25 40 Z M85 55 Q95 35 75 40 Z" fill="url(#c_gob)" '+o+' '+ds+'/><ellipse cx="50" cy="60" rx="32" ry="28" fill="url(#c_gob)" '+o+' '+ds+'/>'
-        +'<path d="M30 55 L45 70 L35 50 Z M70 55 L55 70 L65 50 Z" fill="#166534" opacity="0.6"/>'
-        +eye(36,54,6.5,'#fde047')+eye(64,54,6.5,'#fde047')+pupil(36,54)+pupil(64,54)
-        +'<path d="M38 75 Q50 86 62 75" fill="none" stroke="#000" stroke-width="3"/><path d="M42 76 L44 83 L46 77 M54 76 L56 83 L58 77" fill="#fff" '+o+'/>';
-    }else if(id==='kobold'){
-       s+=bg('#f87171','#450a0a') + '<path d="M25 40 L35 20 L45 35 Z M75 40 L65 20 L55 35 Z" fill="url(#c_kob)" '+o+' '+ds+'/><ellipse cx="50" cy="58" rx="28" ry="26" fill="url(#c_kob)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="70" rx="18" ry="12" fill="#991b1b" '+o+'/><circle cx="44" cy="68" r="2.5" fill="#000"/><circle cx="56" cy="68" r="2.5" fill="#000"/><path d="M44 76 Q50 82 56 76" fill="none" stroke="#000" stroke-width="2.5"/>'
-        +eye(37,52,6,'#fde047')+eye(63,52,6,'#fde047')+pupil(37,52)+pupil(63,52)
-        +'<path d="M30 46 Q37 42 44 48 M70 46 Q63 42 56 48" fill="none" stroke="#450a0a" stroke-width="3"/>';
-    }else if(id==='slime'){
-       s+=bg('#22d3ee','#083344') + '<path d="M20 75 Q10 40 50 40 Q90 40 80 75 Q50 90 20 75 Z" fill="url(#c_sli)" '+o+' '+ds+'/>'
-        +'<ellipse cx="35" cy="55" rx="8" ry="4" transform="rotate(-20 35 55)" fill="#fff" opacity="0.6"/>'
-        +'<circle cx="50" cy="60" r="14" fill="#0891b2" opacity="0.4"/>'
-        +eye(40,65,5,'#fff')+eye(60,65,5,'#fff')+pupil(40,65)+pupil(60,65)
-        +'<path d="M45 75 Q50 80 55 75" fill="none" stroke="#000" stroke-width="2"/>';
-    }else if(id==='skeleton'){
-       s+=bg('#cbd5e1','#0f172a') + '<path d="M20 50 Q20 15 50 15 Q80 15 80 50 L75 80 L25 80 Z" fill="#1e293b" '+ds+'/>'
-        +'<path d="M30 55 Q30 30 50 30 Q70 30 70 55 Q65 70 50 75 Q35 70 30 55 Z" fill="url(#c_ske)" '+o+' '+ds+'/>'
-        +'<path d="M48 30 L50 40 L52 30" fill="none" stroke="#475569" stroke-width="1.5"/>'
-        +eye(40,50,6,'#ef4444')+eye(60,50,6,'#ef4444')
-        +'<path d="M48 60 L50 68 L52 60 Z" fill="#000"/>'
-        +'<rect x="42" y="70" width="16" height="8" rx="2" fill="url(#c_ske)" '+o+'/><path d="M46 70 V78 M50 70 V78 M54 70 V78" stroke="#000" stroke-width="1.5"/>';
-    }else if(id==='wolf'){
-       s+=bg('#94a3b8','#0f172a') + '<path d="M25 45 L15 15 L40 35 Z M75 45 L85 15 L60 35 Z" fill="url(#c_wol)" '+o+' '+ds+'/><ellipse cx="50" cy="55" rx="30" ry="26" fill="url(#c_wol)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="70" rx="16" ry="12" fill="#334155" '+o+'/><ellipse cx="50" cy="65" rx="5" ry="3" fill="#000"/>'
-        +eye(38,50,5.5,'#ef4444')+eye(62,50,5.5,'#ef4444')+pupil(38,50,1.5)+pupil(62,50,1.5)
-        +'<path d="M42 75 Q50 82 58 75" fill="none" stroke="#000" stroke-width="2.5"/><path d="M44 76 L46 82 L48 76 M52 76 L54 82 L56 76" fill="#fff"/>'
-        +'<path d="M30 40 L45 60" stroke="#ef4444" stroke-width="2" opacity="0.7"/>'; // scar
-    }else if(id==='ogre'){
-       s+=bg('#fde047','#451a03') + '<circle cx="20" cy="55" r="8" fill="url(#c_ogr)" '+o+' '+ds+'/><circle cx="80" cy="55" r="8" fill="url(#c_ogr)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="55" rx="34" ry="30" fill="url(#c_ogr)" '+o+' '+ds+'/>'
-        +'<path d="M25 45 Q35 35 45 45 M75 45 Q65 35 55 45" fill="none" stroke="#451a03" stroke-width="5" stroke-linecap="round"/>'
-        +eye(36,52,4,'#000')+eye(64,52,4,'#000')
-        +'<circle cx="50" cy="62" r="7" fill="#ca8a04" '+o+'/>'
-        +'<path d="M30 75 Q50 85 70 75" fill="none" stroke="#000" stroke-width="4"/><path d="M35 76 L38 62 L42 77 M65 76 L62 62 L58 77" fill="#fff" '+o+'/>';
-    }else if(id==='harpy'){
-       s+=bg('#fbcfe8','#4a044e') + '<path d="M10 40 Q25 20 40 45 Q20 60 10 70 Z M90 40 Q75 20 60 45 Q80 60 90 70 Z" fill="#9d174d" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="55" rx="24" ry="26" fill="url(#c_har)" '+o+' '+ds+'/>'
-        +'<path d="M25 40 Q50 10 75 40 Q65 25 50 30 Q35 25 25 40 Z" fill="#831843" '+o+'/>'
-        +eye(38,50,5.5,'#fde047')+eye(62,50,5.5,'#fde047')+pupil(38,50)+pupil(62,50)
-        +'<path d="M45 58 L55 58 L50 70 Z" fill="#f59e0b" '+o+'/>';
-    }else if(id==='mimic'){
-       s+=bg('#fcd34d','#451a03') + '<rect x="15" y="45" width="70" height="40" rx="4" fill="url(#wood)" '+o+' '+ds+'/>'
-        +'<path d="M15 45 Q50 10 85 45 Z" fill="url(#wood)" '+o+' '+ds+'/>'
-        +'<path d="M25 45 H75" stroke="#000" stroke-width="5"/>'
-        +'<path d="M40 50 Q50 85 60 70 Q55 55 50 50 Z" fill="#e11d48" '+o+'/>'
-        +'<path d="M20 45 L25 58 L30 45 L35 58 L40 45 M80 45 L75 58 L70 45 L65 58 L60 45" fill="#fff" '+o+'/>'
-        +'<rect x="42" y="38" width="16" height="14" fill="url(#gold)" '+o+'/><circle cx="50" cy="45" r="3" fill="#000"/>'
-        +eye(30,35,5,'#fde047')+eye(70,35,5,'#fde047');
-    }else if(id==='golem'){
-       s+=bg('#cbd5e1','#0f172a') + '<polygon points="20,25 50,15 80,25 85,65 70,85 30,85 15,65" fill="url(#c_gol)" '+o+' '+ds+'/>'
-        +'<path d="M30 25 L45 40 L35 60 M70 25 L55 40 L65 60" fill="none" stroke="#475569" stroke-width="3"/>'
-        +'<rect x="30" y="45" width="14" height="6" fill="#22d3ee" '+gl+'/><rect x="56" y="45" width="14" height="6" fill="#22d3ee" '+gl+'/>'
-        +'<path d="M35 70 H65" stroke="#22d3ee" stroke-width="4" '+gl+'/>';
-    }else if(id==='basilisk'){
-       s+=bg('#6ee7b7','#022c22') + '<path d="M35 25 L42 10 L48 22 L52 8 L58 22 L64 10 L65 25 Z" fill="#ef4444" '+o+'/>'
-        +'<ellipse cx="50" cy="55" rx="30" ry="25" fill="url(#c_bas)" '+o+' '+ds+'/>'
-        +eye(35,48,7,'#fde047')+eye(65,48,7,'#fde047')
-        +'<rect x="34" y="43" width="2" height="10" fill="#000"/><rect x="64" y="43" width="2" height="10" fill="#000"/>'
-        +'<path d="M35 68 Q50 76 65 68" fill="none" stroke="#000" stroke-width="3"/><path d="M47 72 L50 86 L53 72" fill="#ef4444"/>';
-    }else if(id==='werewolf'){
-       s+=bg('#78716c','#1c1917') + '<path d="M20 45 L15 10 L40 30 Z M80 45 L85 10 L60 30 Z" fill="#44403c" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="55" rx="30" ry="28" fill="url(#c_wer)" '+o+' '+ds+'/><ellipse cx="50" cy="70" rx="18" ry="14" fill="#57534e" '+o+'/>'
-        +eye(36,48,6,'#ef4444')+eye(64,48,6,'#ef4444')
-        +'<path d="M36 76 L42 66 L46 77 M54 77 L58 66 L64 76" fill="#fff" '+o+'/>'
-        +'<path d="M46 77 V82 M54 77 V82" stroke="#ef4444" stroke-width="2"/>'; // blood
-    }else if(id==='cyclops'){
-       s+=bg('#fcd34d','#451a03') + '<path d="M45 25 L50 5 L55 25 Z" fill="url(#c_cyc)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="58" rx="32" ry="30" fill="url(#c_cyc)" '+o+' '+ds+'/>'
-        +'<circle cx="50" cy="45" r="14" fill="#fff" '+o+'/><circle cx="50" cy="45" r="6" fill="#3b82f6"/><circle cx="50" cy="45" r="3" fill="#000"/>'
-        +'<path d="M30 30 Q50 38 70 30" fill="none" stroke="#451a03" stroke-width="5" stroke-linecap="round"/>'
-        +'<path d="M35 72 Q50 66 65 72" fill="none" stroke="#000" stroke-width="3"/><path d="M40 71 L44 62 L48 71 M52 71 L56 62 L60 71" fill="#fff" '+o+'/>';
-    }else if(id==='bat'){
-       s+=bg('#c4b5fd','#2e1065') + '<path d="M50 50 Q10 20 5 50 Q20 70 50 65 Z M50 50 Q90 20 95 50 Q80 70 50 65 Z" fill="url(#c_bat)" '+o+' '+ds+'/>'
-        +'<path d="M38 40 L35 20 L46 36 Z M62 40 L65 20 L54 36 Z" fill="#2e1065" '+o+'/><ellipse cx="50" cy="52" rx="16" ry="18" fill="#4c1d95" '+o+' '+ds+'/>'
-        +eye(43,48,4,'#ef4444')+eye(57,48,4,'#ef4444')+pupil(43,48,1.5)+pupil(57,48,1.5)
-        +'<path d="M45 60 L47 68 L50 60 L53 68 L55 60 Z" fill="#fff" '+o+'/>';
-    }else if(id==='spider'){
-       s+=bg('#a8a29e','#1c1917') + '<path d="M30 45 L5 25 M30 55 L5 75 M70 45 L95 25 M70 55 L95 75 M35 65 L20 90 M65 65 L80 90 M40 35 L25 10 M60 35 L75 10" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/>'
-        +'<ellipse cx="50" cy="65" rx="24" ry="20" fill="url(#c_spi)" '+o+' '+ds+'/><path d="M45 58 H55 L50 65 Z" fill="#ef4444"/>'
-        +'<circle cx="50" cy="40" r="16" fill="#292524" '+o+'/>'
-        +eye(42,38,4,'#ef4444')+eye(58,38,4,'#ef4444')+eye(48,34,3,'#ef4444')+eye(52,34,3,'#ef4444')
-        +'<path d="M45 48 L48 55 L50 48 L52 55 L55 48" fill="none" stroke="#fff" stroke-width="2"/>';
-    }else if(id==='mummy'){
-       s+=bg('#fef08a','#451a03') + '<rect x="25" y="15" width="50" height="70" rx="20" fill="url(#c_mum)" '+o+' '+ds+'/>'
-        +'<path d="M25 35 H75 M25 45 H75 M25 55 H75 M25 65 H75" stroke="#713f12" stroke-width="3" stroke-linecap="round"/>'
-        +'<rect x="35" y="38" width="30" height="12" fill="#222"/>'
-        +eye(42,44,4,'#4ade80')+eye(58,44,4,'#4ade80')
-        +'<path d="M40 68 Q50 74 60 68" fill="none" stroke="#222" stroke-width="3"/>';
-    }else if(id==='troll'){
-       s+=bg('#a3e635','#14532d') + '<circle cx="15" cy="50" r="10" fill="url(#c_tro)" '+o+' '+ds+'/><circle cx="85" cy="50" r="10" fill="url(#c_tro)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="55" rx="35" ry="32" fill="url(#c_tro)" '+o+' '+ds+'/>'
-        +'<path d="M25 40 Q35 30 45 45 M75 40 Q65 30 55 45" fill="none" stroke="#14532d" stroke-width="6" stroke-linecap="round"/>'
-        +eye(38,50,4.5,'#fde047')+eye(62,50,4.5,'#fde047')+pupil(38,50)+pupil(62,50)
-        +'<ellipse cx="50" cy="62" rx="9" ry="7" fill="#4d7c0f" '+o+'/>'
-        +'<path d="M30 76 Q50 86 70 76" fill="none" stroke="#000" stroke-width="4"/><path d="M35 78 L38 65 L44 79 M65 78 L62 65 L56 79" fill="#fff" '+o+'/>';
-    }else if(id==='knight'){
-       s+=bg('#94a3b8','#020617') + '<path d="M50 20 Q65 5 80 15 Q65 18 58 28 Z" fill="#ef4444" '+o+'/>'
-        +'<path d="M25 85 L25 40 C25 15 75 15 75 40 L75 85 Z" fill="url(#c_kni)" '+o+' '+ds+'/>'
-        +'<rect x="30" y="42" width="40" height="10" rx="3" fill="#0f172a"/><circle cx="40" cy="47" r="3" fill="#ef4444" '+gl+'/><circle cx="60" cy="47" r="3" fill="#ef4444" '+gl+'/>'
-        +'<path d="M50 52 V80 M38 62 V78 M62 62 V78" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>'
-        +'<path d="M35 30 L45 35 M65 75 L70 70" stroke="#000" stroke-width="2"/>';
-    }else if(id==='lich'){
-       s+=bg('#e9d5ff','#3b0764') + '<path d="M15 90 L22 35 C25 10 75 10 78 35 L85 90 Z" fill="url(#c_lic)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="50" rx="20" ry="22" fill="#f8fafc" '+o+' '+ds+'/>'
-        +eye(42,48,6,'#4ade80')+eye(58,48,6,'#4ade80')
-        +'<path d="M50 58 L46 66 H54 Z" fill="#000"/>'
-        +'<path d="M40 70 H60 M45 68 V74 M50 68 V74 M55 68 V74" stroke="#000" stroke-width="2"/>'
-        +'<path d="M32 25 L38 8 L45 20 L50 5 L55 20 L62 8 L68 25 Z" fill="url(#gold)" '+o+'/>';
-    }else if(id==='gargoyle'){
-       s+=bg('#a8a29e','#292524') + '<path d="M10 35 L30 20 L35 55 Z M90 35 L70 20 L65 55 Z" fill="#57534e" '+o+' '+ds+'/>'
-        +'<path d="M30 35 L20 10 L40 25 Z M70 35 L80 10 L60 25 Z" fill="#44403c" '+o+'/>'
-        +'<ellipse cx="50" cy="58" rx="28" ry="26" fill="url(#c_gar)" '+o+' '+ds+'/>'
-        +eye(38,50,5,'#f97316')+eye(62,50,5,'#f97316')
-        +'<path d="M35 70 H65 L60 78 H40 Z" fill="#292524" '+o+'/>';
-    }else if(id==='necromancer'){
-       s+=bg('#c4b5fd','#1e1b4b') + '<path d="M15 90 Q20 10 50 10 Q80 10 85 90 Z" fill="url(#c_nec)" '+o+' '+ds+'/>'
-        +'<ellipse cx="50" cy="50" rx="20" ry="24" fill="#0f172a" '+o+'/>'
-        +eye(42,48,4,'#2dd4bf')+eye(58,48,4,'#2dd4bf')
-        +'<circle cx="50" cy="80" r="8" fill="#2dd4bf" '+glL+'/>';
-    }else if(id==='minotaur'){
-       s+=bg('#fdba74','#450a0a') + '<path d="M25 35 Q5 15 15 5 Q25 25 35 30 Z M75 35 Q95 15 85 5 Q75 25 65 30 Z" fill="#fde047" '+o+'/>'
-        +'<ellipse cx="50" cy="55" rx="30" ry="28" fill="url(#c_min)" '+o+' '+ds+'/><ellipse cx="50" cy="68" rx="18" ry="12" fill="#7c2d12" '+o+'/>'
-        +eye(36,46,4.5,'#ef4444')+eye(64,46,4.5,'#ef4444')
-        +'<circle cx="50" cy="76" r="8" fill="none" stroke="url(#gold)" stroke-width="4"/>';
-    }else if(id==='reaper'){
-       s+=bg('#cbd5e1','#020617') + '<path d="M75 10 Q95 20 85 50 Q80 30 65 25 Z" fill="#94a3b8" '+o+'/><path d="M70 15 L60 90" stroke="#451a03" stroke-width="5"/>'
-        +'<path d="M15 90 Q20 10 50 10 Q80 10 80 90 Z" fill="url(#c_rea)" '+o+' '+ds+'/>'
-        +'<ellipse cx="48" cy="50" rx="18" ry="20" fill="#0f172a" '+o+'/>'
-        +eye(40,48,5,'#38bdf8')+eye(56,48,5,'#38bdf8');
-    }else if(id==='frost'){
-       s+=bg('#bae6fd','#082f49') + '<polygon points="50,5 75,25 85,55 65,85 35,85 15,55 25,25" fill="url(#c_fro)" '+o+' '+ds+'/>'
-        +'<polygon points="50,15 68,32 62,75 38,75 32,32" fill="#7dd3fc" opacity="0.8"/>'
-        +eye(38,48,5,'#fff')+eye(62,48,5,'#fff')
-        +'<path d="M35 65 L45 60 L55 65 L65 60" fill="none" stroke="#0c4a6e" stroke-width="3" stroke-linecap="round"/>';
-    }else if(id==='demon'){
-       s+=bg('#fda4af','#4c0519') + '<path d="M25 35 Q10 10 25 5 Q25 20 38 28 Z M75 35 Q90 10 75 5 Q75 20 62 28 Z" fill="#0f172a" '+o+'/>'
-        +'<ellipse cx="50" cy="58" rx="28" ry="26" fill="url(#c_dem)" '+o+' '+ds+'/>'
-        +eye(37,50,5,'#fde047')+eye(63,50,5,'#fde047')+pupil(37,50)+pupil(63,50)
-        +'<path d="M35 70 Q50 85 65 70" fill="#0f172a" '+o+'/><path d="M40 71 L43 78 L46 71 M54 71 L57 78 L60 71" fill="#fff"/>';
+    if(id==='goblin'){ // Ушастый, зубастый, мультяшный
+       s+=bg('#86efac','#064e3b') 
+        + '<path d="M50 50 Q10 20 -5 50 Q20 50 35 45 Z M50 50 Q90 20 105 50 Q80 50 65 45 Z" fill="#65a30d" '+o+'/>' // Уши
+        + '<ellipse cx="50" cy="55" rx="35" ry="32" fill="url(#c_gob)" '+o+'/>' // Голова
+        + '<path d="M35 70 Q50 85 65 70 Q50 95 35 70" fill="#14532d" '+o+'/>' // Рот
+        + '<path d="M40 73 L43 83 L46 73 M54 73 L57 83 L60 73" fill="#fff" stroke="#111" stroke-width="1"/>' // Зубы
+        + eye(35, 48, 8, '#eab308') + eye(65, 48, 8, '#eab308')
+        + '<path d="M25 40 Q35 30 45 42 M75 40 Q65 30 55 42" fill="none" stroke="#064e3b" stroke-width="4" stroke-linecap="round"/>'; // Брови
+    }else if(id==='kobold'){ // Ящероподобный, с рожками
+       s+=bg('#fca5a5','#450a0a') 
+        + '<path d="M30 40 Q25 10 15 5 Q35 15 40 35 Z M70 40 Q75 10 85 5 Q65 15 60 35 Z" fill="#b91c1c" '+o+'/>' // Рога
+        + '<ellipse cx="50" cy="60" rx="32" ry="28" fill="url(#c_kob)" '+o+'/>' // Голова
+        + '<path d="M20 55 Q5 65 25 75 Z M80 55 Q95 65 75 75 Z" fill="url(#c_kob)" '+o+'/>' // Щёки-шипы
+        + '<path d="M30 75 Q50 90 70 75 Z" fill="#7f1d1d" '+o+'/>' // Пасть
+        + '<path d="M35 75 L38 85 L41 75 M59 75 L56 85 L53 75 M47 75 L50 85 L53 75" fill="#fde047" stroke="#111" stroke-width="1"/>' // Зубы
+        + eye(35, 52, 7, '#fbbf24', 2) + eye(65, 52, 7, '#fbbf24', 2); // Глаза рептилии
+    }else if(id==='slime'){ // Прозрачный, с пузырьками внутри
+       s+=bg('#67e8f9','#083344') 
+        + '<path d="M15 80 C 15 30, 85 30, 85 80 Q 85 95, 50 95 Q 15 95, 15 80 Z" fill="url(#c_sli)" '+o+' '+ds+'/>'
+        + '<ellipse cx="30" cy="45" rx="10" ry="5" transform="rotate(-30 30 45)" fill="#fff" opacity="0.7"/>' // Блик
+        + '<circle cx="70" cy="50" r="4" fill="#fff" opacity="0.4"/><circle cx="60" cy="70" r="6" fill="#fff" opacity="0.4"/>' // Пузырьки
+        + eye(38, 65, 6, '#fff', 3.5) + eye(62, 65, 6, '#fff', 3.5) // Милые глазки
+        + '<path d="M45 78 Q50 85 55 78" fill="none" stroke="#083344" stroke-width="3" stroke-linecap="round"/>'; // Ротик
+    }else if(id==='skeleton'){ // Череп с трещиной
+       s+=bg('#e2e8f0','#0f172a') 
+        + '<path d="M25 45 C 25 10, 75 10, 75 45 Q 75 65, 65 70 L 60 85 L 40 85 L 35 70 Q 25 65, 25 45 Z" fill="url(#c_ske)" '+o+' '+ds+'/>'
+        + '<circle cx="38" cy="48" r="8" fill="#0f172a"/><circle cx="62" cy="48" r="8" fill="#0f172a"/>' // Глазницы
+        + glowEye(38,48,3,'#ef4444') + glowEye(62,48,3,'#ef4444') // Светящиеся глаза
+        + '<path d="M50 62 L46 70 H54 Z" fill="#0f172a"/>' // Нос
+        + '<path d="M40 80 H60 M45 75 V85 M50 75 V85 M55 75 V85" stroke="#0f172a" stroke-width="3"/>' // Зубы
+        + '<path d="M45 15 L40 25 L45 35" fill="none" stroke="#64748b" stroke-width="2"/>'; // Трещина
+    }else if(id==='wolf'){ // Свирепый волк с мехом
+       s+=bg('#94a3b8','#020617') 
+        + '<path d="M25 45 L10 15 L40 30 Z M75 45 L90 15 L60 30 Z" fill="#334155" '+o+'/>' // Уши
+        + '<path d="M20 55 Q 5 65 15 75 Q 25 75 25 65 Z M80 55 Q 95 65 85 75 Q 75 75 75 65 Z" fill="url(#c_wol)" '+o+'/>' // Бакенбарды
+        + '<ellipse cx="50" cy="55" rx="32" ry="28" fill="url(#c_wol)" '+o+'/>' // Голова
+        + '<ellipse cx="50" cy="72" rx="20" ry="15" fill="#e2e8f0" '+o+'/>' // Морда
+        + '<ellipse cx="50" cy="65" rx="7" ry="4" fill="#020617"/>' // Нос
+        + eye(35, 48, 6.5, '#ef4444', 2) + eye(65, 48, 6.5, '#ef4444', 2)
+        + '<path d="M25 35 Q35 45 45 42 M75 35 Q65 45 55 42" fill="none" stroke="#020617" stroke-width="4" stroke-linecap="round"/>' // Брови
+        + '<path d="M38 78 Q50 88 62 78" fill="none" stroke="#020617" stroke-width="3"/><path d="M44 79 L46 86 L48 79 M52 79 L54 86 L56 79" fill="#fff"/>'; // Клыки
+    }else if(id==='ogre'){ // Массивный, с тупым выражением
+       s+=bg('#fde047','#451a03') 
+        + '<ellipse cx="50" cy="55" rx="38" ry="32" fill="url(#c_ogr)" '+o+' '+ds+'/>'
+        + '<circle cx="15" cy="55" r="7" fill="url(#c_ogr)" '+o+'/><circle cx="85" cy="55" r="7" fill="url(#c_ogr)" '+o+'/>' // Уши
+        + '<path d="M20 40 Q35 30 45 45 M80 40 Q65 30 55 45" fill="none" stroke="#451a03" stroke-width="6" stroke-linecap="round"/>' // Брови
+        + eye(38, 52, 5, '#fff', 2.5) + eye(62, 52, 5, '#fff', 2.5)
+        + '<ellipse cx="50" cy="65" rx="10" ry="7" fill="#ca8a04" '+o+'/>' // Нос картошкой
+        + '<path d="M30 80 Q50 90 70 80" fill="none" stroke="#451a03" stroke-width="5" stroke-linecap="round"/>'
+        + '<path d="M35 81 L38 68 L43 83 M65 81 L62 68 L57 83" fill="#fff" '+o+'/>'; // Клыки вверх
+    }else if(id==='harpy'){ // Перья, безумный взгляд
+       s+=bg('#fbcfe8','#4a044e') 
+        + '<path d="M10 40 Q25 5 45 35 Q 20 60 10 70 Z M90 40 Q75 5 55 35 Q 80 60 90 70 Z" fill="#9d174d" '+o+'/>' // Перья/волосы
+        + '<ellipse cx="50" cy="55" rx="26" ry="28" fill="url(#c_har)" '+o+' '+ds+'/>'
+        + eye(35, 48, 7, '#fde047', 2) + eye(65, 48, 7, '#fde047', 2)
+        + '<path d="M45 55 L55 55 L50 72 Z" fill="#f59e0b" '+o+'/>' // Клюв
+        + '<path d="M25 35 Q35 25 45 38 M75 35 Q65 25 55 38" fill="none" stroke="#4a044e" stroke-width="3" stroke-linecap="round"/>'; // Брови
+    }else if(id==='mimic'){ // Зловещий сундук
+       s+=bg('#fcd34d','#451a03') 
+        + '<rect x="15" y="45" width="70" height="40" rx="4" fill="#92400e" '+o+' '+ds+'/>' // Тело сундука
+        + '<path d="M15 45 Q50 -5 85 45 Z" fill="#b45309" '+o+' '+ds+'/>' // Крышка сундука
+        + '<path d="M25 45 H75" stroke="#111" stroke-width="6"/>' // Щель
+        + '<path d="M35 45 Q50 90 65 45 Z" fill="#be123c" '+o+'/>' // Язык
+        + '<path d="M20 45 L25 60 L30 45 L35 60 L40 45 L45 60 L50 45 L55 60 L60 45 L65 60 L70 45 L75 60 L80 45" fill="#fff" '+o+'/>' // Зубы верх
+        + '<path d="M25 45 L30 30 L35 45 L40 30 L45 45 L50 30 L55 45 L60 30 L65 45 L70 30 L75 45" fill="#fff" '+o+'/>' // Зубы крышка
+        + '<rect x="42" y="38" width="16" height="14" fill="#fcd34d" '+o+'/><circle cx="50" cy="45" r="3" fill="#111"/>' // Замок
+        + eye(28, 30, 6, '#fde047', 2) + eye(72, 30, 6, '#fde047', 2); // Глаза на крышке
+    }else if(id==='golem'){ // Глыба камней
+       s+=bg('#94a3b8','#0f172a') 
+        + '<polygon points="20,25 50,10 80,25 90,60 75,85 25,85 10,60" fill="url(#c_gol)" '+o+' '+ds+'/>' // Основной камень
+        + '<path d="M20 25 L40 45 L30 65 M80 25 L60 45 L70 65 M40 45 L60 45 M40 45 L50 10 M60 45 L50 10 M30 65 H70" fill="none" stroke="#475569" stroke-width="4"/>' // Трещины
+        + '<rect x="30" y="45" width="14" height="6" fill="#22d3ee" '+gl+'/><rect x="56" y="45" width="14" height="6" fill="#22d3ee" '+gl+'/>' // Глаза-щели
+        + '<path d="M35 75 H65" stroke="#22d3ee" stroke-width="5" '+gl+'/>'; // Рот-щель
+    }else if(id==='basilisk'){ // Мультяшная рептилия
+       s+=bg('#34d399','#022c22') 
+        + '<path d="M30 35 L38 10 L46 30 L50 5 L54 30 L62 10 L70 35 Z" fill="#ef4444" '+o+'/>' // Гребень
+        + '<ellipse cx="50" cy="55" rx="35" ry="30" fill="url(#c_bas)" '+o+' '+ds+'/>' // Голова
+        + eye(32, 45, 8, '#fef08a', 2) + eye(68, 45, 8, '#fef08a', 2) // Глаза
+        + '<rect x="31" y="40" width="2" height="10" fill="#000"/><rect x="67" y="40" width="2" height="10" fill="#000"/>' // Вертикальные зрачки
+        + '<path d="M30 70 Q50 80 70 70" fill="none" stroke="#064e3b" stroke-width="4"/><path d="M46 75 L50 90 L54 75" fill="#ef4444"/>'; // Пасть и язык
+    }else if(id==='werewolf'){ // Лохматый волколак
+       s+=bg('#78716c','#1c1917') 
+        + '<path d="M20 45 L10 10 L40 30 Z M80 45 L90 10 L60 30 Z" fill="#292524" '+o+' '+ds+'/>' // Уши
+        + '<ellipse cx="50" cy="55" rx="32" ry="28" fill="url(#c_wer)" '+o+' '+ds+'/>' // Голова
+        + '<ellipse cx="50" cy="72" rx="20" ry="16" fill="#57534e" '+o+'/>' // Морда
+        + eye(35, 48, 6, '#ef4444', 3) + eye(65, 48, 6, '#ef4444', 3) // Глаза
+        + '<ellipse cx="50" cy="64" rx="6" ry="4" fill="#000"/>' // Нос
+        + '<path d="M34 80 L42 68 L46 82 M54 82 L58 68 L66 80" fill="#fff" '+o+'/>' // Клыки
+        + '<path d="M46 82 V88 M54 82 V88" stroke="#ef4444" stroke-width="3"/>' // Кровь
+        + '<path d="M25 35 L40 45 M75 35 L60 45" stroke="#1c1917" stroke-width="5" stroke-linecap="round"/>'; // Брови
+    }else if(id==='cyclops'){ // Одноглазый громила
+       s+=bg('#fcd34d','#7c2d12') 
+        + '<path d="M45 25 L50 5 L55 25 Z" fill="#ea580c" '+o+'/>' // Рог
+        + '<ellipse cx="50" cy="55" rx="36" ry="34" fill="url(#c_cyc)" '+o+' '+ds+'/>' // Голова
+        + eye(50, 42, 16, '#3b82f6', 6) // Один большой глаз
+        + '<path d="M25 25 Q50 35 75 25" fill="none" stroke="#7c2d12" stroke-width="6" stroke-linecap="round"/>' // Монобровь
+        + '<path d="M35 75 Q50 65 65 75" fill="none" stroke="#451a03" stroke-width="4"/>' // Рот
+        + '<path d="M40 73 L44 63 L48 73 M52 73 L56 63 L60 73" fill="#fff" '+o+'/>'; // Клыки
     }
-    // ------ BOSSES ------
+    // ------ БОССЫ ------
     else if(id==='boss_malganis'){
-       s+=bg('#c7d2fe','#020617') + '<path d="M10 90 L20 25 L50 10 L80 25 L90 90 Z" fill="url(#c_mal)" '+o+' '+ds+'/>'
-        +'<path d="M22 25 L30 5 L42 20 L50 2 L58 20 L70 5 L78 25 Z" fill="#38bdf8" '+o+' '+gl+'/>'
-        +'<ellipse cx="50" cy="55" rx="22" ry="24" fill="#e0f2fe" '+o+'/>'
-        +eye(40,50,6,'#0284c7')+eye(60,50,6,'#0284c7')+pupil(40,50,2)+pupil(60,50,2)
-        +'<path d="M36 70 H64 M42 66 V74 M50 66 V74 M58 66 V74" stroke="#0f172a" stroke-width="3"/>';
+       s+=bg('#818cf8','#020617') 
+        + '<path d="M10 90 L20 25 L50 10 L80 25 L90 90 Z" fill="url(#c_mal)" '+o+' '+ds+'/>' // Капюшон
+        + '<path d="M20 25 L30 5 L40 20 L50 2 L60 20 L70 5 L80 25 Z" fill="#38bdf8" '+o+' '+gl+'/>' // Ледяная корона
+        + '<ellipse cx="50" cy="55" rx="24" ry="26" fill="#e0f2fe" '+o+'/>' // Череп
+        + glowEye(38, 50, 6, '#0284c7') + glowEye(62, 50, 6, '#0284c7')
+        + '<path d="M35 70 Q50 75 65 70" fill="none" stroke="#1e1b4b" stroke-width="4"/><path d="M42 68 V76 M50 68 V76 M58 68 V76" stroke="#1e1b4b" stroke-width="3"/>'; // Зубы
     }else if(id==='boss_pyrodragon'){
-       s+=bg('#fca5a5','#2a0606') + '<path d="M20 40 L5 10 L35 25 Z M80 40 L95 10 L65 25 Z" fill="#f59e0b" '+o+'/>'
-        +'<ellipse cx="50" cy="58" rx="30" ry="28" fill="url(#c_pyr)" '+o+' '+ds+'/><ellipse cx="50" cy="70" rx="20" ry="14" fill="#f97316" '+o+'/>'
-        +eye(36,46,6,'#fef08a')+eye(64,46,6,'#fef08a')+pupil(36,46,2)+pupil(64,46,2)
-        +'<path d="M35 72 L40 62 L45 74 M55 74 L60 62 L65 72" fill="#fff" '+o+'/>'
-        +'<path d="M50 82 Q45 95 50 100 Q55 95 50 82 Z" fill="#f59e0b" '+glL+'/>';
+       s+=bg('#f87171','#450a0a') 
+        + '<path d="M15 45 L5 10 L35 25 Z M85 45 L95 10 L65 25 Z" fill="#f59e0b" '+o+'/>' // Рога
+        + '<ellipse cx="50" cy="55" rx="34" ry="32" fill="url(#c_pyr)" '+o+' '+ds+'/>' // Голова
+        + '<ellipse cx="50" cy="72" rx="22" ry="16" fill="#ea580c" '+o+'/>' // Пасть
+        + eye(34, 45, 7, '#fef08a', 2.5) + eye(66, 45, 7, '#fef08a', 2.5)
+        + '<path d="M25 35 L40 45 M75 35 L60 45" stroke="#450a0a" stroke-width="5" stroke-linecap="round"/>' // Брови
+        + '<path d="M35 74 L40 62 L45 76 M55 76 L60 62 L65 74" fill="#fff" '+o+'/>' // Клыки
+        + '<path d="M45 85 Q50 100 55 85 Z" fill="#fbbf24" '+glL+'/>'; // Огонь из пасти
     }else if(id==='boss_arachna'){
-       s+=bg('#e9d5ff','#1e1b4b') + '<path d="M25 50 L5 25 M25 60 L5 65 M25 70 L5 90 M75 50 L95 25 M75 60 L95 65 M75 70 L95 90" fill="none" stroke="#a855f7" stroke-width="5" stroke-linecap="round"/>'
-        +'<ellipse cx="50" cy="60" rx="28" ry="24" fill="url(#c_ara)" '+o+' '+ds+'/>'
-        +eye(36,44,4.5,'#ef4444')+eye(64,44,4.5,'#ef4444')+eye(44,52,5.5,'#ef4444')+eye(56,52,5.5,'#ef4444')
-        +eye(40,35,3,'#ef4444')+eye(60,35,3,'#ef4444')+eye(50,30,4,'#fde047')
-        +'<path d="M38 70 L45 85 L50 70 M50 70 L55 85 L62 70" fill="#e9d5ff" '+o+'/>';
+       s+=bg('#c084fc','#1e1b4b') 
+        + '<path d="M25 50 L5 20 M25 60 L5 60 M25 70 L5 100 M75 50 L95 20 M75 60 L95 60 M75 70 L95 100" fill="none" stroke="#a855f7" stroke-width="6" stroke-linecap="round"/>' // Лапы
+        + '<ellipse cx="50" cy="60" rx="32" ry="28" fill="url(#c_ara)" '+o+' '+ds+'/>' // Голова/Тело
+        + glowEye(35, 45, 6, '#ef4444') + glowEye(65, 45, 6, '#ef4444') // Основные глаза
+        + glowEye(45, 55, 4, '#ef4444') + glowEye(55, 55, 4, '#ef4444') // Доп. глаза 1
+        + glowEye(40, 35, 3, '#ef4444') + glowEye(60, 35, 3, '#ef4444') // Доп. глаза 2
+        + '<path d="M40 75 L45 90 L50 75 M50 75 L55 90 L60 75" fill="#f8fafc" '+o+'/>'; // Жвала
     }else if(id==='boss_colossus'){
-       s+=bg('#fef08a','#020617') + '<polygon points="15,20 85,20 95,50 80,90 20,90 5,50" fill="url(#c_col)" '+o+' '+ds+'/>'
-        +'<rect x="25" y="42" width="50" height="14" rx="4" fill="#0f172a"/>'
-        +eye(50,49,6.5,'#f59e0b')
-        +'<path d="M30 70 H70 M40 65 V75 M50 65 V75 M60 65 V75" stroke="#0f172a" stroke-width="4"/>';
+       s+=bg('#fbbf24','#020617') 
+        + '<polygon points="10,15 90,15 95,50 80,95 20,95 5,50" fill="url(#c_col)" '+o+' '+ds+'/>' // Механический корпус
+        + '<path d="M10 15 L50 5 L90 15" fill="none" stroke="#713f12" stroke-width="6"/>' // Макушка
+        + '<rect x="20" y="40" width="60" height="16" rx="4" fill="#0f172a" '+o+'/>' // Визор
+        + '<circle cx="50" cy="48" r="7" fill="#f59e0b" '+glL+'/>' // Глаз-сенсор
+        + '<path d="M30 75 H70 M40 70 V80 M50 70 V80 M60 70 V80" stroke="#0f172a" stroke-width="5"/>'; // Механический рот
     }else if(id==='boss_nosferatu'){
-       s+=bg('#f1f5f9','#020617') + '<path d="M10 90 L20 20 L50 35 L80 20 L90 90 Z" fill="#881337" '+o+' '+ds+'/>'
-        +'<path d="M20 45 L5 30 L25 60 Z M80 45 L95 30 L75 60 Z" fill="#cbd5e1" '+o+'/>'
-        +'<ellipse cx="50" cy="52" rx="24" ry="26" fill="url(#c_nos)" '+o+' '+ds+'/>'
-        +eye(38,48,5,'#e11d48')+eye(62,48,5,'#e11d48')+pupil(38,48,1.5)+pupil(62,48,1.5)
-        +'<path d="M38 66 L42 78 L46 66 M54 66 L58 78 L62 66" fill="#fff" '+o+'/>'
-        +'<path d="M42 78 Q42 85 41 90 M58 78 Q58 85 59 90" stroke="#e11d48" stroke-width="2" fill="none"/>';
+       s+=bg('#e2e8f0','#020617') 
+        + '<path d="M10 95 L20 20 L50 35 L80 20 L90 95 Z" fill="#881337" '+o+' '+ds+'/>' // Воротник
+        + '<path d="M20 45 L5 25 L25 65 Z M80 45 L95 25 L75 65 Z" fill="#cbd5e1" '+o+'/>' // Уши
+        + '<ellipse cx="50" cy="55" rx="26" ry="28" fill="url(#c_nos)" '+o+' '+ds+'/>' // Лицо
+        + glowEye(37, 48, 5, '#e11d48') + glowEye(63, 48, 5, '#e11d48') // Глаза
+        + '<path d="M25 40 Q50 50 75 40" fill="none" stroke="#4c0519" stroke-width="4"/>' // Брови
+        + '<path d="M36 70 L40 85 L44 70 M56 70 L60 85 L64 70" fill="#fff" '+o+'/>' // Клыки вампира
+        + '<path d="M40 85 V92 M60 85 V92" stroke="#e11d48" stroke-width="3" stroke-linecap="round"/>'; // Кровь
     }else if(id==='boss_xalatah'){
-       s+=bg('#d8b4fe','#000000') + '<circle cx="50" cy="50" r="40" fill="#4c1d95" opacity="0.6" '+glL+'/>'
-        +'<polygon points="50,10 85,35 75,90 25,90 15,35" fill="url(#c_xal)" '+o+' '+ds+'/>'
-        +eye(50,48,14,'#fde047')+pupil(50,48,4)+'<ellipse cx="50" cy="48" rx="4" ry="12" fill="#000"/>'
-        +eye(25,35,5,'#fde047')+eye(75,35,5,'#fde047')+eye(35,75,4,'#fde047')+eye(65,75,4,'#fde047')
-        +'<path d="M25 20 Q50 35 75 20" fill="none" stroke="#c084fc" stroke-width="4"/>';
+       s+=bg('#c084fc','#000000') 
+        + '<circle cx="50" cy="50" r="45" fill="#4c1d95" opacity="0.6" '+glL+'/>' // Аура бездны
+        + '<polygon points="50,5 90,35 80,95 20,95 10,35" fill="url(#c_xal)" '+o+' '+ds+'/>' // Теневое тело
+        + glowEye(50, 45, 16, '#fde047') + pupil(50, 45, 4) + '<ellipse cx="50" cy="45" rx="3" ry="14" fill="#000"/>' // Главный глаз
+        + glowEye(20, 30, 6, '#fde047') + glowEye(80, 30, 6, '#fde047')
+        + glowEye(30, 80, 5, '#fde047') + glowEye(70, 80, 5, '#fde047')
+        + '<path d="M20 15 Q50 35 80 15" fill="none" stroke="#e9d5ff" stroke-width="5" opacity="0.8"/>'; // Щупальца
     }else{
        s+='<rect width="100" height="100" fill="#888"/><circle cx="50" cy="50" r="20" fill="#f00"/>';
     }
 
     return s + '</svg>';
   };
-
 
   var _origRewardBaseV20 = rewardBase;
   rewardBase = function(mo){
@@ -6164,18 +6132,21 @@ svg.chr{overflow:visible}
 
 
 
-  /* ================== МОДУЛЬ UPDATE 21 (ИСПРАВЛЕННЫЙ: СЕТЫ, АНТИ-АБУЗ, ЗЕЛЬЕ ЛЕЧЕНИЯ, СПЕЦАТАКИ) ================== */
+  /* ================== МОДУЛЬ UPDATE 21 (РЕЛЕКТИВНЫЕ СЕТЫ БОССОВ, АРТЕФАКТЫ, АЛХИМИЯ, АНИМАЦИИ, СПЕЦАТАКИ) ================== */
   APP_V = 21;
   RELEASE_ID = 21;
   RELEASE_NOTES.unshift({
-    title: 'Версия 21 · Реликвии Боссов, Спецатаки, Именные Сеты, Анти-Абуз и Зелье Лечения',
+    title: 'Версия 21 · Реликвии Боссов, Спецатаки, Артефакты, Боевая Алхимия, Классовые защиты и Крафт',
     lines: [
-      '👑 Реликтовая Экипировка (8-й тир): падает ТОЛЬКО с Боссов Экспедиции начиная с 10-го ранга сложности (шанс 1.5%–2.0%). Универсальна для всех классов и даёт уникальные эффекты при сборе 2 и 4 частей сета босса!',
-      '☠️ Спецатаки Боссов: у каждого из 6 Боссов Экспедиции появились 3 коронных числа на рулетке, активирующих уникальную способность босса.',
-      '⚖️ Жёсткий Анти-Абуз лута и привязка к рангам: Эпические вещи падают со 2 ранга, Легендарные — с 4-го, Мифические — с 7-го, Божественные и Реликвии — с 10-го. Если фармить ранги ниже своего максимального, шанс редкого лута режется вплоть до 0%!',
-      '🛡️ Именные комплекты брони и Классовая защита: бонус комплекта, Резонанс заточки (+5% за уровень мин. заточки) и классовая защита (Блок Воина, Уклонение Лучника, Барьер Мага) работают ТОЛЬКО при сборе 2, 3 или 4 вещей ОДНОГО И ТОГО ЖЕ комплекта!',
-      '💍 Новые слоты (Кольцо и Амулет) и Крафт случайного слота своего класса за Магическую пыль в Кузнице.',
-      '🧪 Боевая Алхимия: добавлено Зелье лечения (+20% HP прямо в бою без траты хода, крафт за 800 монет и 20 ✨ пыли, лимит — максимум 2 зелья за всю Экспедицию). Зелье снятия статуса «При смерти» переименовано в «Слезу Феникса».'
+      '👑 Реликтовая Экипировка: новый, 8-й уровень редкости! Уникальные сеты падают ТОЛЬКО с Боссов Экспедиции с шансом 1.5%. Подходят для любого класса и дают ломающие игру ауры при сборе 2-х и 4-х частей (например, игнор урона, бесконечный вампиризм, ожог)!',
+      '☠️ Спецатаки Боссов: у каждого Босса Экспедиции появились 3 уникальных «числа-триггера». Если рулетка останавливается на них, Босс применяет разрушительную фирменную способность!',
+      '⚖️ Баланс лута (Анти-Абуз): фарм слабых монстров высокоуровневыми игроками больше не приносит топовых вещей (штраф за перекач). Топовые редкости требуют высоких рангов сложности!',
+      '💍 Новые слоты: Кольцо и Амулет! Они дают небольшие прибавки к статам, но обладают уникальными пассивными свойствами.',
+      '🛡️ Классовая броня теперь защищает: у Воина появился шанс Блока (снижение урона), у Лучника — Уклонение от атак монстра, а Маг в начале боя получает Магический Барьер.',
+      '🛠️ Крафт экипировки: в Кузнице теперь можно создавать случайную броню и оружие ВАШЕГО класса нужной редкости за Магическую пыль и монеты!',
+      '✨ Резонанс Кузницы: бонус классических сетов теперь усиливается от заточки (бонус сета возрастает на +5% за каждый уровень минимальной заточки надетых вещей комплекта).',
+      '🧪 Боевая Алхимия: в бою над кнопкой «Крутить» появился Пояс алхимика. Лечебные зелья, Каменная кожа и Кровь Берсерка можно пить прямо в бою, не тратя ход (крафтятся в Кузнице)!',
+      '💥 Сочные анимации: при ударах вылетают цифры урона и лечения, мощные удары сотрясают экран, а удачные броски вызывают ослепительную вспышку!'
     ]
   });
 
@@ -6184,13 +6155,9 @@ svg.chr{overflow:visible}
   SELL_PRICES['relic'] = 15000;
   DUST_YIELD['relic'] = 1000;
 
-  // Убираем лишние кнопки зелий из HTML-пояса (оставляем ТОЛЬКО Зелье лечения)
-  if($('btnPotStone')) $('btnPotStone').remove();
-  if($('btnPotBerserk')) $('btnPotBerserk').remove();
-
-  // --- 1. ДАННЫЕ V21 (ТОЛЬКО БОЕВОЕ ЗЕЛЬЕ ЛЕЧЕНИЯ) ---
+  // --- 1. ДАННЫЕ V21 (БОЕВЫЕ ЗЕЛЬЯ) ---
   var v21Data = {
-    pots: {heal: 0}
+    pots: {heal: 0, stone: 0, berserk: 0}
   };
 
   function loadV21Local(){
@@ -6199,7 +6166,9 @@ svg.chr{overflow:visible}
       if(raw){
         var p = JSON.parse(raw);
         if(p && p.pots){
-          v21Data.pots.heal = Math.max(0, Math.min(10000, Math.floor(Number(p.pots.heal)||0)));
+          v21Data.pots.heal = Math.max(0, Math.min(10000, Number(p.pots.heal)||0));
+          v21Data.pots.stone = Math.max(0, Math.min(10000, Number(p.pots.stone)||0));
+          v21Data.pots.berserk = Math.max(0, Math.min(10000, Number(p.pots.berserk)||0));
         }
       }
     }catch(e){}
@@ -6219,29 +6188,11 @@ svg.chr{overflow:visible}
 
   var _origLogoutBeforeV21 = logout;
   logout = function(){
-    v21Data.pots = {heal: 0};
+    v21Data.pots = {heal:0, stone:0, berserk:0};
     _origLogoutBeforeV21();
   };
 
-  // --- 2. ДОБАВЛЯЕМ РЕЛИКВИИ БОССОВ И АРТЕФАКТЫ (КОЛЬЦА/АМУЛЕТЫ) ---
-  var SET_NAMES_MAP_V21 = {
-    'set_nosferatu': 'Сет Кровавого Графа',
-    'set_colossus': 'Сет Древнего Механизма',
-    'set_xalatah': 'Сет Вестника Пустоты',
-    'set_pyro': 'Сет Истинного Пламени',
-    'set_malganis': 'Сет Короля Личей',
-    'set_arachna': 'Сет Матери Роя'
-  };
-
-  var BOSS_TO_RELIC_SET_V21 = {
-    'boss_nosferatu': 'set_nosferatu',
-    'boss_colossus': 'set_colossus',
-    'boss_xalatah': 'set_xalatah',
-    'boss_pyrodragon': 'set_pyro',
-    'boss_malganis': 'set_malganis',
-    'boss_arachna': 'set_arachna'
-  };
-
+  // --- 2. ДОБАВЛЯЕМ РЕЛИКВИИ, АРТЕФАКТЫ И ОБНОВЛЯЕМ ПУЛ ЛУТА ---
   var V21_NEW_ITEMS = [
     // Артефакты (кольца/амулеты)
     {id:'ring_gambler', name:'Кольцо Игрока', slot:'slotRing', r:'uncommon', hp:15, atk:1, desc:'+5% бонус монет, +3% шанс крита.'},
@@ -6250,38 +6201,38 @@ svg.chr{overflow:visible}
     {id:'amulet_truth', name:'Око Истины', slot:'slotAmulet', r:'legendary', hp:45, atk:8, desc:'Снижает получаемый урон на 40% при выпадении Единицы (не действует на Автоматонов).'},
     {id:'ring_executioner', name:'Знак Палача', slot:'slotRing', r:'mythic', hp:60, atk:12, desc:'Если у монстра <15% HP, любой удар наносит х3 урона и добивает врага.'},
     {id:'amulet_titan', name:'Сердце Титана', slot:'slotAmulet', r:'divine', hp:200, atk:15, desc:'Огромный запас HP. Лечение в Экспедиции между комнатами увеличено с 25% до 40% от макс. HP.'},
-
-    // РЕЛИКТОВЫЕ СЕТЫ БОССОВ (cls: 'all', не падают из обычных мобов и не крафтятся)
-    // 1. Кровавый Граф (Носферату)
+    
+    // РЕЛИКТОВЫЕ СЕТЫ БОССОВ (Универсальные - без класса)
+    // 1. Кровавый Граф (Носферату) - Упор на Вампиризм и выживание
     {id:'boss_head_nosferatu', name:'Корона Кровавого Графа', slot:'slotHead', r:'relic', hp:140, atk:26, setId:'set_nosferatu'},
     {id:'boss_body_nosferatu', name:'Мантия Кровавого Графа', slot:'slotBody', r:'relic', hp:220, atk:24, setId:'set_nosferatu'},
     {id:'boss_arms_nosferatu', name:'Коготь Кровавого Графа', slot:'slotArms', r:'relic', hp:45, atk:90, setId:'set_nosferatu'},
     {id:'boss_legs_nosferatu', name:'Поступь Кровавого Графа', slot:'slotLegs', r:'relic', hp:100, atk:20, setId:'set_nosferatu'},
-
-    // 2. Древний Механизм (Колосс)
+    
+    // 2. Древний Механизм (Колосс) - Танк / Шипы
     {id:'boss_head_colossus', name:'Визор Древнего Механизма', slot:'slotHead', r:'relic', hp:160, atk:20, setId:'set_colossus'},
     {id:'boss_body_colossus', name:'Каркас Древнего Механизма', slot:'slotBody', r:'relic', hp:250, atk:18, setId:'set_colossus'},
     {id:'boss_arms_colossus', name:'Молот Древнего Механизма', slot:'slotArms', r:'relic', hp:60, atk:75, setId:'set_colossus'},
     {id:'boss_legs_colossus', name:'Поршни Древнего Механизма', slot:'slotLegs', r:'relic', hp:120, atk:15, setId:'set_colossus'},
 
-    // 3. Вестник Пустоты (Ксалатат)
+    // 3. Вестник Пустоты (Ксалатат) - Уклонение / Игнор
     {id:'boss_head_xalatah', name:'Ореол Вестника Пустоты', slot:'slotHead', r:'relic', hp:110, atk:30, setId:'set_xalatah'},
     {id:'boss_body_xalatah', name:'Покров Вестника Пустоты', slot:'slotBody', r:'relic', hp:190, atk:28, setId:'set_xalatah'},
     {id:'boss_arms_xalatah', name:'Сфера Вестника Пустоты', slot:'slotArms', r:'relic', hp:40, atk:95, setId:'set_xalatah'},
     {id:'boss_legs_xalatah', name:'Тень Вестника Пустоты', slot:'slotLegs', r:'relic', hp:85, atk:25, setId:'set_xalatah'},
-
-    // 4. Истинное Пламя (Пиромант)
+    
+    // 4. Истинное Пламя (Пиромант) - Чистый урон / Ожоги
     {id:'boss_head_pyro', name:'Шлем Истинного Пламени', slot:'slotHead', r:'relic', hp:125, atk:28, setId:'set_pyro'},
     {id:'boss_body_pyro', name:'Чешуя Истинного Пламени', slot:'slotBody', r:'relic', hp:200, atk:25, setId:'set_pyro'},
     {id:'boss_arms_pyro', name:'Клык Истинного Пламени', slot:'slotArms', r:'relic', hp:40, atk:95, setId:'set_pyro'},
     {id:'boss_legs_pyro', name:'Коготь Истинного Пламени', slot:'slotLegs', r:'relic', hp:90, atk:22, setId:'set_pyro'},
-
+    
     // 5. Король Личей (Мал'Ганис)
     {id:'boss_head_malganis', name:'Венец Короля Личей', slot:'slotHead', r:'relic', hp:130, atk:27, setId:'set_malganis'},
     {id:'boss_body_malganis', name:'Саван Короля Личей', slot:'slotBody', r:'relic', hp:210, atk:25, setId:'set_malganis'},
     {id:'boss_arms_malganis', name:'Жезл Короля Личей', slot:'slotArms', r:'relic', hp:40, atk:92, setId:'set_malganis'},
     {id:'boss_legs_malganis', name:'Походка Короля Личей', slot:'slotLegs', r:'relic', hp:90, atk:23, setId:'set_malganis'},
-
+    
     // 6. Мать Роя (Арахна)
     {id:'boss_head_arachna', name:'Глаза Матери Роя', slot:'slotHead', r:'relic', hp:135, atk:26, setId:'set_arachna'},
     {id:'boss_body_arachna', name:'Хитин Матери Роя', slot:'slotBody', r:'relic', hp:215, atk:23, setId:'set_arachna'},
@@ -6292,14 +6243,15 @@ svg.chr{overflow:visible}
   V21_NEW_ITEMS.forEach(function(a){
     var realSlot = a.slot.replace('slot', '').toLowerCase();
     var it = {
-      name: a.name, slot: realSlot, r: a.r, hp: a.hp, atk: a.atk, drop: (a.r !== 'relic'),
+      name: a.name, slot: realSlot, r: a.r, hp: a.hp, atk: a.atk, drop: true,
       visualStyle: 'none', vb: '0 0 40 40', draw: ''
     };
     if(a.desc) it.desc = a.desc;
     if(a.setId) it.setId = a.setId;
-    if(a.r === 'relic') it.cls = 'all';
+    // Универсальность: нет привязки к классу, cls: 'all'
+    if(a.r === 'relic') it.cls = 'all'; 
     else if(a.cls) it.cls = a.cls;
-
+    
     var isRing = realSlot === 'ring';
     var isAmulet = realSlot === 'amulet';
     var c1 = RARITY[a.r] ? RARITY[a.r].color : '#06b6d4';
@@ -6308,60 +6260,24 @@ svg.chr{overflow:visible}
     } else if(isAmulet){
       it.draw = '<path d="M10 10 Q20 35 30 10" fill="none" stroke="#d4d4d8" stroke-width="3"/><polygon points="20,15 28,30 20,38 12,30" fill="'+c1+'" stroke="#000" stroke-width="1.5"/>';
     } else {
-      it.draw = '<rect x="6" y="6" width="28" height="28" rx="6" fill="#0f172a" stroke="'+c1+'" stroke-width="2.5"/><polygon points="20,10 28,20 20,30 12,20" fill="'+c1+'"/>';
+      it.draw = '<rect width="40" height="40" fill="'+c1+'"/><circle cx="20" cy="20" r="10" fill="#000"/>'; // Заглушка для брони боссов, так как у них нет чиби-визуала
     }
+    
     ITEMS[a.id] = it;
   });
 
-  // Обновляем gearFromGame и filterInventory для поддержки 6 слотов и универсальных предметов ('all')
-  gearFromGame = function(g){
-    var out = {}, eq = (g && g.eq) || {}, base = (g && !g.gm) ? gearOf(g.cls) : {};
-    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
-      var id = eq[sl];
-      var valid = id && ITEMS[id] && ITEMS[id].slot === sl && (!ITEMS[id].cls || ITEMS[id].cls === 'all' || ITEMS[id].cls === g.cls);
-      var finalId = valid ? id : base[sl];
-      if(finalId) out[sl] = finalId;
-    });
-    return out;
-  };
-
-  filterInventory = function(g, keep){
-    var inv = [], levels = {}, ench = {}, copies = {}, mapping = {};
-    (g.inv || []).forEach(function(id, i){
-      if(keep(id, i)){
-        var j = inv.length;
-        mapping[i] = j;
-        inv.push(id);
-        var n = copyLevel(g, i);
-        if(n) levels[j] = n;
-        if(g.enchants && g.enchants[i]) ench[j] = g.enchants[i];
-      }
-    });
-    g.enchants = ench;
-    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
-      var i = wornIndex(g, sl);
-      if(Object.prototype.hasOwnProperty.call(mapping, i)) copies[sl] = mapping[i];
-    });
-    g.inv = inv; g.enhance = levels; g.eqCopies = copies;
-  };
-
-  // Перестраиваем кэш лута
+  // Перестраиваем кэш лута для новых предметов
   function buildLootPoolsCacheV21(){
     LOOT_POOL_BY_RARITY = {};
     LOOT_POOL_BY_RARITY_AND_CLASS = {};
     Object.keys(ITEMS).forEach(function(id){
       var it = ITEMS[id];
-      if(!it) return;
-      if(it.r === 'relic'){
-        if(!LOOT_POOL_BY_RARITY['relic']) LOOT_POOL_BY_RARITY['relic'] = [];
-        LOOT_POOL_BY_RARITY['relic'].push(id);
-        return;
-      }
-      if(!it.drop) return;
+      if(!it || !it.drop) return;
       if(!LOOT_POOL_BY_RARITY[it.r]) LOOT_POOL_BY_RARITY[it.r] = [];
       LOOT_POOL_BY_RARITY[it.r].push(id);
-
-      var classesToAssign = (!it.cls || it.cls === 'all') ? Object.keys(CLASSES) : [it.cls];
+      
+      // Предметы для 'all' попадают в пулы ВСЕХ классов
+      var classesToAssign = (it.cls === 'all') ? Object.keys(CLASSES) : (it.cls ? [it.cls] : []);
       classesToAssign.forEach(function(c){
         var key = it.r + ':' + c;
         if(!LOOT_POOL_BY_RARITY_AND_CLASS[key]) LOOT_POOL_BY_RARITY_AND_CLASS[key] = [];
@@ -6371,247 +6287,7 @@ svg.chr{overflow:visible}
   }
   buildLootPoolsCacheV21();
 
-  // --- 3. ЖЁСТКИЙ АНТИ-АБУЗ ЛУТА И ПРИВЯЗКА РЕДКОСТЕЙ К РАНГУ ---
-  lootWeights = function(rank, dungeon, elite){
-    var rows = [
-      [67, 25, 7, 0.6, 0, 0.35, 0.05],
-      [50, 31, 16, 2, 0.6, 0.35, 0.05],
-      [32, 37, 25, 4, 1.6, 0.35, 0.05],
-      [18, 31, 38, 10, 2.6, 0.35, 0.05],
-      [9, 24, 44, 17, 5.6, 0.35, 0.05],
-      [3, 17, 44, 25, 10.6, 0.35, 0.05]
-    ];
-    var v = rows[Math.min(Math.max(1, rank), 6) - 1].slice();
-    if(dungeon){
-      v[0] -= 0.4; v[5] += 0.3; v[6] += 0.1;
-      var ds = Math.min(v[0], 10); v[0] -= ds; v[2] += ds;
-    }
-    if(elite){
-      v[0] -= 0.55; v[5] += 0.4; v[6] += 0.15;
-      var es = Math.min(v[0], 10); v[0] -= es; v[3] += es;
-    }
-
-    // 1. RANK LOCK: минимальный ранг для выпадения высоких редкостей
-    if(rank < 2){ v[0] += v[3]; v[3] = 0; }  // Эпические — только со 2 ранга
-    if(rank < 4){ v[0] += v[4]; v[4] = 0; }  // Легендарные — только с 4 ранга
-    if(rank < 7){ v[0] += v[5]; v[5] = 0; }  // Мифические — только с 7 ранга
-    if(rank < 10){ v[0] += v[6]; v[6] = 0; } // Божественные — только с 10 ранга
-
-    // 2. РЕЛИКВИИ: только в Экспедиции с Элиты/Босса на 10+ ранге
-    var relicChance = 0;
-    if(dungeon && elite && rank >= 10){
-      relicChance = (rank >= 15) ? 2.0 : 1.5;
-    }
-
-    // 3. АНТИ-АБУЗ (Rank Gap Penalty): если игрок фармит ранг ниже своего максимального
-    var playerMax = (game && gameLoaded) ? maxRank(game) : rank;
-    var rankGap = Math.max(0, playerMax - rank);
-    if(rankGap > 0){
-      // Разница 1 ранг: -30%, 2 ранга: -70%, 3+ ранга: -100% (0% шанс на редкий лут!)
-      var penaltyMult = (rankGap === 1) ? 0.70 : ((rankGap === 2) ? 0.30 : 0);
-      for(var i = 2; i <= 6; i++){
-        var removed = v[i] * (1 - penaltyMult);
-        v[i] = Number((v[i] - removed).toFixed(3));
-        v[0] += removed;
-      }
-      relicChance = Number((relicChance * penaltyMult).toFixed(3));
-    }
-
-    // Вычитаем шанс реликвии из обычных/необычных вещей, чтобы сумма весов всегда была 100%
-    if(relicChance > 0){
-      var takeCommon = Math.min(v[0], relicChance);
-      v[0] -= takeCommon;
-      var rem = relicChance - takeCommon;
-      if(rem > 0) v[1] = Math.max(0, v[1] - rem);
-    }
-
-    var res = ['common','uncommon','rare','epic','legendary','mythic','divine'].map(function(r, idx){
-      return [r, Math.max(0, Number(v[idx].toFixed(2)))];
-    });
-    if(relicChance > 0) res.push(['relic', relicChance]);
-    return res;
-  };
-
-  rollLoot = function(rank, dungeon, elite, specificBossId){
-    var w = lootWeights(rank, dungeon, elite), total = 0;
-    for(var i = 0; i < w.length; i++) total += w[i][1];
-    var x = Math.random() * (total || 100), acc = 0, r = 'common';
-    for(var j = 0; j < w.length; j++){
-      acc += w[j][1];
-      if(x <= acc){ r = w[j][0]; break; }
-    }
-
-    if(r === 'relic'){
-      var relicSetId = specificBossId ? BOSS_TO_RELIC_SET_V21[specificBossId] : '';
-      var relicPool = (LOOT_POOL_BY_RARITY['relic'] || []).filter(function(id){
-        return !relicSetId || ITEMS[id].setId === relicSetId;
-      });
-      if(relicPool.length) return relicPool[Math.floor(Math.random() * relicPool.length)];
-      r = 'divine';
-    }
-
-    var targetCls = '';
-    if(dungeon && game && game.cls){
-      if(Math.random() < 0.5){
-        targetCls = game.cls;
-      } else {
-        var others = Object.keys(CLASSES).filter(function(c){ return c !== game.cls; });
-        targetCls = others[Math.floor(Math.random() * others.length)];
-      }
-    }
-    var pool = (dungeon && targetCls) ? (LOOT_POOL_BY_RARITY_AND_CLASS[r + ':' + targetCls] || []) : (LOOT_POOL_BY_RARITY[r] || []);
-    if(!pool.length) pool = LOOT_POOL_BY_RARITY[r] || LOOT_POOL_BY_RARITY['common'] || [];
-    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-  };
-
-  // Переопределяем сундук Босса Экспедиции (убираем старый абуз с Math.max(3, rank) и бесплатными легендарками!)
-  rollBossChestLootV20 = function(rank){
-    var bossId = (v20Data.exp && v20Data.exp.bossId) ? v20Data.exp.bossId : '';
-    var playerMax = (game && gameLoaded) ? maxRank(game) : rank;
-    var rankGap = Math.max(0, playerMax - rank);
-
-    var id = rollLoot(rank, true, true, bossId);
-    // Только если игрок проходит свой актуальный ранг (разница не более 1 ранга), босс гарантирует минимум Редкую (rare) вещь:
-    if(rankGap <= 1 && id && ITEMS[id] && (ITEMS[id].r === 'common' || ITEMS[id].r === 'uncommon')){
-      var rarePool = LOOT_POOL_BY_RARITY_AND_CLASS['rare:' + game.cls] || LOOT_POOL_BY_RARITY['rare'] || [];
-      if(rarePool.length) id = rarePool[Math.floor(Math.random() * rarePool.length)];
-    }
-    return id;
-  };
-
-  // --- 4. СЕТОВЫЕ БОНУСЫ И КЛАССОВАЯ ЗАЩИТА (СТРОГО ТОЛЬКО ЗА ОДИНАКОВЫЙ КОМПЛЕКТ setId!) ---
-  function getSetDisplayNameV21(setId){
-    if(SET_NAMES_MAP_V21[setId]) return SET_NAMES_MAP_V21[setId];
-    var m = /^s([mwa])(\d\d)$/.exec(setId);
-    if(m && SET_THEMES[Number(m[2])]){
-      return 'Комплект ' + SET_THEMES[Number(m[2])];
-    }
-    return 'Именной комплект';
-  }
-
-  function getActiveSetBonus(g){
-    if(!g || !g.eq) return null;
-    var eq = g.eq;
-    var countBySetId = {};
-    var minLevelBySetId = {};
-    var sampleItemBySetId = {};
-
-    ['head', 'body', 'arms', 'legs'].forEach(function(sl){
-      var id = eq[sl];
-      if(id && ITEMS[id] && ITEMS[id].setId){
-        var sid = ITEMS[id].setId;
-        var wIdx = wornIndex(g, sl);
-        var lv = wIdx >= 0 ? copyLevel(g, wIdx) : 0;
-
-        countBySetId[sid] = (countBySetId[sid] || 0) + 1;
-        sampleItemBySetId[sid] = ITEMS[id];
-        if(minLevelBySetId[sid] === undefined || lv < minLevelBySetId[sid]){
-          minLevelBySetId[sid] = lv;
-        }
-      }
-    });
-
-    var bestMatch = { count: 0, type: 'none', key: '', minLv: 0, rarity: 'common' };
-
-    Object.keys(countBySetId).forEach(function(sid){
-      var c = countBySetId[sid];
-      if(c >= 2 && c > bestMatch.count){
-        var isRelic = (sid.indexOf('set_') === 0);
-        var rKey = sampleItemBySetId[sid] ? sampleItemBySetId[sid].r : 'common';
-        bestMatch = {
-          count: c,
-          type: isRelic ? 'relic' : 'named',
-          key: sid,
-          minLv: minLevelBySetId[sid] || 0,
-          rarity: rKey
-        };
-      }
-    });
-
-    // Если нет хотя бы 2 вещей ОДНОГО И ТОГО ЖЕ комплекта — бонуса нет!
-    if(bestMatch.count < 2) return null;
-
-    var baseBonus = {
-      'common':    { 2:4,  3:7,  4:10 },
-      'uncommon':  { 2:6,  3:10, 4:15 },
-      'rare':      { 2:10, 3:15, 4:22 },
-      'epic':      { 2:14, 3:20, 4:30 },
-      'legendary': { 2:18, 3:26, 4:38 },
-      'mythic':    { 2:24, 3:34, 4:48 },
-      'divine':    { 2:30, 3:42, 4:60 }
-    }[bestMatch.rarity] || { 2:0, 3:0, 4:0 };
-
-    var rawPct = (bestMatch.type === 'relic') ? 0 : (baseBonus[bestMatch.count] || 0);
-
-    // Резонанс Кузницы: +5% к эффективности сета за каждый уровень минимальной заточки надетых вещей этого сета
-    var resonanceMult = 1 + (bestMatch.minLv * 0.05);
-    var finalPct = Math.floor(rawPct * resonanceMult);
-
-    return {
-      count: bestMatch.count,
-      type: bestMatch.type,
-      key: bestMatch.key,
-      rarity: bestMatch.rarity,
-      pctBonus: finalPct,
-      minLv: bestMatch.minLv,
-      name: getSetDisplayNameV21(bestMatch.key)
-    };
-  }
-
-  function renderActiveSetBonus(){
-    var evoBox = $('v20EvolutionCard');
-    var sbBox = $('v21SetBonusCard');
-    if(!sbBox && $('charPane')){
-      sbBox = document.createElement('div');
-      sbBox.id = 'v21SetBonusCard';
-      sbBox.className = 'set-bonus-card';
-      if(evoBox){
-        evoBox.parentNode.insertBefore(sbBox, evoBox.nextSibling);
-      } else {
-        var progPanel = $('charPane').querySelector('.progressPanel');
-        $('charPane').insertBefore(sbBox, progPanel ? progPanel.nextSibling : $('charPane').firstChild);
-      }
-    }
-    if(!sbBox || !game) return;
-    var b = getActiveSetBonus(game);
-    if(b){
-      var txt = '🔮 <b>' + b.name + '</b> (' + b.count + '/4 шт.)<br>';
-      if(b.type !== 'relic'){
-        txt += 'Резонанс заточки: <b>+' + b.minLv + '</b> · Бонус комплекта: <b style="color:var(--green)">+' + b.pctBonus + '% к HP и Урону</b>.';
-        var defDesc = '';
-        if(b.count >= 2 && ['common', 'uncommon'].indexOf(b.rarity) < 0){
-          var rVal = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[b.rarity] || 0;
-          if(game.cls === 'warrior') defDesc = '🛡️ Глухая оборона (комплект): блокирует ' + rVal + '% урона монстра.';
-          else if(game.cls === 'archer') defDesc = '🏹 Ловкость (комплект): ' + rVal + '% шанс уклониться от атаки.';
-          else if(game.cls === 'mage') defDesc = '✨ Магический Барьер (комплект): перед боем даёт щит на ' + (rVal + 5) + '% макс. HP.';
-        }
-        if(defDesc) txt += '<br><span style="color:var(--gold)">' + defDesc + '</span>';
-      } else {
-        var relicDesc = '';
-        if(b.key === 'set_nosferatu'){
-          relicDesc = '<b>2 вещи:</b> +20% Макс HP.<br><b>4 вещи:</b> «Жажда Крови». Кап вампиризма отключён. Избыточный отхил превращается в Кровавый Щит.';
-        } else if(b.key === 'set_colossus'){
-          relicDesc = '<b>2 вещи:</b> Весь урон монстров снижен на 15%.<br><b>4 вещи:</b> «Реактивная броня». Шипы +50%. При выпадении 1 отменяет х2 урон и бьёт врага на величину твоего недостающего HP.';
-        } else if(b.key === 'set_xalatah'){
-          relicDesc = '<b>2 вещи:</b> +25% к Урону.<br><b>4 вещи:</b> «Искажение Реальности». При ударе монстра 50% шанс уклониться и нанести ответный крит.';
-        } else if(b.key === 'set_pyro'){
-          relicDesc = '<b>2 вещи:</b> +20% чистого урона сквозь защиту.<br><b>4 вещи:</b> «Испепеление». Каждая твоя атака накладывает стак Ожога (1% макс. HP монстра за ход).';
-        } else if(b.key === 'set_malganis'){
-          relicDesc = '<b>2 вещи:</b> Снижает атаку монстров на 10%.<br><b>4 вещи:</b> «Власть Смерти». +50% к урону и +15% вампиризма.';
-        } else if(b.key === 'set_arachna'){
-          relicDesc = '<b>2 вещи:</b> Яд Роя: +15% к урону.<br><b>4 вещи:</b> «Королева Роя». Отравляет врага каждый ход на 2% его макс. HP.';
-        }
-        txt += '<span style="color:#06b6d4">' + relicDesc + '</span>';
-      }
-      sbBox.innerHTML = txt;
-      sbBox.style.display = 'block';
-    } else {
-      sbBox.innerHTML = '🛡️ <b>Комплект не собран:</b> наденьте минимум 2 вещи из <b>одного именного комплекта</b>, чтобы активировать бонус статов и классовую защиту.';
-      sbBox.style.display = 'block';
-    }
-  }
-
-  // Отрисовка 6 слотов в Персонаже и разрешение надевать 'all' (Реликвии/Кольца/Амулеты)
+  // Добавляем новые слоты в UI Персонажа
   var _origRenderCharBeforeV21 = renderChar;
   renderChar = function(){
     _origRenderCharBeforeV21();
@@ -6640,8 +6316,7 @@ svg.chr{overflow:visible}
         var ci = wornIndex(game, sl[1]), lv = ci >= 0 ? copyLevel(game, ci) : 0;
         el.innerHTML = itemIcon(id) + '<span class="sn">' + it.name + (lv ? ' +' + lv : '') + '</span>';
         el.title = (ci >= 0 ? copyStatsLine(game, ci) : itemLine(id)) + (it.desc ? '\n' + it.desc : '') + '. Нажми, чтобы снять';
-        el.style.borderStyle = 'solid';
-        el.style.borderColor = RARITY[it.r] ? RARITY[it.r].color : '#06b6d4';
+        el.style.borderStyle = 'solid'; el.style.borderColor = RARITY[it.r] ? RARITY[it.r].color : '#06b6d4';
         el.setAttribute('aria-label', sl[2] + ': ' + it.name);
       } else {
         el.textContent = sl[2]; el.style.borderStyle = ''; el.style.borderColor = '';
@@ -6652,32 +6327,147 @@ svg.chr{overflow:visible}
     renderActiveSetBonus();
   };
 
-  var _origRenderInvBeforeV21 = renderInv;
-  renderInv = function(){
-    _origRenderInvBeforeV21();
-    var box = $('inv');
-    if(!box || !game) return;
-    var cells = box.querySelectorAll('.icell');
-    cells.forEach(function(cell, index){
-      var id = game.inv[index], it = ITEMS[id];
-      if(!it) return;
-      var ok = !it.cls || it.cls === 'all' || it.cls === game.cls;
-      if(ok){
-        cell.disabled = false;
-        cell.style.opacity = '1';
+  // --- 3. СЕТОВЫЕ БОНУСЫ, КЛАССОВЫЕ МЕХАНИКИ И РЕЛИКВИИ ---
+  function getActiveSetBonus(g){
+    if(!g || !g.eq) return null;
+    var eq = g.eq;
+    var countByRarity = {};
+    var countBySetId = {};
+    var minLevelBySetId = {};
+    var minLevelByRarity = {};
+
+    ['head', 'body', 'arms', 'legs'].forEach(function(sl){
+      var id = eq[sl];
+      if(id && ITEMS[id]){
+        var r = ITEMS[id].r;
+        var sid = ITEMS[id].setId;
+        var lv = copyLevel(g, wornIndex(g, sl));
+        
+        if(r !== 'relic'){
+          countByRarity[r] = (countByRarity[r] || 0) + 1;
+          if(minLevelByRarity[r] === undefined || lv < minLevelByRarity[r]) minLevelByRarity[r] = lv;
+        }
+
+        if(sid){
+          countBySetId[sid] = (countBySetId[sid] || 0) + 1;
+          if(minLevelBySetId[sid] === undefined || lv < minLevelBySetId[sid]) minLevelBySetId[sid] = lv;
+        }
       }
-      cell.onclick = function(e){
-        e.stopImmediatePropagation();
-        if(merchantBusy || !gameLoaded) return;
-        if(!canChangeGearV20()) return;
-        if(it.cls && it.cls !== 'all' && it.cls !== game.cls) return;
-        game.eq[it.slot] = id;
-        game.eqCopies[it.slot] = index;
-        saveGame();
-        renderChar();
-      };
     });
-  };
+
+    var bestMatch = { count: 0, type: 'none', key: '', minLv: 0 };
+
+    // Сначала ищем Именной Сет (включая Реликвии)
+    Object.keys(countBySetId).forEach(function(sid){
+      var c = countBySetId[sid];
+      if(c >= 2 && c > bestMatch.count){
+        var isRelic = (sid.indexOf('set_') === 0);
+        bestMatch = { count: c, type: isRelic ? 'relic' : 'named', key: sid, minLv: minLevelBySetId[sid] };
+      }
+    });
+
+    // Если нет Именного, ищем сет по Редкости
+    if(bestMatch.count < 2){
+      Object.keys(countByRarity).forEach(function(r){
+        var c = countByRarity[r];
+        if(c >= 2 && c > bestMatch.count){
+          bestMatch = { count: c, type: 'rarity', key: r, minLv: minLevelByRarity[r] };
+        }
+      });
+    }
+
+    if(bestMatch.count < 2) return null;
+
+    var rKey = bestMatch.key;
+    if(bestMatch.type === 'named'){
+      rKey = ITEMS[bestMatch.key.replace('s', 'sm') + 'h'] ? ITEMS[bestMatch.key.replace('s', 'sm') + 'h'].r : 'epic';
+    }
+
+    var baseBonus = {
+      'common':    { 2:3, 3:3, 4:5 },
+      'uncommon':  { 2:5, 3:5, 4:8 },
+      'rare':      { 2:8, 3:8, 4:12 },
+      'epic':      { 2:12, 3:12, 4:16 },
+      'legendary': { 2:16, 3:16, 4:22 },
+      'mythic':    { 2:22, 3:22, 4:30 },
+      'divine':    { 2:30, 3:30, 4:40 }
+    }[rKey] || { 2:0, 3:0, 4:0 };
+
+    var rawPct = baseBonus[bestMatch.count] || 0;
+    
+    // Именной сет удваивает процентный бонус (кроме Реликвий - у них свои уникальные статы и ауры, процентного бонуса нет)
+    if(bestMatch.type === 'named') rawPct *= 2;
+    if(bestMatch.type === 'relic') rawPct = 0; // Реликвии не дают % бонуса, только ауры
+
+    // Резонанс Кузницы: +5% к финальному значению бонуса за каждый уровень мин. заточки
+    var resonanceMult = 1 + (bestMatch.minLv * 0.05);
+    var finalPct = Math.floor(rawPct * resonanceMult);
+
+    return {
+      count: bestMatch.count,
+      type: bestMatch.type,
+      rarity: rKey,
+      pctBonus: finalPct,
+      minLv: bestMatch.minLv,
+      name: bestMatch.type === 'relic' ? 'Реликвия Босса' : (bestMatch.type === 'named' ? 'Именной Сет' : ('Сет Редкости: ' + (RARITY[rKey]?RARITY[rKey].name:rKey)))
+    };
+  }
+
+  function renderActiveSetBonus(){
+    var evoBox = $('v20EvolutionCard');
+    var sbBox = $('v21SetBonusCard');
+    if(!sbBox && $('charPane')){
+      sbBox = document.createElement('div');
+      sbBox.id = 'v21SetBonusCard';
+      sbBox.className = 'set-bonus-card';
+      if(evoBox) {
+        evoBox.parentNode.insertBefore(sbBox, evoBox.nextSibling);
+      } else {
+        var progPanel = $('charPane').querySelector('.progressPanel');
+        $('charPane').insertBefore(sbBox, progPanel ? progPanel.nextSibling : $('charPane').firstChild);
+      }
+    }
+    if(!sbBox || !game) return;
+    var b = getActiveSetBonus(game);
+    if(b){
+      var txt = '🔮 <b>Комплект брони активен!</b> (' + b.count + ' вещи). ';
+      txt += 'Тип: <b>' + b.name + '</b>. <br>';
+      
+      if(b.type !== 'relic'){
+        txt += 'Резонанс заточки: <b>+' + b.minLv + '</b>. Бонус статов: <b style="color:var(--green)">+' + b.pctBonus + '% HP и Урона</b>.';
+        var defDesc = '';
+        if(b.count >= 2 && ['common', 'uncommon'].indexOf(b.rarity) < 0){
+          var rVal = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[b.rarity] || 0;
+          if(game.cls === 'warrior') defDesc = '🛡️ Глухая оборона: блокирует ' + rVal + '% урона монстра.';
+          else if(game.cls === 'archer') defDesc = '🏹 Ловкость: ' + rVal + '% шанс уклониться от атаки.';
+          else if(game.cls === 'mage') defDesc = '✨ Магический Барьер: перед боем даёт щит на ' + (rVal + 5) + '% макс. HP.';
+        }
+        if(defDesc) txt += '<br><span style="color:var(--gold)">' + defDesc + '</span>';
+      } else {
+        // Описание аур реликтовых сетов
+        var relicDesc = '';
+        if(b.key === 'set_nosferatu'){
+          relicDesc = '<b>2 вещи:</b> +20% Макс HP.<br><b>4 вещи:</b> «Жажда Крови». Кап вампиризма отключён. Избыточный отхил превращается в щит.';
+        } else if(b.key === 'set_colossus'){
+          relicDesc = '<b>2 вещи:</b> Весь урон монстров снижен на 15%.<br><b>4 вещи:</b> «Реактивная броня». Шипы +50%. Вместо двойного урона при промахе механизм наносит урон равный твоему потерянному здоровью.';
+        } else if(b.key === 'set_xalatah'){
+          relicDesc = '<b>2 вещи:</b> +25% к Урону.<br><b>4 вещи:</b> «Искажение Реальности». При ударе монстра 50% шанс уклониться и критануть в ответ.';
+        } else if(b.key === 'set_pyro'){
+          relicDesc = '<b>2 вещи:</b> Игнорирует 20% защиты монстра.<br><b>4 вещи:</b> «Испепеление». Твои атаки накладывают бесконечный стак ожога (1% макс HP монстра каждый ход).';
+        } else if(b.key === 'set_malganis'){
+          relicDesc = '<b>2 вещи:</b> Заморозка: Скорость атак врагов снижена.<br><b>4 вещи:</b> «Власть Смерти». Увеличивает урон на 50% при статусе "При Смерти" (1 HP).';
+        } else if(b.key === 'set_arachna'){
+          relicDesc = '<b>2 вещи:</b> Яд Роя: 5% постоянного урона врагу.<br><b>4 вещи:</b> «Королева пауков». Позволяет 1 раз за Экспедицию возродиться с 50% HP.';
+        }
+        txt += '<span style="color:#06b6d4">' + relicDesc + '</span>';
+      }
+      
+      sbBox.innerHTML = txt;
+      sbBox.style.display = 'block';
+    } else {
+      sbBox.style.display = 'none';
+    }
+  }
 
   var _origStatsBeforeV21 = stats;
   stats = function(source){
@@ -6690,12 +6480,20 @@ svg.chr{overflow:visible}
       st.hp = Math.floor(st.hp * (1 + b.pctBonus / 100));
       st.atk = Math.floor(st.atk * (1 + b.pctBonus / 100));
     }
+    
+    // Эффекты артефактов (только статы)
+    var ringId = g.eq && g.eq.ring;
+    if(ringId && ITEMS[ringId] && ITEMS[ringId].hp) st.hp += ITEMS[ringId].hp;
+    if(ringId && ITEMS[ringId] && ITEMS[ringId].atk) st.atk += ITEMS[ringId].atk;
+    
+    var amuId = g.eq && g.eq.amulet;
+    if(amuId && ITEMS[amuId] && ITEMS[amuId].hp) st.hp += ITEMS[amuId].hp;
+    if(amuId && ITEMS[amuId] && ITEMS[amuId].atk) st.atk += ITEMS[amuId].atk;
 
+    // Реликтовые бонусы статов (2 части)
     if(b && b.type === 'relic' && b.count >= 2){
       if(b.key === 'set_nosferatu') st.hp = Math.floor(st.hp * 1.20);
       if(b.key === 'set_xalatah') st.atk = Math.floor(st.atk * 1.25);
-      if(b.key === 'set_arachna') st.atk = Math.floor(st.atk * 1.15);
-      if(b.key === 'set_malganis' && b.count >= 4) st.atk = Math.floor(st.atk * 1.50);
     }
 
     return st;
@@ -6705,48 +6503,55 @@ svg.chr{overflow:visible}
   getEquippedEnchants = function(g){
     var res = _origGetEquippedEnchantsBeforeV21(g);
     var target = g || game;
-    if(!target || !target.eq) return res;
 
-    var ringId = target.eq.ring;
-    var amuId = target.eq.amulet;
+    var ringId = target.eq && target.eq.ring;
+    var amuId = target.eq && target.eq.amulet;
     var f = dgOn() ? v20Data.exp : (target && target.fight);
-
+    
     if(ringId === 'ring_gambler'){ res.gold += 5; res.crit += 3; }
     if(ringId === 'ring_reflection'){ res.thorns += 15; }
     if(amuId === 'amulet_vampire'){
       res.vamp += 10;
-      if(f && f.on && f.ph && (f.p / f.ph < 0.3)) res.vamp *= 2;
+      if(f && f.on && f.ph){
+        if(f.p / f.ph < 0.3) res.vamp *= 2;
+      }
     }
-
+    
     var b = getActiveSetBonus(target);
     if(b && b.type === 'relic' && b.count >= 4){
-      if(b.key === 'set_nosferatu') res.vamp = Math.max(res.vamp, 35);
-      if(b.key === 'set_colossus') res.thorns = Math.floor(res.thorns * 1.50);
-      if(b.key === 'set_malganis') res.vamp += 15;
+      if(b.key === 'set_nosferatu'){
+        res.vamp = 999; // Убираем кап вампиризма
+      }
+      if(b.key === 'set_colossus'){
+        res.thorns = Math.floor(res.thorns * 1.50);
+      }
     }
+
     return res;
   };
 
-  // --- 5. ЗЕЛЬЕ ЛЕЧЕНИЯ (ЛИМИТ 2 ЗА ЭКСПЕДИЦИЮ) И АНИМАЦИИ ---
+  // --- 4. БОЕВЫЕ ЗЕЛЬЯ (АЛХИМИЯ) И АНИМАЦИИ УРОНА ---
+  var combatBuffs = { stoneTurns: 0, nextCrit: false };
+  
   function spawnFloatingText(text, isHero, type){
     if(document.hidden || reduce) return;
     var container = $('fight');
     if(!container || container.hidden) return;
-    var barEl = container.querySelector('.bar.p');
-    var target = isHero ? (barEl ? barEl.parentNode : container) : (container.querySelector('.mon') || container);
+    var target = isHero ? container.querySelector('.bar.p').parentNode : container.querySelector('.mon');
     if(!target) return;
-
+    
     var ft = document.createElement('div');
     ft.className = 'floating-text';
     ft.textContent = text;
     ft.style.color = type === 'heal' ? '#4ade80' : (type === 'crit' ? '#fcd34d' : (type === 'shield' ? '#60a5fa' : (type === 'boss' ? '#c026d3' : '#f87171')));
-    if(type === 'crit' || type === 'boss') ft.style.fontSize = '30px';
-
+    if(type === 'crit' || type === 'boss') ft.style.fontSize = '32px';
+    
     var rect = target.getBoundingClientRect();
     var cRect = container.getBoundingClientRect();
-    ft.style.left = Math.max(10, (rect.left - cRect.left + (Math.random() * 40))) + 'px';
-    ft.style.top = Math.max(10, (rect.top - cRect.top + (Math.random() * 20 - 10))) + 'px';
-
+    
+    ft.style.left = (rect.left - cRect.left + (Math.random()*40)) + 'px';
+    ft.style.top = (rect.top - cRect.top + (Math.random()*20 - 10)) + 'px';
+    
     container.appendChild(ft);
     setTimeout(function(){ if(ft.parentNode) ft.remove(); }, 1200);
   }
@@ -6754,94 +6559,101 @@ svg.chr{overflow:visible}
   function shakeScreen(){
     if(document.hidden || reduce) return;
     var b = $('fight');
-    if(b){ b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+    if(b){
+      b.classList.remove('shake');
+      void b.offsetWidth;
+      b.classList.add('shake');
+    }
   }
 
   function bloomScreen(){
     if(document.hidden || reduce) return;
     var b = $('fight');
-    if(b){ b.classList.remove('bloom'); void b.offsetWidth; b.classList.add('bloom'); }
+    if(b){
+      b.classList.remove('bloom');
+      void b.offsetWidth;
+      b.classList.add('bloom');
+    }
   }
 
   function updateAlchemyBeltUI(){
     var belt = $('alchemyBelt');
     if(!belt) return;
-    var isExp = dgOn();
-    var f = isExp ? v20Data.exp : (game && game.fight);
-    var inCombat = isExp ? (f && f.on && f.inCombat) : (f && f.on);
-    if(inCombat){
+    var f = dgOn() ? v20Data.exp : (game && game.fight);
+    if(f && f.on){
       belt.hidden = false;
-      var used = Number(f.usedPots) || 0;
-      var btn = $('btnPotHeal');
-      if(btn){
-        btn.innerHTML = '❤️ Зелье лечения (+20% HP) <span class="qty" id="qtyPotHeal">' + v21Data.pots.heal + ' шт. · Лимит: ' + used + '/2</span>';
-        btn.disabled = (v21Data.pots.heal <= 0 || (f.p >= f.ph && !v20Data.nearDeath) || used >= 2);
-      }
+      $('qtyPotHeal').textContent = v21Data.pots.heal;
+      $('qtyPotStone').textContent = v21Data.pots.stone;
+      $('qtyPotBerserk').textContent = v21Data.pots.berserk;
+      $('btnPotHeal').disabled = (v21Data.pots.heal <= 0 || (f.p >= f.ph && !v20Data.nearDeath) || f.usedPots >= 2);
+      $('btnPotStone').disabled = (v21Data.pots.stone <= 0 || combatBuffs.stoneTurns > 0 || f.usedPots >= 2);
+      $('btnPotBerserk').disabled = (v21Data.pots.berserk <= 0 || combatBuffs.nextCrit || f.usedPots >= 2);
     } else {
       belt.hidden = true;
     }
   }
 
-  if($('btnPotHeal')) $('btnPotHeal').onclick = function(){ useCombatPotionV21(); };
+  if($('btnPotHeal')) $('btnPotHeal').onclick = function(){ useCombatPotion('heal'); };
+  if($('btnPotStone')) $('btnPotStone').onclick = function(){ useCombatPotion('stone'); };
+  if($('btnPotBerserk')) $('btnPotBerserk').onclick = function(){ useCombatPotion('berserk'); };
 
-  function useCombatPotionV21(){
-    var isExp = dgOn();
-    var f = isExp ? v20Data.exp : (game && game.fight);
-    var inCombat = isExp ? (f && f.on && f.inCombat) : (f && f.on);
-    if(!inCombat || v21Data.pots.heal <= 0) return;
+  function useCombatPotion(type){
+    var f = dgOn() ? v20Data.exp : (game && game.fight);
+    if(!f || !f.on || v21Data.pots[type] <= 0) return;
     if(!f.usedPots) f.usedPots = 0;
-    if(f.usedPots >= 2){
-      toast('🚫 Лимит исчерпан: можно выпить максимум 2 зелья лечения за всю Экспедицию!');
-      return;
-    }
-    if(v20Data.nearDeath){
-      toast('🩸 Зелье лечения не снимает статус «При смерти» (нужна Слеза Феникса вне боя)!');
-      return;
-    }
-    if(f.p >= f.ph){
-      toast('❤️ У вас уже полное здоровье!');
-      return;
-    }
-
-    v21Data.pots.heal--;
+    if(f.usedPots >= 2){ toast('Вы уже выпили максимум 2 зелья за этот поход!'); return; }
+    
+    v21Data.pots[type]--;
     f.usedPots++;
     saveV21Local();
-    if(isExp) saveV20Local();
-
-    var hAmt = Math.max(1, Math.floor(f.ph * 0.20));
-    f.p = Math.min(f.ph, f.p + hAmt);
-    spawnFloatingText('+' + hAmt + ' HP', true, 'heal');
-    fightLog = '🧪 Выпито Зелье лечения (+' + hAmt + ' HP, использовано ' + f.usedPots + '/2). ' + fightLog;
+    
+    if(type === 'heal'){
+      if(v20Data.nearDeath){ toast('Зелье исцеления бессильно против статуса «При Смерти»!'); return; }
+      var hAmt = Math.max(1, Math.floor(f.ph * 0.20)); // Ослаблено до 20%
+      f.p = Math.min(f.ph, f.p + hAmt);
+      spawnFloatingText('+' + hAmt, true, 'heal');
+      fightLog = '🧪 Выпито Малое зелье лечения (+' + hAmt + ' HP). ' + fightLog;
+    } else if (type === 'stone'){
+      combatBuffs.stoneTurns = 3;
+      fightLog = '🧪 Выпит Эликсир Каменной Кожи! Урон снижен на 30% на 3 хода. ' + fightLog;
+    } else if (type === 'berserk'){
+      combatBuffs.nextCrit = true;
+      fightLog = '🧪 Выпита Кровь Берсерка! Следующий удар будет критическим. ' + fightLog;
+    }
+    
     renderFight();
   }
 
-  var _origRenderFightBeforeV21 = renderFight;
-  renderFight = function(){
-    _origRenderFightBeforeV21();
-    updateAlchemyBeltUI();
-    var f = dgOn() ? v20Data.exp : (game && game.fight);
-    if(f && f.on && (f.mageShield > 0 || f.bloodShield > 0)){
-      var log = $('fight') && $('fight').querySelector('.flog');
-      if(log){
-        var shStr = '';
-        if(f.mageShield > 0) shStr += '<span style="color:#60a5fa;font-weight:700">[Маг. Барьер: ' + f.mageShield + ']</span> ';
-        if(f.bloodShield > 0) shStr += '<span style="color:#ef4444;font-weight:700">[Кровавый Щит: ' + f.bloodShield + ']</span> ';
-        if(shStr && log.innerHTML.indexOf('Щит:') === -1 && log.innerHTML.indexOf('Барьер:') === -1){
-          log.innerHTML = shStr + log.innerHTML;
-        }
-      }
+  // Обновляем старт боя для генерации Магического Барьера и сброса стаков Боссов
+  var _origStartFightBeforeV21 = startFight;
+  startFight = function(){
+    _origStartFightBeforeV21();
+    combatBuffs = { stoneTurns: 0, nextCrit: false };
+    var f = game && game.fight;
+    if(f && f.on){
+       applyMageBarrierV21(f);
+       f.burnStacks = 0; // Для сета Пироманта
+       f.bloodShield = 0; // Для сета Носферату
+       f.arachnaWebbed = false;
+       f.malganisFrozen = false;
+    }
+  };
+  var _origDgEnterBeforeV21 = dgEnter;
+  dgEnter = function(){
+    _origDgEnterBeforeV21();
+    combatBuffs = { stoneTurns: 0, nextCrit: false };
+    var d = v20Data.exp;
+    if(d && d.on && d.inCombat){
+       applyMageBarrierV21(d);
+       d.burnStacks = 0;
+       d.bloodShield = 0;
+       d.arachnaWebbed = false;
+       d.malganisFrozen = false;
+       d.usedPots = 0; // Лимит зелий на ВЕСЬ поход
     }
   };
 
-  var _origHealBetweenBeforeV21 = healBetween;
-  healBetween = function(hp, max){
-    var amuId = game && game.eq && game.eq.amulet;
-    var pct = (amuId === 'amulet_titan') ? 0.40 : 0.25;
-    return Math.min(max, hp + Math.round(max * pct));
-  };
-
   function applyMageBarrierV21(fObj){
-    fObj.mageShield = 0;
     if(game.cls !== 'mage') return;
     var b = getActiveSetBonus(game);
     if(b && b.count >= 2 && b.type !== 'relic' && ['common', 'uncommon'].indexOf(b.rarity) < 0){
@@ -6849,64 +6661,58 @@ svg.chr{overflow:visible}
       var shield = Math.floor(fObj.ph * (rVal + 5) / 100);
       if(shield > 0){
         fObj.mageShield = shield;
-        fightLog += ' 🔮 Создан Магический Барьер комплекта на ' + shield + ' HP!';
+        fightLog += ' 🔮 Создан Магический Барьер на ' + shield + ' HP!';
       }
     }
   }
 
-  var _origStartFightBeforeV21 = startFight;
-  startFight = function(){
-    _origStartFightBeforeV21();
-    var f = game && game.fight;
-    if(f && f.on){
-      f.usedPots = 0;
-      f.burnStacks = 0;
-      f.bloodShield = 0;
-      f.arachnaWebbed = false;
-      applyMageBarrierV21(f);
-      renderFight();
+  // Защита от эксплойта низких рангов в луте
+  var _origLootWeightsV21 = lootWeights;
+  lootWeights = function(rank, dungeon, elite){
+    var vOriginal = _origLootWeightsV21(rank, dungeon, elite);
+    
+    // ПРОВЕРКА РАЗНИЦЫ РАНГОВ (Anti-Farm Exploit)
+    var playerMax = maxRank();
+    var rankGap = playerMax - rank;
+    if(rankGap > 3){
+        // Жесткий штраф: режем шансы эпиков, легендарок и мификов
+        var penalty = Math.max(0, 1 - (rankGap - 3) * 0.25);
+        for(var i=0; i<vOriginal.length; i++){
+            if(['rare', 'epic', 'legendary', 'mythic', 'divine'].indexOf(vOriginal[i][0]) >= 0){
+                vOriginal[i][1] *= penalty;
+            }
+        }
     }
+    
+    // Плавное добавление Реликвий (только с Боссов данжа на 10+ ранге)
+    var relicChance = 0;
+    if(dungeon && elite && rank >= 10){
+        // Жестко 1.5% на 10-14 рангах, 2.0% на 15 ранге.
+        relicChance = rank >= 15 ? 2.0 : 1.5;
+    }
+    
+    // Вычитаем шанс реликвии из шанса common, чтобы в сумме было 100%
+    for(var j=0; j<vOriginal.length; j++){
+        if(vOriginal[j][0] === 'common') vOriginal[j][1] -= relicChance;
+    }
+    
+    vOriginal.push(['relic', relicChance]);
+    return vOriginal;
   };
 
-  var _origDgEnterBeforeV21 = dgEnter;
-  dgEnter = function(){
-    _origDgEnterBeforeV21();
-    var d = v20Data.exp;
-    if(d && d.on){
-      d.usedPots = 0; // Строго 2 зелья на ВСЮ 5-этажную Экспедицию!
-      d.burnStacks = 0;
-      d.bloodShield = 0;
-      d.arachnaWebbed = false;
-      saveV20Local();
-    }
-  };
-
-  var _origSelectExpPathBeforeV21 = selectExpeditionPathV20;
-  selectExpeditionPathV20 = function(choiceIdx){
-    _origSelectExpPathBeforeV21(choiceIdx);
-    var d = v20Data.exp;
-    if(d && d.on && d.inCombat){
-      d.burnStacks = 0;
-      d.bloodShield = 0;
-      d.arachnaWebbed = false;
-      applyMageBarrierV21(d);
-      saveV20Local();
-      renderFight();
-    }
-  };
-
-  // --- 6. ЯДРО БОЁВКИ V21 (СПЕЦАТАКИ БОССОВ, ИМЕННЫЕ СЕТЫ, ИСПРАВЛЕННЫЕ ГЛАДИАТОР И ЗАЩИТНИК) ---
+  // --- 5. ОБНОВЛЁННАЯ БОЁВКА V21 (УКЛОНЕНИЕ, БЛОК, РЕЛИКВИИ, АРТЕФАКТЫ, СПЕЦАТАКИ) ---
   strikeCoreBase = function(f, mo, st, n){
     if(!Number.isFinite(f.dealt)) f.dealt = 0;
     if(!Number.isFinite(f.taken)) f.taken = 0;
     f.skip = false;
     if(v20Data.nearDeath && f.p > 1){ f.p = 1; f.ph = 1; }
+    if(combatBuffs.stoneTurns > 0) combatBuffs.stoneTurns--;
 
     var r = (game && game.race) || 'human';
     var sub = findSubclassV20(v20Data.subcls);
     var eqEnch = getEquippedEnchants(game);
     var bns = getActiveSetBonus(game);
-
+    
     var healFactor = (r === 'orc') ? 0.9 : 1.0;
     var bossFactor = (r === 'celestial' && mo && (mo.boss || mo.elite)) ? 1.25 : 1.0;
     var berserkMult = 1.0;
@@ -6919,80 +6725,74 @@ svg.chr{overflow:visible}
 
     var ringId = game.eq && game.eq.ring;
     var amuId = game.eq && game.eq.amulet;
-    var tickDmgMsg = '';
 
-    // Доты от Реликтовых сетов (Пиромант 4/4 и Арахна 4/4)
+    var tickDmgMsg = '';
+    
+    // Аура Пироманта (Испепеление) - стаки ожога перед ударом
     if(bns && bns.key === 'set_pyro' && bns.count >= 4 && f.burnStacks > 0 && f.m > 0){
       var burnDmg = Math.max(1, Math.floor(mo.hp * 0.01 * f.burnStacks));
       f.m -= burnDmg; f.dealt += burnDmg;
-      tickDmgMsg += ' 🔥 Ожог (-' + burnDmg + ' HP).';
+      tickDmgMsg = ' 🔥 Ожог (-' + burnDmg + ' HP).';
       spawnFloatingText('-' + burnDmg, false, 'hit');
     }
-    if(bns && bns.key === 'set_arachna' && bns.count >= 4 && f.m > 0){
-      var psnDmg = Math.max(1, Math.floor(mo.hp * 0.02));
-      f.m -= psnDmg; f.dealt += psnDmg;
-      tickDmgMsg += ' 🕷️ Яд Роя (-' + psnDmg + ' HP).';
-      spawnFloatingText('-' + psnDmg, false, 'hit');
-    }
-    if(f.m <= 0) return 'Монстр повержен периодическим уроном!' + tickDmgMsg;
 
-    // --- ПРОВЕРКА УНИКАЛЬНЫХ СПЕЦАТАК БОССОВ НА 3 ЧИСЛАХ ---
+    if(f.m <= 0) return 'Монстр сгорел дотла!' + tickDmgMsg;
+
+    // --- ПРОВЕРКА СПЕЦАТАК БОССОВ ---
     var bossSpecialStr = '';
     if(mo.boss){
-      if(mo.id === 'boss_malganis' && [6, 13, 31].indexOf(n) >= 0){
-        shakeScreen(); bloomScreen();
-        var bossDmg = Math.floor(mo.dmg * 1.5);
-        f.p -= bossDmg; f.taken += bossDmg;
-        f.m = Math.min(mo.hp, f.m + bossDmg);
-        spawnFloatingText('-' + bossDmg, true, 'boss');
-        return '❄️ [Число ' + n + '] Мал\'Ганис кастует «Похищение жизни»! Наносит ' + bossDmg + ' урона и исцеляется на ' + bossDmg + ' HP!';
-      }
-      if(mo.id === 'boss_pyrodragon' && [5, 10, 25].indexOf(n) >= 0){
-        shakeScreen(); bloomScreen();
-        var bDmg = Math.floor(mo.dmg * 1.3);
-        f.p -= bDmg; f.taken += bDmg;
-        spawnFloatingText('-' + bDmg, true, 'boss');
-        return '🔥 [Число ' + n + '] Архидракон обрушивает «Огненный шторм» сквозь щиты на ' + bDmg + ' чистого урона!';
-      }
-      if(mo.id === 'boss_arachna' && [4, 17, 28].indexOf(n) >= 0){
-        shakeScreen(); bloomScreen();
-        f.arachnaWebbed = true;
-        spawnFloatingText('Паутина!', true, 'boss');
-        return '🕸️ [Число ' + n + '] Арахна оплетает тебя «Липким Коконом»! Следующий промах нанесёт двойной урон и исцелит Арахну!';
-      }
-      if(mo.id === 'boss_colossus' && [11, 22, 33].indexOf(n) >= 0){
-        shakeScreen(); bloomScreen();
-        f.mageShield = 0; f.bloodShield = 0;
-        var empDmg = Math.max(1, mo.dmg);
-        f.p -= empDmg; f.taken += empDmg;
-        spawnFloatingText('-' + empDmg, true, 'boss');
-        return '⚙️ [Число ' + n + '] Колосс выпускает «Энергетический импульс»! Все твои щиты уничтожены, нанесено ' + empDmg + ' урона!';
-      }
-      if(mo.id === 'boss_nosferatu' && [7, 19, 35].indexOf(n) >= 0){
-        shakeScreen(); bloomScreen();
-        var nDmg = Math.floor(mo.dmg * 1.4);
-        f.p -= nDmg; f.taken += nDmg;
-        f.m = Math.min(mo.hp, f.m + nDmg);
-        spawnFloatingText('-' + nDmg, true, 'boss');
-        return '🦇 [Число ' + n + '] Носферату призывает «Кровавый пир»! Игнорирует броню и выпивает ' + nDmg + ' HP!';
-      }
-      if(mo.id === 'boss_xalatah' && [9, 18, 36].indexOf(n) >= 0){
-        shakeScreen(); bloomScreen();
-        n = 1;
-        spawnFloatingText('Искажение -> 1!', true, 'boss');
-        bossSpecialStr = '🌌 [Глаз Бездны] Ксалатат исказил реальность и превратил твой бросок в Единицу! ';
-      }
+        if(mo.id === 'boss_malganis' && [6, 13, 31].indexOf(n) >= 0){
+            shakeScreen(); bloomScreen();
+            var bossDmg = Math.floor(mo.dmg * 1.5);
+            f.p -= bossDmg; f.taken += bossDmg;
+            f.m = Math.min(mo.hp, f.m + bossDmg);
+            spawnFloatingText('-' + bossDmg, true, 'boss');
+            bossSpecialStr = '❄️ Мал\'Ганис применяет "Ледяное дыхание"! Он наносит ' + bossDmg + ' урона и исцеляется на эту сумму! ';
+            return bossSpecialStr; // Прерываем обычный ход
+        }
+        if(mo.id === 'boss_pyrodragon' && [5, 10, 25].indexOf(n) >= 0){
+            shakeScreen(); bloomScreen();
+            var bDmg = Math.floor(mo.dmg * 1.2);
+            f.p -= bDmg; f.taken += bDmg;
+            // Игнор щитов (упрощенно - бьем напрямую HP)
+            spawnFloatingText('-' + bDmg, true, 'boss');
+            bossSpecialStr = '🔥 Архидракон использует "Огненный шторм"! Он пробивает защиту на ' + bDmg + ' урона! ';
+            return bossSpecialStr;
+        }
+        if(mo.id === 'boss_arachna' && [4, 17, 28].indexOf(n) >= 0){
+            shakeScreen(); bloomScreen();
+            f.arachnaWebbed = true;
+            spawnFloatingText('Паутина!', true, 'boss');
+            bossSpecialStr = '🕸️ Арахна оплетает вас паутиной! Следующий промах будет фатальным! ';
+            return bossSpecialStr;
+        }
+        if(mo.id === 'boss_colossus' && [11, 22, 33].indexOf(n) >= 0){
+            shakeScreen(); bloomScreen();
+            combatBuffs.nextCrit = false; // Отключаем берсерка если был
+            spawnFloatingText('Перегрузка!', true, 'boss');
+            bossSpecialStr = '⚙️ Колосс выпускает "Энергетический импульс"! Ваши баффы сброшены! ';
+            return bossSpecialStr;
+        }
+        if(mo.id === 'boss_nosferatu' && [7, 19, 35].indexOf(n) >= 0){
+            shakeScreen(); bloomScreen();
+            var nDmg = Math.floor(mo.dmg * 1.5);
+            f.p -= nDmg; f.taken += nDmg;
+            f.m = Math.min(mo.hp, f.m + nDmg);
+            spawnFloatingText('-' + nDmg, true, 'boss');
+            bossSpecialStr = '🦇 Носферату превращается в стаю летучих мышей! Крадёт ' + nDmg + ' HP! ';
+            return bossSpecialStr;
+        }
+        if(mo.id === 'boss_xalatah' && [9, 18, 36].indexOf(n) >= 0){
+            shakeScreen(); bloomScreen();
+            n = 1; // Принудительно меняем число на 1 (Критическая неудача)
+            spawnFloatingText('Искажение!', true, 'boss');
+            bossSpecialStr = '🌌 Ксалатат применяет "Искажение"! Ваш бросок принудительно заменён на Единицу! ';
+        }
     }
 
-    // Помощник для нанесения урона от Гладиатора (СТРОГО только при атаке игрока!)
-    function applyGladiatorHit(){
-      if(f.buddy === 'gladiator'){
-        var extraGlad = Math.max(1, Math.floor(st.atk * 0.08));
-        f.m -= extraGlad; f.dealt += extraGlad;
-        return ' [⚔️ Гладиатор +' + extraGlad + ']';
-      }
-      return '';
-    }
+
+    var forceCrit = combatBuffs.nextCrit;
+    if(forceCrit) combatBuffs.nextCrit = false;
 
     // ЗЕРО (0)
     if(n === 0){
@@ -7000,29 +6800,26 @@ svg.chr{overflow:visible}
       var isTriple = (r === 'demon' && Math.random() < 0.05);
       var mult0 = isTriple ? 3 : 2;
       var d0 = effAtk * mult0;
-      if(bns && bns.key === 'set_pyro' && bns.count >= 2) d0 = Math.floor(d0 * 1.20);
       if(ringId === 'ring_executioner' && (f.m / mo.hp < 0.15)){ d0 *= 3; tickDmgMsg += ' ⚖️ Знак Палача!'; }
-
+      
       f.m -= d0; f.dealt += d0;
-      var glad0 = applyGladiatorHit();
       spawnFloatingText('-' + d0, false, 'crit');
-
-      if(bns && bns.key === 'set_pyro' && bns.count >= 4) f.burnStacks = (f.burnStacks || 0) + 1;
+      
+      if(bns && bns.key === 'set_pyro' && bns.count >= 4) f.burnStacks++; // Стак ожога
 
       var v0 = eqEnch.vamp > 0 ? Math.max(1, Math.round(d0 * (eqEnch.vamp / 100) * healFactor)) : 0;
       if(v0 && !v20Data.nearDeath){
         if(bns && bns.key === 'set_nosferatu' && bns.count >= 4 && (f.p + v0) > maxPlayerHp){
-          f.bloodShield = (f.bloodShield || 0) + ((f.p + v0) - maxPlayerHp);
-          f.p = maxPlayerHp;
-          spawnFloatingText('Щит +' + f.bloodShield, true, 'shield');
-          tickDmgMsg += ' 🩸 Кровавый Щит!';
+           f.bloodShield = (f.p + v0) - maxPlayerHp;
+           f.p = maxPlayerHp;
+           spawnFloatingText('Щит +' + f.bloodShield, true, 'shield');
+           tickDmgMsg += ' 🩸 Кровавый Щит!';
         } else {
-          f.p = Math.min(maxPlayerHp, f.p + v0);
-          spawnFloatingText('+' + v0, true, 'heal');
+           f.p = Math.min(maxPlayerHp, f.p + v0);
+           spawnFloatingText('+' + v0, true, 'heal');
         }
       }
-      f.arachnaWebbed = false;
-      return 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Критический удар (x2): ') + mo.name + ' теряет ' + d0 + ' HP.' + glad0 + tickDmgMsg + (v0 && !v20Data.nearDeath ? ' Вампиризм +' + v0 + ' HP.' : '');
+      return bossSpecialStr + 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Критический удар (x2): ') + mo.name + ' теряет ' + d0 + ' HP.' + tickDmgMsg + (v0 && !v20Data.nearDeath ? ' Вампиризм +' + v0 + ' HP.' : '');
     }
 
     // ЕДИНИЦА (1)
@@ -7033,25 +6830,22 @@ svg.chr{overflow:visible}
       var colossusSaved = (bns && bns.key === 'set_colossus' && bns.count >= 4);
 
       var monBaseDmg = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
-      if(bns && bns.key === 'set_malganis' && bns.count >= 2) monBaseDmg = Math.max(1, Math.floor(monBaseDmg * 0.90));
-
+      
+      // Аура Колосса отменяет х2 урон и бьёт монстра в ответ
       if(colossusSaved){
-        var colDmg = Math.max(1, maxPlayerHp - f.p);
-        f.m -= colDmg; f.dealt += colDmg;
-        spawnFloatingText('-' + colDmg, false, 'crit');
-        tickDmgMsg += ' ⚙️ Реактивная броня наносит ' + colDmg + ' урона!';
+        var colDmg = maxPlayerHp - f.p;
+        if(colDmg > 0){
+          f.m -= colDmg; f.dealt += colDmg;
+          spawnFloatingText('-' + colDmg, false, 'crit');
+          tickDmgMsg += ' ⚙️ Реактивная броня наносит ' + colDmg + ' урона!';
+        }
       }
 
       var dd = (autoSaved || colossusSaved) ? monBaseDmg : (monBaseDmg * 2);
       if(truthSaved) dd = Math.max(1, Math.floor(dd * 0.6));
-      if(bns && bns.key === 'set_colossus' && bns.count >= 2) dd = Math.max(1, Math.floor(dd * 0.85));
-
-      // Срез Защитника ПЕРЕД блоком и щитами
-      var defMsg1 = '';
-      if(f.buddy === 'defender' && dd > 1){
-        var defB1 = Math.min(dd - 1, Math.floor(dd * 0.15));
-        if(defB1 > 0){ dd -= defB1; defMsg1 = ' [🛡️ Защитник -' + defB1 + ']'; }
-      }
+      if(combatBuffs.stoneTurns >= 0) dd = Math.max(1, Math.floor(dd * 0.7)); 
+      
+      if(bns && bns.key === 'set_colossus' && bns.count >= 2) dd = Math.max(1, Math.floor(dd * 0.85)); // 15% рез.
 
       var wBlock = 0;
       if(game.cls === 'warrior' && bns && bns.count >= 2 && bns.type !== 'relic' && ['common', 'uncommon'].indexOf(bns.rarity) < 0){
@@ -7062,41 +6856,41 @@ svg.chr{overflow:visible}
 
       var sAbs = 0;
       if(f.mageShield > 0){ sAbs = Math.min(f.mageShield, dd); f.mageShield -= sAbs; dd -= sAbs; }
+      
       var bsAbs = 0;
       if(f.bloodShield > 0){ bsAbs = Math.min(f.bloodShield, dd); f.bloodShield -= bsAbs; dd -= bsAbs; }
 
       dd = Math.max(1, dd);
-      if(f.arachnaWebbed){
-        dd *= 2; f.arachnaWebbed = false;
-        tickDmgMsg += ' 🕸️ Кокон Арахны удвоил урон!';
-        f.m = Math.min(mo.hp, f.m + Math.floor(dd / 2));
-      }
+      
+      // Арахна штраф
+      if(f.arachnaWebbed){ dd *= 2; f.arachnaWebbed = false; tickDmgMsg += ' 🕸️ Паутина Арахны удваивает урон!'; f.m = Math.min(mo.hp, f.m + Math.floor(dd/2)); }
 
       f.p -= dd; f.taken += dd;
       spawnFloatingText('-' + dd, true, 'hit');
-
+      
       var th1 = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(dd * eqEnch.thorns / 100))) : 0;
       if(th1 > 0){ f.m -= th1; f.dealt += th1; spawnFloatingText('-' + th1, false, 'hit'); }
-
+      
       var resStr = (autoSaved ? 'Единица! ⚙️ Автоматон отменил крит: ' : (colossusSaved ? 'Единица! ⚙️ Колосс отразил удар: ' : 'Единица — неудача! '));
       if(truthSaved) resStr = '👁️ Око Истины смягчило удар! ';
       if(wBlock > 0) resStr += '[Блок ' + wBlock + '] ';
       if(sAbs > 0) resStr += '[Щит ' + sAbs + '] ';
       if(bsAbs > 0) resStr += '[Кровь ' + bsAbs + '] ';
-
-      return bossSpecialStr + resStr + mo.name + ' наносит ' + dd + ' HP!' + defMsg1 + tickDmgMsg + (th1 ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th1 + ' урона.' : '');
+      
+      return bossSpecialStr + resStr + mo.name + ' наносит ' + dd + ' HP!' + tickDmgMsg + (th1 ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th1 + ' урона.' : '');
     }
 
     // УДАР ИГРОКА (ИЛИ СЧАСТЛИВАЯ ПЯТЁРКА)
     var isLuckyFive = sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.indexOf(n) !== -1;
-    if(isLuckyFive || mo.hit(n)){
+    if(isLuckyFive || mo.hit(n) || forceCrit){
       if(isLuckyFive) bloomScreen();
-
-      var isCrit = !isLuckyFive && (eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit));
+      
+      var isCrit = forceCrit || (eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit));
       var critMult = (sub && sub.id === 'sniper') ? 2.25 : 1.75;
-
+      
       var lMult = 1, extraEffect = '';
       if(isLuckyFive){
+        isCrit = false;
         if(sub.id === 'witcher'){ lMult = 2.5; var burn = Math.max(1, Math.round(mo.hp * 0.05)); f.m -= burn; f.dealt += burn; extraEffect = ' 🔥 Игни сжёг ещё ' + burn + ' HP!'; }
         else if(sub.id === 'berserk'){ lMult = 2.8; if(!v20Data.nearDeath){ var bHeal = Math.max(1, Math.round(maxPlayerHp * 0.15)); f.p = Math.min(maxPlayerHp, f.p + bHeal); extraEffect = ' 🩸 Ярость исцелила +' + bHeal + ' HP!'; } }
         else if(sub.id === 'paladin'){ lMult = 2.2; if(!v20Data.nearDeath){ var pHeal = Math.max(1, Math.round(maxPlayerHp * 0.20)); f.p = Math.min(maxPlayerHp, f.p + pHeal); extraEffect = ' 🛡️ Святой щит +' + pHeal + ' HP!'; } }
@@ -7109,57 +6903,83 @@ svg.chr{overflow:visible}
       }
 
       var dmg = isLuckyFive ? Math.round(effAtk * lMult) : (isCrit ? Math.round(effAtk * critMult) : effAtk);
-      if(bns && bns.key === 'set_pyro' && bns.count >= 2) dmg = Math.floor(dmg * 1.20);
+      
+      // Игнор брони у Пироманта
+      if(bns && bns.key === 'set_pyro' && bns.count >= 2) dmg = Math.floor(dmg * 1.20); 
+
       if(ringId === 'ring_executioner' && (f.m / mo.hp < 0.15)){ dmg *= 3; extraEffect += ' ⚖️ Знак Палача!'; }
-
+      
       f.m -= dmg; f.dealt += dmg;
-      var gladHit = applyGladiatorHit();
       spawnFloatingText('-' + dmg, false, (isCrit || isLuckyFive) ? 'crit' : 'hit');
+      
+      // Гладиатор (Только если игрок наносит урон сам!)
+      var gladMsg = '';
+      if(f.buddy === 'gladiator'){
+        var extraGlad = Math.max(1, Math.floor(st.atk * 0.08));
+        f.m -= extraGlad; f.dealt += extraGlad;
+        gladMsg = ' [⚔️ Гладиатор +' + extraGlad + ']';
+      }
 
-      if(bns && bns.key === 'set_pyro' && bns.count >= 4) f.burnStacks = (f.burnStacks || 0) + 1;
+      if(bns && bns.key === 'set_pyro' && bns.count >= 4) f.burnStacks++; // Стак ожога
 
+      var vp = 0;
       var lVampPct = eqEnch.vamp + (isLuckyFive && sub.id === 'necromancer' ? 50 : 0);
-      var vp = lVampPct > 0 ? Math.max(1, Math.round(dmg * (lVampPct / 100) * healFactor)) : 0;
+      vp = lVampPct > 0 ? Math.max(1, Math.round(dmg * (lVampPct / 100) * healFactor)) : 0;
+      
       if(vp && !v20Data.nearDeath){
         if(bns && bns.key === 'set_nosferatu' && bns.count >= 4 && (f.p + vp) > maxPlayerHp){
-          f.bloodShield = (f.bloodShield || 0) + ((f.p + vp) - maxPlayerHp);
-          f.p = maxPlayerHp;
-          spawnFloatingText('Щит +' + f.bloodShield, true, 'shield');
-          tickDmgMsg += ' 🩸 Кровавый Щит!';
+           f.bloodShield = (f.p + vp) - maxPlayerHp;
+           f.p = maxPlayerHp;
+           spawnFloatingText('Щит +' + f.bloodShield, true, 'shield');
+           tickDmgMsg += ' 🩸 Кровавый Щит!';
         } else {
-          f.p = Math.min(maxPlayerHp, f.p + vp);
-          spawnFloatingText('+' + vp, true, 'heal');
+           f.p = Math.min(maxPlayerHp, f.p + vp);
+           spawnFloatingText('+' + vp, true, 'heal');
         }
       }
 
-      f.arachnaWebbed = false;
+      f.arachnaWebbed = false; // Спал дебафф
+
       if(isLuckyFive){
-        return '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + '! [' + sub.name + ' · ' + sub.skill + '] наносит ' + dmg + ' урона!' + gladHit + extraEffect + tickDmgMsg + (vp && !v20Data.nearDeath ? ' Вамп +' + vp + ' HP.' : '');
+        return bossSpecialStr + '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + '! [' + sub.name + ' · ' + sub.skill + '] наносит ' + dmg + ' урона!' + gladMsg + extraEffect + tickDmgMsg + (vp && !v20Data.nearDeath ? ' Вамп +' + vp + ' HP.' : '');
       }
-      return 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' ' + mo.name + ' теряет ' + dmg + ' HP.' + gladHit + extraEffect + tickDmgMsg + (vp && !v20Data.nearDeath ? ' Вамп +' + vp + ' HP.' : '');
+      return bossSpecialStr + 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' ' + mo.name + ' теряет ' + dmg + ' HP.' + gladMsg + extraEffect + tickDmgMsg + (vp && !v20Data.nearDeath ? ' Вамп +' + vp + ' HP.' : '');
     }
 
-    // УДАР МОНСТРА (ПРОМАХ ИГРОКА — ГЛАДИАТОР ЗДЕСЬ НЕ БЬЁТ!)
+    // УДАР МОНСТРА (ПРОМАХ ИГРОКА)
     var incomingDmg = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
-    if(bns && bns.key === 'set_colossus' && bns.count >= 2) incomingDmg = Math.max(1, Math.floor(incomingDmg * 0.85));
-    if(bns && bns.key === 'set_malganis' && bns.count >= 2) incomingDmg = Math.max(1, Math.floor(incomingDmg * 0.90));
+    if(combatBuffs.stoneTurns >= 0) incomingDmg = Math.max(1, Math.floor(incomingDmg * 0.7));
+    if(bns && bns.key === 'set_colossus' && bns.count >= 2) incomingDmg = Math.max(1, Math.floor(incomingDmg * 0.85)); // 15% рез.
+
+    // Защитник (Режет урон до всех щитов)
+    var defMsg = '';
+    if(f.buddy === 'defender'){
+        var defBlock = Math.min(incomingDmg - 1, Math.floor(incomingDmg * 0.15));
+        if(defBlock > 0){
+            incomingDmg -= defBlock;
+            defMsg = ' [🛡️ Защитник -' + defBlock + ']';
+        }
+    }
 
     // Аура Ксалатата (Искажение Реальности - 50/50 уворот и контрудар)
-    if(bns && bns.key === 'set_xalatah' && bns.count >= 4 && Math.random() < 0.5){
-      bloomScreen();
-      var xalDmg = Math.round(effAtk * 1.75);
-      f.m -= xalDmg; f.dealt += xalDmg;
-      spawnFloatingText('Искажение!', true, 'shield');
-      spawnFloatingText('-' + xalDmg, false, 'crit');
-      f.arachnaWebbed = false;
-      return 'Выпало ' + n + '. 🌌 Искажение Реальности: ты уклонился от удара и нанёс ' + xalDmg + ' ответного крит. урона!' + tickDmgMsg;
+    if(bns && bns.key === 'set_xalatah' && bns.count >= 4){
+      if(Math.random() < 0.5){
+        bloomScreen();
+        var xalDmg = Math.round(effAtk * 1.75); // Гарантированный крит в ответ
+        f.m -= xalDmg; f.dealt += xalDmg;
+        spawnFloatingText('Искажение!', true, 'shield');
+        spawnFloatingText('-' + xalDmg, false, 'crit');
+        f.arachnaWebbed = false;
+        return bossSpecialStr + 'Выпало ' + n + '. 🌌 Искажение Реальности: ты уклонился от удара и нанёс ' + xalDmg + ' критического урона!' + tickDmgMsg;
+      }
     }
 
-    // Уклонение Лучника (только при активном именном комплекте!)
+    // Уклонение Лучника
     if(game.cls === 'archer' && bns && bns.count >= 2 && bns.type !== 'relic' && ['common', 'uncommon'].indexOf(bns.rarity) < 0){
       var dodgePct = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[bns.rarity] || 0;
       if(Math.random() * 100 < dodgePct){
         spawnFloatingText('Уворот!', true, 'heal');
+        // Перстень Отражения всё равно бьёт
         if(ringId === 'ring_reflection'){
           var refl = Math.max(1, Math.round(incomingDmg * 0.05));
           f.m -= refl; f.dealt += refl;
@@ -7167,17 +6987,7 @@ svg.chr{overflow:visible}
           tickDmgMsg += ' Отражено ' + refl + ' ур.';
         }
         f.arachnaWebbed = false;
-        return 'Выпало ' + n + '. 🏹 Ловкость комплекта: ты уклонился от атаки ' + mo.name + '!' + tickDmgMsg;
-      }
-    }
-
-    // Срез Защитника (ПЕРЕД блоком Воина и щитами!)
-    var defMsg = '';
-    if(f.buddy === 'defender' && incomingDmg > 1){
-      var defBlock = Math.min(incomingDmg - 1, Math.floor(incomingDmg * 0.15));
-      if(defBlock > 0){
-        incomingDmg -= defBlock;
-        defMsg = ' [🛡️ Защитник -' + defBlock + ']';
+        return bossSpecialStr + 'Выпало ' + n + '. 🏹 Ловкость: ты уклонился от атаки ' + mo.name + '!' + tickDmgMsg;
       }
     }
 
@@ -7190,58 +7000,46 @@ svg.chr{overflow:visible}
 
     var mAbs = 0;
     if(f.mageShield > 0){ mAbs = Math.min(f.mageShield, incomingDmg); f.mageShield -= mAbs; incomingDmg -= mAbs; }
+    
     var bsAbs = 0;
     if(f.bloodShield > 0){ bsAbs = Math.min(f.bloodShield, incomingDmg); f.bloodShield -= bsAbs; incomingDmg -= bsAbs; }
 
     incomingDmg = Math.max(1, incomingDmg);
-    if(f.arachnaWebbed){
-      incomingDmg *= 2; f.arachnaWebbed = false;
-      tickDmgMsg += ' 🕸️ Кокон Арахны удвоил урон!';
-      f.m = Math.min(mo.hp, f.m + Math.floor(incomingDmg / 2));
-    }
+    
+    if(f.arachnaWebbed){ incomingDmg *= 2; f.arachnaWebbed = false; tickDmgMsg += ' 🕸️ Паутина Арахны удваивает урон!'; f.m = Math.min(mo.hp, f.m + Math.floor(incomingDmg/2)); }
 
     f.p -= incomingDmg; f.taken += incomingDmg;
     spawnFloatingText('-' + incomingDmg, true, 'hit');
-
+    
     var th = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(incomingDmg * eqEnch.thorns / 100))) : 0;
     if(ringId === 'ring_reflection') th = Math.max(th, Math.max(1, Math.round(incomingDmg * 0.05)));
-    if(th > 0){ f.m -= th; f.dealt += th; spawnFloatingText('-' + th, false, 'hit'); }
 
+    if(th > 0){ f.m -= th; f.dealt += th; spawnFloatingText('-' + th, false, 'hit'); }
     var drainMsg = '';
     if(mo.id === 'boss_nosferatu' && f.m > 0){
       var healBoss = Math.max(1, Math.round(mo.hp * 0.05));
       f.m = Math.min(mo.hp, f.m + healBoss);
       drainMsg = ' 🩸 Носф. выпил кровь (+' + healBoss + ' HP)!';
     }
-
-    var missStr = 'Выпало ' + n + ': промах. ';
+    
+    var missStr = bossSpecialStr + 'Выпало ' + n + ': промах. ';
     if(mBlock > 0) missStr += '[Блок ' + mBlock + '] ';
     if(mAbs > 0) missStr += '[Щит ' + mAbs + '] ';
     if(bsAbs > 0) missStr += '[Кровь ' + bsAbs + '] ';
     return missStr + mo.name + ' бьёт на ' + incomingDmg + '.' + defMsg + drainMsg + tickDmgMsg + (th ? ' Шипы: ' + th + ' ур.' : '');
   };
 
-  strikeCore = function(f, mo, st, n){
-    return strikeCoreBase(f, mo, st, n);
-  };
+  // Удаляем старый вызов minerCombat, так как логика Гладиатора и Защитника встроена в ядро
+  function strikeCore(f,mo,st,n){ return strikeCoreBase(f,mo,st,n); }
 
-  // --- 7. КУЗНИЦА: ТОЛЬКО ЗЕЛЬЕ ЛЕЧЕНИЯ, СЛЕЗА ФЕНИКСА И КРАФТ СЛУЧАЙНОГО СЛОТА ---
+  // --- 7. ДОБАВЛЕНИЕ КРАФТА СЕТОВОЙ ЭКИПИРОВКИ ---
   var _origRenderForgeBeforeV21 = renderForge;
   renderForge = function(){
     _origRenderForgeBeforeV21();
     var box = $('forgeBody');
     if(!box || !game) return;
-
-    // Переименовываем карточку старого Зелья восстановления (от 1 HP) в «Слезу Феникса»
-    var pCraftCard = $('v20PotionCraftCard');
-    if(pCraftCard){
-      var h3 = pCraftCard.querySelector('h3');
-      if(h3) h3.textContent = '💧 Алхимия Кузницы: Слеза Феникса (Снятие «При смерти»)';
-      var btnP = $('btnCraftPotionV20');
-      if(btnP) btnP.textContent = 'Скрафтить Слезу Феникса 💧';
-    }
-
-    // 1. БОЕВАЯ АЛХИМИЯ (ТОЛЬКО ЗЕЛЬЕ ЛЕЧЕНИЯ!)
+    
+    // 1. БОЕВАЯ АЛХИМИЯ
     var alchCard = $('v21AlchemyCraftCard');
     if(alchCard) alchCard.remove();
     alchCard = document.createElement('div');
@@ -7249,30 +7047,49 @@ svg.chr{overflow:visible}
     alchCard.className = 'card';
     alchCard.style.marginTop = '12px';
     alchCard.style.borderColor = '#3b82f6';
-
-    var coins = Number(game.coins) || 0;
-    var dust = Number(game.dust) || 0;
+    
+    var coins = Number(game.coins)||0;
+    var stones = Number(game.stones)||0;
+    var dust = Number(game.dust)||0;
+    
     var canH = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= 800 && dust >= 20;
+    var canS = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= 800 && dust >= 10;
+    var canB = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= 1200 && stones >= 1;
 
-    alchCard.innerHTML = '<h3>🧪 Боевая Алхимия: Зелье лечения</h3>'
-      + '<p>Восстанавливает <b>20% макс. HP</b> прямо во время боя, не тратя ход! Ограничение: не более <b>2 зелий за всю Экспедицию</b> (или за один бой).</p>'
-      + '<p>Цена создания: <b>800 монет + 20 ✨ Магической пыли</b> · В запасе: <b>' + v21Data.pots.heal + ' ❤️</b></p>'
+    alchCard.innerHTML = '<h3>🧪 Боевая Алхимия (Расходники)</h3>'
+      + '<p>Эти зелья можно пить <b>прямо во время боя</b> (макс. 2 штуки за всю Экспедицию), при этом ход не переходит к монстру! Лежат в Поясе алхимика над кнопкой «Крутить».</p>'
+      + '<ul style="margin:0 0 10px 16px;font-size:13px;color:var(--muted)">'
+      + '<li><b>Малое зелье лечения:</b> восстанавливает 20% HP (800 мон + 20 ✨). В запасе: ' + v21Data.pots.heal + '</li>'
+      + '<li><b>Эликсир Каменной Кожи:</b> блокирует 30% урона на 3 хода (800 мон + 10 ✨). В запасе: ' + v21Data.pots.stone + '</li>'
+      + '<li><b>Кровь Берсерка:</b> следующий удар — гарантированный крит (1200 мон + 1 🪨). В запасе: ' + v21Data.pots.berserk + '</li>'
+      + '</ul>'
       + '<div class="forgeButtons">'
-      + '<button type="button" id="btnCraftHeal"' + (canH ? '' : ' disabled') + '>Сварить Зелье лечения ❤️ (800 мон. + 20 ✨)</button>'
+      + '<button type="button" id="btnCraftHeal"'+(canH?'':' disabled')+'>Сварить Лечение ❤️</button>'
+      + '<button type="button" id="btnCraftStone"'+(canS?'':' disabled')+'>Сварить Кожу 🛡️</button>'
+      + '<button type="button" id="btnCraftBerserk"'+(canB?'':' disabled')+'>Сварить Кровь 🔥</button>'
       + '</div>';
-
+    
+    var pCraftCard = $('v20PotionCraftCard');
     if(pCraftCard) box.insertBefore(alchCard, pCraftCard);
     else box.appendChild(alchCard);
 
     if($('btnCraftHeal')) $('btnCraftHeal').onclick = function(){
-      if(!canUseTownServicesV20()) return;
-      if((game.coins||0) < 800 || (game.dust||0) < 20) return;
+      if(coins < 800 || dust < 20) return;
       game.coins -= 800; game.dust -= 20; v21Data.pots.heal++;
-      saveV21Local(); saveGame(); renderCoins(); renderForge();
-      toast('❤️ Сварено Зелье лечения (+20% HP)!');
+      saveV21Local(); saveGame(); renderCoins(); renderForge(); toast('Сварено Малое зелье лечения ❤️');
+    };
+    if($('btnCraftStone')) $('btnCraftStone').onclick = function(){
+      if(coins < 800 || dust < 10) return;
+      game.coins -= 800; game.dust -= 10; v21Data.pots.stone++;
+      saveV21Local(); saveGame(); renderCoins(); renderForge(); toast('Сварен Эликсир Каменной Кожи 🛡️');
+    };
+    if($('btnCraftBerserk')) $('btnCraftBerserk').onclick = function(){
+      if(coins < 1200 || stones < 1) return;
+      game.coins -= 1200; game.stones -= 1; v21Data.pots.berserk++;
+      saveV21Local(); saveGame(); renderCoins(); renderForge(); toast('Сварена Кровь Берсерка 🔥');
     };
 
-    // 2. КРАФТ ЭКИПИРОВКИ (СЛУЧАЙНЫЙ СЛОТ СВОЕГО КЛАССА)
+    // 2. КРАФТ ЭКИПИРОВКИ
     var forgeCraftCard = $('v21GearCraftCard');
     if(forgeCraftCard) forgeCraftCard.remove();
     forgeCraftCard = document.createElement('div');
@@ -7282,23 +7099,23 @@ svg.chr{overflow:visible}
     forgeCraftCard.style.borderColor = '#10b981';
 
     var cPrice = {
-      'uncommon':  { d:30,   c:500 },
-      'rare':      { d:100,  c:1000 },
-      'epic':      { d:250,  c:2500 },
-      'legendary': { d:600,  c:5000 },
-      'mythic':    { d:1500, c:10000 }
+      'uncommon': { d:30, c:500 },
+      'rare': { d:100, c:1000 },
+      'epic': { d:250, c:2500 },
+      'legendary': { d:600, c:5000 },
+      'mythic': { d:1500, c:10000 }
     };
 
-    var chtml = '<h3>🛠️ Кузня Судеб (Крафт случайного слота)</h3>'
-      + '<p>Выбери редкость и создай случайный предмет <b>своего класса</b> (или Кольцо/Амулет) за Магическую пыль и монеты. Божественные и Реликтовые вещи выковать нельзя — они добываются только в боях!</p>'
+    var chtml = '<h3>🛠️ Кузня Судеб (Крафт экипировки)</h3>'
+      + '<p>Тратишь пыль и монеты — получаешь случайную вещь <b>твоего класса</b> выбранной редкости (Может выпасть и Кольцо/Амулет). Божественные и Реликтовые вещи сковать нельзя — только выбить из Боссов!</p>'
       + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">';
-
+    
     ['uncommon', 'rare', 'epic', 'legendary', 'mythic'].forEach(function(rKey){
       var cp = cPrice[rKey];
       var canCraft = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= cp.c && dust >= cp.d && game.cls;
-      chtml += '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:8px 12px;border-radius:12px;border:1px solid ' + RARITY[rKey].color + '">'
-        + '<div><b style="color:' + RARITY[rKey].color + '">' + RARITY[rKey].name + ' вещь</b><br><span style="font-size:12px;color:var(--muted)">Цена: ' + cp.c + ' мон. + ' + cp.d + ' ✨ пыли</span></div>'
-        + '<button type="button" class="btnGearCraft" data-craft-rarity="' + rKey + '" ' + (canCraft ? '' : 'disabled') + '>Сковать</button>'
+      chtml += '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:8px 12px;border-radius:12px;border:1px solid '+RARITY[rKey].color+'">'
+        + '<div><b style="color:'+RARITY[rKey].color+'">' + RARITY[rKey].name + '</b><br><span style="font-size:12px;color:var(--muted)">' + cp.c + ' мон + ' + cp.d + ' ✨</span></div>'
+        + '<button type="button" class="btnGearCraft" data-craft-rarity="'+rKey+'" '+(canCraft?'':'disabled')+'>Сковать</button>'
         + '</div>';
     });
     chtml += '</div>';
@@ -7307,14 +7124,18 @@ svg.chr{overflow:visible}
 
     box.querySelectorAll('.btnGearCraft').forEach(function(btn){
       btn.onclick = function(){
-        if(!canUseTownServicesV20() || !canSell()) return;
+        if(!canSell()) return;
         var rKey = this.getAttribute('data-craft-rarity');
         var cp = cPrice[rKey];
-        if(!cp || (game.coins||0) < cp.c || (game.dust||0) < cp.d || !game.cls) return;
-
+        if(!cp || coins < cp.c || dust < cp.d || !game.cls) return;
+        
+        // Роллим шмотку
         var pool = LOOT_POOL_BY_RARITY_AND_CLASS[rKey + ':' + game.cls] || [];
-        if(!pool.length){ toast('Пул предметов этой редкости пуст.'); return; }
-
+        var allPool = LOOT_POOL_BY_RARITY_AND_CLASS[rKey + ':all'] || [];
+        pool = pool.concat(allPool); // добавляем кольца и амулеты
+        
+        if(!pool.length){ toast('Ошибка пула крафта.'); return; }
+        
         var id = pool[Math.floor(Math.random() * pool.length)];
         game.coins -= cp.c;
         game.dust -= cp.d;
@@ -7325,11 +7146,10 @@ svg.chr{overflow:visible}
       };
     });
   };
+
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 21 ================== */
   restore();
 })();
 </script>
-
-
 </body>
 </html>
