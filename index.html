@@ -6672,6 +6672,201 @@ svg.chr{overflow:visible}
   restore();
 
 })();
+
+// ================= ПАТЧ: ОГРАНИЧЕНИЕ АРТЕФАКТОВ И РЕБАЛАНС СЛЁЗ ФЕНИКСА =================
+  
+  // 1. Уменьшаем стоимость крафта
+  POTION_CRAFT_COST = {coins: 1500, stones: 10, dust: 200};
+  
+  // 2. Блокируем появление Колец, Амулетов и Реликвий до Эволюции (Престижа)
+  rollLoot = function(rank, dungeon, elite){
+    var w = lootWeights(rank, dungeon, elite), x = Math.random() * 100, acc = 0, r = 'common';
+    for(var i = 0; i < w.length; i++){
+      acc += w[i][1];
+      if(x < acc){ r = w[i][0]; break; }
+    }
+    var targetCls = '';
+    if(dungeon && game && game.cls){
+      if(Math.random() < 0.5){
+        targetCls = game.cls;
+      } else {
+        var others = Object.keys(CLASSES).filter(function(c){ return c !== game.cls; });
+        targetCls = others[Math.floor(Math.random() * others.length)];
+      }
+    }
+    var pool = (dungeon && targetCls) ? (LOOT_POOL_BY_RARITY_AND_CLASS[r + ':' + targetCls] || []) : (LOOT_POOL_BY_RARITY[r] || []);
+    
+    // Блокировка артефактов и реликвий до Вознесения
+    if (!v20Data || !v20Data.prestige) {
+        pool = pool.filter(function(id){
+            var it = ITEMS[id];
+            return it && it.slot !== 'ring' && it.slot !== 'amulet' && it.r !== 'relic';
+        });
+    }
+    
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  };
+  
+  var _origRollBossChestLootV21 = rollBossChestLootV20;
+  rollBossChestLootV20 = function(rank){
+    var id = rollLoot(Math.max(3, rank), true, true);
+    if(id && ITEMS[id] && (ITEMS[id].r === 'common' || ITEMS[id].r === 'uncommon')){
+      var betterPool = []
+        .concat(LOOT_POOL_BY_RARITY_AND_CLASS['rare:' + game.cls] || [])
+        .concat(LOOT_POOL_BY_RARITY_AND_CLASS['epic:' + game.cls] || [])
+        .concat(LOOT_POOL_BY_RARITY_AND_CLASS['legendary:' + game.cls] || []);
+        
+      // Блокировка артефактов из сундука босса
+      if (!v20Data || !v20Data.prestige) {
+          betterPool = betterPool.filter(function(x){
+              var it = ITEMS[x];
+              return it && it.slot !== 'ring' && it.slot !== 'amulet' && it.r !== 'relic';
+          });
+      }
+      
+      if(betterPool.length) id = betterPool[Math.floor(Math.random() * betterPool.length)];
+    }
+    return id;
+  };
+  
+  // 3. Полностью переименовываем Зелье Восстановления в Слёзы Феникса
+  var _origRenderForgeV22 = renderForge;
+  renderForge = function(){
+    _origRenderForgeV22();
+    var potCard = document.getElementById('v20PotionCraftCard');
+    if(potCard) {
+        var canCraftPot = !isInActiveCombatV20() && !isInExpeditionV20()
+          && (game.coins||0) >= POTION_CRAFT_COST.coins
+          && (game.stones||0) >= POTION_CRAFT_COST.stones
+          && (game.dust||0) >= POTION_CRAFT_COST.dust;
+          
+        potCard.innerHTML = '<h3>🧪 Алхимия Кузницы: Слёзы Феникса</h3>'
+          + '<p>Легендарное средство, снимающее смертельный недуг <b>«При смерти» (1 HP)</b> после гибели в Экспедиции.</p>'
+          + '<p>В запасе: <b>' + (v20Data.potions||0) + ' 🧪</b>' + (v20Data.nearDeath ? ' · <span style="color:#ef4444;font-weight:700">Статус «При смерти» активен!</span>' : '') + '</p>'
+          + '<p>Создание: <b>' + POTION_CRAFT_COST.coins + ' монет + ' + POTION_CRAFT_COST.stones + ' 🪨 камней + ' + POTION_CRAFT_COST.dust + ' ✨ пыли</b>.</p>'
+          + '<div class="forgeButtons">'
+          + '<button type="button" id="btnCraftPotionV20"' + (canCraftPot ? '' : ' disabled') + '>Скрафтить Слёзы 🧪</button>'
+          + (v20Data.nearDeath && (v20Data.potions||0) > 0 ? '<button type="button" id="btnDrinkPotionForgeV20" class="ghost">Выпить Слёзы (Снять 1 HP)</button>' : '')
+          + '</div>';
+        
+        var cBtn = document.getElementById('btnCraftPotionV20'); 
+        if(cBtn) cBtn.onclick = function(){
+            if(!canUseTownServicesV20()) return;
+            if(!game || !gameLoaded || merchantBusy || marketBusyV20) return;
+            if((game.coins||0) < POTION_CRAFT_COST.coins || (game.stones||0) < POTION_CRAFT_COST.stones || (game.dust||0) < POTION_CRAFT_COST.dust){
+              toast('❌ Недостаточно ресурсов!'); return;
+            }
+            confirmBox(
+              'Скрафтить «🧪 Слёзы Феникса» за ' + POTION_CRAFT_COST.coins + ' монет, ' + POTION_CRAFT_COST.stones + ' 🪨 и ' + POTION_CRAFT_COST.dust + ' ✨ пыли?',
+              'Скрафтить',
+              function(){
+                if((game.coins||0) < POTION_CRAFT_COST.coins || (game.stones||0) < POTION_CRAFT_COST.stones || (game.dust||0) < POTION_CRAFT_COST.dust) return;
+                game.coins -= POTION_CRAFT_COST.coins;
+                game.stones -= POTION_CRAFT_COST.stones;
+                game.dust -= POTION_CRAFT_COST.dust;
+                v20Data.potions = (Number(v20Data.potions)||0) + 1;
+                saveV20Local(); saveV20ToFirestore(); saveGame();
+                renderCoins(); renderForge(); renderNearDeathBannerV20();
+                toast('🧪 Слёзы Феникса созданы! Теперь их можно выпить.');
+              }
+            );
+        };
+        var dBtn = document.getElementById('btnDrinkPotionForgeV20'); 
+        if(dBtn) dBtn.onclick = useRecoveryPotionV20;
+    }
+  };
+  
+  useRecoveryPotionV20 = function() {
+    if(!game || !gameLoaded || merchantBusy || marketBusyV20) return;
+    if(isInActiveCombatV20() || isInExpeditionV20()){
+      toast('🚫 Нельзя использовать Слёзы Феникса во время боя или внутри Экспедиции!'); return;
+    }
+    if(!v20Data.nearDeath){
+      toast('✨ У вас нет статуса «При смерти» (в запасе слёз: ' + (v20Data.potions||0) + ' 🧪).'); return;
+    }
+    if((v20Data.potions || 0) <= 0){
+      toast('🧪 У вас нет Слёз Феникса! Скрафтите их в Кузнице.'); return;
+    }
+    v20Data.potions = Math.max(0, (v20Data.potions || 0) - 1);
+    v20Data.nearDeath = false;
+    saveV20Local(); saveV20ToFirestore();
+    renderNearDeathBannerV20(); renderCoins(); renderChar();
+    toast('💖 Вы выпили Слёзы Феникса! Здоровье полностью восстановлено!');
+  };
+  
+  renderNearDeathBannerV20 = function(){
+    var existing = document.getElementById('v20NearDeathBanner');
+    if(!game || !v20Data.nearDeath || document.getElementById('app').hidden){
+      if(existing) existing.remove();
+      return;
+    }
+    var rightCol = document.querySelector('.rightCol');
+    if(!rightCol) return;
+    if(!existing){
+      existing = document.createElement('div');
+      existing.id = 'v20NearDeathBanner';
+      existing.className = 'near-death-banner';
+      var toastEl = document.getElementById('toast');
+      if(toastEl && toastEl.parentNode === rightCol){
+        rightCol.insertBefore(existing, toastEl.nextSibling);
+      } else {
+        rightCol.insertBefore(existing, rightCol.firstChild);
+      }
+    }
+    var pots = Number(v20Data.potions) || 0;
+    existing.innerHTML = '<span>🩸 Статус «При смерти»: ваше здоровье во всех боях равно 1 HP!</span>'
+      + '<button type="button" id="btnDrinkPotionBanner">🧪 Выпить Слёзы (' + pots + ' шт.)</button>';
+    var btn = document.getElementById('btnDrinkPotionBanner');
+    if(btn) btn.onclick = useRecoveryPotionV20;
+  };
+  
+  listPotionOnMarketV20 = async function(priceCoins) {
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
+    var db = initFirestoreV20();
+    if(!db){ toast('Ошибка: Firestore не подключён.'); return; }
+    if((v20Data.potions || 0) <= 0){
+      toast('🧪 У вас нет Слёз Феникса для продажи!');
+      return;
+    }
+    var price = Math.floor(Number(priceCoins) || 0);
+    if(price <= 0 || price > 10000000){
+      toast('Укажите корректную цену больше 0 монет!');
+      return;
+    }
+    marketBusyV20 = true;
+    v20Data.potions -= 1;
+    saveV20Local();
+    saveV20ToFirestore();
+    renderCoins(); renderMarketV20();
+
+    try{
+      await db.collection('market_listings').add({
+        sellerId: String(sess.uid),
+        sellerName: String(nick || sess.name || 'Игрок').slice(0, 20),
+        price: price,
+        isPotion: true,
+        item: {id:'recovery_potion', name:'🧪 Слёзы Феникса', r:'epic'},
+        createdAt: Date.now()
+      });
+      toast('✅ Слёзы Феникса выставлены на Рынок за ' + price + ' монет!');
+    }catch(e){
+      v20Data.potions += 1;
+      saveV20Local();
+      renderCoins();
+      toast('❌ Ошибка сети при выставлении предмета на Рынок.');
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
+    }
+  };
+  
+  var potBox = document.getElementById('potionBox');
+  if(potBox) potBox.title = 'Слёзы Феникса (нажми, чтобы исцелить статус «При смерти»)';
+  
+  if(typeof gameLoaded !== 'undefined' && gameLoaded) { 
+      renderForge(); 
+      renderNearDeathBannerV20(); 
+  }
 </script>
 </body>
 </html>
