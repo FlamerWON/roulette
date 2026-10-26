@@ -4613,7 +4613,7 @@ svg.chr{overflow:visible}
   ];
 
   
-  // --- НОВЫЙ ВЫСОКОДЕТАЛИЗИРОВАННЫЙ АРТ-ДВИЖОК ДЛЯ МОНСТРОВ V21 ---
+ // --- НОВЫЙ ВЫСОКОДЕТАЛИЗИРОВАННЫЙ АРТ-ДВИЖОК ДЛЯ МОНСТРОВ V21 ---
   monsterSvg = function(id){
     var o = 'stroke="#0f0f0f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"';
     var ds = 'filter="url(#ds)"', gl = 'filter="url(#gl)"', glL = 'filter="url(#glL)"';
@@ -4640,6 +4640,7 @@ svg.chr{overflow:visible}
     function bg(c1,c2){ return '<rect width="100" height="100" fill="'+c2+'"/><circle cx="50" cy="50" r="70" fill="url(#bg_'+id+')" opacity="0.6"/><defs>'+r('bg_'+id,c1,c2)+'</defs>'; }
     function eye(x,y,r,c, pupilSize){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#fff" stroke="#111" stroke-width="1.5"/><circle cx="'+x+'" cy="'+y+'" r="'+(r*0.7)+'" fill="'+c+'"/><circle cx="'+x+'" cy="'+y+'" r="'+(pupilSize||(r*0.4))+'" fill="#000"/><circle cx="'+(x-r*0.2)+'" cy="'+(y-r*0.2)+'" r="'+(r*0.25)+'" fill="#fff"/>'; }
     function glowEye(x,y,r,c){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+c+'" '+gl+'/><circle cx="'+x+'" cy="'+y+'" r="'+(r*0.4)+'" fill="#fff"/>'; }
+    function pupil(x,y,r){ return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#000"/>'; }
 
     if(id==='goblin'){ // Ушастый, зубастый, мультяшный
        s+=bg('#86efac','#064e3b') 
@@ -4739,6 +4740,86 @@ svg.chr{overflow:visible}
         + '<path d="M25 25 Q50 35 75 25" fill="none" stroke="#7c2d12" stroke-width="6" stroke-linecap="round"/>' // Монобровь
         + '<path d="M35 75 Q50 65 65 75" fill="none" stroke="#451a03" stroke-width="4"/>' // Рот
         + '<path d="M40 73 L44 63 L48 73 M52 73 L56 63 L60 73" fill="#fff" '+o+'/>'; // Клыки
+    }else if(id==='bat'){
+       s+=bg('#a78bfa','#4c1d95')
+        + '<path d="M50 50 L8 30 Q14 52 24 58 Q32 54 38 62 Q44 56 50 62Z" fill="#5b4a7a" '+o+'/><path d="M50 50 L92 30 Q86 52 76 58 Q68 54 62 62 Q56 56 50 62Z" fill="#5b4a7a" '+o+'/>'
+        + '<path d="M38 40 L35 26 L46 36Z M62 40 L65 26 L54 36Z" fill="#3f3358" '+o+'/><ellipse cx="50" cy="52" rx="15" ry="16" fill="url(#c_bat)" '+o+' '+ds+'/>'
+        + glowEye(44, 50, 3.4, '#ff5b5b') + glowEye(56, 50, 3.4, '#ff5b5b')
+        + '<path d="M45 60 L47 66 L50 60 L53 66 L55 60Z" fill="#fff" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/>';
+    }else if(id==='spider'){
+       s+=bg('#78716c','#1c1917')
+        + '<path d="M30 50 L8 36 L6 58 M30 58 L10 72 M70 50 L92 36 L94 58 M70 58 L90 72 M34 66 L22 88 M66 66 L78 88 M38 42 L26 24 M62 42 L74 24" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+        + '<ellipse cx="50" cy="64" rx="22" ry="18" fill="url(#c_spi)" '+o+' '+ds+'/><path d="M46 58 H54 L50 64 L54 70 H46 L50 64Z" fill="#e63946"/>'
+        + '<circle cx="50" cy="40" r="15" fill="#5c4848" '+o+'/>'
+        + glowEye(44, 38, 3.8, '#ffe066') + glowEye(56, 38, 3.8, '#ffe066')
+        + '<path d="M45 47 L47 52 L50 47 L53 52 L55 47" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>';
+    }else if(id==='mummy'){
+       s+=bg('#fef08a','#854d0e')
+        + '<rect x="26" y="12" width="48" height="68" rx="20" fill="url(#c_mum)" '+o+' '+ds+'/>'
+        + '<path d="M27 32 H73 M26 44 H74 M28 56 H72 M31 68 H69" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>'
+        + eye(41, 44, 6, '#fff', 2.6) + eye(59, 44, 6, '#fff', 2.6)
+        + '<path d="M42 62 Q50 67 58 62" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"/>';
+    }else if(id==='troll'){
+       s+=bg('#65a30d','#14532d')
+        + '<circle cx="18" cy="52" r="8" fill="#6f8c50" '+o+'/><circle cx="82" cy="52" r="8" fill="#6f8c50" '+o+'/>'
+        + '<ellipse cx="50" cy="54" rx="32" ry="31" fill="url(#c_tro)" '+o+' '+ds+'/>'
+        + '<path d="M24 40 Q38 34 46 44 M76 40 Q62 34 54 44" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/>'
+        + glowEye(38, 49, 3.4, '#ffe066') + glowEye(62, 49, 3.4, '#ffe066')
+        + '<ellipse cx="50" cy="60" rx="8" ry="6" fill="#6a8749" stroke="#111" stroke-width="2"/>'
+        + '<path d="M30 74 Q50 84 70 74" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/><path d="M36 76 L38 66 L43 77Z M64 76 L62 66 L57 77Z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/>';
+    }else if(id==='knight'){
+       s+=bg('#94a3b8','#020617')
+        + '<path d="M50 20 Q62 2 74 12 Q62 14 56 24Z" fill="#b3261e" '+o+'/>'
+        + '<path d="M26 82 L26 42 C26 18 74 18 74 42 L74 82Z" fill="url(#c_kni)" '+o+' '+ds+'/>'
+        + '<rect x="31" y="40" width="38" height="9" rx="3" fill="#111827"/>'
+        + glowEye(41, 44.5, 2.4, '#ff4d4d') + glowEye(59, 44.5, 2.4, '#ff4d4d')
+        + '<path d="M50 49 V76 M40 58 V74 M60 58 V74" stroke="#111" stroke-width="2.4" stroke-linecap="round"/>';
+    }else if(id==='lich'){
+       s+=bg('#d8b4fe','#4c1d95')
+        + '<path d="M18 88 L22 36 C24 12 76 12 78 36 L82 88Z" fill="url(#c_lic)" '+o+' '+ds+'/>'
+        + '<ellipse cx="50" cy="50" rx="19" ry="21" fill="#efe9d6" '+o+'/>'
+        + '<ellipse cx="42" cy="48" rx="5.5" ry="6.5" fill="#111"/><ellipse cx="58" cy="48" rx="5.5" ry="6.5" fill="#111"/>'
+        + glowEye(42, 49, 2, '#66ff99') + glowEye(58, 49, 2, '#66ff99')
+        + '<path d="M50 55 L47 62 H53Z" fill="#111"/><path d="M41 68 H59 M45 66 V71 M50 66 V71 M55 66 V71" stroke="#111" stroke-width="2"/>'
+        + '<path d="M34 24 L38 10 L45 20 L50 7 L55 20 L62 10 L66 24Z" fill="#f6c343" '+o+'/>';
+    }else if(id==='gargoyle'){
+       s+=bg('#a8a29e','#44403c')
+        + '<path d="M12 36 L28 24 L32 52Z M88 36 L72 24 L68 52Z" fill="#6c757d" '+o+'/>'
+        + '<path d="M30 34 L24 14 L40 28Z M70 34 L76 14 L60 28Z" fill="#495057" '+o+'/>'
+        + '<ellipse cx="50" cy="56" rx="25" ry="24" fill="url(#c_gar)" '+o+' '+ds+'/>'
+        + glowEye(40, 50, 4, '#ff9f1c') + glowEye(60, 50, 4, '#ff9f1c')
+        + '<path d="M38 66 H62 L58 73 H42Z" fill="#343a40" '+o+'/>';
+    }else if(id==='necromancer'){
+       s+=bg('#a78bfa','#2e1065')
+        + '<path d="M16 86 Q20 14 50 12 Q80 14 84 86Z" fill="url(#c_nec)" '+o+' '+ds+'/>'
+        + '<ellipse cx="50" cy="54" rx="18" ry="20" fill="#10002b" '+o+'/>'
+        + glowEye(42, 50, 4, '#72efdd') + glowEye(58, 50, 4, '#72efdd')
+        + '<path d="M36 20 L50 28 L64 20" fill="none" stroke="#c77dff" stroke-width="2.5" '+gl+'/>';
+    }else if(id==='minotaur'){
+       s+=bg('#fb923c','#7c2d12')
+        + '<path d="M26 36 Q8 22 18 8 Q22 24 34 30Z M74 36 Q92 22 82 8 Q78 24 66 30Z" fill="#e5d4a2" '+o+'/>'
+        + '<ellipse cx="50" cy="54" rx="27" ry="25" fill="url(#c_min)" '+o+' '+ds+'/>'
+        + '<ellipse cx="50" cy="66" rx="16" ry="11" fill="#582f0e" '+o+'/>'
+        + glowEye(38, 46, 4, '#ff4d4d') + glowEye(62, 46, 4, '#ff4d4d')
+        + '<circle cx="50" cy="72" r="6" fill="none" stroke="#f6c343" stroke-width="3.2"/>';
+    }else if(id==='reaper'){
+       s+=bg('#94a3b8','#020617')
+        + '<path d="M78 16 Q96 22 86 48 Q84 30 72 26Z" fill="#b0bec5" '+o+'/><path d="M74 20 L66 86" stroke="#5d4037" stroke-width="4"/>'
+        + '<path d="M18 86 Q22 16 50 16 Q76 16 78 86Z" fill="url(#c_rea)" '+o+' '+ds+'/>'
+        + '<ellipse cx="48" cy="50" rx="15" ry="17" fill="#eceff1" '+o+'/>'
+        + glowEye(42, 48, 4.5, '#ef4444') + glowEye(54, 48, 4.5, '#ef4444');
+    }else if(id==='frost'){
+       s+=bg('#7dd3fc','#0284c7')
+        + '<polygon points="50,12 72,28 80,56 64,84 36,84 20,56 28,28" fill="url(#c_fro)" '+o+' '+ds+'/>'
+        + '<polygon points="50,20 66,34 60,72 40,72 34,34" fill="#90e0ef" opacity="0.7"/>'
+        + glowEye(40, 48, 4.5, '#fff') + glowEye(60, 48, 4.5, '#fff')
+        + '<path d="M38 64 L46 60 L54 64 L62 60" fill="none" stroke="#03045e" stroke-width="2.8" stroke-linecap="round"/>';
+    }else if(id==='demon'){
+       s+=bg('#fb7185','#881337')
+        + '<path d="M28 34 Q14 14 28 6 Q28 20 38 28Z M72 34 Q86 14 72 6 Q72 20 62 28Z" fill="#2b2d42" '+o+'/>'
+        + '<ellipse cx="50" cy="56" rx="26" ry="25" fill="url(#c_dem)" '+o+' '+ds+'/>'
+        + glowEye(39, 49, 5, '#ffbe0b') + glowEye(61, 49, 5, '#ffbe0b')
+        + '<path d="M36 68 Q50 80 64 68" fill="#2b2d42" '+o+'/><path d="M40 69 L43 75 L46 69 M54 69 L57 75 L60 69" fill="#fff"/>';
     }
     // ------ БОССЫ ------
     else if(id==='boss_malganis'){
