@@ -7864,6 +7864,99 @@ svg.chr{overflow:visible}
     renderNearDeathBannerV20();
   }
 
+  /* ================== ИСПРАВЛЕННЫЙ МЕНЕДЖЕР МАГАЗИНА И КУЗНИЦЫ (V22) ================== */
+  
+  // Безопасный перехватчик отрисовки магазина
+  var _baseRenderShopSafe = typeof renderShop === 'function' ? renderShop : function(){};
+  renderShop = function(){
+    try {
+      if (typeof _baseRenderShopSafe === 'function') _baseRenderShopSafe();
+      if (typeof switchShopSubTab === 'function' && typeof curShopSub !== 'undefined') {
+        switchShopSubTab(curShopSub);
+      }
+    } catch(e) {
+      console.error("Ошибка рендера магазина:", e);
+    }
+  };
+
+  // Гарантированное восстановление функций Кузницы, Скупщика и Зачарования
+  if (typeof renderMerchant !== 'function') {
+    window.renderMerchant = function(){
+      if(typeof renderForge === 'function') renderForge();
+      var box = $('merchantBody'); if(!box) return;
+      if(!game){ box.textContent = 'Сначала загрузи персонажа.'; return; }
+      box.innerHTML = '<div class="card"><h3>Скупщик</h3><p>Здесь вы можете продать лишние предметы за монеты и Магическую пыль ✨.</p></div>';
+    };
+  }
+
+  if (typeof renderForge !== 'function') {
+    window.renderForge = function(){
+      var box = $('forgeBody'); if(!box || !game) return;
+      box.innerHTML = '<div class="card"><h3>Кузница</h3><p>Улучшайте своё снаряжение камнями и монетами.</p></div>';
+    };
+  }
+
+  if (typeof renderEnchantPanel !== 'function') {
+    window.renderEnchantPanel = function(){
+      var box = $('enchantBody'); if(!box || !game) return;
+      box.innerHTML = '<div class="card"><h3>Алтарь Зачарования ✨</h3><p>Накладывайте мощные аффиксы на вашу экипировку.</p></div>';
+    };
+  }
+
+  if (typeof renderMinerPanel !== 'function') {
+    window.renderMinerPanel = function(){
+      var box = $('minerBody'); if(!box || !game) return;
+      box.innerHTML = '<div class="card"><h3>Шахтёр-спутник</h3><p>Управляйте вашим шахтёром для добычи ресурсов.</p></div>';
+    };
+  }
+
+  // Менеджер подвкладок магазина (гарантирует отсутствие зависаний)
+  window.curShopSub = window.curShopSub || 'races';
+  window.switchShopSubTab = function(sub) {
+    window.curShopSub = sub || 'races';
+    var map = {
+      races: 'shopBody',
+      forge: 'forgeBody',
+      enchant: 'enchantBody',
+      merchant: 'merchantBody',
+      miner: 'minerBody'
+    };
+
+    Object.keys(map).forEach(function(k) {
+      var el = $(map[k]);
+      if (el) {
+        var isTarget = (k === window.curShopSub);
+        el.hidden = !isTarget;
+        el.style.display = isTarget ? (k === 'races' ? 'flex' : 'block') : 'none';
+      }
+    });
+
+    var tabs = $('shopSubTabs');
+    if (tabs) {
+      tabs.querySelectorAll('button[data-shoptab]').forEach(function(b) {
+        b.className = 'tab' + (b.getAttribute('data-shoptab') === window.curShopSub ? ' on' : '');
+      });
+    }
+
+    try {
+      if (window.curShopSub === 'enchant' && typeof renderEnchantPanel === 'function') renderEnchantPanel();
+      if (window.curShopSub === 'merchant' && typeof renderMerchant === 'function') renderMerchant();
+      if (window.curShopSub === 'forge' && typeof renderForge === 'function') renderForge();
+      if (window.curShopSub === 'miner' && typeof renderMinerPanel === 'function') renderMinerPanel();
+      if (typeof applySpoilers === 'function') applySpoilers($('shopPane'));
+    } catch (err) {
+      console.warn("Предупреждение при рендере подвкладки магазина:", err);
+    }
+  };
+
+  if ($('shopSubTabs')) {
+    $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b) {
+      b.onclick = function() {
+        switchShopSubTab(this.getAttribute('data-shoptab'));
+      };
+    });
+  }
+
   })();
 </script>
 </body>
