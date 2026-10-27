@@ -3544,49 +3544,60 @@ svg.chr{overflow:visible}
   }
 
   // Под-вкладки Магазина (Скупщик, Кузница, Зачарование, Расы и Классы, Шахтёр)
-  var curShopSub='races';
-  function switchShopSubTab(sub){
+  var curShopSub = 'races';
+
+  function switchShopSubTab(sub) {
     curShopSub = sub || 'races';
-    var map = {races:'shopBody', forge:'forgeBody', enchant:'enchantBody', merchant:'merchantBody', miner:'minerBody'};
-    Object.keys(map).forEach(function(k){
+    var map = {
+      races: 'shopBody',
+      forge: 'forgeBody',
+      enchant: 'enchantBody',
+      merchant: 'merchantBody',
+      miner: 'minerBody'
+    };
+
+    Object.keys(map).forEach(function(k) {
       var el = $(map[k]);
-      if(el){
+      if (el) {
         var isTarget = (k === curShopSub);
         el.hidden = !isTarget;
         el.style.display = isTarget ? (k === 'races' ? 'flex' : 'block') : 'none';
       }
     });
+
     var tabs = $('shopSubTabs');
-    if(tabs){
-      tabs.querySelectorAll('button[data-shoptab]').forEach(function(b){
+    if (tabs) {
+      tabs.querySelectorAll('button[data-shoptab]').forEach(function(b) {
         b.className = 'tab' + (b.getAttribute('data-shoptab') === curShopSub ? ' on' : '');
       });
     }
+
     try {
-      if(curShopSub === 'enchant' && typeof renderEnchantPanel === 'function') renderEnchantPanel();
-      if(curShopSub === 'merchant' && typeof renderMerchant === 'function') renderMerchant();
-      if(curShopSub === 'forge' && typeof renderForge === 'function') renderForge();
-      if(curShopSub === 'miner' && typeof renderMinerPanel === 'function') renderMinerPanel();
-      if(typeof applySpoilers === 'function') applySpoilers($('shopPane'));
-    } catch(err) {
-      console.warn("Shop subtab render warning:", err);
+      if (curShopSub === 'enchant' && typeof renderEnchantPanel === 'function') renderEnchantPanel();
+      if (curShopSub === 'merchant' && typeof renderMerchant === 'function') renderMerchant();
+      if (curShopSub === 'forge' && typeof renderForge === 'function') renderForge();
+      if (curShopSub === 'miner' && typeof renderMinerPanel === 'function') renderMinerPanel();
+      if (typeof applySpoilers === 'function') applySpoilers($('shopPane'));
+    } catch (err) {
+      console.warn("Shop subtab render error:", err);
     }
   }
 
-  if($('shopSubTabs')){
-    $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b){
-      b.onclick = function(){
+  if ($('shopSubTabs')) {
+    $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b) {
+      b.onclick = function() {
         switchShopSubTab(this.getAttribute('data-shoptab'));
       };
     });
   }
 
-  var _origRenderShopSafe = renderShop;
-  renderShop = function(){
+  // Безопасный перехватчик renderShop без бесконечной рекурсии
+  var _baseRenderShop = renderShop;
+  renderShop = function() {
     try {
-      if(typeof _origRenderShopSafe === 'function') _origRenderShopSafe();
+      if (typeof _baseRenderShop === 'function') _baseRenderShop();
       switchShopSubTab(curShopSub);
-    } catch(e) {
+    } catch (e) {
       console.error("Error in renderShop:", e);
     }
   };
