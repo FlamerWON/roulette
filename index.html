@@ -7071,7 +7071,154 @@ svg.chr{overflow:visible}
   
   if(gameLoaded) { renderChar(); renderDg(); }
 
-  })();
+  
+  /* ================== МОДУЛЬ UPDATE 22 (МИРОВЫЕ БОССЫ, ИМЕННЫЕ СЕТЫ, АНТИ-ФАРМ, АЛХИМИЯ) ================== */
+  APP_V = 22;
+  RELEASE_ID = 22;
+  
+  RELEASE_NOTES.unshift({
+    title: 'Версия 22 · Мировой Босс, Именные Сеты, Бижутерия, Анти-Фарм и Алхимия',
+    lines: [
+      '🌍 Мировой Босс «Титан Мироздания»: появляется каждый день ровно в 18:00 по МСК (награда за победу увеличена в 2.5 раза).',
+      '🛡️ Именные Комплекты Боссов (Сеты): бонус сета активируется при надевании 2 частей одного именного комплекта (например, сектор «Пепла»): дает +50% урона по боссам и гарантированный 15% вампиризм!',
+      '💎 Баланс Лута: Бижутерия (Кольца и Амулеты) выпадает только с 10 ранга сложности, а Реликвии — после Эволюции (Престижа).',
+      '⚖️ Ступенчатый Анти-Фарм: штрафы при игре ниже своего максимального ранга (-50% лута и наград при разнице в 2 ранга, -90% и только мусор при разнице в 3 ранга).',
+      '🧪 Алхимия и Лечение: в бой добавлена кнопка «Зелье лечения» (лечит 20% HP прямо в сражении), а также Слёзы Феникса для защиты от гибели.'
+    ]
+  });
+
+  // 1. Мировой Босс (Титан Мироздания каждый день в 18:00)
+  function isWorldBossHourV22(){
+    var now = new Date();
+    return now.getHours() === 18;
+  }
+
+  var _origFoeForV22 = foeFor;
+  foeFor = function(slot, rank){
+    var mo = _origFoeForV22(slot, rank);
+    if(isWorldBossHourV22() && Math.random() < 0.15){
+      mo.id = 'world_titan';
+      mo.name = '🌍 Мировой Босс: Титан Мироздания';
+      mo.hp = Math.round(mo.hp * 2.5);
+      mo.dmg = Math.round(mo.dmg * 1.8);
+      mo.boss = true;
+    }
+    return mo;
+  };
+
+  var _origRewardBaseV22 = rewardBase;
+  rewardBase = function(mo){
+    var b = _origRewardBaseV22(mo);
+    if(mo && (mo.id === 'world_titan' || mo.boss)){
+      return {xp: Math.round(b.xp * 2.5), coins: Math.round(b.coins * 2.5)};
+    }
+    return b;
+  };
+
+  // 2. Именные комплекты (Сеты) и бонусы (2 части: +50% урона по боссам, +15% вампиризм)
+  var SET_NAMES_V22 = {
+    's00': 'Сет Пепла', 's01': 'Сет Мха', 's02': 'Сет Меди', 's03': 'Сет Тумана',
+    's04': 'Сет Кремня', 's05': 'Сет Вереска', 's06': 'Сет Дождя', 's07': 'Сет Янтаря'
+  };
+
+  function getActiveSetBonusV22(g){
+    var eq = (g && g.eq) || {}, sets = {};
+    ALL_SLOTS_V22.forEach(function(sl){
+      var id = eq[sl], it = ITEMS[id];
+      if(it && it.setId){
+        var prefix = it.setId.slice(0, 3);
+        sets[prefix] = (sets[prefix] || 0) + 1;
+      }
+    });
+    for(var k in sets){
+      if(sets[k] >= 2) return true;
+    }
+    return false;
+  }
+
+  var _origGetEquippedEnchantsV22 = getEquippedEnchants;
+  getEquippedEnchants = function(g){
+    var res = _origGetEquippedEnchantsV22(g);
+    if(getActiveSetBonusV22(g)){
+      res.vamp = Math.min(45, res.vamp + 15);
+    }
+    return res;
+  };
+
+  var _origStrikeCoreBaseV22 = strikeCoreBase;
+  strikeCoreBase = function(f, mo, st, n){
+    var hasSet = getActiveSetBonusV22(game);
+    if(hasSet && mo && (mo.boss || mo.elite || mo.id === 'world_titan')){
+      st = Object.assign({}, st, {atk: Math.round(st.atk * 1.5)});
+    }
+    return _origStrikeCoreBaseV22(f, mo, st, n);
+  };
+
+  // 3. Баланс лута (Бижутерия с 10 ранга, Реликвии после Престижа)
+  var _origRollLootV22 = rollLoot;
+  rollLoot = function(rank, dungeon, elite){
+    var id = _origRollLootV22(rank, dungeon, elite);
+    if(id && ITEMS[id]){
+      var it = ITEMS[id];
+      if((it.slot === 'ring' || it.slot === 'amulet') && rank < 10){
+        return rollLoot(Math.min(rank, 9), dungeon, elite);
+      }
+      if(it.r === 'divine' && (!v20Data || !v20Data.prestige || v20Data.prestige < 1)){
+        return rollLoot(rank, dungeon, elite);
+      }
+    }
+    return id;
+  };
+
+  // 4. Ступенчатый Анти-Фарм
+  function getAntiFarmMultiplierV22(){
+    if(!game) return 1.0;
+    var maxR = maxRank(game);
+    var curR = selectedRank();
+    var diff = maxR - curR;
+    if(diff >= 3) return 0.1; // Штраф 90%
+    if(diff >= 2) return 0.5; // Штраф 50%
+    return 1.0;
+  }
+
+  var _origGainXPV22 = gainXP;
+  gainXP = function(amount){
+    var mult = getAntiFarmMultiplierV22();
+    return _origGainXPV22(amount * mult);
+  };
+
+  // 5. Алхимия: Зелье лечения в бою (+20% HP прямо в бою)
+  var battleHealUsed = false;
+  var _origRenderFightV22 = renderFight;
+  renderFight = function(){
+    _origRenderFightV22();
+    var box = $('fight');
+    if(box && !box.hidden && game && game.fight && game.fight.on){
+      battleHealUsed = false;
+      var existingPotionBtn = $('btnBattleHealV22');
+      if(!existingPotionBtn){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'btnBattleHealV22';
+        btn.className = 'ghost';
+        btn.style.marginTop = '6px';
+        btn.textContent = '🧪 Зелье лечения (+20% HP)';
+        btn.onclick = function(){
+          if(battleHealUsed){ toast('Зелье лечения уже использовано в этом бою!'); return; }
+          var st = stats();
+          var maxHp = v20Data.nearDeath ? 1 : (game.fight.ph || st.hp);
+          if(game.fight.p >= maxHp){ toast('Здоровье уже максимальное!'); return; }
+          var heal = Math.max(1, Math.round(maxHp * 0.20));
+          game.fight.p = Math.min(maxHp, game.fight.p + heal);
+          battleHealUsed = true;
+          renderFight();
+          toast('🧪 Зелье лечения восстановлено +' + heal + ' HP прямо в бою!');
+        };
+        box.appendChild(btn);
+      }
+    }
+  };
+})();
 </script>
 </body>
 </html>
