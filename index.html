@@ -3569,7 +3569,7 @@ svg.chr{overflow:visible}
       'Исключение «При смерти» (1 HP): Доступ в лоу-зоны открыт, но падает исключительно базовое золото для покупки Зелья восстановления.',
       'Классовые защитные сеты (от 2 вещей) теперь работают в бою! Воин пассивно блокирует урон, Лучник имеет шанс уклонения, Маг получает магический щит.',
       'Мировой Босс (Рейдовый режим): Вкладка «Рейд». Серверный босс с общим запасом здоровья. Крути колесо и вноси урон вместе со всем сервером!',
-      'Ребаланс Алхимии: Зелье восстановления теперь стоит 300 монет, 10 🪨 и 200 ✨ пыли.',
+      'Ребаланс Алхимии: Слёзы Феникса теперь стоит 1500 монет, 10 🪨 и 200 ✨ пыли.',
       'Ограничения экипировки: Кольца и Амулеты доступны только с 10-го ранга, а Артефакты (реликвии) — только после Возвышения (Престижа).'
     ]
   });
@@ -4289,7 +4289,7 @@ svg.chr{overflow:visible}
       'Исключение «При смерти» (1 HP): Доступ в лоу-зоны открыт, но падает исключительно базовое золото для покупки Зелья восстановления.',
       'Классовые защитные сеты (от 2 вещей) теперь работают в бою! Воин пассивно блокирует урон, Лучник имеет шанс уклонения, Маг получает магический щит.',
       'Мировой Босс (Рейдовый режим): Вкладка «Рейд». Серверный босс с общим запасом здоровья. Крути колесо и вноси урон вместе со всем сервером!',
-      'Ребаланс Алхимии: Зелье восстановления теперь стоит 300 монет, 10 🪨 и 200 ✨ пыли.',
+      'Ребаланс Алхимии: Слёзы Феникса теперь стоит 1500 монет, 10 🪨 и 200 ✨ пыли.',
       'Ограничения экипировки: Кольца и Амулеты доступны только с 10-го ранга, а Артефакты (реликвии) — только после Возвышения (Престижа).'
     ]
   });
@@ -4663,7 +4663,7 @@ svg.chr{overflow:visible}
   }
 
   // --- 6. СТАТУС «ПРИ СМЕРТИ» (1 HP) И ЗЕЛЬЕ ВОССТАНОВЛЕНИЯ ---
-  var POTION_CRAFT_COST = {coins: 300, stones: 10, dust: 200};
+  var POTION_CRAFT_COST = {coins: 1500, stones: 10, dust: 200};
 
   function enforceNearDeathOnFightV20(fObj){
     if(v20Data.nearDeath && fObj){
@@ -4675,7 +4675,7 @@ svg.chr{overflow:visible}
   function useRecoveryPotionV20(){
     if(!game || !gameLoaded || merchantBusy || marketBusyV20) return;
     if(isInActiveCombatV20() || isInExpeditionV20()){
-      toast('🚫 Нельзя использовать Зелье восстановления во время боя или внутри Экспедиции!');
+      toast('🚫 Нельзя использовать Слёзы Феникса во время боя или внутри Экспедиции!');
       return;
     }
     if(!v20Data.nearDeath){
@@ -4693,7 +4693,7 @@ svg.chr{overflow:visible}
     renderNearDeathBannerV20();
     renderCoins();
     renderChar();
-    toast('💖 Вы выпили Зелье восстановления! Статус «При смерти» снят, здоровье полностью восстановлено!');
+    toast('💖 Вы выпили Слёзы Феникса! Статус «При смерти» снят, здоровье полностью восстановлено!');
   }
 
   function craftRecoveryPotionV20(){
@@ -4704,7 +4704,7 @@ svg.chr{overflow:visible}
       return;
     }
     confirmBox(
-      'Скрафтить «🧪 Зелье восстановления» за ' + POTION_CRAFT_COST.coins + ' монет, ' + POTION_CRAFT_COST.stones + ' 🪨 камней и ' + POTION_CRAFT_COST.dust + ' ✨ Магической пыли?',
+      'Скрафтить «🧪 Слёзы Феникса» за ' + POTION_CRAFT_COST.coins + ' монет, ' + POTION_CRAFT_COST.stones + ' 🪨 камней и ' + POTION_CRAFT_COST.dust + ' ✨ Магической пыли?',
       'Скрафтить',
       function(){
         if((game.coins||0) < POTION_CRAFT_COST.coins || (game.stones||0) < POTION_CRAFT_COST.stones || (game.dust||0) < POTION_CRAFT_COST.dust) return;
@@ -4718,7 +4718,7 @@ svg.chr{overflow:visible}
         renderCoins();
         renderForge();
         renderNearDeathBannerV20();
-        toast('🧪 Зелье восстановления создано! Теперь его можно выпить или продать на Рынке.');
+        toast('🧪 Слёзы Феникса создано! Теперь его можно выпить или продать на Рынке.');
       }
     );
   }
@@ -5209,7 +5209,7 @@ svg.chr{overflow:visible}
         r:'divine',
         bossId: bossBase.id,
         title:'👑 Финальный Босс: ' + bossBase.name,
-        desc:'Условие удара: ' + bossBase.rule + '. Награда: Сундук Босса (редкий/эпический+ предмет класса, Магическая пыль ✨ и 8% шанс на 🧪 Зелье восстановления)!'
+        desc:'Условие удара: ' + bossBase.rule + '. Награда: Сундук Босса (редкий/эпический+ предмет класса, Магическая пыль ✨ и 8% шанс на 🧪 Слёзы Феникса)!'
       }];
     }
 
@@ -5504,7 +5504,7 @@ svg.chr{overflow:visible}
       saveV20ToFirestore();
       updateLockedTabsV20();
       renderNearDeathBannerV20();
-      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! Потеряно ' + lostGold + ' монет и наложен статус «При смерти» (1 HP во всех боях, пока не выпьешь 🧪 Зелье восстановления).';
+      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! Потеряно ' + lostGold + ' монет и наложен статус «При смерти» (1 HP во всех боях, пока не выпьешь 🧪 Слёзы Феникса).';
       fightChest = false;
       renderCoins(); renderProgress(); renderDg();
       toast('💀 Гибель в Экспедиции! Наложен статус «При смерти» (1 HP).');
@@ -5601,7 +5601,7 @@ svg.chr{overflow:visible}
     h += '</div>';
 
     h += '<div class="card"><h3>🎁 Награды Сундука Босса · Ранг ' + rank + '</h3>'
-      + '<p>Гарантированное редкое/эпическое+ снаряжение твоего класса, <b>' + (15 + rank * 5) + '–' + (30 + rank * 5) + ' ✨ Магической пыли</b> и <b>8% шанс</b> на редкое 🧪 Зелье восстановления!</p>'
+      + '<p>Гарантированное редкое/эпическое+ снаряжение твоего класса, <b>' + (15 + rank * 5) + '–' + (30 + rank * 5) + ' ✨ Магической пыли</b> и <b>8% шанс</b> на редкое 🧪 Слёзы Феникса!</p>'
       + '<div class="odds">';
     lootWeights(rank, true, true).forEach(function(x){ if(x[1]) h += rarPill(x[0]).replace('</span>', ' ' + x[1] + '%</span>'); });
     h += '</div></div>';
@@ -5767,13 +5767,13 @@ svg.chr{overflow:visible}
       && (game.coins||0) >= POTION_CRAFT_COST.coins
       && (game.stones||0) >= POTION_CRAFT_COST.stones
       && (game.dust||0) >= POTION_CRAFT_COST.dust;
-    potCard.innerHTML = '<h3>🧪 Алхимия Кузницы: Зелье восстановления</h3>'
+    potCard.innerHTML = '<h3>🧪 Алхимия Кузницы: Слёзы Феникса</h3>'
       + '<p>Единственное средство, снимающее смертельный недуг <b>«При смерти» (1 HP)</b> после гибели в Экспедиции. Также выпадает с Босса 5-го этажа Экспедиции или покупается у игроков на Рынке.</p>'
       + '<p>У тебя в запасе: <b>' + (v20Data.potions||0) + ' 🧪</b>' + (v20Data.nearDeath ? ' · <span style="color:#ef4444;font-weight:700">Статус «При смерти» активен!</span>' : '') + '</p>'
       + '<p>Стоимость создания: <b>' + POTION_CRAFT_COST.coins + ' монет + ' + POTION_CRAFT_COST.stones + ' 🪨 камней + ' + POTION_CRAFT_COST.dust + ' ✨ Магической пыли</b>.</p>'
       + '<div class="forgeButtons">'
-      + '<button type="button" id="btnCraftPotionV20"' + (canCraftPot ? '' : ' disabled') + '>Скрафтить Зелье 🧪</button>'
-      + (v20Data.nearDeath && (v20Data.potions||0) > 0 ? '<button type="button" id="btnDrinkPotionForgeV20" class="ghost">Выпить зелье (Снять 1 HP)</button>' : '')
+      + '<button type="button" id="btnCraftPotionV20"' + (canCraftPot ? '' : ' disabled') + '>Скрафтить Слёзы 🧪</button>'
+      + (v20Data.nearDeath && (v20Data.potions||0) > 0 ? '<button type="button" id="btnDrinkPotionForgeV20" class="ghost">Выпить Слёзы (Снять 1 HP)</button>' : '')
       + '</div>';
     box.appendChild(potCard);
     var cBtn = $('btnCraftPotionV20'); if(cBtn) cBtn.onclick = craftRecoveryPotionV20;
@@ -6114,10 +6114,10 @@ svg.chr{overflow:visible}
         sellerName: String(nick || sess.name || 'Игрок').slice(0, 20),
         price: price,
         isPotion: true,
-        item: {id:'recovery_potion', name:'🧪 Зелье восстановления', r:'epic'},
+        item: {id:'recovery_potion', name:'🧪 Слёзы Феникса', r:'epic'},
         createdAt: Date.now()
       });
-      toast('✅ Зелье восстановления выставлено на Рынок за ' + price + ' монет!');
+      toast('✅ Слёзы Феникса выставлено на Рынок за ' + price + ' монет!');
     }catch(e){
       v20Data.potions += 1;
       saveV20Local();
@@ -6180,7 +6180,7 @@ svg.chr{overflow:visible}
         await db.collection('players').doc(String(lot.sellerId)).set({
           pendingMarketGold: firebase.firestore.FieldValue.increment(payout)
         }, {merge: true});
-        var boughtName = lot.isPotion ? '🧪 Зелье восстановления' : (lot.item && ITEMS[lot.item.id] ? ITEMS[lot.item.id].name : 'Предмет');
+        var boughtName = lot.isPotion ? '🧪 Слёзы Феникса' : (lot.item && ITEMS[lot.item.id] ? ITEMS[lot.item.id].name : 'Предмет');
         toast('🎉 Вы купили «' + boughtName + '» за ' + lotPrice + ' монет!');
       } else {
         toast('📦 Вы сняли свой лот с продажи, предмет возвращён в инвентарь.');
@@ -6256,7 +6256,7 @@ svg.chr{overflow:visible}
         var lv = Math.max(0, Math.min(10, Math.floor(Number(itObj.enhanceLv) || 0)));
         var ench = itObj.enchantCode ? parseEnchant(String(itObj.enchantCode)) : null;
         var stLine = '';
-        var safeTitle = lot.isPotion ? '🧪 Зелье восстановления' : baseIt.name;
+        var safeTitle = lot.isPotion ? '🧪 Слёзы Феникса' : baseIt.name;
         if(lot.isPotion){
           stLine = 'Снимает статус «При смерти» (1 HP)';
         } else if(baseIt){
@@ -6830,11 +6830,11 @@ svg.chr{overflow:visible}
       alchCard.style.borderColor = '#3b82f6';
 
       var coins = Number(game.coins) || 0, dust = Number(game.dust) || 0;
-      var canH = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= 800 && dust >= 20;
+      var canH = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= 300 && dust >= 200;
 
       alchCard.innerHTML = '<h3>🧪 Боевая Алхимия: Зелье лечения</h3>'
         + '<p>Восстанавливает <b>20% макс. HP</b> в бою без траты хода! <b>Максимум 2 зелья на Экспедицию</b>.</p>'
-        + '<p>Цена: <b>800 монет + 20 ✨</b> · В запасе: <b>' + v21Data.pots.heal + ' ❤️</b></p>'
+        + '<p>Цена: <b>300 монет + 200 ✨</b> · В запасе: <b>' + v21Data.pots.heal + ' ❤️</b></p>'
         + '<div class="forgeButtons">'
         + '<button type="button" id="btnCraftHeal"' + (canH ? '' : ' disabled') + '>Сварить Зелье ❤️</button></div>';
 
@@ -6844,8 +6844,8 @@ svg.chr{overflow:visible}
       var bHeal = $('btnCraftHeal');
       if(bHeal){
         bHeal.onclick = function(){
-          if(!canUseTownServicesV20() || (game.coins||0) < 800 || (game.dust||0) < 20) return;
-          game.coins -= 800; game.dust -= 20; v21Data.pots.heal++;
+          if(!canUseTownServicesV20() || (game.coins||0) < 300 || (game.dust||0) < 200) return;
+          game.coins -= 300; game.dust -= 200; v21Data.pots.heal++;
           saveV21Local(); saveGame(); renderCoins(); renderForge();
           toast('❤️ Сварено Зелье лечения (+20% HP)!');
         };
