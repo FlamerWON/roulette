@@ -2001,7 +2001,7 @@ svg.chr{overflow:visible}
  var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game.fight;
  var live=el<EVENT_MS,mo=f&&f.on?foeOfFight(f):foeFor(slot,selectedRank()),T,S,btn=false;
  if(f&&f.on){T=(f.kind==='ambush'?'Нападение: ':'Бой: ')+mo.name;S=rankName(f.r)+' · '+(f.kind==='ambush'?'награды 40% от события':'характеристики зафиксированы');}
- else if(live){T=mo.name+' · '+rankName(mo.rank);if(game.eventSlot===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=gameLoaded&&!dgOn()&&!merchantBusy;}}
+ else if(live){T=mo.name+' · '+rankName(mo.rank);if(game.eventSlot===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=gameLoaded&&!dgOn()&&!merchantBusy&&game.eventSlot!==slot;}}
  else{T='Следующий монстр';S='Через '+fmt(HOUR-el)+' · '+rankName(selectedRank());}
  $('evT').textContent=T;$('evS').textContent=S;$('evBtn').hidden=!btn;
  bar.className='eventBar'+(live||f&&f.on?' live':'')+(mo.elite?' elite':'');
