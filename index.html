@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="22">
+<meta name="app-version" content="20">
 <title>Рулетка с чатом</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
@@ -831,7 +831,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 22</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 20</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -2001,7 +2001,7 @@ svg.chr{overflow:visible}
  var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game.fight;
  var live=el<EVENT_MS,mo=f&&f.on?foeOfFight(f):foeFor(slot,selectedRank()),T,S,btn=false;
  if(f&&f.on){T=(f.kind==='ambush'?'Нападение: ':'Бой: ')+mo.name;S=rankName(f.r)+' · '+(f.kind==='ambush'?'награды 40% от события':'характеристики зафиксированы');}
- else if(live){T=mo.name+' · '+rankName(mo.rank);if(game.eventSlot===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=gameLoaded&&!dgOn()&&!merchantBusy&&game.eventSlot!==slot;}}
+ else if(live){T=mo.name+' · '+rankName(mo.rank);if(game.eventSlot===slot)S='Ты уже сразился с этим монстром';else{S=mo.hp+' HP · '+mo.dmg+' урона · уйдёт через '+fmt(EVENT_MS-el);btn=gameLoaded&&!dgOn()&&!merchantBusy;}}
  else{T='Следующий монстр';S='Через '+fmt(HOUR-el)+' · '+rankName(selectedRank());}
  $('evT').textContent=T;$('evS').textContent=S;$('evBtn').hidden=!btn;
  bar.className='eventBar'+(live||f&&f.on?' live':'')+(mo.elite?' elite':'');
@@ -4133,10 +4133,10 @@ svg.chr{overflow:visible}
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
   /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
-  APP_V = 22;
-  RELEASE_ID = 22;
+  APP_V = 20;
+  RELEASE_ID = 20;
   RELEASE_NOTES.unshift({
-    title: 'Версия 22 · 5-этажные Экспедиции, 6 Новых Боссов, Алтарь, Рынок Firestore и Престиж',
+    title: 'Версия 20 · 5-этажные Экспедиции, 6 Новых Боссов, Алтарь, Рынок Firestore и Престиж',
     lines: [
       'Новая система «Экспедиция» (5 этажей): на этажах 1–4 генерируется от 1 до 3 путей (25% — 1 путь, 50% — 2 пути, 25% — 3 пути). Каждая комната имеет свою редкость: Столкновение (Обычная, 52%), Элитный Страж (Необычная, 22%), Лагерь (Редкая, 12%), Алтарь Древних (Эпическая, 9%) и Тайник (Легендарная, 5% — не более 1 за поход со 2-го этажа)!',
       'Лагерь и Алтарь разделены: в Лагере ты отдыхаешь (+45% HP) и можешь сменить экипировку, а на Алтаре Древних выбираешь между Благословением Мощи (+15% урона) и Кровавой Жертвой (-20% HP ради +25% урона и +10% крита до конца похода)!',
@@ -6213,8 +6213,8 @@ svg.chr{overflow:visible}
 
 
 /* ================== МОДУЛЬ UPDATE 21 (ФИНАЛ: АЛХИМИЯ, АНТИ-АБУЗ, СЕТЫ, ФИКСЫ) ================== */
-  APP_V = 22;
-  RELEASE_ID = 22;
+  APP_V = 21;
+  RELEASE_ID = 21;
   
   if(!window.v21PatchApplied){
     window.v21PatchApplied = true;
@@ -7071,154 +7071,7 @@ svg.chr{overflow:visible}
   
   if(gameLoaded) { renderChar(); renderDg(); }
 
-  
-  /* ================== МОДУЛЬ UPDATE 22 (МИРОВЫЕ БОССЫ, ИМЕННЫЕ СЕТЫ, АНТИ-ФАРМ, АЛХИМИЯ) ================== */
-  APP_V = 22;
-  RELEASE_ID = 22;
-  
-  RELEASE_NOTES.unshift({
-    title: 'Версия 22 · Мировой Босс, Именные Сеты, Бижутерия, Анти-Фарм и Алхимия',
-    lines: [
-      '🌍 Мировой Босс «Титан Мироздания»: появляется каждый день ровно в 18:00 по МСК (награда за победу увеличена в 2.5 раза).',
-      '🛡️ Именные Комплекты Боссов (Сеты): бонус сета активируется при надевании 2 частей одного именного комплекта (например, сектор «Пепла»): дает +50% урона по боссам и гарантированный 15% вампиризм!',
-      '💎 Баланс Лута: Бижутерия (Кольца и Амулеты) выпадает только с 10 ранга сложности, а Реликвии — после Эволюции (Престижа).',
-      '⚖️ Ступенчатый Анти-Фарм: штрафы при игре ниже своего максимального ранга (-50% лута и наград при разнице в 2 ранга, -90% и только мусор при разнице в 3 ранга).',
-      '🧪 Алхимия и Лечение: в бой добавлена кнопка «Зелье лечения» (лечит 20% HP прямо в сражении), а также Слёзы Феникса для защиты от гибели.'
-    ]
-  });
-
-  // 1. Мировой Босс (Титан Мироздания каждый день в 18:00)
-  function isWorldBossHourV22(){
-    var now = new Date();
-    return now.getHours() === 18;
-  }
-
-  var _origFoeForV22 = foeFor;
-  foeFor = function(slot, rank){
-    var mo = _origFoeForV22(slot, rank);
-    if(isWorldBossHourV22() && Math.random() < 0.15){
-      mo.id = 'world_titan';
-      mo.name = '🌍 Мировой Босс: Титан Мироздания';
-      mo.hp = Math.round(mo.hp * 2.5);
-      mo.dmg = Math.round(mo.dmg * 1.8);
-      mo.boss = true;
-    }
-    return mo;
-  };
-
-  var _origRewardBaseV22 = rewardBase;
-  rewardBase = function(mo){
-    var b = _origRewardBaseV22(mo);
-    if(mo && (mo.id === 'world_titan' || mo.boss)){
-      return {xp: Math.round(b.xp * 2.5), coins: Math.round(b.coins * 2.5)};
-    }
-    return b;
-  };
-
-  // 2. Именные комплекты (Сеты) и бонусы (2 части: +50% урона по боссам, +15% вампиризм)
-  var SET_NAMES_V22 = {
-    's00': 'Сет Пепла', 's01': 'Сет Мха', 's02': 'Сет Меди', 's03': 'Сет Тумана',
-    's04': 'Сет Кремня', 's05': 'Сет Вереска', 's06': 'Сет Дождя', 's07': 'Сет Янтаря'
-  };
-
-  function getActiveSetBonusV22(g){
-    var eq = (g && g.eq) || {}, sets = {};
-    ALL_SLOTS_V22.forEach(function(sl){
-      var id = eq[sl], it = ITEMS[id];
-      if(it && it.setId){
-        var prefix = it.setId.slice(0, 3);
-        sets[prefix] = (sets[prefix] || 0) + 1;
-      }
-    });
-    for(var k in sets){
-      if(sets[k] >= 2) return true;
-    }
-    return false;
-  }
-
-  var _origGetEquippedEnchantsV22 = getEquippedEnchants;
-  getEquippedEnchants = function(g){
-    var res = _origGetEquippedEnchantsV22(g);
-    if(getActiveSetBonusV22(g)){
-      res.vamp = Math.min(45, res.vamp + 15);
-    }
-    return res;
-  };
-
-  var _origStrikeCoreBaseV22 = strikeCoreBase;
-  strikeCoreBase = function(f, mo, st, n){
-    var hasSet = getActiveSetBonusV22(game);
-    if(hasSet && mo && (mo.boss || mo.elite || mo.id === 'world_titan')){
-      st = Object.assign({}, st, {atk: Math.round(st.atk * 1.5)});
-    }
-    return _origStrikeCoreBaseV22(f, mo, st, n);
-  };
-
-  // 3. Баланс лута (Бижутерия с 10 ранга, Реликвии после Престижа)
-  var _origRollLootV22 = rollLoot;
-  rollLoot = function(rank, dungeon, elite){
-    var id = _origRollLootV22(rank, dungeon, elite);
-    if(id && ITEMS[id]){
-      var it = ITEMS[id];
-      if((it.slot === 'ring' || it.slot === 'amulet') && rank < 10){
-        return rollLoot(Math.min(rank, 9), dungeon, elite);
-      }
-      if(it.r === 'divine' && (!v20Data || !v20Data.prestige || v20Data.prestige < 1)){
-        return rollLoot(rank, dungeon, elite);
-      }
-    }
-    return id;
-  };
-
-  // 4. Ступенчатый Анти-Фарм
-  function getAntiFarmMultiplierV22(){
-    if(!game) return 1.0;
-    var maxR = maxRank(game);
-    var curR = selectedRank();
-    var diff = maxR - curR;
-    if(diff >= 3) return 0.1; // Штраф 90%
-    if(diff >= 2) return 0.5; // Штраф 50%
-    return 1.0;
-  }
-
-  var _origGainXPV22 = gainXP;
-  gainXP = function(amount){
-    var mult = getAntiFarmMultiplierV22();
-    return _origGainXPV22(amount * mult);
-  };
-
-  // 5. Алхимия: Зелье лечения в бою (+20% HP прямо в бою)
-  var battleHealUsed = false;
-  var _origRenderFightV22 = renderFight;
-  renderFight = function(){
-    _origRenderFightV22();
-    var box = $('fight');
-    if(box && !box.hidden && game && game.fight && game.fight.on){
-      battleHealUsed = false;
-      var existingPotionBtn = $('btnBattleHealV22');
-      if(!existingPotionBtn){
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.id = 'btnBattleHealV22';
-        btn.className = 'ghost';
-        btn.style.marginTop = '6px';
-        btn.textContent = '🧪 Зелье лечения (+20% HP)';
-        btn.onclick = function(){
-          if(battleHealUsed){ toast('Зелье лечения уже использовано в этом бою!'); return; }
-          var st = stats();
-          var maxHp = v20Data.nearDeath ? 1 : (game.fight.ph || st.hp);
-          if(game.fight.p >= maxHp){ toast('Здоровье уже максимальное!'); return; }
-          var heal = Math.max(1, Math.round(maxHp * 0.20));
-          game.fight.p = Math.min(maxHp, game.fight.p + heal);
-          battleHealUsed = true;
-          renderFight();
-          toast('🧪 Зелье лечения восстановлено +' + heal + ' HP прямо в бою!');
-        };
-        box.appendChild(btn);
-      }
-    }
-  };
-})();
+  })();
 </script>
 </body>
 </html>
