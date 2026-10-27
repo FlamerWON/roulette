@@ -3544,6 +3544,7 @@ svg.chr{overflow:visible}
   }
 
   // Под-вкладки Магазина (Скупщик, Кузница, Зачарование, Расы и Классы, Шахтёр)
+  // --- МЕНЕДЖЕР ВКЛАДОК МАГАЗИНА ---
   var curShopSub = 'races';
 
   function switchShopSubTab(sub) {
@@ -3591,14 +3592,126 @@ svg.chr{overflow:visible}
     });
   }
 
-  // Безопасный перехватчик renderShop без бесконечной рекурсии
-  var _baseRenderShop = renderShop;
+  // --- ПОЛНЫЙ РЕНДЕР КУЗНИЦЫ ---
+  window.renderForge = function(){
+    var box = $('forgeBody'); if(!box || !game) return;
+    var indices = [];
+    (game.inv || []).forEach(function(id, i){
+      var it = ITEMS[id];
+      if(it && (!it.cls || it.cls === game.cls) && (it.hp > 0 || it.atk > 0)) indices.push(i);
+    });
+    if(indices.indexOf(forgeIndex) < 0) forgeIndex = indices.length ? indices[0] : -1;
+    var blocked = !canSell();
+
+    var h = '<div class="card"><h3>Кузница</h3>'
+      + '<p>Камни: <strong>' + (game.stones || 0) + '</strong> · один камень — ' + STONE_PRICE + ' монет. Каждая попытка также стоит монеты.</p>'
+      + '<div class="forgeButtons">';
+    [1, 5, 10].forEach(function(n){
+      h += '<button type="button" data-stones="' + n + '"' + (blocked || (game.coins || 0) < STONE_PRICE * n ? ' disabled' : '') + '>Купить ' + n + ' · ' + (STONE_PRICE * n) + ' мон.</button>';
+    });
+    h += '</div>'
+      + '<p>Каждый +1: для существующего урона +1 и 3% от базы; для существующего HP +5 и 3% от базы. Первые +1 и +2 гарантированы. Далее неудача сбросит заточку до +0, но вещь сохранится.</p>';
+
+    if(indices.length){
+      h += '<label for="forgeItem">Выбери экземпляр</label>'
+        + '<select id="forgeItem" style="width:100%;padding:10px;border-radius:10px;background:var(--card);color:var(--ink);border:1px solid var(--line)"' + (blocked ? ' disabled' : '') + '>';
+      indices.forEach(function(i){
+        h += '<option value="' + i + '"' + (i === forgeIndex ? ' selected' : '') + '>' + copyName(game, i) + ' · экземпляр №' + (i + 1) + '</option>';
+      });
+      h += '</select>';
+
+      var n = copyLevel(game, forgeIndex), it = ITEMS[game.inv[forgeIndex]], st = enhancedStats(it, n + 1);
+      h += '<div class="forgePreview">' + itemIcon(game.inv[forgeIndex]) + '<strong>' + copyName(game, forgeIndex) + '</strong>'
+        + '<p>' + copyStatsLine(game, forgeIndex) + '</p>';
+      if(n < 10){
+        h += '<p>Следующий уровень +' + (n + 1) + ': ' + (st.hp ? 'HP ' + st.hp + ' ' : '') + (st.atk ? 'урон ' + st.atk : '') + '</p>'
+          + '<p>Шанс: <b>' + FORGE_CHANCES[n] + '%</b> · ' + FORGE_COSTS[n] + ' монет + 1 камень.</p>'
+          + (n >= 2 ? '<p class="forgeWarning">При неудаче: сброс до +0.</p>' : '<p>Успех гарантирован.</p>')
+          + '<div class="forgeButtons">'
+          + '<button type="button" id="forgeTry"' + (blocked || !game.stones || (game.coins || 0) < FORGE_COSTS[n] ? ' disabled' : '') + '>Улучшить до +' + (n + 1) + '</button>'
+          + '<button type="button" id="forgeSell" class="ghost"' + (blocked ? ' disabled' : '') + '>Продать за ' + copySellPrice(game, forgeIndex) + ' мон.</button>'
+          + '</div>';
+      } else {
+        h += '<p>Максимальная заточка +10.</p>'
+          + '<button type="button" id="forgeSell" class="ghost"' + (blocked ? ' disabled' : '') + '>Продать за ' + copySellPrice(game, forgeIndex) + ' мон.</button>';
+      }
+      h += '</div>';
+    } else {
+      h += '<p>Получите экипировку своего класса для улучшения в кузнице.</p>';
+    }
+    h += '</div>';
+
+    box.innerHTML = h;
+
+    box.querySelectorAll('[data-stones]').forEach(function(b){
+      b.onclick = function(){ confirmForge('buy', null, Number(b.dataset.stones)); };
+    });
+    var select = $('forgeItem');
+    if(select) select.onchange = function(){ forgeIndex = Number(this.value); renderForge(); };
+    var button = $('forgeTry');
+    if(button) button.onclick = function(){ confirmForge('enhance', forgeIndex); };
+    var sbtn = $('forgeSell');
+    if(sbtn) sbtn.onclick = function(){ confirmSale(null, false, forgeIndex); };
+  };
+
+  // --- ПОЛНЫЙ РЕНДЕР СКУПЩИКА ---
+  window.renderMerchant = function(){
+    if(typeof renderForge === 'function') renderForge();
+    var box = $('merchantBody'); if(!box) return;
+    if(!game){ box.textContent = 'Сначала загрузи персонажа.'; return; }
+
+    var counts = saleCounts(game), ids = Object.keys(counts), plan = salePlan(game, null, true);
+    var blocked = merchantBusy || !gameLoaded || opening || spinning || !!(game.fight && game.fight.on) || dgOn();
+
+    var h = '<div class="card merchantIntro"><h3>Скупщик</h3>'
+      + '<p>Продай лишний лут или старую заточенную экипировку за монеты и Магическую пыль ✨! Заточенные вещи продаются с надбавкой. При нажатии «Продать дубликаты» заточенные вещи не трогаются.</p>'
+      + '<div class="sellPrices">';
+    Object.keys(SELL_PRICES).forEach(function(r){
+      h += '<span>' + rarPill(r) + ' ' + SELL_PRICES[r] + ' мон.</span>';
+    });
+    h += '</div>'
+      + '<button type="button" id="sellDuplicates"' + (blocked || !plan.amount ? ' disabled' : '') + '>Продать дубликаты (+0)' + (plan.amount ? ' · ' + plan.total + ' мон.' : '') + '</button>'
+      + '</div>';
+
+    if(!ids.length){
+      h += '<div class="card"><p>Инвентарь пуст. Добыча появится после побед над монстрами.</p></div>';
+    } else {
+      h += '<div class="merchantList">' + ids.map(function(id){
+        var it = ITEMS[id], fav = !!(game.favorites && game.favorites[id]), available = saleAvailable(game, id), starter = isStarterItem(id), p1 = salePlan(game, id, false);
+        var enhList = [];
+        game.inv.forEach(function(k, idx){ if(k === id && copyLevel(game, idx) > 0) enhList.push('+' + copyLevel(game, idx) + (idx === wornIndex(game, it.slot) ? ' (надето)' : '')); });
+        var status = fav ? 'Избранное · защищено' : starter ? 'Стартовое · оставляем 1 · доступно: ' + available : 'Доступно к продаже: ' + available;
+        if(enhList.length) status += ' · заточка: ' + enhList.join(', ');
+
+        return '<div class="merchantItem">'
+          + '<div class="merchantIcon" style="border-color:' + RARITY[it.r].color + '">' + itemIcon(id) + '</div>'
+          + '<div class="merchantDetails"><strong>' + it.name + '</strong><span>' + RARITY[it.r].name + ' · ' + counts[id] + ' шт.</span><span>' + status + '</span></div>'
+          + '<div class="merchantActions">'
+          + '<button type="button" class="ghost favoriteButton" data-favorite="' + id + '" aria-pressed="' + fav + '">' + (fav ? '★' : '☆') + '</button>'
+          + '<button type="button" data-sell="' + id + '"' + (blocked || !available ? ' disabled' : '') + '>' + (starter && !available ? 'Оставить 1' : 'Продать · ' + (p1.total || SELL_PRICES[it.r])) + '</button>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    }
+
+    box.innerHTML = h;
+
+    var bulk = $('sellDuplicates');
+    if(bulk) bulk.onclick = function(){ confirmSale(null, true); };
+    box.querySelectorAll('[data-favorite]').forEach(function(b){
+      b.onclick = function(){ setFavorite(b.getAttribute('data-favorite')); };
+    });
+    box.querySelectorAll('[data-sell]').forEach(function(b){
+      b.onclick = function(){ confirmSale(b.getAttribute('data-sell'), false); };
+    });
+  };
+
+  var _baseRenderShopSafe = typeof renderShop === 'function' ? renderShop : function(){};
   renderShop = function() {
     try {
-      if (typeof _baseRenderShop === 'function') _baseRenderShop();
-      switchShopSubTab(curShopSub);
+      if (typeof _baseRenderShopSafe === 'function') _baseRenderShopSafe();
+      switchShopSubTab(window.curShopSub);
     } catch (e) {
-      console.error("Error in renderShop:", e);
+      console.error("Ошибка в renderShop:", e);
     }
   };
 
