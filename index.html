@@ -7071,6 +7071,794 @@ svg.chr{overflow:visible}
   
   if(gameLoaded) { renderChar(); renderDg(); }
 
+  // ================= ПАТЧ 22 + ОПТИМИЗАЦИЯ И ИСПРАВЛЕНИЕ БАГОВ =================
+
+  // 1. Исправление весов рас (ровно 100%) и описания процентных Шипов Драконорождённого
+  RACES.forEach(function(r){
+    if(r.id === 'human') r.w = 48; // Было 50 (сумма давала 102%, блокируя Автоматона и Небожителя)
+    if(r.id === 'drake') r.desc = 'Пассивные Шипы (+15% к возврату урона) и +15% к золоту со всех побед';
+  });
+  RELEASE_NOTES.forEach(function(n){
+    if(n.title && n.title.indexOf('Версия 19 · Зачарование') === 0){
+      n.title = 'Версия 18 · Зачарование, Таверна, Вкладки и Исправление боёвки';
+    }
+  });
+
+  // 2. Оптимизация: кэширование статичных SVG-иконок предметов
+  var ITEM_ICON_CACHE_V22 = {};
+  itemIcon = function(id){
+    var it = ITEMS[id];
+    if(!it) return '';
+    var key = id + ':' + it.vb + ':' + it.draw.length;
+    if(!ITEM_ICON_CACHE_V22[key]){
+      ITEM_ICON_CACHE_V22[key] = cvSVG(it.draw, it.vb, 'cvItem');
+    }
+    return ITEM_ICON_CACHE_V22[key];
+  };
+
+  // 3. Оптимизация: отключение холостой перерисовки скрытых мини-колёс при 60 FPS
+  drawMiniWheels = function(){
+    if(spinning && $('tavernAmt') && !$('tavernAmt').disabled) lockTavernBetOnSpin();
+    var sk = currentWheelSkin();
+    if(!$('app').hidden && curTab === 'game' && wheelVisibleRatio < 0.2){
+      drawWheelOnCanvas($('floatWheelCanvas'), sk);
+    }
+    if(!$('app').hidden && curTab === 'char'){
+      drawWheelOnCanvas($('charChibiWheel'), sk);
+    }
+    var fig = $('charWheelFigurine');
+    if(fig) fig.title = 'Фигурка колеса: ' + (sk === 'pioneer' ? 'Первопроходец' : 'Классическое');
+    var ftxt = $('floatWheelTxt');
+    if(ftxt) ftxt.textContent = spinning ? 'Крутится…' : (game && game.last >= 0 ? 'Выпало: ' + game.last : 'Готово');
+  };
+
+  // 4. Сохранение бонусного времени шахтёра (haste) без превышения лимита 60000 мс в minerPlan
+  var minerCarryMsV22 = 0;
+  minerClock = function(){
+    var now = performance.now(), delta = now - minerTickAt, eligible = minerEligible();
+    minerTickAt = now;
+    if(eligible && minerWasEligible && delta >= 0 && delta <= 2500){
+      var r = (game && game.race) || 'human';
+      var eqEnch = getEquippedEnchants(game);
+      var mult = 1 + (eqEnch.haste || 0) / 100;
+      if(r === 'dwarf') mult += 0.25;
+      else if(r === 'automaton') mult += 0.20;
+      var gained = Math.floor(delta * mult) + minerCarryMsV22;
+      var total = minerPendingMs + gained;
+      if(total > 60000){
+        minerPendingMs = 60000;
+        minerCarryMsV22 = Math.min(60000, total - 60000);
+      } else {
+        minerPendingMs = total;
+        minerCarryMsV22 = 0;
+      }
+    }
+    minerWasEligible = eligible;
+  };
+
+  // 5. Настройка новых редкостей (Комплекты Боссов) и поддержка всех 6 слотов экипировки
+  var ALL_SLOTS_V22 = ['head', 'body', 'arms', 'legs', 'ring', 'amulet'];
+  RARITY['set'] = {name: 'Комплект Босса', color: '#dc2626'};
+  SELL_PRICES['set'] = 1800;
+  DUST_YIELD['set'] = 160;
+  if(!RARITY['relic']) RARITY['relic'] = {name: 'Реликвия', color: '#0ea5e9'};
+  if(!SELL_PRICES['relic']) SELL_PRICES['relic'] = 2200;
+  if(!DUST_YIELD['relic']) DUST_YIELD['relic'] = 200;
+
+  ITEMS['set_titan_ring'] = {
+    name:'Кольцо Абсолюта', slot:'ring', cls:'all', r:'set', hp: 250, atk: 25, drop:true,
+    draw: '<circle cx="50" cy="50" r="30" fill="none" stroke="#dc2626" stroke-width="12"/><circle cx="50" cy="20" r="10" fill="#facc15"/>',
+    vb: '0 0 100 100'
+  };
+  ITEMS['set_titan_amulet'] = {
+    name:'Око Титана', slot:'amulet', cls:'all', r:'set', hp: 300, atk: 35, drop:true,
+    draw: '<path d="M50 20 L80 50 L50 80 L20 50 Z" fill="#dc2626"/><circle cx="50" cy="50" r="12" fill="#000"/><circle cx="50" cy="50" r="6" fill="#fff"/>',
+    vb: '0 0 100 100'
+  };
+
+  var v22Style = document.createElement('style');
+  v22Style.textContent = '.cvPortrait .relic-icon, .cvBody .relic-icon { display: none !important; }';
+  document.head.appendChild(v22Style);
+  Object.keys(ITEMS).forEach(function(k){
+    if((ITEMS[k].r === 'relic' || ITEMS[k].r === 'set') && ITEMS[k].draw.indexOf('relic-icon') === -1){
+      ITEMS[k].draw = '<g class="relic-icon">' + ITEMS[k].draw + '</g>';
+    }
+  });
+
+  // Пересобираем кэш пулов лута (с поддержкой универсальных предметов cls === 'all')
+  buildLootPoolsCacheV20 = function(){
+    LOOT_POOL_BY_RARITY = {};
+    LOOT_POOL_BY_RARITY_AND_CLASS = {};
+    ITEM_ICON_CACHE_V22 = {};
+    Object.keys(ITEMS).forEach(function(id){
+      var it = ITEMS[id];
+      if(!it || !it.drop) return;
+      if(!LOOT_POOL_BY_RARITY[it.r]) LOOT_POOL_BY_RARITY[it.r] = [];
+      LOOT_POOL_BY_RARITY[it.r].push(id);
+      if(it.cls === 'all'){
+        Object.keys(CLASSES).forEach(function(c){
+          var key = it.r + ':' + c;
+          if(!LOOT_POOL_BY_RARITY_AND_CLASS[key]) LOOT_POOL_BY_RARITY_AND_CLASS[key] = [];
+          LOOT_POOL_BY_RARITY_AND_CLASS[key].push(id);
+        });
+      } else if(it.cls){
+        var key = it.r + ':' + it.cls;
+        if(!LOOT_POOL_BY_RARITY_AND_CLASS[key]) LOOT_POOL_BY_RARITY_AND_CLASS[key] = [];
+        LOOT_POOL_BY_RARITY_AND_CLASS[key].push(id);
+      }
+    });
+  };
+  buildLootPoolsCacheV20();
+
+  gearFromGame = function(g){
+    var out = {}, eq = (g && g.eq) || {}, base = (g && !g.gm) ? gearOf(g.cls) : {};
+    ALL_SLOTS_V22.forEach(function(sl){
+      var id = eq[sl], it = ITEMS[id];
+      if(id && it && it.slot === sl && (!it.cls || it.cls === g.cls || it.cls === 'all')) out[sl] = id;
+      else if(base[sl]) out[sl] = base[sl];
+    });
+    return out;
+  };
+
+  initEnhancement = function(g){
+    g.stones = Number.isInteger(g.stones) && g.stones >= 0 ? Math.min(g.stones, 1000000) : 0;
+    g.dust = Number.isInteger(g.dust) && g.dust >= 0 ? Math.min(g.dust, 1000000) : 0;
+    if(!Number.isFinite(g.eventSlot) || g.eventSlot < 0) g.eventSlot = 0;
+    var oldEnch = g.enchants || {}, validEnch = {};
+    (g.inv || []).forEach(function(id, i){
+      if(typeof oldEnch[i] === 'string' && oldEnch[i].length <= 40) validEnch[i] = oldEnch[i];
+    });
+    g.enchants = validEnch;
+    var old = g.enhance || {}, valid = {};
+    (g.inv || []).forEach(function(id, i){
+      var n = Number(old[i]);
+      if(Number.isInteger(n) && n > 0 && n <= 10) valid[i] = n;
+    });
+    g.enhance = valid;
+    var copies = {};
+    ALL_SLOTS_V22.forEach(function(sl){
+      var i = wornIndex(g, sl);
+      if(i >= 0) copies[sl] = i;
+    });
+    g.eqCopies = copies;
+  };
+
+  filterInventory = function(g, keep){
+    var inv = [], levels = {}, ench = {}, copies = {}, mapping = {};
+    (g.inv || []).forEach(function(id, i){
+      if(keep(id, i)){
+        var j = inv.length;
+        mapping[i] = j;
+        inv.push(id);
+        var n = copyLevel(g, i);
+        if(n) levels[j] = n;
+        if(g.enchants && g.enchants[i]) ench[j] = g.enchants[i];
+      }
+    });
+    g.enchants = ench;
+    ALL_SLOTS_V22.forEach(function(sl){
+      var i = wornIndex(g, sl);
+      if(Object.prototype.hasOwnProperty.call(mapping, i)) copies[sl] = mapping[i];
+    });
+    g.inv = inv;
+    g.enhance = levels;
+    g.eqCopies = copies;
+  };
+
+  getEquippedEnchants = function(g){
+    var target = g || game;
+    var res = {crit:0, vamp:0, gold:0, thorns:0, haste:0};
+    if(!target || !target.eq) return res;
+    ALL_SLOTS_V22.forEach(function(sl){
+      var idx = wornIndex(target, sl);
+      if(idx >= 0 && target.enchants && target.enchants[idx]){
+        var e = parseEnchant(target.enchants[idx]);
+        if(e && res[e.id] !== undefined) res[e.id] += e.val;
+      }
+    });
+    var sub = (target === game) ? findSubclassV20(v20Data.subcls) : null;
+    if(sub && sub.enchMult){
+      res.crit = Math.round(res.crit * sub.enchMult);
+      res.vamp = Math.round(res.vamp * sub.enchMult);
+      res.thorns = Math.round(res.thorns * sub.enchMult);
+      res.gold = Math.round(res.gold * sub.enchMult);
+      res.haste = Math.round(res.haste * sub.enchMult);
+    }
+    res.crit = Math.min(25, res.crit);
+    res.vamp = Math.min(30, res.vamp);
+    res.thorns = Math.min(50, res.thorns);
+    res.gold = Math.min(40, res.gold);
+    res.haste = Math.min(25, res.haste);
+
+    var r = target.race || 'human';
+    if(r === 'elf'){
+      res.crit = Math.min(35, Math.round(res.crit * 1.2));
+      res.vamp = Math.min(36, Math.round(res.vamp * 1.2));
+      res.thorns = Math.min(60, Math.round(res.thorns * 1.2));
+      res.gold = Math.min(50, Math.round(res.gold * 1.2));
+      res.haste = Math.min(35, Math.round(res.haste * 1.2));
+    }
+    if(r === 'beast') res.crit = Math.min(40, res.crit + 7);
+    if(r === 'undead') res.vamp = Math.min(38, res.vamp + 6);
+    if(r === 'drake') res.thorns = Math.min(65, res.thorns + 15);
+
+    if(sub){
+      if(sub.critBonus) res.crit = Math.min(45, res.crit + sub.critBonus);
+      if(sub.vampBonus) res.vamp = Math.min(45, res.vamp + sub.vampBonus);
+      if(sub.thornsBonus) res.thorns = Math.min(65, res.thorns + sub.thornsBonus);
+      if(sub.goldBonus) res.gold = Math.min(60, res.gold + sub.goldBonus);
+    }
+    if(target === game && v20Data.exp && v20Data.exp.on && v20Data.exp.altarCritBonus){
+      res.crit = Math.min(55, res.crit + v20Data.exp.altarCritBonus);
+    }
+    return res;
+  };
+
+  // Отрисовка слотов Кольца и Амулета в профиле и поддержка предметов cls === 'all'
+  var _origRenderCharV22 = renderChar;
+  renderChar = function(){
+    _origRenderCharV22();
+    if(!game || (curTab !== 'char' && $('charPane') && $('charPane').hidden)) return;
+    var gear = equipped();
+    [['slotRing','ring','Кольцо'],['slotAmulet','amulet','Амулет']].forEach(function(sl){
+      var el = $(sl[0]), id = gear[sl[1]];
+      if(!el) return;
+      el.onclick = (game.eq && game.eq[sl[1]]) ? function(){
+        if(merchantBusy || !gameLoaded || !canChangeGearV20()) return;
+        delete game.eq[sl[1]];
+        delete game.eqCopies[sl[1]];
+        saveGame();
+        renderChar();
+      } : null;
+      if(id && ITEMS[id]){
+        var it = ITEMS[id], ci = wornIndex(game, sl[1]), lv = ci >= 0 ? copyLevel(game, ci) : 0;
+        el.innerHTML = itemIcon(id) + '<span class="sn">' + it.name + (lv ? ' +' + lv : '') + '</span>';
+        el.title = (ci >= 0 ? copyStatsLine(game, ci) : itemLine(id)) + '. Нажми, чтобы снять';
+        el.style.borderStyle = 'solid';
+        el.style.borderColor = (RARITY[it.r] || RARITY.common).color;
+        el.setAttribute('aria-label', sl[2] + ': ' + it.name);
+      } else {
+        el.textContent = sl[2];
+        el.style.borderStyle = '';
+        el.style.borderColor = '';
+        el.setAttribute('aria-label', sl[2] + ': пусто');
+      }
+    });
+  };
+
+  var _origRenderInvV22 = renderInv;
+  renderInv = function(){
+    _origRenderInvV22();
+    var box = $('inv');
+    if(!box || !game) return;
+    var cells = box.querySelectorAll('.icell');
+    cells.forEach(function(cell, index){
+      var id = game.inv[index], it = ITEMS[id];
+      if(!it) return;
+      if(it.cls === 'all'){
+        cell.disabled = false;
+        cell.style.opacity = '';
+      }
+      cell.onclick = function(e){
+        e.stopImmediatePropagation();
+        if(merchantBusy || !gameLoaded || !canChangeGearV20()) return;
+        if(it.cls && it.cls !== game.cls && it.cls !== 'all') return;
+        game.eq[it.slot] = id;
+        game.eqCopies[it.slot] = index;
+        saveGame();
+        renderChar();
+      };
+    });
+  };
+
+  // 6. Ступенчатая система Анти-Фарма (Золото и XP не режутся для окупаемости входа, деградирует только лут и пыль)
+  function getFarmPenaltyV22(targetRank){
+    if(!game || (typeof v20Data !== 'undefined' && v20Data.nearDeath)) return 0;
+    var diff = maxRank(game) - targetRank;
+    if(diff >= 3) return 2; // Жёсткий штраф (разница 3+ ранга)
+    if(diff === 2) return 1; // Слабый штраф (разница 2 ранга)
+    return 0;
+  }
+
+  rollLoot = function(rank, dungeon, elite, isBossChest){
+    var penalty = getFarmPenaltyV22(rank);
+    var w = lootWeights(rank, dungeon, elite);
+    if(isBossChest && penalty === 0) w.push(['set', 5]); // Редкий шанс на Комплект Босса
+
+    var totalW = 0;
+    for(var j = 0; j < w.length; j++) totalW += w[j][1];
+    var x = Math.random() * totalW, acc = 0, r = 'common';
+    for(var i = 0; i < w.length; i++){
+      acc += w[i][1];
+      if(x < acc){ r = w[i][0]; break; }
+    }
+
+    if(penalty === 2){
+      r = 'common';
+    } else if(penalty === 1 && ['epic', 'legendary', 'mythic', 'divine', 'set', 'relic'].indexOf(r) !== -1){
+      var fallbacks = ['common', 'uncommon', 'rare'];
+      r = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    }
+
+    if(isBossChest && penalty === 0 && (r === 'common' || r === 'uncommon')){
+      var bps = ['rare', 'epic', 'legendary'];
+      r = bps[Math.floor(Math.random() * bps.length)];
+    }
+
+    var targetCls = '';
+    if(dungeon && game && game.cls){
+      targetCls = Math.random() < 0.5 ? game.cls : Object.keys(CLASSES).filter(function(c){ return c !== game.cls; })[Math.floor(Math.random() * 2)];
+    }
+
+    var pool = (dungeon && targetCls && LOOT_POOL_BY_RARITY_AND_CLASS[r + ':' + targetCls])
+      ? LOOT_POOL_BY_RARITY_AND_CLASS[r + ':' + targetCls].slice()
+      : (LOOT_POOL_BY_RARITY[r] || []).slice();
+
+    var maxR = maxRank(game);
+    var hasPrestige = (typeof v20Data !== 'undefined' && v20Data.prestige > 0);
+
+    pool = pool.filter(function(id){
+      var it = ITEMS[id];
+      if(!it) return false;
+      if((it.slot === 'ring' || it.slot === 'amulet') && maxR < 10) return false;
+      if(it.r === 'relic' && !hasPrestige) return false;
+      if(it.r === 'set' && penalty > 0) return false;
+      return true;
+    });
+
+    if(!pool.length){
+      var fallbackRar = penalty === 2 ? 'common' : 'rare';
+      pool = (LOOT_POOL_BY_RARITY_AND_CLASS[fallbackRar + ':' + game.cls] || LOOT_POOL_BY_RARITY[fallbackRar] || []).filter(function(id){
+        var it = ITEMS[id];
+        return it && ((it.slot !== 'ring' && it.slot !== 'amulet') || maxR >= 10) && (it.r !== 'relic' || hasPrestige);
+      });
+    }
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  };
+
+  rollBossChestLootV20 = function(rank){
+    var penalty = getFarmPenaltyV22(rank);
+    if(penalty === 2) return rollLoot(rank, true, false, false); // При жёстком штрафе — только серая вещь
+    return rollLoot(Math.max(3, rank), true, true, true);
+  };
+
+  // 7. Мировой Босс (ежедневно в 18:00)
+  var WORLD_BOSS = {
+    id: 'boss_colossus',
+    name: '🌎 Титан Мироздания (Мировой Босс)',
+    hp: 3500,
+    dmg: 18,
+    rule: 'число от 1 до 12 или зеро',
+    hit: function(n){ return n === 0 || (n >= 1 && n <= 12); }
+  };
+  function isWorldBossTime(){ return new Date().getHours() === 18; }
+
+  var _origFoeForV22 = foeFor;
+  foeFor = function(slot, rank){
+    if(isWorldBossTime()){
+      var r = rank || selectedRank();
+      return {
+        id: WORLD_BOSS.id, name: WORLD_BOSS.name,
+        hp: Math.round(WORLD_BOSS.hp * rankHP(r)), dmg: Math.round(WORLD_BOSS.dmg * rankDMG(r)),
+        rule: WORLD_BOSS.rule, hit: WORLD_BOSS.hit, elite: true, boss: true, rank: r, isWorldBoss: true
+      };
+    }
+    return _origFoeForV22(slot, rank);
+  };
+
+  var _origRewardBaseV22 = rewardBase;
+  rewardBase = function(mo){
+    var b = _origRewardBaseV22(mo);
+    if(mo && mo.isWorldBoss) return {xp: Math.round(b.xp * 2.5), coins: Math.round(b.coins * 2.5)};
+    return b;
+  };
+
+  // 8. Бонус Комплекта Босса и Активные/Пассивные способности 6 Боссов
+  function getSetBonus(g){
+    var eq = (g && g.eq) || {}, count = 0;
+    ALL_SLOTS_V22.forEach(function(sl){
+      if(eq[sl] && ITEMS[eq[sl]] && ITEMS[eq[sl]].r === 'set') count++;
+    });
+    return count >= 2;
+  }
+
+  strikeCoreBase = function(f, mo, st, n){
+    if(!Number.isFinite(f.dealt)) f.dealt = 0;
+    if(!Number.isFinite(f.taken)) f.taken = 0;
+    f.skip = false;
+    if(typeof v20Data !== 'undefined' && v20Data.nearDeath && f.p > 1){ f.p = 1; f.ph = 1; }
+
+    var r = (game && game.race) || 'human';
+    var sub = (typeof v20Data !== 'undefined') ? findSubclassV20(v20Data.subcls) : null;
+    var eqEnch = getEquippedEnchants(game);
+    var healFactor = (r === 'orc') ? 0.9 : 1.0;
+    var bossFactor = (r === 'celestial' && mo && (mo.boss || mo.elite)) ? 1.25 : 1.0;
+
+    if(getSetBonus(game)){ bossFactor *= 1.5; eqEnch.vamp = Math.max(eqEnch.vamp, 15); }
+    if(mo.id === 'boss_malganis') healFactor = 0;
+
+    var berserkMult = 1.0;
+    if(sub && sub.id === 'berserk' && (f.ph || st.hp) > 0){
+      var missingRatio = Math.max(0, 1 - (f.p / (f.ph || st.hp)));
+      berserkMult = 1 + missingRatio * 0.35;
+    }
+    var effAtk = Math.max(1, Math.round(st.atk * bossFactor * berserkMult));
+    var maxPlayerHp = (typeof v20Data !== 'undefined' && v20Data.nearDeath) ? 1 : (f.ph || st.hp);
+
+    var applyBossDefense = function(rawDmg){
+      var finalDmg = rawDmg, suffix = '';
+      if(mo.id === 'boss_colossus'){
+        var block = Math.ceil(finalDmg * 0.20);
+        finalDmg -= block;
+        suffix += ' 🛡️ Колосс блокирует ' + block + ' ур!';
+      }
+      f.m -= finalDmg; f.dealt += finalDmg;
+      return {dmg: finalDmg, msg: suffix};
+    };
+
+    if(n === 0){
+      var isTriple = (r === 'demon' && Math.random() < 0.05);
+      var mult0 = isTriple ? 3 : 2;
+      var bDef = applyBossDefense(effAtk * mult0);
+      var v0 = eqEnch.vamp > 0 ? Math.max(1, Math.round(bDef.dmg * (eqEnch.vamp / 100) * healFactor)) : 0;
+      if(v0 && (!v20Data || !v20Data.nearDeath)) f.p = Math.min(maxPlayerHp, f.p + v0);
+      return 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Крит (x2): ') + mo.name + ' теряет ' + bDef.dmg + ' HP.' + bDef.msg + (mo.id === 'boss_malganis' ? ' ❄️ Ледяная аура режет отхил!' : (v0 && (!v20Data || !v20Data.nearDeath) ? ' Вампиризм +' + v0 + ' HP.' : ''));
+    }
+
+    if(n === 1){
+      var autoSaved = (r === 'automaton');
+      var isTrapped = currentFightTrapped && mo.id !== 'boss_pyrodragon';
+      var monBaseDmg = isTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+      var failMult = (mo.id === 'boss_xalatah') ? 3 : 2;
+      var dd = autoSaved ? monBaseDmg : (monBaseDmg * failMult);
+
+      f.p -= dd; f.taken += dd;
+      var th1 = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(dd * eqEnch.thorns / 100))) : 0;
+      if(th1 > 0){ f.m -= th1; f.dealt += th1; }
+
+      var warnStr = autoSaved ? 'Единица! ⚙️ Автоматон спас от крит-неудачи: ' : ('Единица — неудача! ' + (mo.id === 'boss_xalatah' ? '🌌 Бездна усиливает удар (x3)! ' : ''));
+      return warnStr + mo.name + ' наносит ' + dd + ' HP!' + (th1 ? ' 🌵 Шипы вернули ' + th1 + ' ур.' : '');
+    }
+
+    // Активные способности Боссов на 3 числа
+    if(mo.id === 'boss_pyrodragon' && (n === 11 || n === 22 || n === 33)){
+      var breath = Math.max(1, Math.round(maxPlayerHp * 0.15));
+      f.p -= breath; f.taken += breath;
+      return '🔥 СЕКТОР ' + n + '! Пиромант изрыгает пламя на ' + breath + ' чистых HP! (Игнор брони)';
+    }
+    if(mo.id === 'boss_arachna' && (n === 8 || n === 18 || n === 28)){
+      var poison = mo.dmg * 2;
+      f.p -= poison; f.taken += poison;
+      return '🕸️ СЕКТОР ' + n + '! Арахна ловит тебя в кокон! Получено ' + poison + ' урона ядом.';
+    }
+    if(mo.id === 'boss_xalatah' && (n === 13 || n === 23 || n === 33)){
+      var madness = effAtk;
+      f.p -= madness; f.taken += madness;
+      return '👁️ СЕКТОР ' + n + '! Шёпот Бездны сводит с ума: ты бьёшь сам себя на ' + madness + ' HP!';
+    }
+
+    var isLuckyFive = sub && typeof v20Data !== 'undefined' && Array.isArray(v20Data.lucky5) && v20Data.lucky5.indexOf(n) !== -1;
+    if(isLuckyFive){
+      var lMult = 2.5, extraEffect = '';
+      if(sub.id === 'witcher'){ lMult = 2.5; var burn = Math.max(1, Math.round(mo.hp * 0.05)); f.m -= burn; f.dealt += burn; extraEffect = ' 🔥 Игни сжёг ещё ' + burn + ' HP!';
+      } else if(sub.id === 'berserk'){ lMult = 2.8; if(!v20Data.nearDeath && mo.id !== 'boss_malganis'){ var bHeal = Math.max(1, Math.round(maxPlayerHp * 0.15)); f.p = Math.min(maxPlayerHp, f.p + bHeal); extraEffect = ' 🩸 Ярость исцелила +' + bHeal + ' HP!'; }
+      } else if(sub.id === 'paladin'){ lMult = 2.2; if(!v20Data.nearDeath && mo.id !== 'boss_malganis'){ var pHeal = Math.max(1, Math.round(maxPlayerHp * 0.20)); f.p = Math.min(maxPlayerHp, f.p + pHeal); extraEffect = ' 🛡️ Святой щит +' + pHeal + ' HP!'; }
+      } else if(sub.id === 'legolas'){ lMult = 2.6; extraEffect = ' 🏹 Залп!';
+      } else if(sub.id === 'sniper'){ lMult = 3.0; extraEffect = ' 🎯 В голову (x3)!';
+      } else if(sub.id === 'trapper'){ lMult = 2.3; currentFightTrapped = true; extraEffect = ' 🪤 Враг в капкане!';
+      } else if(sub.id === 'archmage'){ lMult = 2.8; extraEffect = ' ☄️ Метеорит!';
+      } else if(sub.id === 'necromancer'){ lMult = 2.4;
+      } else if(sub.id === 'chronomage'){ lMult = 2.5; if(!v20Data.nearDeath && mo.id !== 'boss_malganis'){ var cHeal = Math.max(1, Math.round(maxPlayerHp * 0.20)); f.p = Math.min(maxPlayerHp, f.p + cHeal); extraEffect = ' ⏳ Откат времени +' + cHeal + ' HP!'; } }
+
+      var bdL = applyBossDefense(Math.max(1, Math.round(effAtk * lMult)));
+      // Исправленный расчёт вампиризма Некроманта (ровно 50% без сверхсложения)
+      var lVampPct = (sub.id === 'necromancer') ? Math.max(50, eqEnch.vamp) : eqEnch.vamp;
+      var lVp = lVampPct > 0 ? Math.max(1, Math.round(bdL.dmg * (lVampPct / 100) * healFactor)) : 0;
+      if(lVp && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + lVp);
+
+      return '🌟 ПЯТЁРКА ' + n + '! [' + sub.skill + '] бьёт на ' + bdL.dmg + ' HP!' + bdL.msg + extraEffect + (mo.id === 'boss_malganis' ? ' ❄️ Отхил заблокирован!' : (lVp && !v20Data.nearDeath ? ' Вамп +' + lVp + ' HP.' : ''));
+    }
+
+    if(mo.hit(n)){
+      var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      var critMult = (sub && sub.id === 'sniper') ? 2.25 : 1.75;
+      var bdH = applyBossDefense(isCrit ? Math.round(effAtk * critMult) : effAtk);
+      var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(bdH.dmg * (eqEnch.vamp / 100) * healFactor)) : 0;
+      if(vp && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + vp);
+
+      return 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' Враг теряет ' + bdH.dmg + ' HP.' + bdH.msg + (mo.id === 'boss_malganis' ? ' ❄️ Аура режет отхил!' : (vp && !v20Data.nearDeath ? ' Вамп +' + vp + ' HP.' : ''));
+    }
+
+    var incomingDmg = (currentFightTrapped && mo.id !== 'boss_pyrodragon') ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+    f.p -= incomingDmg; f.taken += incomingDmg;
+    var th = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(incomingDmg * eqEnch.thorns / 100))) : 0;
+    if(th > 0){ f.m -= th; f.dealt += th; }
+
+    var drainMsg = '';
+    if(mo.id === 'boss_nosferatu' && f.m > 0){
+      var healBoss = incomingDmg;
+      f.m = Math.min(mo.hp, f.m + healBoss);
+      drainMsg = ' 🩸 Граф выпил кровь (+' + healBoss + ' HP)!';
+    }
+
+    return 'Выпало ' + n + ': промах. Враг бьёт на ' + incomingDmg + '.' + drainMsg + (th ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th + ' ур.' : '');
+  };
+
+  // 9. Боёвка и Экспедиция с учётом деградации лута/пыли (без урезания золота и XP)
+  fightStrike = function(n){
+    var f = game && game.fight;
+    if(!f || !f.on) return;
+    var mo = foeOfFight(f), st = battleStats(f);
+    fightLog = strikeCore(f, mo, st, n);
+    if(f.m <= 0){
+      f.m = 0; f.on = false; f.skip = false;
+      var penalty = getFarmPenaltyV22(mo.rank);
+      var base = rewardBase(mo), factor = f.kind === 'ambush' ? AMBUSH_REWARD : 1;
+      var coins = rollReward(base.coins * factor);
+      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(mo.rank) * factor);
+      var chance = f.kind === 'ambush' ? (mo.elite ? 0.35 : 0.2) : (mo.isWorldBoss ? 1.0 : (mo.elite ? 0.7 : 0.4));
+      var id = (Math.random() < chance) ? rollLoot(mo.rank, false, mo.elite, mo.isWorldBoss) : null;
+
+      game.coins += coins;
+      if(id) game.inv.push(id);
+      var up = gainXP(xp);
+      var penMsg = penalty === 2 ? ' <b style="color:var(--red)">(Анти-Фарм: лут снижен до Обычного)</b>' : (penalty === 1 ? ' <b style="color:var(--gold)">(Анти-Фарм: лут ограничен Редким)</b>' : '');
+
+      fightMsg = fightLog + ' Победа! +' + coins + ' монет · +' + xp + ' XP.' + up + (id ? ' Добыча: ' + ITEMS[id].name + ' (' + RARITY[ITEMS[id].r].name + ').' : ' Предметов не выпало.') + penMsg;
+      if(id){ toast('Выпал предмет: ' + ITEMS[id].name); $('dot').hidden = false; } else if(up) toast(up);
+      battleTitles(coins, f, true);
+      renderCoins(); renderProgress();
+    } else if(f.p <= 0){
+      f.p = 0; f.skip = false;
+      loseFight(fightLog + ' Ты погиб.', true);
+    }
+  };
+
+  var _origSelectExpeditionPathV22 = selectExpeditionPathV20;
+  selectExpeditionPathV20 = function(choiceIdx){
+    if(!dgOn() || merchantBusy) return;
+    var d = v20Data.exp;
+    if(d.inCombat || d.inAltar) return;
+    var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    var picked = choices[choiceIdx];
+    if(picked && picked.type === 'cache'){
+      d.cacheUsed = true;
+      var rank = d.r || 1, penalty = getFarmPenaltyV22(rank);
+      var goldGain = Math.max(5, rollReward(dungeonPrice(rank) * 0.12));
+      var dustGain = penalty === 2 ? 0 : Math.round((8 + Math.floor(Math.random() * 11) + rank) * (penalty === 1 ? 0.5 : 1));
+      var dropId = (Math.random() < 0.35) ? rollLoot(rank, true, false, false) : null;
+
+      game.coins += goldGain;
+      game.dust = Math.min(1000000, (Number(game.dust)||0) + dustGain);
+      if(dropId) game.inv.push(dropId);
+
+      d.st++;
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      saveV20Local(); saveGame(); renderCoins(); renderChar(); renderDg();
+      toast('📦 Древний Тайник открыт! +' + goldGain + ' монет' + (dustGain ? ', +' + dustGain + ' ✨ пыли' : ' (0 ✨ пыли из-за Анти-Фарма)') + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
+      return;
+    }
+    _origSelectExpeditionPathV22(choiceIdx);
+  };
+
+  dgStrike = function(n){
+    var d = v20Data.exp;
+    if(!d || !d.on || !d.inCombat) return;
+    var mo = dgFoe(), st = battleStats(d);
+    fightLog = strikeCore(d, mo, st, n);
+
+    if(d.m <= 0){
+      d.m = 0; d.inCombat = false;
+      var penalty = getFarmPenaltyV22(d.r);
+      var base = rewardBase(mo), sub = findSubclassV20(v20Data.subcls);
+      var xpMult = (sub && sub.xpBonus) ? (1 + sub.xpBonus / 100) : 1;
+      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(d.r) * xpMult);
+      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.34 : 0.18));
+      game.coins += coins;
+      var up = gainXP(xp);
+      var wonState = {dealt: d.dealt, taken: d.taken};
+      var extraLootMsg = '';
+
+      if(d.roomType === 'elite' && d.st < 4){
+        var eliteDust = penalty === 2 ? 0 : Math.round((5 + Math.floor(Math.random() * 8) + d.r) * (penalty === 1 ? 0.5 : 1));
+        game.dust = Math.min(1000000, (Number(game.dust)||0) + eliteDust);
+        if(eliteDust > 0) extraLootMsg += ' +' + eliteDust + ' ✨ пыли.';
+        if(Math.random() < 0.50){
+          var eItem = rollLoot(d.r, true, true, false);
+          if(eItem){
+            game.inv.push(eItem);
+            extraLootMsg += ' Добыча со Стража: ' + ITEMS[eItem].name + ' (' + RARITY[ITEMS[eItem].r].name + ')!';
+          }
+        }
+      }
+
+      var earned = ' +' + xp + ' XP · +' + coins + ' монет.' + up + extraLootMsg;
+
+      if(d.st + 1 >= EXP_FLOORS || d.roomType === 'boss'){
+        var bossItem = rollBossChestLootV20(d.r);
+        var bossDust = penalty === 2 ? 0 : Math.round((15 + d.r * 5 + Math.floor(Math.random() * 15)) * (penalty === 1 ? 0.5 : 1));
+        var gotPotion = penalty === 0 && (Math.random() < 0.08);
+        var bonusXp = game.level >= LEVEL_CAP ? 0 : rollReward(75 * Math.pow(d.r, 1.65) * xpFactor(d.r) * xpMult);
+        if(bossItem) game.inv.push(bossItem);
+        game.dust = Math.min(1000000, (Number(game.dust)||0) + bossDust);
+        if(gotPotion) v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        var moreUp = gainXP(bonusXp);
+        v20Data.exp = null;
+        saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20();
+        fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP' + moreUp
+          + (bossDust ? ', +' + bossDust + ' ✨ Магической пыли' : ' (0 ✨ пыли из-за Анти-Фарма)')
+          + (bossItem ? ', предмет «' + ITEMS[bossItem].name + '» (' + RARITY[ITEMS[bossItem].r].name + ')' : '')
+          + (gotPotion ? ' и редкие 🧪 СЛЁЗЫ ФЕНИКСА!' : '!');
+        fightChest = true;
+        toast('🏆 Босс повержен! Сундук Экспедиции открыт!');
+        $('dot').hidden = false;
+      } else {
+        d.st++;
+        d.p = v20Data.nearDeath ? 1 : healBetween(d.p, d.ph);
+        d.skip = false; d.dealt = 0; d.taken = 0;
+        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        saveV20Local();
+        fightMsg = fightLog + ' Враг повержен!' + earned + ' Восстановлено 25% HP. Перейди во вкладку «Экспедиция» для выбора пути на Этаже ' + (d.st + 1) + '!';
+        toast('✅ Этаж ' + d.st + ' пройден! Выбери развилку следующего этажа.');
+      }
+      battleTitles(coins, wonState, true);
+      renderCoins(); renderProgress(); renderDg();
+    } else if(d.p <= 0){
+      battleTitles(0, d, false);
+      var rankLost = d.r || 1;
+      var lostGold = Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rankLost));
+      game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
+      v20Data.nearDeath = true;
+      v20Data.exp = null;
+      saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20(); renderNearDeathBannerV20();
+      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! Потеряно ' + lostGold + ' монет и наложен статус «При смерти» (1 HP во всех боях, пока не выпьешь 🧪 Слёзы Феникса).';
+      fightChest = false;
+      renderCoins(); renderProgress(); renderDg();
+      toast('💀 Гибель в Экспедиции! Наложен статус «При смерти» (1 HP).');
+    }
+  };
+
+  var _origRenderProgressV22 = renderProgress;
+  renderProgress = function(){
+    _origRenderProgressV22();
+    var rh = $('rankHint');
+    if(rh && game){
+      var pen = getFarmPenaltyV22(game.rank);
+      if(pen === 1){
+        rh.innerHTML += '<br><b style="color:var(--gold)">⚠️ СЛАБЫЙ АНТИ-ФАРМ (-2 ранга): Лут ограничен Редким, пыль с боссов и тайников снижена на 50%. Золото и XP без штрафа.</b>';
+      } else if(pen === 2){
+        rh.innerHTML += '<br><b style="color:var(--red)">⚠️ ЖЁСТКИЙ АНТИ-ФАРМ (-3+ ранга): Выпадает только Обычный (серый) лут, пыль и Слёзы Феникса в данже не падают. Золото и XP без штрафа.</b>';
+      }
+    }
+  };
+
+  // 10. Слёзы Феникса (1500 мон / 10 камней / 200 пыли) и Боевое Зелье Лечения (300 мон / 200 пыли)
+  POTION_CRAFT_COST = {coins: 1500, stones: 10, dust: 200};
+
+  function injectHealBtnV22(box){
+    if(box.querySelector('#btnDrinkHeal')) return;
+    var pots = (typeof v20Data !== 'undefined' && v20Data.potsHeal) || 0;
+    var btnHTML = '<button type="button" id="btnDrinkHeal" class="ghost" style="margin-top:8px;border-color:var(--green);color:var(--green)">🧪 Выпить Зелье лечения (' + pots + ' шт.)</button>';
+    var fleeBtn = box.querySelector('#fFlee, #dgLeave');
+    if(fleeBtn) fleeBtn.insertAdjacentHTML('beforebegin', btnHTML);
+    else box.insertAdjacentHTML('beforeend', btnHTML);
+
+    var btn = $('btnDrinkHeal');
+    if(btn) btn.onclick = function(){
+      if((v20Data.potsHeal || 0) <= 0){ toast('Нет зелий лечения! Скрафти в Кузнице.'); return; }
+      if(v20Data.nearDeath){ toast('Не работает при статусе «При смерти» (1 HP)!'); return; }
+      var f = (typeof v20Data !== 'undefined' && v20Data.exp && v20Data.exp.inCombat) ? v20Data.exp : game.fight;
+      if(!f || (!f.on && !f.inCombat)) return;
+      if(f.p >= f.ph){ toast('Здоровье и так полное!'); return; }
+
+      v20Data.potsHeal--;
+      var heal = Math.max(1, Math.round(f.ph * 0.2));
+      f.p = Math.min(f.ph, f.p + heal);
+      saveV20Local(); saveGame();
+      if(v20Data.exp && v20Data.exp.inCombat) renderDgFight(box); else renderFight();
+      toast('💚 Выпито Зелье лечения! +' + heal + ' HP');
+    };
+  }
+
+  var _origRenderFightV22 = renderFight;
+  renderFight = function(){
+    _origRenderFightV22();
+    var box = $('fight');
+    if(box && !box.hidden && game && game.fight && game.fight.on) injectHealBtnV22(box);
+  };
+
+  var _origRenderDgFightV22 = renderDgFight;
+  renderDgFight = function(box){
+    _origRenderDgFightV22(box);
+    if(box && !box.hidden && typeof v20Data !== 'undefined' && v20Data.exp && v20Data.exp.inCombat) injectHealBtnV22(box);
+  };
+
+  var _origRenderForgeV22 = renderForge;
+  renderForge = function(){
+    _origRenderForgeV22();
+    var box = $('forgeBody');
+    if(!box || !game) return;
+
+    var oldAlch = $('v22CombatAlchemyCard');
+    if(oldAlch) oldAlch.remove();
+
+    var c = game.coins || 0, d = game.dust || 0;
+    var costHeal = {coins: 300, dust: 200};
+    var blocked = isInActiveCombatV20() || isInExpeditionV20() || !canSell();
+
+    var card = document.createElement('div');
+    card.id = 'v22CombatAlchemyCard';
+    card.className = 'card';
+    card.style.marginTop = '12px';
+    card.style.borderColor = '#4ade80';
+
+    card.innerHTML = '<h3>🧪 Боевая Алхимия: Зелье лечения</h3>'
+      + '<p>Восстанавливает <b>20% от макс. HP</b> прямо в бою без траты хода! Кнопка приёма появляется внутри окна боя.</p>'
+      + '<p>У тебя в запасе: <b>' + (typeof v20Data !== 'undefined' ? (v20Data.potsHeal || 0) : 0) + ' шт.</b></p>'
+      + '<div class="forgeButtons">'
+      + '<button type="button" id="btnCrHeal"' + (!blocked && c >= costHeal.coins && d >= costHeal.dust ? '' : ' disabled') + '>Сварить Зелье (' + costHeal.coins + ' мон, ' + costHeal.dust + ' ✨)</button>'
+      + '</div>';
+    box.appendChild(card);
+
+    var bHeal = $('btnCrHeal');
+    if(bHeal) bHeal.onclick = function(){
+      if(!canUseTownServicesV20() || merchantBusy) return;
+      if((game.coins || 0) < costHeal.coins || (game.dust || 0) < costHeal.dust) return;
+      game.coins -= costHeal.coins;
+      game.dust -= costHeal.dust;
+      if(typeof v20Data !== 'undefined') v20Data.potsHeal = (v20Data.potsHeal || 0) + 1;
+      saveV20Local(); saveGame(); renderCoins(); renderForge();
+      toast('🧪 Сварено Зелье лечения (+20% HP)!');
+    };
+
+    var potCard = $('v20PotionCraftCard');
+    if(potCard){
+      var canCraftPot = !blocked
+        && (game.coins || 0) >= POTION_CRAFT_COST.coins
+        && (game.stones || 0) >= POTION_CRAFT_COST.stones
+        && (game.dust || 0) >= POTION_CRAFT_COST.dust;
+
+      potCard.innerHTML = '<h3>🧪 Алхимия Кузницы: Слёзы Феникса</h3>'
+        + '<p>Легендарное средство, снимающее смертельный недуг <b>«При смерти» (1 HP)</b> после гибели в Экспедиции.</p>'
+        + '<p>В запасе: <b>' + (v20Data.potions || 0) + ' 🧪</b>' + (v20Data.nearDeath ? ' · <span style="color:#ef4444;font-weight:700">Статус «При смерти» активен!</span>' : '') + '</p>'
+        + '<p>Создание: <b>' + POTION_CRAFT_COST.coins + ' монет + ' + POTION_CRAFT_COST.stones + ' 🪨 камней + ' + POTION_CRAFT_COST.dust + ' ✨ пыли</b>.</p>'
+        + '<div class="forgeButtons">'
+        + '<button type="button" id="btnCraftPotionV20"' + (canCraftPot ? '' : ' disabled') + '>Скрафтить Слёзы 🧪</button>'
+        + (v20Data.nearDeath && (v20Data.potions || 0) > 0 ? '<button type="button" id="btnDrinkPotionForgeV20" class="ghost">Выпить Слёзы (Снять 1 HP)</button>' : '')
+        + '</div>';
+
+      var cBtn = $('btnCraftPotionV20');
+      if(cBtn) cBtn.onclick = function(){
+        if(!canUseTownServicesV20() || !game || !gameLoaded || merchantBusy || marketBusyV20) return;
+        if((game.coins || 0) < POTION_CRAFT_COST.coins || (game.stones || 0) < POTION_CRAFT_COST.stones || (game.dust || 0) < POTION_CRAFT_COST.dust){
+          toast('❌ Недостаточно ресурсов!'); return;
+        }
+        confirmBox(
+          'Скрафтить «🧪 Слёзы Феникса» за ' + POTION_CRAFT_COST.coins + ' монет, ' + POTION_CRAFT_COST.stones + ' 🪨 камней и ' + POTION_CRAFT_COST.dust + ' ✨ пыли?',
+          'Скрафтить',
+          function(){
+            if((game.coins || 0) < POTION_CRAFT_COST.coins || (game.stones || 0) < POTION_CRAFT_COST.stones || (game.dust || 0) < POTION_CRAFT_COST.dust) return;
+            game.coins -= POTION_CRAFT_COST.coins;
+            game.stones -= POTION_CRAFT_COST.stones;
+            game.dust -= POTION_CRAFT_COST.dust;
+            v20Data.potions = (Number(v20Data.potions) || 0) + 1;
+            saveV20Local(); saveV20ToFirestore(); saveGame();
+            renderCoins(); renderForge(); renderNearDeathBannerV20();
+            toast('🧪 Слёзы Феникса созданы!');
+          }
+        );
+      };
+      var dBtn = $('btnDrinkPotionForgeV20');
+      if(dBtn) dBtn.onclick = useRecoveryPotionV20;
+    }
+  };
+
+  if(typeof gameLoaded !== 'undefined' && gameLoaded){
+    renderChar();
+    renderForge();
+    renderNearDeathBannerV20();
+  }
+
   })();
 </script>
 </body>
