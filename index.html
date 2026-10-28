@@ -6600,6 +6600,7 @@ svg.chr{overflow:visible}
     };
 
     // ФИКС ИМЕННЫХ СЕТОВ И КЛАССОВОЙ БРОНИ
+    window.getActiveSetBonus = getActiveSetBonus;
     function getActiveSetBonus(g){
       if(!g || !g.eq) return null;
       var eq = g.eq, countBySetId = {}, minLevelBySetId = {}, sampleItemBySetId = {};
@@ -7100,9 +7101,9 @@ svg.chr{overflow:visible}
     var setBonus = (typeof getActiveSetBonus === 'function') ? getActiveSetBonus(game) : null;
     var blockDmg = 0, dodgeChance = 0;
     if(setBonus && setBonus.count >= 2 && setBonus.type !== 'relic'){
-      var rVal = {'rare':8, 'epic':12, 'legendary':16, 'mythic':22, 'divine':25}[setBonus.rarity] || 0;
-      if(game.cls === 'warrior') blockDmg = rVal / 100;
-      else if(game.cls === 'archer') dodgeChance = rVal;
+      var defVal = (typeof window.getClassSetDefPctV22 === 'function') ? window.getClassSetDefPctV22(setBonus, game.cls) : 0;
+      if(game.cls === 'warrior') blockDmg = defVal / 100;
+      else if(game.cls === 'archer') dodgeChance = defVal;
     }
     var relicKey = (setBonus && setBonus.type === 'relic') ? setBonus.key : '';
     var relicCount = (setBonus && setBonus.type === 'relic') ? setBonus.count : 0;
@@ -7618,6 +7619,193 @@ svg.chr{overflow:visible}
     }
   }, 5000);
   setTimeout(fetchRaidDataV22, 1500);
+
+
+  // --- ФИКС ИМЕННЫХ КОМПЛЕКТОВ (СТАТЫ 2/3/4 ВЕЩИ) И МАГИЧЕСКОГО БАРЬЕРА МАГА (ЗАВИСИТ ОТ 2/3/4 ВЕЩЕЙ) ---
+  // Вычисляем % классовой защиты (у Воина блок, у Лучника уворот, у Мага щит) в зависимости от редкости И числа вещей (2, 3 или 4)!
+  window.getClassSetDefPctV22 = function(b, cls){
+    if(!b || b.type === 'relic' || b.count < 2) return 0;
+    var baseVal = { 'common': 3, 'uncommon': 5, 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[b.rarity] || 0;
+    if(!baseVal) return 0;
+    // Масштабирование от собранности комплекта: 2 вещи = x1.0, 3 вещи = x1.35, 4 вещи = x1.75
+    var countScale = (b.count >= 4) ? 1.75 : ((b.count === 3) ? 1.35 : 1.0);
+    var val = Math.round(baseVal * countScale);
+    if(cls === 'mage') return val + (b.count >= 4 ? 10 : (b.count === 3 ? 7 : 5));
+    return val;
+  };
+
+  // Применяем бонус комплекта (+% к HP и Урону от 2/3/4 вещей + бонус 2 вещей Реликвий) реально в stats()!
+  var _origStatsBeforeSetFixV22 = stats;
+  stats = function(source){
+    var st = _origStatsBeforeSetFixV22(source);
+    var g = source || game;
+    if(!g || typeof window.getActiveSetBonus !== 'function') return st;
+    var b = window.getActiveSetBonus(g);
+    if(b){
+      if(b.type !== 'relic' && b.pctBonus > 0){
+        st.hp  = Math.round(st.hp  * (1 + b.pctBonus / 100));
+        st.atk = Math.round(st.atk * (1 + b.pctBonus / 100));
+      } else if(b.type === 'relic' && b.count >= 2 && b.key === 'set_nosferatu'){
+        st.hp  = Math.round(st.hp * 1.20);
+      }
+    }
+    return st;
+  };
+
+  // Функция расчёта щита Мага при старте боя или комнаты Экспедиции
+  window.calcMageShieldV22 = function(g, maxHp){
+    if(!g || g.cls !== 'mage' || typeof window.getActiveSetBonus !== 'function') return 0;
+    var b = window.getActiveSetBonus(g);
+    var shieldPct = window.getClassSetDefPctV22(b, 'mage');
+    return shieldPct > 0 ? Math.max(1, Math.floor(maxHp * shieldPct / 100)) : 0;
+  };
+
+  // Обновляем описание в карточке комплекта (показываем точный % для 2, 3 и 4 вещей)
+  var _origRenderCharSetCardV22 = renderChar;
+  renderChar = function(){
+    _origRenderCharSetCardV22();
+    var sbBox = $('v21SetBonusCard');
+    if(sbBox && game && typeof window.getActiveSetBonus === 'function'){
+      var b = window.getActiveSetBonus(game);
+      if(b && b.type !== 'relic'){
+        var defPct = window.getClassSetDefPctV22(b, game.cls);
+        var defDesc = '';
+        if(defPct > 0){
+          if(game.cls === 'warrior') defDesc = '🛡️ Глухая оборона (' + b.count + '/4 шт.): блокирует <b>' + defPct + '%</b> урона монстра.';
+          else if(game.cls === 'archer') defDesc = '🏹 Ловкость (' + b.count + '/4 шт.): <b>' + defPct + '%</b> шанс уклониться от атаки.';
+          else if(game.cls === 'mage'){
+            var stNow = stats(game);
+            var shVal = window.calcMageShieldV22(game, stNow.hp);
+            defDesc = '✨ Магический Барьер (' + b.count + '/4 шт.): даёт щит <b>+' + defPct + '% макс. HP (+' + shVal + ' HP)</b> в начале каждого боя!';
+          }
+        }
+        sbBox.innerHTML = '🔮 <b>' + b.name + '</b> (' + b.count + '/4 шт.)<br>'
+          + 'Резонанс заточки: <b>+' + b.minLv + '</b> · Бонус комплекта: <b style="color:var(--green)">+' + b.pctBonus + '% к HP и Урону</b>.'
+          + (defDesc ? '<br><span style="color:var(--gold)">' + defDesc + '</span>' : '');
+      }
+    }
+  };
+
+  // --- ОТДЕЛЬНАЯ ПОЛОСКА ЩИТА МАГА В БОЮ (НЕ ПРИБАВЛЯЕТСЯ К HP, СБИВАЕТСЯ ПЕРВОЙ, ВОССТАНАВЛИВАЕТСЯ В СЛЕДУЮЩЕМ БОЮ) ---
+  window.mageCurrentBattleShield = 0;
+  window.mageMaxBattleShield = 0;
+
+  var _origStartFightMageShieldV22 = startFight;
+  startFight = function(){
+    _origStartFightMageShieldV22();
+    if(game && game.fight && game.fight.on && !(v20Data && v20Data.nearDeath)){
+      var st = stats(game);
+      // Фиксируем чистое здоровье без прибавления щита в зеленую полоску
+      game.fight.ph = st.hp;
+      game.fight.p  = st.hp;
+      game.fight.pa = st.atk;
+      var sh = window.calcMageShieldV22(game, st.hp);
+      window.mageMaxBattleShield = sh;
+      window.mageCurrentBattleShield = sh;
+      if(sh > 0) fightLog = '✨ Магический Барьер активирован: ' + sh + ' ед. щита! ' + fightLog;
+      saveGame(); renderFight();
+    } else {
+      window.mageMaxBattleShield = 0;
+      window.mageCurrentBattleShield = 0;
+    }
+  };
+
+  var _origMaybeAmbushMageShieldV22 = maybeAmbush;
+  maybeAmbush = function(){
+    var res = _origMaybeAmbushMageShieldV22();
+    if(res && game && game.fight && game.fight.on && !(v20Data && v20Data.nearDeath)){
+      var st = stats(game);
+      game.fight.ph = st.hp;
+      game.fight.p  = st.hp;
+      game.fight.pa = st.atk;
+      var sh = window.calcMageShieldV22(game, st.hp);
+      window.mageMaxBattleShield = sh;
+      window.mageCurrentBattleShield = sh;
+      if(sh > 0) fightLog = '✨ Магический Барьер активирован: ' + sh + ' ед. щита! ' + fightLog;
+      renderFight();
+    }
+    return res;
+  };
+
+  var _origDgEnterShieldV22 = dgEnter;
+  dgEnter = function(){
+    _origDgEnterShieldV22();
+    if(v20Data && v20Data.exp && v20Data.exp.on && !v20Data.nearDeath){
+      var st = stats(game);
+      v20Data.exp.ph = st.hp;
+      v20Data.exp.p  = st.hp;
+      saveV20Local(); renderDg();
+    }
+  };
+
+  var _origSelectExpPathMageShieldV22 = selectExpeditionPathV20;
+  selectExpeditionPathV20 = function(choiceIdx){
+    var d = v20Data.exp;
+    var choices = (d && d.choices) ? d.choices : [];
+    var picked = choices[choiceIdx];
+    _origSelectExpPathMageShieldV22(choiceIdx);
+    if(d && d.on && picked && (picked.type === 'combat' || picked.type === 'elite' || picked.type === 'boss') && !v20Data.nearDeath){
+      var stNow = stats(game);
+      d.ph = stNow.hp;
+      d.p  = Math.min(d.ph, Math.max(1, d.p));
+      var sh = window.calcMageShieldV22(game, stNow.hp);
+      window.mageMaxBattleShield = sh;
+      window.mageCurrentBattleShield = sh;
+      if(sh > 0){
+        fightLog = '✨ Магический Барьер активирован: ' + sh + ' ед. щита! ' + fightLog;
+        saveV20Local(); renderFight(); renderDg();
+      }
+    }
+  };
+
+  // При получении урона сначала тратится синяя полоска щита Мага (внутри боя щит не лечится)
+  var _origStrikeCoreBaseV22 = strikeCoreBase;
+  strikeCoreBase = function(f, mo, st, n){
+    var beforeP = f.p;
+    var resText = _origStrikeCoreBaseV22(f, mo, st, n);
+    var dmgTaken = beforeP - f.p;
+
+    if(game && game.cls === 'mage' && dmgTaken > 0 && window.mageCurrentBattleShield > 0){
+      var absorbed = Math.min(dmgTaken, window.mageCurrentBattleShield);
+      window.mageCurrentBattleShield -= absorbed;
+      f.p = Math.min(f.ph || st.hp, f.p + absorbed);
+      resText += ' 🛡️ Щит Мага поглотил ' + absorbed + ' урона (осталось щита: ' + window.mageCurrentBattleShield + '/' + window.mageMaxBattleShield + ').';
+    }
+    return resText;
+  };
+
+  function injectMageShieldBarUI(box){
+    if(!box || box.hidden || !game || game.cls !== 'mage' || window.mageMaxBattleShield <= 0) return;
+    var isActiveFight = (dgOn() && v20Data.exp && v20Data.exp.inCombat) || (game.fight && game.fight.on);
+    if(!isActiveFight) return;
+    var curSh = window.mageCurrentBattleShield, maxSh = window.mageMaxBattleShield;
+    var pctSh = Math.max(0, Math.min(100, Math.round(curSh / maxSh * 100)));
+    var barsContainer = box.querySelector('.bar.p');
+    if(barsContainer && barsContainer.parentNode && !box.querySelector('#mageShieldBarWrap')){
+      var wrap = document.createElement('div');
+      wrap.id = 'mageShieldBarWrap';
+      wrap.innerHTML = '<div class="hpl"><span style="color:#60a5fa;font-weight:700">✨ Магический Щит</span><span style="color:#60a5fa;font-weight:700">' + curSh + ' / ' + maxSh + '</span></div>'
+        + '<div class="bar" style="border-color:#3b82f6"><i style="display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#60a5fa);width:' + pctSh + '%"></i></div>';
+      barsContainer.parentNode.parentNode.insertBefore(wrap, barsContainer.parentNode.nextSibling);
+    } else {
+      var fillEl = box.querySelector('#mageShieldBarWrap i');
+      var txtEl  = box.querySelector('#mageShieldBarWrap .hpl span:last-child');
+      if(fillEl) fillEl.style.width = pctSh + '%';
+      if(txtEl) txtEl.textContent = curSh + ' / ' + maxSh;
+    }
+  }
+
+  var _origRenderFightMageBarV22 = renderFight;
+  renderFight = function(){
+    _origRenderFightMageBarV22();
+    injectMageShieldBarUI($('fight'));
+  };
+
+  var _origRenderDgFightMageBarV22 = renderDgFight;
+  renderDgFight = function(box){
+    _origRenderDgFightMageBarV22(box);
+    injectMageShieldBarUI(box || $('fight'));
+  };
 
   if(gameLoaded){ renderChar(); renderForge(); renderEnchantPanel(); renderDg(); }
 })();
