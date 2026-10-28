@@ -8093,6 +8093,57 @@ svg.chr{overflow:visible}
   };
 
   if(gameLoaded){ renderChar(); renderForge(); renderEnchantPanel(); renderDg(); }
+
+  // =====================================================================
+  // ПАТЧ: ИСПРАВЛЕНИЕ РАБОТЫ КОЛЕЦ И АМУЛЕТОВ (Ранг 10+)
+  // =====================================================================
+  
+  // 1. Исправляем названия слотов у предметов
+  ['ring_gambler', 'ring_reflection', 'ring_executioner'].forEach(function(id){ if(ITEMS[id]) ITEMS[id].slot = 'ring'; });
+  ['amulet_vampire', 'amulet_truth', 'amulet_titan'].forEach(function(id){ if(ITEMS[id]) ITEMS[id].slot = 'amulet'; });
+
+  // 2. Учим игру учитывать Кольца и Амулеты при надевании и подсчёте статов
+  var _origGearFromGameFix = gearFromGame;
+  gearFromGame = function(g){
+    var out = _origGearFromGameFix(g);
+    var eq = (g && g.eq) || {};
+    ['ring', 'amulet'].forEach(function(sl){
+      var id = eq[sl];
+      var it = ITEMS[id];
+      if(id && it && it.slot === sl && (!it.cls || it.cls === 'all' || it.cls === g.cls)){
+        out[sl] = id;
+      }
+    });
+    return out;
+  };
+
+  // 3. Учим игру собирать чары (Вампиризм, Шипы и т.д.) с Колец и Амулетов
+  var _origGetEquippedEnchantsFix = getEquippedEnchants;
+  getEquippedEnchants = function(g){
+    var res = _origGetEquippedEnchantsFix(g);
+    if(!g || !g.eq) return res;
+    ['ring', 'amulet'].forEach(function(sl){
+      var idx = wornIndex(g, sl);
+      if(idx >= 0 && g.enchants && g.enchants[idx]){
+        var e = parseEnchant(g.enchants[idx]);
+        if(e && res[e.id] !== undefined) res[e.id] += e.val;
+      }
+    });
+    return res;
+  };
+
+  // 4. Учим систему корректно сохранять надетые дубликаты колец и амулетов
+  var _origInitEnhancementFix = initEnhancement;
+  initEnhancement = function(g){
+    _origInitEnhancementFix(g);
+    var copies = g.eqCopies || {};
+    ['ring', 'amulet'].forEach(function(sl){
+      var i = wornIndex(g, sl);
+      if(i >= 0) copies[sl] = i;
+    });
+    g.eqCopies = copies;
+  };
+  
 })();
 </script>
 </body>
