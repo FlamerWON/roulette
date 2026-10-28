@@ -1175,21 +1175,8 @@ svg.chr{overflow:visible}
     game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
     fightStrike(n); dgStrike(n);
     if (raidInCombat && raidActive && !dgOn() && !(game.fight && game.fight.on)) {
-       var st = stats();
-       var rDmg = 0;
-       if (n === 0) rDmg = st.atk * 3; // Crit on zero
-       else if (n === 1) rDmg = 0; // Fail
-       else if (n > 0 && n % 2 === 0) rDmg = Math.floor(st.atk * 1.5); // Example rule: Evens hit boss
-       else rDmg = Math.floor(st.atk * 0.5); // Odds graze
-       
-       if(rDmg > 0) {
-           dealRaidDamage(rDmg);
-           fightMsg = '🌍 Рейд: Ты нанес Мировому Боссу ' + rDmg + ' урона!';
-           renderFight();
-       } else {
-           fightMsg = '🌍 Рейд: Промах по Мировому Боссу!';
-           renderFight();
-       }
+       if(typeof window.handleRaidSpinV22 === 'function') window.handleRaidSpinV22(n);
+       wasInCombat = true;
     }
 
     if(!wasInCombat)maybeAmbush();
@@ -1271,14 +1258,14 @@ svg.chr{overflow:visible}
     (g.inv||[]).forEach(function(id,i){if(typeof oldEnch[i]==='string'&&oldEnch[i].length<=40)validEnch[i]=oldEnch[i];});g.enchants=validEnch;
     var old=g.enhance||{},valid={};
     (g.inv||[]).forEach(function(id,i){var n=Number(old[i]);if(Number.isInteger(n)&&n>0&&n<=10)valid[i]=n;});g.enhance=valid;
-    var copies={};['head','body','arms','legs'].forEach(function(sl){var i=wornIndex(g,sl);if(i>=0)copies[sl]=i;});g.eqCopies=copies;
+    var copies={};['head','body','arms','legs','ring','amulet'].forEach(function(sl){var i=wornIndex(g,sl);if(i>=0)copies[sl]=i;});g.eqCopies=copies;
   }
   // Every removal compacts ALL per-copy metadata, including the equipped duplicate.
   function filterInventory(g,keep){
     var inv=[],levels={},ench={},copies={},mapping={};
     (g.inv||[]).forEach(function(id,i){if(keep(id,i)){var j=inv.length;mapping[i]=j;inv.push(id);var n=copyLevel(g,i);if(n)levels[j]=n;if(g.enchants&&g.enchants[i])ench[j]=g.enchants[i];}});
     g.enchants=ench;
-    ['head','body','arms','legs'].forEach(function(sl){var i=wornIndex(g,sl);if(Object.prototype.hasOwnProperty.call(mapping,i))copies[sl]=mapping[i];});
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){var i=wornIndex(g,sl);if(Object.prototype.hasOwnProperty.call(mapping,i))copies[sl]=mapping[i];});
     g.inv=inv;g.enhance=levels;g.eqCopies=copies;
   }
   function enhancedStats(it,n){
@@ -2633,7 +2620,7 @@ svg.chr{overflow:visible}
   // надетое = выбранные предметы из инвентаря, а где их нет, стартовое снаряжение класса
   function gearFromGame(g){
     var out={}, eq=(g&&g.eq)||{}, base=(g&&!g.gm)?gearOf(g.cls):{};
-    ['head','body','arms','legs'].forEach(function(sl){
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
       var id=(eq[sl]&&ITEMS[eq[sl]]&&ITEMS[eq[sl]].slot===sl&&(!ITEMS[eq[sl]].cls||ITEMS[eq[sl]].cls===g.cls))?eq[sl]:base[sl];
       if(id) out[sl]=id;
     });
@@ -3604,7 +3591,7 @@ svg.chr{overflow:visible}
   function getEquippedEnchants(g){
     var res={crit:0,vamp:0,gold:0,thorns:0,haste:0};
     if(!g||!g.eq)return res;
-    ['head','body','arms','legs'].forEach(function(sl){
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
       var idx=wornIndex(g,sl);
       if(idx>=0&&g.enchants&&g.enchants[idx]){
         var e=parseEnchant(g.enchants[idx]);
@@ -4519,7 +4506,7 @@ svg.chr{overflow:visible}
     var target = g || game;
     var res = {crit:0, vamp:0, gold:0, thorns:0, haste:0};
     if(!target || !target.eq) return res;
-    ['head','body','arms','legs'].forEach(function(sl){
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
       var idx = wornIndex(target, sl);
       if(idx >= 0 && target.enchants && target.enchants[idx]){
         var e = parseEnchant(target.enchants[idx]);
@@ -4620,6 +4607,7 @@ svg.chr{overflow:visible}
   function isInActiveCombatV20(){
     if(!game) return false;
     if(game.fight && game.fight.on) return true;
+    if(raidInCombat && raidActive) return true;
     if(v20Data.exp && v20Data.exp.on && v20Data.exp.inCombat) return true;
     return false;
   }
@@ -6443,12 +6431,12 @@ svg.chr{overflow:visible}
     };
 
     var V21_NEW_ITEMS = [
-      {id:'ring_gambler', name:'Кольцо Игрока', slot:'slotRing', r:'uncommon', hp:15, atk:1, desc:'+5% бонус монет, +3% шанс крита.'},
-      {id:'amulet_vampire', name:'Амулет Вампира', slot:'slotAmulet', r:'epic', hp:30, atk:5, desc:'Вампиризм +10%. Если HP ниже 30%, весь вампиризм удваивается!'},
-      {id:'ring_reflection', name:'Перстень Отражения', slot:'slotRing', r:'epic', hp:25, atk:4, desc:'Шипы +15%. Враг получает 5% своего урона обратно.'},
-      {id:'amulet_truth', name:'Око Истины', slot:'slotAmulet', r:'legendary', hp:45, atk:8, desc:'Снижает получаемый урон на 40% при выпадении Единицы.'},
-      {id:'ring_executioner', name:'Знак Палача', slot:'slotRing', r:'mythic', hp:60, atk:12, desc:'Если у монстра <15% HP, удар наносит х3 урона и добивает.'},
-      {id:'amulet_titan', name:'Сердце Титана', slot:'slotAmulet', r:'divine', hp:200, atk:15, desc:'Лечение в Экспедиции между комнатами увеличено до 40%.'},
+      {id:'ring_gambler', name:'Кольцо Игрока', slot:'ring', r:'uncommon', hp:15, atk:1, desc:'+5% бонус монет, +3% шанс крита.'},
+      {id:'amulet_vampire', name:'Амулет Вампира', slot:'amulet', r:'epic', hp:30, atk:5, desc:'Вампиризм +10%. Если HP ниже 30%, весь вампиризм удваивается!'},
+      {id:'ring_reflection', name:'Перстень Отражения', slot:'ring', r:'epic', hp:25, atk:4, desc:'Шипы +15%. Враг получает 5% своего урона обратно.'},
+      {id:'amulet_truth', name:'Око Истины', slot:'amulet', r:'legendary', hp:45, atk:8, desc:'Снижает получаемый урон на 40% при выпадении Единицы.'},
+      {id:'ring_executioner', name:'Знак Палача', slot:'ring', r:'mythic', hp:60, atk:12, desc:'Если у монстра <15% HP, удар наносит х3 урона и добивает.'},
+      {id:'amulet_titan', name:'Сердце Титана', slot:'amulet', r:'divine', hp:200, atk:15, desc:'Лечение в Экспедиции между комнатами увеличено до 40%.'},
       {id:'boss_head_nosferatu', name:'Корона Кровавого Графа', slot:'slotHead', r:'relic', hp:140, atk:26, setId:'set_nosferatu'},
       {id:'boss_body_nosferatu', name:'Мантия Кровавого Графа', slot:'slotBody', r:'relic', hp:220, atk:24, setId:'set_nosferatu'},
       {id:'boss_arms_nosferatu', name:'Коготь Кровавого Графа', slot:'slotArms', r:'relic', hp:45, atk:90, setId:'set_nosferatu'},
@@ -6604,7 +6592,7 @@ svg.chr{overflow:visible}
     function getActiveSetBonus(g){
       if(!g || !g.eq) return null;
       var eq = g.eq, countBySetId = {}, minLevelBySetId = {}, sampleItemBySetId = {};
-      ['head', 'body', 'arms', 'legs'].forEach(function(sl){
+      ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
         var id = eq[sl];
         if(id && ITEMS[id] && ITEMS[id].setId){
           var sid = ITEMS[id].setId, wIdx = wornIndex(g, sl), lv = wIdx >= 0 ? copyLevel(g, wIdx) : 0;
@@ -7445,9 +7433,61 @@ svg.chr{overflow:visible}
     }
   };
 
-  // --- ПУНКТ 7: МИРОВОЙ БОСС В 18:00 НА 30 МИНУТ + ТОП ВКЛАДА + НАГРАДЫ ---
+  // --- ПУНКТ 7: МИРОВОЙ БОСС В 18:00 НА 30 МИНУТ + БОЕВОЕ ОКНО, 5 ЧИСЕЛ БОССА (РАНГ 8) И КД 5 МИНУТ ---
   var RAID_START_HOUR = 18, RAID_DURATION_MIN = 30, RAID_BOSS_MAX_HP = 1500000;
-  var raidStateV22 = { dateKey: '', hp: RAID_BOSS_MAX_HP, maxHp: RAID_BOSS_MAX_HP, players: {}, loaded: false };
+  var RAID_DEATH_CD_MS = 5 * 60000; // 5 минут КД после гибели в рейде
+  var RAID_BOSS_SPELLS = [
+    '☄️ Катаклизм Бездны',
+    '🩸 Жатва Душ',
+    '🔥 Кольцо Адского Пламени',
+    '⚡ Гнев Пожирателя',
+    '💀 Дыхание Небытия'
+  ];
+  var raidStateV22 = {
+    dateKey: '',
+    hp: RAID_BOSS_MAX_HP,
+    maxHp: RAID_BOSS_MAX_HP,
+    players: {},
+    loaded: false,
+    bossNums: [6, 13, 19, 27, 34],
+    pHp: 100,
+    pMaxHp: 100,
+    pAtk: 10,
+    usedPots: 0,
+    combatLog: ''
+  };
+
+  function getRaidDeathCdKeyV22(){
+    return 'roulette_raid_cd_' + (sess && sess.uid ? sess.uid : 'guest');
+  }
+  function getRaidCooldownUntilV22(){
+    try{ return Number(localStorage.getItem(getRaidDeathCdKeyV22())) || 0; }catch(e){ return 0; }
+  }
+  function setRaidCooldownUntilV22(ts){
+    try{ localStorage.setItem(getRaidDeathCdKeyV22(), String(ts)); }catch(e){}
+  }
+  function getRaidCooldownLeftMsV22(){
+    return Math.max(0, getRaidCooldownUntilV22() - Date.now());
+  }
+
+  // Детерминированные 5 проклятых чисел Босса на сегодняшний день (одинаковые у всех игроков сервера)
+  function getRaidBossNumbersV22(dateKey){
+    var r = rng(hashStr('worldboss_nums_v22:' + dateKey));
+    var pool = [];
+    for(var i = 2; i <= 36; i++) pool.push(i);
+    var out = [];
+    while(out.length < 5 && pool.length){
+      var idx = Math.floor(r() * pool.length);
+      out.push(pool.splice(idx, 1)[0]);
+    }
+    out.sort(function(a, b){ return a - b; });
+    return out;
+  }
+
+  // Базовый урон способности Мирового Босса на уровне 8-го ранга сложности (~90 ед. урона)
+  function getRaidBossAbilityDmgV22(){
+    return Math.max(45, Math.round(18 * rankDMG(8) * 1.25));
+  }
 
   function getRaidWindowV22(){
     var now = new Date();
@@ -7461,9 +7501,179 @@ svg.chr{overflow:visible}
     return { dateKey: dateKey, isLive: isLive, isPastToday: isPastToday, msLeft: end - now, msToStart: nextStart - now };
   }
 
+  function enterRaidCombatV22(){
+    if(!game || !gameLoaded || merchantBusy) return;
+    if(dgOn() || (game.fight && game.fight.on)){
+      toast('⚔️ Сначала завершите текущий бой или Экспедицию!');
+      return;
+    }
+    var w = getRaidWindowV22();
+    if(!w.isLive || raidStateV22.hp <= 0){
+      toast('⏳ Мировой Босс сейчас не активен.');
+      return;
+    }
+    var cdLeft = getRaidCooldownLeftMsV22();
+    if(cdLeft > 0){
+      toast('💀 Вы пали в Рейде! Вернуться в бой можно через ' + fmt(cdLeft) + '.');
+      return;
+    }
+    var st = stats(game);
+    raidStateV22.bossNums = getRaidBossNumbersV22(w.dateKey);
+    raidStateV22.pMaxHp = (v20Data && v20Data.nearDeath) ? 1 : st.hp;
+    raidStateV22.pHp = raidStateV22.pMaxHp;
+    raidStateV22.pAtk = st.atk;
+    raidStateV22.usedPots = 0;
+
+    var sh = (!(v20Data && v20Data.nearDeath) && typeof window.calcMageShieldV22 === 'function') ? window.calcMageShieldV22(game, st.hp) : 0;
+    window.mageMaxBattleShield = sh;
+    window.mageCurrentBattleShield = sh;
+
+    raidInCombat = true;
+    raidStateV22.combatLog = '🌍 Ты вступил в бой с Пожирателем Душ! Остерегайся его чисел: [' + raidStateV22.bossNums.join(', ') + ']!'
+      + (sh > 0 ? ' ✨ Магический Барьер: ' + sh + ' ед. щита!' : '');
+    fightMsg = ''; fightChest = false;
+    updateLockedTabsV20();
+    renderFight(); renderRaidPaneV22();
+    showTab('game');
+    toast('⚔️ Бой с Мировым Боссом начался! Крути колесо!');
+  }
+
+  function leaveRaidCombatV22(byDeath){
+    raidInCombat = false;
+    window.mageMaxBattleShield = 0;
+    window.mageCurrentBattleShield = 0;
+    updateLockedTabsV20();
+    if(!byDeath){
+      fightMsg = '🏳️ Ты отступил из боя с Мировым Боссом. Весь нанесённый урон сохранён в рейтинге вклада!';
+    }
+    renderFight(); renderRaidPaneV22();
+  }
+
+  window.handleRaidSpinV22 = function(n){
+    var w = getRaidWindowV22();
+    if(!w.isLive || raidStateV22.hp <= 0){
+      leaveRaidCombatV22(false);
+      return;
+    }
+    var st = stats(game);
+    raidStateV22.pMaxHp = (v20Data && v20Data.nearDeath) ? 1 : st.hp;
+    raidStateV22.pAtk = st.atk;
+    var bossNums = getRaidBossNumbersV22(w.dateKey);
+    raidStateV22.bossNums = bossNums;
+
+    var eqEnch = getEquippedEnchants(game);
+    var r = (game && game.race) || 'human';
+    var healFactor = (r === 'orc') ? 0.9 : 1.0;
+    var bossFactor = (r === 'celestial') ? 1.25 : 1.0;
+    var sub = findSubclassV20(v20Data.subcls);
+    var effAtk = Math.max(1, Math.round(st.atk * bossFactor));
+
+    var logParts = [];
+    var dmgToBoss = 0;
+
+    // 1. Расчёт урона ИГРОКА по Мировому Боссу
+    var isLuckyFive = sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.indexOf(n) !== -1;
+    if(n === 0){
+      var isTriple = (r === 'demon' && Math.random() < 0.05);
+      dmgToBoss = effAtk * (isTriple ? 4 : 3);
+      logParts.push('Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (×4): ' : '💥 Критический удар (×3): ') + 'Пожиратель Душ теряет ' + dmgToBoss + ' HP!');
+    } else if(isLuckyFive){
+      dmgToBoss = Math.round(effAtk * 2.6);
+      logParts.push('🌟 Счастливое число ' + n + ' [' + sub.skill + ']! Нанесено ' + dmgToBoss + ' урона!');
+    } else if(n === 1){
+      dmgToBoss = 0;
+      logParts.push('Выпала 1 — критический промах (0 урона)!');
+    } else if(n % 2 === 0){
+      var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      dmgToBoss = Math.round(effAtk * 1.5 * (isCrit ? 1.6 : 1));
+      logParts.push('Выпало ' + n + ' (чётное):' + (isCrit ? ' 💥 КРИТ!' : '') + ' Удар на ' + dmgToBoss + ' урона!');
+    } else {
+      var isCritOdd = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      dmgToBoss = Math.max(1, Math.round(effAtk * 0.5 * (isCritOdd ? 1.6 : 1)));
+      logParts.push('Выпало ' + n + ' (нечётное): касательный удар на ' + dmgToBoss + ' урона.');
+    }
+
+    if(minerActive(game) === 'gladiator' && dmgToBoss > 0){
+      var gladBonus = Math.max(1, Math.floor(st.atk * 0.08));
+      dmgToBoss += gladBonus;
+      logParts.push('⚔️ Гладиатор +' + gladBonus + ' урона.');
+    }
+
+    // Вампиризм игрока от удара
+    if(dmgToBoss > 0 && eqEnch.vamp > 0 && !(v20Data && v20Data.nearDeath)){
+      var vampHeal = Math.max(1, Math.round(dmgToBoss * (eqEnch.vamp / 100) * healFactor));
+      raidStateV22.pHp = Math.min(raidStateV22.pMaxHp, raidStateV22.pHp + vampHeal);
+      logParts.push('🩸 Вампиризм +' + vampHeal + ' HP.');
+    }
+
+    // 2. ПРОВЕРКА СПОСОБНОСТИ МИРОВОГО БОССА (если выпало одно из 5 его чисел ИЛИ единица)
+    var bossNumIdx = bossNums.indexOf(n);
+    if(bossNumIdx !== -1 || n === 1){
+      var baseAbilityDmg = getRaidBossAbilityDmgV22(); // Урон 8-го ранга (~90 HP)
+      var rawDmg = (n === 1) ? Math.round(baseAbilityDmg * ((r === 'automaton') ? 0.6 : 0.85)) : baseAbilityDmg;
+      var spellName = (n === 1) ? '💀 Кара Неудачи' : RAID_BOSS_SPELLS[bossNumIdx % RAID_BOSS_SPELLS.length];
+
+      // Классовая защита (Уворот Лучника / Блок Воина)
+      var setBonus = (typeof window.getActiveSetBonus === 'function') ? window.getActiveSetBonus(game) : null;
+      var defVal = (setBonus && setBonus.count >= 2 && setBonus.type !== 'relic' && typeof window.getClassSetDefPctV22 === 'function')
+        ? window.getClassSetDefPctV22(setBonus, game.cls) : 0;
+      var dodged = (game.cls === 'archer' && defVal > 0 && Math.random() * 100 < defVal);
+
+      if(dodged){
+        logParts.push('🏹 Босс применил «' + spellName + '», но твоя Ловкость позволила уклониться (0 урона)!');
+      } else {
+        var inc = rawDmg;
+        var mitNotes = [];
+        if(game.cls === 'warrior' && defVal > 0){
+          inc = Math.max(1, Math.floor(inc * (1 - defVal / 100)));
+          mitNotes.push('Блок Воина -' + defVal + '%');
+        }
+        if(minerActive(game) === 'defender' && inc > 1){
+          var defBlock = Math.floor(inc * 0.15);
+          inc -= defBlock;
+          mitNotes.push('Защитник -' + defBlock);
+        }
+        // Поглощение отдельным Магическим Щитом Мага
+        if(game.cls === 'mage' && window.mageCurrentBattleShield > 0){
+          var absorbed = Math.min(inc, window.mageCurrentBattleShield);
+          window.mageCurrentBattleShield -= absorbed;
+          inc -= absorbed;
+          mitNotes.push('Щит Мага поглотил ' + absorbed + ' (осталось ' + window.mageCurrentBattleShield + ')');
+        }
+
+        raidStateV22.pHp = Math.max(0, raidStateV22.pHp - inc);
+        logParts.push('🔥 СПОСОБНОСТЬ БОССА «' + spellName + '» (число ' + n + ')! Нанесено ' + inc + ' урона (Ранг 8)' + (mitNotes.length ? ' [' + mitNotes.join(', ') + ']' : '') + '!');
+
+        // Шипы игрока
+        if(eqEnch.thorns > 0 && rawDmg > 0){
+          var thDmg = Math.max(1, Math.round(rawDmg * eqEnch.thorns / 100));
+          dmgToBoss += thDmg;
+          logParts.push('🌵 Шипы вернули боссу +' + thDmg + ' урона.');
+        }
+      }
+    }
+
+    if(dmgToBoss > 0){
+      dealRaidDamage(dmgToBoss);
+    }
+
+    raidStateV22.combatLog = logParts.join(' ');
+
+    // 3. Проверка смерти игрока в Рейде -> 5 минут КД
+    if(raidStateV22.pHp <= 0){
+      var cdUntil = Date.now() + RAID_DEATH_CD_MS;
+      setRaidCooldownUntilV22(cdUntil);
+      leaveRaidCombatV22(true);
+      fightMsg = raidStateV22.combatLog + ' 💀 ТЫ ПАЛ ОТ СПОСОБНОСТИ МИРОВОГО БОССА! Наложен тайм-аут возрождения: ты не сможешь вернуться в Рейд в течение 5 минут (нанесённый урон полностью сохранён).';
+      toast('💀 Вы погибли в Рейде! Повторный вход в Рейд заблокирован на 5 минут.');
+    }
+    renderFight();
+  };
+
   function fetchRaidDataV22(){
     if(!sess || !configured()) return Promise.resolve();
     var w = getRaidWindowV22();
+    raidStateV22.bossNums = getRaidBossNumbersV22(w.dateKey);
     return token().then(function(t){
       return fetch(DB_URL + '/raids/' + w.dateKey + '.json?auth=' + encodeURIComponent(t));
     }).then(function(r){ return r.json(); }).then(function(d){
@@ -7481,8 +7691,13 @@ svg.chr{overflow:visible}
       raidHp = raidStateV22.hp;
       raidMaxHp = raidStateV22.maxHp;
       raidMyDmg = (sess && raidStateV22.players[sess.uid]) ? (Number(raidStateV22.players[sess.uid].dmg)||0) : 0;
-      if(!raidActive) raidInCombat = false;
+      if(!raidActive && raidInCombat){
+        raidInCombat = false;
+        fightMsg = (raidStateV22.hp <= 0) ? '🏆 МИРОВОЙ БОСС ПОВЕРЖЕН! Перейди во вкладку «Рейд 🌍», чтобы забрать награду!' : '⏳ Время Рейда подошло к концу!';
+        renderFight();
+      }
       renderRaidPaneV22();
+      if(raidInCombat && curTab === 'game') renderFight();
     }).catch(function(){});
   }
 
@@ -7494,6 +7709,8 @@ svg.chr{overflow:visible}
     if(!raidStateV22.players[sess.uid]) raidStateV22.players[sess.uid] = {name: nick || sess.name || 'Игрок', dmg: 0};
     raidStateV22.players[sess.uid].dmg = nextDmg;
     raidStateV22.players[sess.uid].name = nick || sess.name || 'Игрок';
+    raidStateV22.totalDmg = (Number(raidStateV22.totalDmg)||0) + dmg;
+    raidStateV22.hp = Math.max(0, RAID_BOSS_MAX_HP - raidStateV22.totalDmg);
     token().then(function(t){
       return fetch(DB_URL + '/raids/' + w.dateKey + '/players/' + sess.uid + '.json?auth=' + encodeURIComponent(t), {
         method: 'PATCH',
@@ -7537,9 +7754,64 @@ svg.chr{overflow:visible}
     });
   }
 
+  // Отрисовка полноценного окна боя с Мировым Боссом прямо над рулеткой
+  function renderRaidFightBoxV22(box){
+    var w = getRaidWindowV22();
+    var bossNums = getRaidBossNumbersV22(w.dateKey);
+    var pm = Math.max(0, Math.min(100, Math.round(raidStateV22.hp / raidStateV22.maxHp * 100)));
+    var pp = Math.max(0, Math.min(100, Math.round(raidStateV22.pHp / raidStateV22.pMaxHp * 100)));
+    var abilDmg = getRaidBossAbilityDmgV22();
+
+    box.hidden = false;
+    box.className = 'fight elite';
+    box.innerHTML = '<div class="fhead"><div class="mon">' + monsterSvg('boss_xalatah') + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="rn">🌍 Пожиратель Душ · Ранг 8</div>'
+      + '<div class="rd">Зеро: ×3 урона · Чёт: ×1.5 · Нечёт: ×0.5.<br>'
+      + '<span style="color:#f87171;font-weight:700">⚠️ Числа способности Босса (' + abilDmg + ' урона): [' + bossNums.join(', ') + '] и [1]</span></div>'
+      + '</div></div>'
+      + '<div><div class="hpl"><span>👑 Пожиратель Душ (Общее HP)</span><span>' + raidStateV22.hp + ' / ' + raidStateV22.maxHp + ' (' + pm + '%)</span></div><div class="bar m"><i style="width:' + pm + '%"></i></div></div>'
+      + '<div><div class="hpl"><span>Ты' + (v20Data.nearDeath ? ' [ПРИ СМЕРТИ]' : '') + '</span><span>' + raidStateV22.pHp + ' / ' + raidStateV22.pMaxHp + ' HP</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
+      + '<div class="flog">' + (raidStateV22.combatLog || 'Крути рулетку, чтобы наносить урон Мировому Боссу!') + '</div>'
+      + '<div class="alchemy-belt" id="raidAlchemyBelt" style="margin-top:4px">'
+      + '<button type="button" class="pot-btn" id="btnRaidPotHeal"' + ((v21Data && v21Data.pots && v21Data.pots.heal > 0 && raidStateV22.pHp < raidStateV22.pMaxHp && raidStateV22.usedPots < 2 && !v20Data.nearDeath) ? '' : ' disabled') + '>❤️ Зелье лечения <span class="qty">' + ((v21Data && v21Data.pots && v21Data.pots.heal) || 0) + ' шт. (' + raidStateV22.usedPots + '/2)</span></button>'
+      + '</div>'
+      + '<button type="button" id="btnLeaveRaidFight" class="ghost">Отступить из Рейда</button>';
+
+    var hBtn = $('btnRaidPotHeal');
+    if(hBtn) hBtn.onclick = function(){
+      if(!v21Data || v21Data.pots.heal <= 0 || raidStateV22.usedPots >= 2 || raidStateV22.pHp >= raidStateV22.pMaxHp || v20Data.nearDeath) return;
+      v21Data.pots.heal--;
+      raidStateV22.usedPots++;
+      if(typeof saveV21Local === 'function') saveV21Local();
+      var healAmt = Math.max(1, Math.floor(raidStateV22.pMaxHp * 0.20));
+      raidStateV22.pHp = Math.min(raidStateV22.pMaxHp, raidStateV22.pHp + healAmt);
+      raidStateV22.combatLog = '🧪 Выпито Зелье лечения (+' + healAmt + ' HP, ' + raidStateV22.usedPots + '/2). ' + raidStateV22.combatLog;
+      renderFight();
+    };
+    var lBtn = $('btnLeaveRaidFight');
+    if(lBtn) lBtn.onclick = function(){ leaveRaidCombatV22(false); };
+  }
+
+  var _origRenderFightRaidWrapV22 = renderFight;
+  renderFight = function(){
+    if(raidInCombat && raidActive && !dgOn() && !(game && game.fight && game.fight.on)){
+      var box = $('fight');
+      if(box){
+        renderRaidFightBoxV22(box);
+        if(typeof injectMageShieldBarUI === 'function') injectMageShieldBarUI(box);
+        return;
+      }
+    }
+    _origRenderFightRaidWrapV22();
+  };
+
   function renderRaidPaneV22(){
     var pane = $('raidPane'); if(!pane) return;
     var w = getRaidWindowV22();
+    var bossNums = getRaidBossNumbersV22(w.dateKey);
+    var abilDmg = getRaidBossAbilityDmgV22();
+    var cdLeft = getRaidCooldownLeftMsV22();
     var total = Math.max(1, raidStateV22.totalDmg || 0);
     var myEntry = (sess && raidStateV22.players && raidStateV22.players[sess.uid]) || {dmg: 0, claimed: false};
     var myDmg = Number(myEntry.dmg) || 0;
@@ -7560,17 +7832,27 @@ svg.chr{overflow:visible}
       statusHtml = '<div style="color:var(--muted)">⏳ Мировой Босс появляется ежедневно в <b>18:00</b> ровно на <b>30 минут</b>.<br>До начала следующего рейда: <b>' + fmt(w.msToStart) + '</b></div>';
     }
 
+    if(cdLeft > 0){
+      statusHtml += '<div style="color:var(--red);font-weight:700;margin-top:6px">💀 Вы пали в Рейде! Возрождение и повторный вход через: ' + fmt(cdLeft) + '</div>';
+    }
+
     var canClaim = (myDmg > 0 && !myEntry.claimed && (!w.isLive || raidStateV22.hp <= 0));
     var h = '<div class="card" style="border-color:var(--gold)">'
       + '<h3>🌍 Мировой Босс · Пожиратель Душ</h3>'
-      + '<p>Ежедневное событие сервера с <b>18:00 до 18:30</b>. Крути колесо во время рейда: Зеро — <b>×3 урона</b>, Чётное — <b>×1.5 урона</b>, Нечётное — <b>×0.5 урона</b>, Единица — промах. Награда (монеты, пыль ✨, камни 🪨 и шанс на Слёзы Феникса) зависит от твоего % вклада в общий урон!</p>'
+      + '<p>Ежедневное событие сервера с <b>18:00 до 18:30</b>. Крути колесо во время рейда: Зеро — <b>×3 урона</b>, Чётное — <b>×1.5 урона</b>, Нечётное — <b>×0.5 урона</b>, Единица — промах и ответный удар.</p>'
+      + '<div style="background:rgba(239,68,68,.12);border:1px solid #ef4444;border-radius:12px;padding:10px;font-size:13px">'
+      + '<b>🔥 Способности Босса (Уровень 8-го ранга — ~' + abilDmg + ' урона):</b><br>'
+      + 'Если на рулетке выпадает одно из 5 проклятых чисел Босса сегодня, он применяет разрушительную способность по герою! При гибели в Рейде вход блокируется на <b>5 минут</b>.<br>'
+      + '<div class="luckyFiveWrap" style="margin-top:6px">'
+      + bossNums.map(function(num){ return '<span class="luckyBall" style="background:#ef4444;color:#fff">' + num + '</span>'; }).join('')
+      + '</div></div>'
       + statusHtml
       + '<div style="margin-top:8px">'
       + '<div class="hpl"><span>👑 Мировой Пожиратель Душ</span><span>' + raidStateV22.hp + ' / ' + raidStateV22.maxHp + ' HP (' + pctHp + '%)</span></div>'
       + '<div class="bar m"><i style="width:' + pctHp + '%"></i></div>'
       + '<div style="margin-top:8px;font-size:13px">Твой урон сегодня: <b>' + myDmg + '</b> (' + myShare + '% от общего урона сервера)</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
-      + (w.isLive && raidStateV22.hp > 0 ? '<button type="button" id="btnRaidJoinV22">' + (raidInCombat ? '⚔️ Ты в Рейде (Перейти к рулетке)' : '⚔️ Вступить в Рейд') + '</button>' : '')
+      + (w.isLive && raidStateV22.hp > 0 ? '<button type="button" id="btnRaidJoinV22"' + (cdLeft > 0 && !raidInCombat ? ' disabled' : '') + '>' + (raidInCombat ? '⚔️ Ты в Рейде (Перейти к рулетке)' : (cdLeft > 0 ? '⏳ КД возрождения (' + fmt(cdLeft) + ')' : '⚔️ Вступить в Рейд')) + '</button>' : '')
       + (canClaim ? '<button type="button" id="btnRaidClaimV22" style="background:var(--green);color:#fff">🎁 Забрать награду за вклад (' + myShare + '%)</button>' : '')
       + (myEntry.claimed ? '<span style="font-size:12px;color:var(--green);font-weight:700">✓ Награда за сегодняшний рейд получена</span>' : '')
       + '</div></div></div>';
@@ -7590,9 +7872,8 @@ svg.chr{overflow:visible}
 
     var jBtn = $('btnRaidJoinV22');
     if(jBtn) jBtn.onclick = function(){
-      raidInCombat = true;
-      toast('⚔️ Вы вступили в Рейд! Крутите колесо на вкладке «Рулетка»!');
-      showTab('game');
+      if(raidInCombat){ showTab('game'); return; }
+      enterRaidCombatV22();
     };
     var cBtn = $('btnRaidClaimV22');
     if(cBtn) cBtn.onclick = claimRaidRewardV22;
@@ -7618,8 +7899,12 @@ svg.chr{overflow:visible}
       if(curTab === 'raid' || w.isLive) fetchRaidDataV22();
     }
   }, 5000);
+  setInterval(function(){
+    if(!document.hidden && curTab === 'raid' && getRaidCooldownLeftMsV22() > 0){
+      renderRaidPaneV22();
+    }
+  }, 1000);
   setTimeout(fetchRaidDataV22, 1500);
-
 
   // --- ФИКС ИМЕННЫХ КОМПЛЕКТОВ (СТАТЫ 2/3/4 ВЕЩИ) И МАГИЧЕСКОГО БАРЬЕРА МАГА (ЗАВИСИТ ОТ 2/3/4 ВЕЩЕЙ) ---
   // Вычисляем % классовой защиты (у Воина блок, у Лучника уворот, у Мага щит) в зависимости от редкости И числа вещей (2, 3 или 4)!
@@ -7776,7 +8061,7 @@ svg.chr{overflow:visible}
 
   function injectMageShieldBarUI(box){
     if(!box || box.hidden || !game || game.cls !== 'mage' || window.mageMaxBattleShield <= 0) return;
-    var isActiveFight = (dgOn() && v20Data.exp && v20Data.exp.inCombat) || (game.fight && game.fight.on);
+    var isActiveFight = (dgOn() && v20Data.exp && v20Data.exp.inCombat) || (game.fight && game.fight.on) || (raidInCombat && raidActive);
     if(!isActiveFight) return;
     var curSh = window.mageCurrentBattleShield, maxSh = window.mageMaxBattleShield;
     var pctSh = Math.max(0, Math.min(100, Math.round(curSh / maxSh * 100)));
