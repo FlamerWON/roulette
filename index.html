@@ -1198,7 +1198,7 @@ svg.chr{overflow:visible}
     var ct=$('charClass'); ct.textContent=game.cls?CLASSES[game.cls].name:'Без класса'; ct.style.background=game.cls?'#374151':'#6b7280';
     var stt=stats(); $('stHp').textContent=stt.hp; $('stAtk').textContent=stt.atk;
     var gear=equipped();
-    [['slotHead','head','Голова'],['slotBody','body','Тело'],['slotArms','arms','Руки'],['slotLegs','legs','Ноги']].forEach(function(sl){
+    [['slotHead','head','Голова'],['slotBody','body','Тело'],['slotArms','arms','Руки'],['slotLegs','legs','Ноги'],['slotRing','ring','Кольцо'],['slotAmulet','amulet','Амулет']].forEach(function(sl){
       var el=$(sl[0]), id=gear[sl[1]];
       el.onclick=(game.eq&&game.eq[sl[1]])?function(){if(merchantBusy||!gameLoaded)return;delete game.eq[sl[1]];delete game.eqCopies[sl[1]]; saveGame(); renderChar();}:null;
       el.title=(game.eq&&game.eq[sl[1]])?'Нажми, чтобы снять':'';
@@ -7476,7 +7476,7 @@ svg.chr{overflow:visible}
     var pool = [];
     for(var i = 2; i <= 36; i++) pool.push(i);
     var out = [];
-    while(out.length < 5 && pool.length){
+    while(out.length < 10 && pool.length){
       var idx = Math.floor(r() * pool.length);
       out.push(pool.splice(idx, 1)[0]);
     }
@@ -7486,7 +7486,8 @@ svg.chr{overflow:visible}
 
   // Базовый урон способности Мирового Босса на уровне 8-го ранга сложности (~90 ед. урона)
   function getRaidBossAbilityDmgV22(){
-    return Math.max(45, Math.round(18 * rankDMG(8) * 1.25));
+    var curRank = game ? (game.unlockedRank || maxRank(game)) : 8;
+    return Math.max(45, Math.round(15 * rankDMG(curRank) * 1.5));
   }
 
   function getRaidWindowV22(){
@@ -8095,136 +8096,11 @@ svg.chr{overflow:visible}
   if(gameLoaded){ renderChar(); renderForge(); renderEnchantPanel(); renderDg(); }
 
   // =====================================================================
-  // ФИКС ВИЗУАЛЬНОГО ОТОБРАЖЕНИЯ КОЛЕЦ И АМУЛЕТОВ В СЛОТАХ
+  // ТЕНЕВОЙ ОБМЕННИК (1000 Золота -> 100 Пыли)
   // =====================================================================
-  var _origFixRenderCharSlots = renderChar;
-  renderChar = function(){
-    _origFixRenderCharSlots();
-    if(!game) return;
-    
-    var gear = equipped();
-    [['slotRing','ring','Кольцо'], ['slotAmulet','amulet','Амулет']].forEach(function(sl){
-      var el = document.getElementById(sl[0]), id = gear[sl[1]];
-      if(!el) return;
-      
-      el.onclick = (game.eq && game.eq[sl[1]]) ? function(){
-        if(typeof merchantBusy !== 'undefined' && merchantBusy) return;
-        delete game.eq[sl[1]]; 
-        delete game.eqCopies[sl[1]];
-        saveGame(); 
-        renderChar();
-      } : null;
-      el.title = (game.eq && game.eq[sl[1]]) ? 'Нажми, чтобы снять' : '';
-      
-      if(id && ITEMS[id]){
-        var it = ITEMS[id];
-        var ci = wornIndex(game, sl[1]), lv = ci >= 0 ? copyLevel(game, ci) : 0;
-        el.innerHTML = (typeof itemIcon === 'function' ? itemIcon(id) : '') + '<span class="sn">' + it.name + (lv ? ' +' + lv : '') + '</span>';
-        el.title = (ci >= 0 ? copyStatsLine(game, ci) : (typeof itemLine === 'function' ? itemLine(id) : '')) + '. Нажми, чтобы снять';
-        el.style.borderStyle = 'solid'; 
-        el.style.borderColor = (typeof RARITY !== 'undefined' && RARITY[it.r]) ? RARITY[it.r].color : '#06b6d4';
-        el.setAttribute('aria-label', sl[2] + ': ' + it.name);
-      } else {
-        el.textContent = sl[2]; 
-        el.style.borderStyle = ''; 
-        el.style.borderColor = '';
-        el.setAttribute('aria-label', sl[2] + ': пусто');
-      }
-    });
-  };
-
-  // =====================================================================
-  // ГЛОБАЛЬНЫЙ ФИКС V22.5: ОШИБКИ БИЖУТЕРИИ, БОСС, ОБМЕННИК
-  // =====================================================================
-  
-  // 1. Починка ошибки при надевании (Cannot set property of undefined) 
-  // и проблемы сохранения/слетания колец после обновления страницы
-  var _origLoadV20LocalFix = (typeof loadV20Local === 'function') ? loadV20Local : function(){};
-  loadV20Local = function() {
-    _origLoadV20LocalFix();
-    try {
-      var raw = localStorage.getItem(v20StorageKey());
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        if (parsed) {
-          v20Data.ring = parsed.ring || null;
-          v20Data.amulet = parsed.amulet || null;
-          v20Data.ringCopy = parsed.ringCopy !== undefined ? parsed.ringCopy : null;
-          v20Data.amuletCopy = parsed.amuletCopy !== undefined ? parsed.amuletCopy : null;
-        }
-      }
-    } catch(e){}
-  };
-
-  var _origSaveV20LocalFix = (typeof saveV20Local === 'function') ? saveV20Local : function(){};
-  saveV20Local = function() {
-    if(game && !game.eqCopies) game.eqCopies = {};
-    if(game && !game.eq) game.eq = {};
-    
-    if (game && game.eq) {
-      v20Data.ring = game.eq.ring || null;
-      v20Data.amulet = game.eq.amulet || null;
-      v20Data.ringCopy = game.eqCopies.ring !== undefined ? game.eqCopies.ring : null;
-      v20Data.amuletCopy = game.eqCopies.amulet !== undefined ? game.eqCopies.amulet : null;
-    }
-    _origSaveV20LocalFix();
-    
-    try {
-      var raw = localStorage.getItem(v20StorageKey());
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        parsed.ring = v20Data.ring;
-        parsed.amulet = v20Data.amulet;
-        parsed.ringCopy = v20Data.ringCopy;
-        parsed.amuletCopy = v20Data.amuletCopy;
-        localStorage.setItem(v20StorageKey(), JSON.stringify(parsed));
-      }
-    } catch(e){}
-  };
-  
-  var _origRenderCharFix = renderChar;
-  renderChar = function() {
-    if (game && !game.eqCopies) game.eqCopies = {};
-    if (game && !game.eq) game.eq = {};
-    
-    // Восстанавливаем сохраненную бижутерию
-    if (game && v20Data.ring && !game.eq.ring) game.eq.ring = v20Data.ring;
-    if (game && v20Data.amulet && !game.eq.amulet) game.eq.amulet = v20Data.amulet;
-    if (game && v20Data.ringCopy != null && game.eqCopies.ring == null) game.eqCopies.ring = v20Data.ringCopy;
-    if (game && v20Data.amuletCopy != null && game.eqCopies.amulet == null) game.eqCopies.amulet = v20Data.amuletCopy;
-    
-    _origRenderCharFix();
-  };
-  
-  // 2. Мировой Босс: 10 цифр атаки вместо 5
-  if (typeof getRaidBossNumbersV22 !== 'undefined') {
-    getRaidBossNumbersV22 = function(dateKey) {
-      var r = rng(hashStr('worldboss_nums_v22:' + dateKey));
-      var pool = [];
-      for(var i = 2; i <= 36; i++) pool.push(i);
-      var out = [];
-      while(out.length < 10 && pool.length){ // <-- ИЗМЕНЕНО НА 10
-        var idx = Math.floor(r() * pool.length);
-        out.push(pool.splice(idx, 1)[0]);
-      }
-      out.sort(function(a, b){ return a - b; });
-      return out;
-    };
-  }
-
-  // 3. Мировой Босс: Автоматический расчёт силы (от ранга игрока)
-  if (typeof getRaidBossAbilityDmgV22 !== 'undefined') {
-    getRaidBossAbilityDmgV22 = function(){
-      var curRank = game ? (game.unlockedRank || maxRank(game)) : 8;
-      // Босс бьёт как усиленный элитный враг твоего текущего максимального ранга
-      return Math.max(45, Math.round(15 * rankDMG(curRank) * 1.5));
-    };
-  }
-
-  // 4. Обменник: 1000 золота -> 100 пыли в Скупщике
-  var _origRenderMerchantV22 = renderMerchant;
+  var _origRenderMerchantV22b = renderMerchant;
   renderMerchant = function() {
-    _origRenderMerchantV22();
+    _origRenderMerchantV22b();
     var box = document.getElementById('merchantBody');
     if (!box || !game) return;
     
@@ -8255,7 +8131,6 @@ svg.chr{overflow:visible}
         };
     }
   };
-
 })();
 </script>
 </body>
