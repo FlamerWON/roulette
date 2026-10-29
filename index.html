@@ -8133,6 +8133,129 @@ svg.chr{overflow:visible}
     });
   };
 
+  // =====================================================================
+  // ГЛОБАЛЬНЫЙ ФИКС V22.5: ОШИБКИ БИЖУТЕРИИ, БОСС, ОБМЕННИК
+  // =====================================================================
+  
+  // 1. Починка ошибки при надевании (Cannot set property of undefined) 
+  // и проблемы сохранения/слетания колец после обновления страницы
+  var _origLoadV20LocalFix = (typeof loadV20Local === 'function') ? loadV20Local : function(){};
+  loadV20Local = function() {
+    _origLoadV20LocalFix();
+    try {
+      var raw = localStorage.getItem(v20StorageKey());
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed) {
+          v20Data.ring = parsed.ring || null;
+          v20Data.amulet = parsed.amulet || null;
+          v20Data.ringCopy = parsed.ringCopy !== undefined ? parsed.ringCopy : null;
+          v20Data.amuletCopy = parsed.amuletCopy !== undefined ? parsed.amuletCopy : null;
+        }
+      }
+    } catch(e){}
+  };
+
+  var _origSaveV20LocalFix = (typeof saveV20Local === 'function') ? saveV20Local : function(){};
+  saveV20Local = function() {
+    if(game && !game.eqCopies) game.eqCopies = {};
+    if(game && !game.eq) game.eq = {};
+    
+    if (game && game.eq) {
+      v20Data.ring = game.eq.ring || null;
+      v20Data.amulet = game.eq.amulet || null;
+      v20Data.ringCopy = game.eqCopies.ring !== undefined ? game.eqCopies.ring : null;
+      v20Data.amuletCopy = game.eqCopies.amulet !== undefined ? game.eqCopies.amulet : null;
+    }
+    _origSaveV20LocalFix();
+    
+    try {
+      var raw = localStorage.getItem(v20StorageKey());
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        parsed.ring = v20Data.ring;
+        parsed.amulet = v20Data.amulet;
+        parsed.ringCopy = v20Data.ringCopy;
+        parsed.amuletCopy = v20Data.amuletCopy;
+        localStorage.setItem(v20StorageKey(), JSON.stringify(parsed));
+      }
+    } catch(e){}
+  };
+  
+  var _origRenderCharFix = renderChar;
+  renderChar = function() {
+    if (game && !game.eqCopies) game.eqCopies = {};
+    if (game && !game.eq) game.eq = {};
+    
+    // Восстанавливаем сохраненную бижутерию
+    if (game && v20Data.ring && !game.eq.ring) game.eq.ring = v20Data.ring;
+    if (game && v20Data.amulet && !game.eq.amulet) game.eq.amulet = v20Data.amulet;
+    if (game && v20Data.ringCopy != null && game.eqCopies.ring == null) game.eqCopies.ring = v20Data.ringCopy;
+    if (game && v20Data.amuletCopy != null && game.eqCopies.amulet == null) game.eqCopies.amulet = v20Data.amuletCopy;
+    
+    _origRenderCharFix();
+  };
+  
+  // 2. Мировой Босс: 10 цифр атаки вместо 5
+  if (typeof getRaidBossNumbersV22 !== 'undefined') {
+    getRaidBossNumbersV22 = function(dateKey) {
+      var r = rng(hashStr('worldboss_nums_v22:' + dateKey));
+      var pool = [];
+      for(var i = 2; i <= 36; i++) pool.push(i);
+      var out = [];
+      while(out.length < 10 && pool.length){ // <-- ИЗМЕНЕНО НА 10
+        var idx = Math.floor(r() * pool.length);
+        out.push(pool.splice(idx, 1)[0]);
+      }
+      out.sort(function(a, b){ return a - b; });
+      return out;
+    };
+  }
+
+  // 3. Мировой Босс: Автоматический расчёт силы (от ранга игрока)
+  if (typeof getRaidBossAbilityDmgV22 !== 'undefined') {
+    getRaidBossAbilityDmgV22 = function(){
+      var curRank = game ? (game.unlockedRank || maxRank(game)) : 8;
+      // Босс бьёт как усиленный элитный враг твоего текущего максимального ранга
+      return Math.max(45, Math.round(15 * rankDMG(curRank) * 1.5));
+    };
+  }
+
+  // 4. Обменник: 1000 золота -> 100 пыли в Скупщике
+  var _origRenderMerchantV22 = renderMerchant;
+  renderMerchant = function() {
+    _origRenderMerchantV22();
+    var box = document.getElementById('merchantBody');
+    if (!box || !game) return;
+    
+    if (!document.getElementById('exchangeDustBtn')) {
+        var btnHTML = '<div class="card" style="border-color: #a855f7; margin-top:14px;">'
+          + '<h3>✨ Теневой Обменник</h3>'
+          + '<p>У тебя накопилось излишне много золота? Скупщик готов обменять его на Магическую пыль.</p>'
+          + '<button type="button" id="exchangeDustBtn">Купить 100 ✨ за 1000 мон.</button>'
+          + '</div>';
+        box.insertAdjacentHTML('beforeend', btnHTML);
+    }
+    
+    var exBtn = document.getElementById('exchangeDustBtn');
+    if (exBtn) {
+        var canExchange = (typeof merchantBusy !== 'undefined' ? !merchantBusy : true) && gameLoaded && (game.coins >= 1000);
+        exBtn.disabled = !canExchange;
+        exBtn.onclick = function() {
+            if (!canSell()) return;
+            if (game.coins >= 1000) {
+                game.coins -= 1000;
+                game.dust = Math.min(1000000, (Number(game.dust)||0) + 100);
+                saveGame();
+                renderCoins();
+                renderMerchant();
+                if (typeof renderEnchantPanel === 'function') renderEnchantPanel();
+                toast('Обмен успешен! Получено 100 ✨ Магической пыли.');
+            }
+        };
+    }
+  };
+
 })();
 </script>
 </body>
