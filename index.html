@@ -5654,7 +5654,7 @@ svg.chr{overflow:visible}
     _origRenderCharBeforeV20();
     if(!game) return;
 
-    [['slotHead','head'],['slotBody','body'],['slotArms','arms'],['slotLegs','legs']].forEach(function(sl){
+    [['slotHead','head'],['slotBody','body'],['slotArms','arms'],['slotLegs','legs'],['slotRing','ring'],['slotAmulet','amulet']].forEach(function(sl){
       var el = $(sl[0]);
       if(el && game.eq && game.eq[sl[1]]){
         el.onclick = function(){
@@ -8095,32 +8095,40 @@ svg.chr{overflow:visible}
   if(gameLoaded){ renderChar(); renderForge(); renderEnchantPanel(); renderDg(); }
 
   // =====================================================================
-  // ГЛОБАЛЬНЫЙ ФИКС БИЖУТЕРИИ (КОЛЕЦ И АМУЛЕТОВ) НА 10 РАНГЕ
+  // ФИКС ВИЗУАЛЬНОГО ОТОБРАЖЕНИЯ КОЛЕЦ И АМУЛЕТОВ В СЛОТАХ
   // =====================================================================
-  
-  // 1. Исправляем кривые названия слотов в самой базе предметов
-  Object.keys(ITEMS).forEach(function(id) {
-    if (ITEMS[id].slot === 'slotRing') ITEMS[id].slot = 'ring';
-    if (ITEMS[id].slot === 'slotAmulet') ITEMS[id].slot = 'amulet';
-  });
-
-  // 2. Вылечиваем багованные сохранения (если бижутерия уже "наделась" криво)
-  var _origLoadGamePatch = loadGame;
-  loadGame = function() {
-    return _origLoadGamePatch().then(function() {
-      if (game && game.eq) {
-        var changed = false;
-        if (game.eq['slotRing']) { game.eq['ring'] = game.eq['slotRing']; delete game.eq['slotRing']; changed = true; }
-        if (game.eq['slotAmulet']) { game.eq['amulet'] = game.eq['slotAmulet']; delete game.eq['slotAmulet']; changed = true; }
-        if (game.eqCopies && game.eqCopies['slotRing']) { game.eqCopies['ring'] = game.eqCopies['slotRing']; delete game.eqCopies['slotRing']; }
-        if (game.eqCopies && game.eqCopies['slotAmulet']) { game.eqCopies['amulet'] = game.eqCopies['slotAmulet']; delete game.eqCopies['slotAmulet']; }
-        
-        // Если исправили сохранение, сразу сохраняем на сервер и обновляем визуал
-        if (changed && gameLoaded) {
-          saveGame();
-          renderChar();
-          renderInv();
-        }
+  var _origFixRenderCharSlots = renderChar;
+  renderChar = function(){
+    _origFixRenderCharSlots();
+    if(!game) return;
+    
+    var gear = equipped();
+    [['slotRing','ring','Кольцо'], ['slotAmulet','amulet','Амулет']].forEach(function(sl){
+      var el = document.getElementById(sl[0]), id = gear[sl[1]];
+      if(!el) return;
+      
+      el.onclick = (game.eq && game.eq[sl[1]]) ? function(){
+        if(typeof merchantBusy !== 'undefined' && merchantBusy) return;
+        delete game.eq[sl[1]]; 
+        delete game.eqCopies[sl[1]];
+        saveGame(); 
+        renderChar();
+      } : null;
+      el.title = (game.eq && game.eq[sl[1]]) ? 'Нажми, чтобы снять' : '';
+      
+      if(id && ITEMS[id]){
+        var it = ITEMS[id];
+        var ci = wornIndex(game, sl[1]), lv = ci >= 0 ? copyLevel(game, ci) : 0;
+        el.innerHTML = (typeof itemIcon === 'function' ? itemIcon(id) : '') + '<span class="sn">' + it.name + (lv ? ' +' + lv : '') + '</span>';
+        el.title = (ci >= 0 ? copyStatsLine(game, ci) : (typeof itemLine === 'function' ? itemLine(id) : '')) + '. Нажми, чтобы снять';
+        el.style.borderStyle = 'solid'; 
+        el.style.borderColor = (typeof RARITY !== 'undefined' && RARITY[it.r]) ? RARITY[it.r].color : '#06b6d4';
+        el.setAttribute('aria-label', sl[2] + ': ' + it.name);
+      } else {
+        el.textContent = sl[2]; 
+        el.style.borderStyle = ''; 
+        el.style.borderColor = '';
+        el.setAttribute('aria-label', sl[2] + ': пусто');
       }
     });
   };
