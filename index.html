@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="22">
-<title>Рулетка с чатом · Версия 22</title>
+<meta name="app-version" content="23">
+<title>Рулетка с чатом · Версия 23</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
 :root{
@@ -852,7 +852,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 22</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 23</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -2312,11 +2312,24 @@ svg.chr{overflow:visible}
   setInterval(function(){ if(curTab==='board'&&!document.hidden) loadBoard(); },15000);
   function showTab(which){
     curTab=which;
-    $('gamePane').hidden=(which!=='game'); $('charPane').hidden=(which!=='char'); $('boardPane').hidden=(which!=='board'); $('shopPane').hidden=(which!=='shop'); $('dgPane').hidden=(which!=='dg');
+    $('gamePane').hidden=(which!=='game'); 
+    $('charPane').hidden=(which!=='char'); 
+    $('boardPane').hidden=(which!=='board'); 
+    $('shopPane').hidden=(which!=='shop'); 
+    $('dgPane').hidden=(which!=='dg');
+    if($('marketPane')) $('marketPane').hidden=(which!=='market');
+    if($('petsPane')) $('petsPane').hidden=(which!=='pets');
+    if($('raidPane')) $('raidPane').hidden=(which!=='raid');
+
     $('tabGame').className='tab'+(which==='game'?' on':'');
     $('tabChar').className='tab'+(which==='char'?' on':'');
     $('tabBoard').className='tab'+(which==='board'?' on':'');
-    $('tabShop').className='tab'+(which==='shop'?' on':''); $('tabDg').className='tab'+(which==='dg'?' on':'');
+    $('tabShop').className='tab'+(which==='shop'?' on':''); 
+    $('tabDg').className='tab'+(which==='dg'?' on':'');
+    if($('tabMarket')) $('tabMarket').className='tab'+(which==='market'?' on':'');
+    if($('tabPets')) $('tabPets').className='tab'+(which==='pets'?' on':'');
+    if($('tabRaid')) $('tabRaid').className='tab'+(which==='raid'?' on':'');
+
     if(which==='game') draw();
     if(which==='char'){$('dot').hidden=true; renderChar();}
     if(which==='board') loadBoard();
@@ -2324,17 +2337,17 @@ svg.chr{overflow:visible}
     if(which==='dg') renderDg();
     if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
     
-    var btnPets = document.getElementById('tabPets');
-    if(btnPets) btnPets.className = 'tab' + (which === 'pets' ? ' on' : '');
-    var panePets = document.getElementById('petsPane');
-    if(panePets) panePets.hidden = (which !== 'pets');
+    updateFloatWheelState();
+    drawMiniWheels();
   }
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
   $('tabBoard').addEventListener('click',function(){showTab('board');});
   $('tabShop').addEventListener('click',function(){showTab('shop');});
   $('tabDg').addEventListener('click',function(){showTab('dg');});
-  var btnPets = document.getElementById('tabPets'); if(btnPets) btnPets.addEventListener('click',function(){showTab('pets');});
+  if($('tabMarket')) $('tabMarket').addEventListener('click',function(){showTab('market');});
+  if($('tabPets')) $('tabPets').addEventListener('click',function(){showTab('pets');});
+  if($('tabRaid')) $('tabRaid').addEventListener('click',function(){showTab('raid');});
   $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
@@ -3092,7 +3105,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   /* ---------- принудительное обновление ---------- */
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
-  var APP_V=Number((document.querySelector('meta[name="app-version"]')||{}).content)||0;
+  var APP_V=23;
   var updating=false;
   function showUpdate(){
     if(updating) return; updating=true;
@@ -3629,7 +3642,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
 
   /* ================== МОДУЛЬ UPDATE 18 ================== */
-  RELEASE_ID = 22;
+  RELEASE_ID = 23;
   RELEASE_NOTES.unshift({
     title: 'Версия 22 · Мировой Босс, Анти-Фарм и Сеты',
     lines: [
@@ -4667,8 +4680,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
   /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
-  APP_V = 22;
-  RELEASE_ID = 22;
+  APP_V = 23;
+  RELEASE_ID = 23;
   RELEASE_NOTES.unshift({
     title: 'Версия 22 · Мировой Босс, Анти-Фарм и Сеты',
     lines: [
@@ -6829,8 +6842,8 @@ function startFirestoreListenersV20(){
 
 
 /* ================== МОДУЛЬ UPDATE 21 (ФИНАЛ: АЛХИМИЯ, АНТИ-АБУЗ, СЕТЫ, ФИКСЫ) ================== */
-  APP_V = 22;
-  RELEASE_ID = 22;
+  APP_V = 23;
+  RELEASE_ID = 23;
   
   if(!window.v21PatchApplied){
     window.v21PatchApplied = true;
@@ -7290,7 +7303,7 @@ function startFirestoreListenersV20(){
 
   /* ================== МЕГА-ПАТЧ V22 (ВСЕ 7 ПУНКТОВ + ФИКС ВЕЧНОГО ОБНОВЛЕНИЯ) ================== */
   APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 22;
-  RELEASE_ID = 22;
+  RELEASE_ID = 23;
 
   // --- ПУНКТ 3 (часть 1): Универсальный класс "all" для Реликтовой брони Боссов ---
   // В Кузнице/Инвентаре/Зачаровании добавляем 'all' только для отображения, но не в магазин покупки классов!
