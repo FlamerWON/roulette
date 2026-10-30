@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="24">
-<title>Рулетка с чатом · Версия 24</title>
+<meta name="app-version" content="23">
+<title>Рулетка с чатом · Версия 23</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
 :root{
@@ -852,7 +852,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 24</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 23</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -1151,12 +1151,12 @@ svg.chr{overflow:visible}
         for(var csl in cg){
           if(game.inv.indexOf(cg[csl])<0){ game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; added=true; }
         }
-        game.gm=1; if(g.balanceV!==9)game.balanceV=0; migrateBalance(game); if(!Number.isFinite(g.eventSlot)||g.eventSlot<0)game.eventSlot=0; initV11(game);
+        game.gm=1; if(g.balanceV!==9)game.balanceV=0; migrateBalance(game); if(!Number.isFinite(g.eventSlot)||g.eventSlot<0)game.eventSlot=0; initV11(game); syncV20DataToGame();
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
         gameLoaded=true; renderProgress(); saveGame(); maybeNews();
       }else if(g===null){
         // в базе правда пусто: новый аккаунт
-        game=defaultGame(); initV11(game); gameLoaded=true; renderChar(); renderCoins(); maybeNews(); return saveGame();
+        game=defaultGame(); initV11(game); syncV20DataToGame(); gameLoaded=true; renderChar(); renderCoins(); maybeNews(); return saveGame();
       }else{
         loadFailed();
       }
@@ -1542,7 +1542,7 @@ svg.chr{overflow:visible}
       var write=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(next)});
       if(!write.ok)throw Error(write.status===412?'Инвентарь изменился во время продажи':'Продажа не подтверждена сервером');
       if(sess!==session)return false;
-      game=next;initV11(game);gameLoaded=true;again=false;
+      game=next;initV11(game); syncV20DataToGame();gameLoaded=true;again=false;
       merchantBusy=false;renderCoins();renderChar();renderMerchant();renderForge();renderEvent();
       toast('Продано '+plan.amount+' шт. Получено '+plan.total+' монет и +'+lastDustEarned+' ✨ Магической пыли!');return true;
     }catch(e){
@@ -3105,7 +3105,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   /* ---------- принудительное обновление ---------- */
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
-  var APP_V=24;
+  var APP_V=23;
   var updating=false;
   function showUpdate(){
     if(updating) return; updating=true;
@@ -3642,16 +3642,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
 
   /* ================== МОДУЛЬ UPDATE 18 ================== */
-  RELEASE_ID = 24;
-  RELEASE_NOTES.unshift({
-    title: 'Версия 24 · 20 Рангов от Уровня, Замедленная Прокачка и Ребаланс Лута',
-    lines: [
-      '20 Рангов строго по уровням (1 ранг = 5 уровней, до 100 ур.): убран пропуск рангов за счёт характеристик экипировки.',
-      'Освоение ранга в бою: на 1-м уровне нового ранга герой наносит 90% урона и получает 110%, а к 5-му уровню ранга — наносит 110% и получает 94%. На рангах ниже максимального враги слабее, но награды снижаются.',
-      'Замедленная прокачка: кубическая формула требуемого XP (150 + 65·L + 12·L² + 0.15·L³) и плавный рост числа боёв на уровень (от 6 на 1 ранге до 76 на 20 ранге). Снижен опыт за проходные комнаты Экспедиции и засады.',
-      'Новая система выпадения шмота на 20 рангов: поэтапное открытие редкостей (Эпик со 2 ранга, Легендарка с 5-го, Мифик с 8-го, Реликвии и Бижутерия с 10-го, Божественное с 12-го). Снижен общий шанс дропа для ценности каждой находки.'
-    ]
-  });
+  RELEASE_ID = 23;
   RELEASE_NOTES.unshift({
     title: 'Версия 22 · Мировой Босс, Анти-Фарм и Сеты',
     lines: [
@@ -4689,8 +4680,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
   /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
-  APP_V = 24;
-  RELEASE_ID = 24;
+  APP_V = 23;
+  RELEASE_ID = 23;
   RELEASE_NOTES.unshift({
     title: 'Версия 22 · Мировой Босс, Анти-Фарм и Сеты',
     lines: [
@@ -4720,7 +4711,11 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     prestige: 0,
     nearDeath: false,
     potions: 0,
-    exp: null
+    exp: null,
+    pets: [],
+    incubator: { active: false, started: false, eggId: '', startSpins: 0, requiredSpins: 1500 },
+    activeCompanion: 'miner',
+    activePetUuid: ''
   };
 
   function resetV20Data(){
@@ -4730,6 +4725,10 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     v20Data.nearDeath = false;
     v20Data.potions = 0;
     v20Data.exp = null;
+    v20Data.pets = [];
+    v20Data.incubator = { active: false, started: false, eggId: '', startSpins: 0, requiredSpins: 1500 };
+    v20Data.activeCompanion = 'miner';
+    v20Data.activePetUuid = '';
   }
 
   function sanitizeLuckyFiveV20(arr){
@@ -4770,6 +4769,19 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     return 'roulette_v20_clean_' + (sess && sess.uid ? sess.uid : 'guest');
   }
 
+  function syncV20DataToGame() {
+    if(!game) return;
+    game.subcls = v20Data.subcls;
+    game.lucky5 = v20Data.lucky5;
+    game.prestige = v20Data.prestige;
+    game.nearDeath = v20Data.nearDeath;
+    game.potions = v20Data.potions;
+    game.pets = v20Data.pets;
+    game.incubator = v20Data.incubator;
+    game.activeCompanion = v20Data.activeCompanion;
+    game.activePetUuid = v20Data.activePetUuid;
+  }
+
   function loadV20Local(){
     resetV20Data();
     try{
@@ -4783,6 +4795,10 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
           v20Data.nearDeath = Boolean(parsed.nearDeath);
           v20Data.potions = Math.max(0, Number(parsed.potions) || 0);
           v20Data.exp = (parsed.exp && parsed.exp.on) ? parsed.exp : null;
+          if(Array.isArray(parsed.pets)) v20Data.pets = parsed.pets;
+          if(parsed.incubator) v20Data.incubator = parsed.incubator;
+          if(parsed.activeCompanion) v20Data.activeCompanion = parsed.activeCompanion;
+          if(typeof parsed.activePetUuid === 'string') v20Data.activePetUuid = parsed.activePetUuid;
         }
       }
     }catch(e){}
@@ -4796,15 +4812,17 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     }catch(e){}
   }
 
-  function stripV20FromGameObj(g){
-    if(!g) return;
-    if(g.subcls !== undefined){ if(!v20Data.subcls) v20Data.subcls = g.subcls; delete g.subcls; }
+  
     if(g.lucky5 !== undefined){ if(!v20Data.lucky5.length && Array.isArray(g.lucky5)) v20Data.lucky5 = g.lucky5; delete g.lucky5; }
     if(g.prestige !== undefined){ if(!v20Data.prestige) v20Data.prestige = Number(g.prestige)||0; delete g.prestige; }
     if(g.nearDeath !== undefined){ if(!v20Data.nearDeath) v20Data.nearDeath = Boolean(g.nearDeath); delete g.nearDeath; }
     if(g.potions !== undefined){ if(!v20Data.potions) v20Data.potions = Number(g.potions)||0; delete g.potions; }
     if(g.fight && g.fight.trapped !== undefined) delete g.fight.trapped;
     if(g.dg) delete g.dg;
+    if(g.pets !== undefined){ if(!v20Data.pets || !v20Data.pets.length) v20Data.pets = g.pets; delete g.pets; }
+    if(g.incubator !== undefined){ if(!v20Data.incubator || !v20Data.incubator.active) v20Data.incubator = g.incubator; delete g.incubator; }
+    if(g.activeCompanion !== undefined){ if(!v20Data.activeCompanion || v20Data.activeCompanion==='miner') v20Data.activeCompanion = g.activeCompanion; delete g.activeCompanion; }
+    if(g.activePetUuid !== undefined){ if(!v20Data.activePetUuid) v20Data.activePetUuid = g.activePetUuid; delete g.activePetUuid; }
   }
 
   // --- ОПТИМИЗАЦИЯ O(1) ПУЛА ЛУТА (ВМЕСТО ПЕРЕБОРА 510 ПРЕДМЕТОВ НА КАЖДЫЙ ДРОП) ---
@@ -6090,7 +6108,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   var _origRenderCharBeforeV20 = renderChar;
   renderChar = function(){
-    if(game) stripV20FromGameObj(game);
+    if(game) 
     // Оптимизация: если вкладка Персонажа скрыта, обновляем только шапку, прогресс и баннер При Смерти,
     // не перестраивая тяжёлый SVG-аватар и весь DOM инвентаря на каждый прокрут колеса!
     if(curTab !== 'char' && $('charPane') && $('charPane').hidden){
@@ -6298,6 +6316,10 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       prestige: Number(v20Data.prestige) || 0,
       nearDeath: Boolean(v20Data.nearDeath),
       potions: Number(v20Data.potions) || 0,
+      pets: v20Data.pets || [],
+      incubator: v20Data.incubator || null,
+      activeCompanion: v20Data.activeCompanion || 'miner',
+      activePetUuid: v20Data.activePetUuid || '',
       lastSeen: Date.now()
     }, {merge: true}).catch(function(){});
   }
@@ -6393,7 +6415,7 @@ function startFirestoreListenersV20(){
           });
         }
       });
-    }); // <-- ВОТ ЗДЕСЬ НЕ ХВАТАЛО ЗАКРЫВАЮЩИХ СКОБОК
+    });
   }
 
   setInterval(function(){
@@ -6766,9 +6788,36 @@ function startFirestoreListenersV20(){
   var _origSaveGameV19 = saveGame;
   saveGame = function(){
     if(!game || !sess || !gameLoaded || merchantBusy) return Promise.resolve();
-    stripV20FromGameObj(game);
+    if(saving){again=true; return Promise.resolve();}
+    saving=true;
+    
+    // Copy any V20/V23 data to v20Data before saving locally
+    if(game.subcls !== undefined) v20Data.subcls = game.subcls;
+    if(game.lucky5 !== undefined) v20Data.lucky5 = game.lucky5;
+    if(game.prestige !== undefined) v20Data.prestige = game.prestige;
+    if(game.nearDeath !== undefined) v20Data.nearDeath = game.nearDeath;
+    if(game.potions !== undefined) v20Data.potions = game.potions;
+    if(game.pets !== undefined) v20Data.pets = game.pets;
+    if(game.incubator !== undefined) v20Data.incubator = game.incubator;
+    if(game.activeCompanion !== undefined) v20Data.activeCompanion = game.activeCompanion;
+    if(game.activePetUuid !== undefined) v20Data.activePetUuid = game.activePetUuid;
+    
     saveV20Local();
-    return _origSaveGameV19();
+    
+    return token().then(function(t){
+      game.v=APP_V; if(mySid) game.sid=mySid; else delete game.sid;
+      
+      // CREATE A CLONE FOR FIREBASE AND STRIP NEW FIELDS SO RULES DON'T REJECT IT (401 Permission Denied)
+      var clone = JSON.parse(JSON.stringify(game));
+      delete clone.subcls; delete clone.lucky5; delete clone.prestige; delete clone.nearDeath; delete clone.potions;
+      if(clone.fight) delete clone.fight.trapped;
+      delete clone.dg;
+      delete clone.pets; delete clone.incubator; delete clone.activeCompanion; delete clone.activePetUuid;
+      
+      return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(clone)});
+    }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
+    .catch(function(e){ if(!kickedOut) toast('Прогресс не сохранился ('+((e&&e.message)||'нет связи')+').'); checkSession(); })
+    .then(function(){ saving=false; if(again){again=false; return saveGame();} if(curTab==='shop'){renderForge();renderMinerPanel();}renderMiner(); });
   };
 
   // --- 12. ОБНОВЛЕНИЕ ШАПКИ, ВЫХОДА ИЗ АККАУНТА И ЖЁСТКАЯ ИЗОЛЯЦИЯ ВКЛАДКИ РЫНКА ---
@@ -6841,7 +6890,7 @@ function startFirestoreListenersV20(){
     _origStartBeforeV20();
     setTimeout(function(){
       loadV20Local();
-      if(game) stripV20FromGameObj(game);
+      if(game) 
       startFirestoreListenersV20();
       renderCoins();
       renderNearDeathBannerV20();
@@ -6851,8 +6900,8 @@ function startFirestoreListenersV20(){
 
 
 /* ================== МОДУЛЬ UPDATE 21 (ФИНАЛ: АЛХИМИЯ, АНТИ-АБУЗ, СЕТЫ, ФИКСЫ) ================== */
-  APP_V = 24;
-  RELEASE_ID = 24;
+  APP_V = 23;
+  RELEASE_ID = 23;
   
   if(!window.v21PatchApplied){
     window.v21PatchApplied = true;
@@ -7312,7 +7361,7 @@ function startFirestoreListenersV20(){
 
   /* ================== МЕГА-ПАТЧ V22 (ВСЕ 7 ПУНКТОВ + ФИКС ВЕЧНОГО ОБНОВЛЕНИЯ) ================== */
   APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 22;
-  RELEASE_ID = 24;
+  RELEASE_ID = 23;
 
   // --- ПУНКТ 3 (часть 1): Универсальный класс "all" для Реликтовой брони Боссов ---
   // В Кузнице/Инвентаре/Зачаровании добавляем 'all' только для отображения, но не в магазин покупки классов!
@@ -8602,501 +8651,6 @@ function startFirestoreListenersV20(){
         };
     }
   };
-
-  /* ================== МОДУЛЬ UPDATE 24: 20 РАНГОВ ОТ УРОВНЯ, МЕДЛЕННАЯ ПРОКАЧКА И НОВЫЙ ЛУТ ================== */
-  APP_V = 24;
-  RELEASE_ID = 24;
-
-  var RANK_NAMES_V24 = [
-    'Поход', 'Разведка', 'Охота', 'Застава', 'Ветеран',
-    'Штурм', 'Гвардия', 'Подвиг', 'Герой', 'Триумф',
-    'Полководец', 'Легенда', 'Миф', 'Титан', 'Кошмар',
-    'Бездна', 'Катаклизм', 'Апокалипсис', 'Вечность', 'Абсолют'
-  ];
-
-  // 1 ранг = строго 5 уровней (Ур. 1-5 -> Ранг 1 ... Ур. 96-100 -> Ранг 20)
-  rankLevel = function(rank){
-    var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
-    return 1 + 5 * (r - 1);
-  };
-
-  rankName = function(rank){
-    var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
-    var lStart = rankLevel(r), lEnd = Math.min(100, lStart + 4);
-    return (RANK_NAMES_V24[r - 1] || ('Ранг ' + r)) + ' · ранг ' + r + ' (ур. ' + lStart + '–' + lEnd + ')';
-  };
-
-  // Строгая привязка максимального ранга ТОЛЬКО к уровню персонажа (без пропуска по статам)
-  maxRank = function(source){
-    source = source || game;
-    if(!source) return 1;
-    var lvl = Math.max(1, Math.min(LEVEL_CAP, Math.floor(Number(source.level) || 1)));
-    return Math.max(1, Math.min(20, Math.floor((lvl - 1) / 5) + 1));
-  };
-
-  selectedRank = function(){
-    if(!game) return 1;
-    var mr = maxRank(game);
-    return Math.max(1, Math.min(mr, Math.floor(Number(game.rank) || 1)));
-  };
-
-  // Масштабирование HP и урона монстров на 20 рангов
-  rankHP = function(rank){
-    var r = Math.max(1, Math.min(20, Number(rank) || 1)) - 1;
-    return Number((1 + 0.38 * r + 0.065 * r * r).toFixed(3));
-  };
-
-  rankDMG = function(rank){
-    var r = Math.max(1, Math.min(20, Number(rank) || 1)) - 1;
-    return Number((1 + 0.28 * r + 0.052 * r * r).toFixed(3));
-  };
-
-  // Замедленная кривая опыта: 150 + 65*(L-1) + 12*(L-1)^2 + 0.15*(L-1)^3
-  xpNeed = function(level){
-    var l = Math.max(0, Math.min(LEVEL_CAP, Math.floor(Number(level) || 1)) - 1);
-    return Math.floor(150 + 65 * l + 12 * l * l + 0.15 * l * l * l);
-  };
-
-  // Целевое число побед над часовым монстром на 1 уровень внутри ранга (от 6 на 1 ранге до 76.7 на 20 ранге)
-  function killsNeededForLevelV24(rank){
-    var r = Math.max(1, Math.min(20, Number(rank) || 1)) - 1;
-    return 6 + 2.2 * r + 0.08 * r * r;
-  }
-
-  // Штраф на опыт при спуске на ранги ниже максимального
-  xpFactor = function(rank){
-    if(!game) return 1;
-    var gap = Math.max(0, maxRank(game) - (Number(rank) || 1));
-    if(gap === 0) return 1.0;
-    if(gap === 1) return 0.65;
-    if(gap === 2) return 0.30;
-    return 0.05;
-  };
-
-  // Штраф на золото при спуске на 1-2 ранга ниже
-  function goldFactorV24(rank){
-    if(!game) return 1;
-    var gap = Math.max(0, maxRank(game) - (Number(rank) || 1));
-    if(gap === 0) return 1.0;
-    if(gap === 1) return 0.80;
-    if(gap === 2) return 0.45;
-    return 0.10;
-  }
-
-  // Анти-фарм срабатывает при разнице в 3 и более рангов
-  getFarmPenaltyV22 = function(targetRank){
-    if(!game) return false;
-    return (maxRank(game) - (Number(targetRank) || 1)) >= 3;
-  };
-
-  AMBUSH_REWARD = 0.25; // Засады дают 25% от часового монстра, чтобы не пролетать уровни на прокрутах
-
-  dungeonPrice = function(rank){
-    var r = Math.max(1, Math.min(20, Number(rank) || 1));
-    return Math.round(140 + 55 * (r - 1) + 6 * (r - 1) * (r - 1));
-  };
-
-  lossCap = function(rank){
-    var r = Math.max(1, Math.min(20, Number(rank) || 1));
-    var cap = (25 + 15 * r) * r;
-    if(game && game.race === 'undead') return Math.max(1, Math.round(cap * 0.5));
-    return cap;
-  };
-
-  // Базовые награды XP и золота с монстра (с учётом расовых бонусов и чар)
-  rewardBase = function(mo){
-    var rk = Math.max(1, Math.min(20, Number(mo && mo.rank) || 1));
-    var weight = {
-      goblin:1, kobold:0.9, slime:1, skeleton:1.12, wolf:1.18, ogre:1.35,
-      harpy:1.12, mimic:1.2, golem:1.4, basilisk:1.18, werewolf:1.25, cyclops:1.38,
-      bat:1.0, spider:1.1, mummy:1.1, troll:1.18, knight:1.28, lich:1.15,
-      gargoyle:1.15, necromancer:1.2, minotaur:1.3, reaper:1.25, frost:1.2, demon:1.4
-    }[mo && mo.id] || 1.1;
-
-    if(mo && String(mo.id).indexOf('boss_') === 0) weight = 1.45;
-
-    var midLevel = 5 * rk - 2;
-    var rawXp = (xpNeed(midLevel) / killsNeededForLevelV24(rk)) * weight;
-    var rawCoins = (110 + 42 * (rk - 1) + 4 * (rk - 1) * (rk - 1)) * weight;
-
-    var specialXp = (mo && mo.elite ? 1.35 : 1) * (mo && mo.boss ? 1.25 : 1);
-    var specialCoins = (mo && mo.elite ? 1.50 : 1) * (mo && mo.boss ? 1.35 : 1);
-
-    var r = (game && game.race) || 'human';
-    var eqEnch = getEquippedEnchants(game);
-    var xpMult = (r === 'human') ? 1.15 : 1.0;
-    var coinMult = ((r === 'drake') ? 1.15 : 1.0) * (1 + (eqEnch.gold || 0) / 100) * goldFactorV24(rk);
-
-    return {
-      xp: Math.max(1, Math.round(rawXp * specialXp * xpMult)),
-      coins: Math.max(1, Math.round(rawCoins * specialCoins * coinMult))
-    };
-  };
-
-  // Модификаторы урона в зависимости от освоения ранга (0..4 ур. внутри ранга) и разницы рангов
-  function getRankCombatModifiersV24(mobRank){
-    if(!game) return {atkMult: 1.0, incomingMult: 1.0};
-    var pMax = maxRank(game);
-    var mr = Math.max(1, Math.min(20, Number(mobRank) || 1));
-    var gap = pMax - mr;
-    if(gap <= 0){
-      var delta = Math.max(0, Math.min(4, (Number(game.level) || 1) - rankLevel(mr)));
-      return {
-        atkMult: 0.90 + 0.05 * delta,       // от 90% на 1-м ур. ранга до 110% на 5-м ур. ранга
-        incomingMult: 1.10 - 0.04 * delta   // от 110% входящего урона до 94%
-      };
-    }
-    if(gap === 1) return {atkMult: 1.15, incomingMult: 0.85};
-    if(gap === 2) return {atkMult: 1.30, incomingMult: 0.70};
-    return {atkMult: 1.50, incomingMult: 0.60};
-  }
-
-  var _origStrikeCoreBaseV23 = strikeCoreBase;
-  strikeCoreBase = function(f, mo, st, n){
-    var rk = (mo && mo.rank) || (f && f.r) || 1;
-    var mods = getRankCombatModifiersV24(rk);
-    var adjSt = { hp: st.hp, atk: Math.max(1, Math.round(st.atk * mods.atkMult)) };
-    var origDmg = mo.dmg;
-    mo.dmg = Math.max(1, Math.round(origDmg * mods.incomingMult));
-    try {
-      return _origStrikeCoreBaseV23(f, mo, adjSt, n);
-    } finally {
-      mo.dmg = origDmg;
-    }
-  };
-
-  // --- НОВАЯ СИСТЕМА ВЫПАДЕНИЯ ШМОТА НА 20 РАНГОВ ---
-  lootWeights = function(rank, dungeon, elite){
-    var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
-    var t = (r - 1) / 19.0;
-
-    // Необычное: пик на 5-8 рангах, затем уступает место Редкому и Эпическому
-    var uncommon = 20.0 + 18.0 * (1 - Math.abs(r - 7) / 13.0);
-    uncommon = Math.max(14.0, Number(uncommon.toFixed(2)));
-
-    // Редкое: с 2% на 1 ранге до ~35% на высоких рангах
-    var rare = 2.0 + 36.0 * Math.pow(t, 0.85);
-    if(r > 14) rare -= (r - 14) * 0.8;
-    rare = Number(rare.toFixed(2));
-
-    // Поэтапное открытие старших редкостей:
-    // Эпическое — со 2 ранга, Легендарное — с 5 ранга, Мифическое — с 8 ранга, Божественное — с 12 ранга
-    var epic = (r < 2) ? 0 : Number((0.3 + 24.7 * Math.pow((r - 2) / 18.0, 1.4)).toFixed(2));
-    var legendary = (r < 5) ? 0 : Number((0.2 + 12.8 * Math.pow((r - 5) / 15.0, 1.6)).toFixed(2));
-    var mythic = (r < 8) ? 0 : Number((0.08 + 2.12 * Math.pow((r - 8) / 12.0, 1.7)).toFixed(3));
-    var divine = (r < 12) ? 0 : Number((0.03 + 0.47 * Math.pow((r - 12) / 8.0, 1.8)).toFixed(3));
-
-    // Реликвии Боссов: с 10 ранга в Экспедиции или с Элиты
-    var relic = 0;
-    if((dungeon || elite) && r >= 10){
-      var baseRel = 0.10 + 0.25 * ((r - 10) / 10.0);
-      if(dungeon && elite) baseRel *= 1.4;
-      relic = Number(baseRel.toFixed(3));
-    }
-
-    // Пропорциональный бонус Экспедиции и Элиты (без поломки баланса на 1-3 рангах)
-    if(dungeon){
-      rare = Number((rare * 1.15).toFixed(2));
-      epic = Number((epic * 1.25).toFixed(2));
-      legendary = Number((legendary * 1.25).toFixed(2));
-      mythic = Number((mythic * 1.25).toFixed(3));
-      divine = Number((divine * 1.25).toFixed(3));
-    }
-    if(elite){
-      rare = Number((rare * 1.15).toFixed(2));
-      epic = Number((epic * 1.30).toFixed(2));
-      legendary = Number((legendary * 1.35).toFixed(2));
-      mythic = Number((mythic * 1.35).toFixed(3));
-      divine = Number((divine * 1.35).toFixed(3));
-    }
-
-    // Штраф на редкость при фарме рангов ниже своего максимума
-    var playerMax = (game && gameLoaded) ? maxRank(game) : r;
-    var gap = Math.max(0, playerMax - r);
-    if(gap > 0){
-      var pen = (gap === 1) ? 0.70 : ((gap === 2) ? 0.30 : 0.0);
-      rare = Number((rare * pen).toFixed(2));
-      epic = Number((epic * pen).toFixed(2));
-      legendary = Number((legendary * pen).toFixed(2));
-      mythic = Number((mythic * pen).toFixed(3));
-      divine = Number((divine * pen).toFixed(3));
-      relic = Number((relic * pen).toFixed(3));
-    }
-
-    var others = uncommon + rare + epic + legendary + mythic + divine + relic;
-    if(others > 97.0){
-      var sc = 97.0 / others;
-      uncommon = Number((uncommon * sc).toFixed(2));
-      rare = Number((rare * sc).toFixed(2));
-      epic = Number((epic * sc).toFixed(2));
-      legendary = Number((legendary * sc).toFixed(2));
-      mythic = Number((mythic * sc).toFixed(3));
-      divine = Number((divine * sc).toFixed(3));
-      relic = Number((relic * sc).toFixed(3));
-      others = uncommon + rare + epic + legendary + mythic + divine + relic;
-    }
-    var common = Number(Math.max(3.0, 100.0 - others).toFixed(3));
-
-    var out = [
-      ['common', common],
-      ['uncommon', uncommon],
-      ['rare', rare],
-      ['epic', epic],
-      ['legendary', legendary],
-      ['mythic', mythic],
-      ['divine', divine]
-    ];
-    if(relic > 0) out.push(['relic', relic]);
-    return out;
-  };
-
-  // Сундук Босса Экспедиции: минимальная редкость зависит от ранга (1-4: Необычная+, 5-11: Редкая+, 12-20: Эпическая+)
-  rollBossChestLootV20 = function(rank){
-    var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
-    var bossId = (v20Data.exp && v20Data.exp.bossId) ? v20Data.exp.bossId : '';
-    var playerMax = (game && gameLoaded) ? maxRank(game) : r;
-    var gap = Math.max(0, playerMax - r);
-
-    if(r >= 10 && gap <= 1){
-      var bossRelicChance = 0.25 + (r - 10) * 0.06; // от 0.25% на 10 ранге до 0.85% на 20 ранге
-      if(Math.random() * 100 < bossRelicChance){
-        var relicSetId = bossId ? BOSS_TO_RELIC_SET_V22[bossId] : '';
-        var rPool = Object.keys(ITEMS).filter(function(id){
-          return ITEMS[id].r === 'relic' && (!relicSetId || ITEMS[id].setId === relicSetId);
-        });
-        if(rPool.length) return rPool[Math.floor(Math.random() * rPool.length)];
-      }
-    }
-
-    var id = rollLoot(r, true, true, bossId);
-    if(gap <= 1 && id && ITEMS[id]){
-      var minTarget = (r >= 12) ? 'epic' : ((r >= 5) ? 'rare' : 'uncommon');
-      var order = {common:1, uncommon:2, rare:3, epic:4, legendary:5, mythic:6, divine:7, relic:8};
-      if((order[ITEMS[id].r] || 1) < order[minTarget]){
-        var upgradePool = Object.keys(ITEMS).filter(function(k){
-          var it = ITEMS[k];
-          if(!it || !it.drop || it.r !== minTarget) return false;
-          if(r < 10 && (it.slot === 'ring' || it.slot === 'amulet')) return false;
-          return (!it.cls || it.cls === 'all' || it.cls === game.cls);
-        });
-        if(upgradePool.length) id = upgradePool[Math.floor(Math.random() * upgradePool.length)];
-      }
-    }
-    return id;
-  };
-
-  // Скорректированные шансы выпадения предметов и замедленный опыт в боях на поверхности/засадах
-  fightStrike = function(n){
-    var f = game && game.fight; if(!f || !f.on) return;
-    var mo = foeOfFight(f), st = battleStats(f);
-    fightLog = strikeCore(f, mo, st, n);
-    if(f.m <= 0){
-      f.m = 0; f.on = false; f.skip = false;
-      var penalty = getFarmPenaltyV22(mo.rank);
-      var base = rewardBase(mo);
-      var factor = (f.kind === 'ambush') ? AMBUSH_REWARD : 1.0;
-      var coins = rollReward(base.coins * factor);
-      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(mo.rank) * factor);
-      var isNearDeath = !!(v20Data && v20Data.nearDeath);
-
-      if(penalty){
-        xp = isNearDeath ? 0 : Math.floor(xp * 0.1);
-        if(!isNearDeath) coins = Math.floor(coins * 0.1);
-      }
-
-      // Сниженный базовый шанс дропа: Засада 12% (22% элита), Часовой монстр 28% (50% элита)
-      var chance = (f.kind === 'ambush') ? (mo.elite ? 0.22 : 0.12) : (mo.elite ? 0.50 : 0.28);
-      var gap = Math.max(0, maxRank(game) - (mo.rank || 1));
-      if(gap === 1) chance *= 0.75;
-      else if(gap === 2) chance *= 0.35;
-
-      var id = (!penalty && Math.random() < chance) ? rollLoot(mo.rank, false, mo.elite) : null;
-      if(f.kind === 'ambush' && !penalty) maybeDropMysteryEggV23(f.kind);
-
-      game.coins += coins; if(id) game.inv.push(id); var up = gainXP(xp);
-      var penMsg = penalty ? (isNearDeath ? ' <b style="color:var(--gold)">(Выживание 1 HP: 100% золота сохранено!)</b>' : ' <b style="color:var(--red)">(Анти-фарм: лута нет, -90% наград)</b>') : '';
-      fightMsg = fightLog + ' Победа! +' + coins + ' монет · +' + xp + ' XP.' + up + (id ? ' Добыча: ' + ITEMS[id].name + ' (' + RARITY[ITEMS[id].r].name + ').' : ' Предметов не выпало.') + penMsg;
-      if(id){ toast('Выпал предмет: ' + ITEMS[id].name); $('dot').hidden = false; } else if(up) toast(up);
-      battleTitles(coins, f, true);
-      saveGame(); renderCoins(); renderProgress();
-    } else if(f.p <= 0){
-      f.p = 0; f.skip = false; loseFight(fightLog + ' Ты погиб.', true); saveGame();
-    }
-  };
-
-  // Скорректированный шанс дропа в Тайнике Экспедиции (25% вместо 35%)
-  var _origSelectExpeditionPathV24 = selectExpeditionPathV20;
-  selectExpeditionPathV20 = function(choiceIdx){
-    if(!dgOn() || merchantBusy) return;
-    var d = v20Data.exp;
-    if(d.inCombat || d.inAltar) return;
-    var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
-    var picked = choices[choiceIdx];
-    if(picked && picked.type === 'cache'){
-      d.cacheUsed = true;
-      var rank = d.r || 1;
-      var penalty = getFarmPenaltyV22(rank);
-      var isNearDeath = !!(v20Data && v20Data.nearDeath);
-      var goldGain = Math.max(5, rollReward(dungeonPrice(rank) * 0.14));
-      var dustGain = 6 + Math.floor(Math.random() * 8) + Math.floor(rank * 0.7);
-      var gap = Math.max(0, maxRank(game) - rank);
-      var cacheChance = 0.25 * (gap === 0 ? 1 : (gap === 1 ? 0.75 : 0.35));
-      var dropId = (!penalty && Math.random() < cacheChance) ? rollLoot(rank, true, false) : null;
-
-      if(penalty){
-        if(!isNearDeath) goldGain = Math.floor(goldGain * 0.1);
-        dustGain = 0; dropId = null;
-      }
-      game.coins += goldGain;
-      game.dust = Math.min(1000000, (Number(game.dust)||0) + dustGain);
-      if(dropId) game.inv.push(dropId);
-
-      d.st++;
-      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
-      saveV20Local(); saveGame(); renderCoins(); renderChar(); renderDg();
-      toast('📦 Древний Тайник открыт! +' + goldGain + ' монет' + (dustGain ? ', +' + dustGain + ' ✨ пыли' : '') + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
-      return;
-    }
-    _origSelectExpeditionPathV24(choiceIdx);
-  };
-
-  // Замедленный опыт в комнатах Экспедиции (Столкновение 30%, Элита 55%, Босс 90% + бонус 50%) и 35% шанс лута с Элиты
-  dgStrike = function(n){
-    var d = v20Data.exp;
-    if(!d || !d.on || !d.inCombat) return;
-    var mo = dgFoe(), st = battleStats(d);
-    fightLog = strikeCore(d, mo, st, n);
-
-    if(d.m <= 0){
-      d.m = 0; d.inCombat = false;
-      var penalty = getFarmPenaltyV22(d.r);
-      var isNearDeath = !!(v20Data && v20Data.nearDeath);
-      var base = rewardBase(mo);
-      var sub = findSubclassV20(v20Data.subcls);
-      var xpMult = (sub && sub.xpBonus) ? (1 + sub.xpBonus / 100) : 1;
-      var roomXpScale = (d.roomType === 'boss' || d.st + 1 >= EXP_FLOORS) ? 0.90 : ((d.roomType === 'elite') ? 0.55 : 0.30);
-      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * roomXpScale * xpFactor(d.r) * xpMult);
-      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.32 : 0.16) * goldFactorV24(d.r));
-
-      if(penalty){
-        xp = isNearDeath ? 0 : Math.floor(xp * 0.1);
-        if(!isNearDeath) coins = Math.floor(coins * 0.1);
-      }
-      game.coins += coins;
-      var up = gainXP(xp);
-      var wonState = {dealt: d.dealt, taken: d.taken};
-      var extraLootMsg = '';
-
-      if(d.roomType === 'elite' && d.st < 4 && !penalty){
-        var eliteDust = 4 + Math.floor(Math.random() * 6) + Math.floor(d.r * 0.7);
-        game.dust = Math.min(1000000, (Number(game.dust)||0) + eliteDust);
-        extraLootMsg += ' +' + eliteDust + ' ✨ пыли.';
-        var gapE = Math.max(0, maxRank(game) - (d.r || 1));
-        var eliteLootChance = 0.35 * (gapE === 0 ? 1 : (gapE === 1 ? 0.75 : 0.35));
-        if(Math.random() < eliteLootChance){
-          var eItem = rollLoot(d.r, true, true);
-          if(eItem){ game.inv.push(eItem); extraLootMsg += ' Добыча: ' + ITEMS[eItem].name + ' (' + RARITY[ITEMS[eItem].r].name + ')!'; }
-        }
-      }
-
-      var earned = ' +' + xp + ' XP · +' + coins + ' монет.' + up + extraLootMsg + (penalty ? (isNearDeath ? ' <b style="color:var(--gold)">(Выживание: 100% золота)</b>' : ' <b style="color:var(--red)">(Анти-фарм -90%)</b>') : '');
-
-      if(d.st + 1 >= EXP_FLOORS || d.roomType === 'boss'){
-        var bossItem = penalty ? null : rollBossChestLootV20(d.r);
-        var bossDust = penalty ? 0 : (12 + d.r * 3 + Math.floor(Math.random() * 10));
-        var gotPotion = penalty ? false : (Math.random() < 0.08);
-        var bonusXp = (game.level >= LEVEL_CAP || (penalty && isNearDeath)) ? 0 : rollReward(base.xp * 0.50 * xpFactor(d.r) * xpMult);
-        if(penalty && !isNearDeath) bonusXp = Math.floor(bonusXp * 0.1);
-
-        if(bossItem) game.inv.push(bossItem);
-        game.dust = Math.min(1000000, (Number(game.dust)||0) + bossDust);
-        if(gotPotion) v20Data.potions = (Number(v20Data.potions)||0) + 1;
-        var moreUp = gainXP(bonusXp);
-        v20Data.exp = null;
-        saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20();
-        fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP' + moreUp
-          + (penalty ? '' : (', +' + bossDust + ' ✨ пыли' + (bossItem ? ', предмет «' + ITEMS[bossItem].name + '» (' + RARITY[ITEMS[bossItem].r].name + ')' : '') + (gotPotion ? ' и 🧪 СЛЁЗЫ ФЕНИКСА!' : '!')));
-        fightChest = !penalty;
-        saveGame();
-      } else {
-        d.st++;
-        d.p = v20Data.nearDeath ? 1 : healBetween(d.p, d.ph);
-        d.skip = false; d.dealt = 0; d.taken = 0;
-        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
-        saveV20Local(); saveGame();
-        fightMsg = fightLog + ' Враг повержен!' + earned + ' Восстановлено 25% HP. Выбери путь на Этаже ' + (d.st + 1) + '!';
-      }
-      battleTitles(coins, wonState, true);
-      renderCoins(); renderProgress(); renderDg();
-    } else if(d.p <= 0){
-      battleTitles(0, d, false);
-      var rkLost = d.r || 1;
-      var lostGold = rkLost <= 2 ? 0 : Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rkLost));
-      game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
-      v20Data.nearDeath = true; v20Data.exp = null;
-      saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20(); renderNearDeathBannerV20(); saveGame();
-      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! ' + (rkLost <= 2 ? 'Штрафа монет нет (1–2 ранг)' : 'Потеряно ' + lostGold + ' монет') + ' и наложен статус «При смерти» (1 HP, пока не выпьешь 🧪 Слёзы Феникса).';
-      fightChest = false; renderCoins(); renderProgress(); renderDg();
-    }
-  };
-
-  // Обновление панели прогресса с отображением освоения текущего ранга и условий открытия следующего из 20 рангов
-  renderProgress = function(){
-    if(!game) return;
-    game.unlockedRank = maxRank(game);
-    game.rank = selectedRank();
-    var need = xpNeed(game.level), pct = game.level >= LEVEL_CAP ? 100 : Math.min(100, game.xp / need * 100);
-    $('levelLabel').textContent = 'Уровень ' + game.level + ' (Ранг ' + game.unlockedRank + '/20)';
-    $('xpLabel').textContent = game.level >= LEVEL_CAP ? 'Максимальный уровень' : game.xp + ' / ' + need + ' XP';
-    $('xpFill').style.width = pct + '%';
-    var bar = $('xpBar');
-    bar.setAttribute('aria-valuemax', game.level >= LEVEL_CAP ? 1 : need);
-    bar.setAttribute('aria-valuenow', game.level >= LEVEL_CAP ? 1 : game.xp);
-
-    var select = $('rankSelect'), sig = game.unlockedRank + ':' + game.rank + ':v24';
-    if(select.dataset.sig !== sig){
-      select.innerHTML = '';
-      for(var r = 1; r <= game.unlockedRank; r++){
-        var o = document.createElement('option');
-        o.value = r;
-        o.textContent = rankName(r);
-        o.selected = (r === game.rank);
-        select.appendChild(o);
-      }
-      select.dataset.sig = sig;
-    }
-    select.disabled = !gameLoaded || !!(game.fight && game.fight.on) || dgOn();
-
-    var mods = getRankCombatModifiersV24(game.rank);
-    var atkPct = Math.round(mods.atkMult * 100), incPct = Math.round(mods.incomingMult * 100);
-    var nextR = game.unlockedRank + 1;
-    var info = 'Ранг зависит строго от уровня (каждые 5 ур., всего 20 рангов). На выбранном ранге: твой урон ' + atkPct + '%, урон врагов ' + incPct + '%.';
-    if(xpFactor(game.rank) < 1 && !getFarmPenaltyV22(game.rank)){
-      info += ' Награды снижены: ' + Math.round(xpFactor(game.rank) * 100) + '% XP и ' + Math.round(goldFactorV24(game.rank) * 100) + '% монет.';
-    }
-    if(nextR <= 20){
-      info += ' Следующий ранг (' + nextR + ') откроется на ' + rankLevel(nextR) + '-м уровне.';
-    }
-    $('rankHint').innerHTML = info;
-
-    if(getFarmPenaltyV22(game.rank)){
-      if(v20Data && v20Data.nearDeath){
-        $('rankHint').innerHTML += '<br><b style="color:var(--gold)">🩸 Режим выживания («При смерти»): на низком ранге вы получаете 100% базовых монет для накопления на Слёзы Феникса (опыт и лут отключены).</b>';
-      } else {
-        $('rankHint').innerHTML += '<br><b style="color:var(--red)">⚠️ ШТРАФ АНТИ-ФАРМА (разница ≥ 3 рангов): Предметы и пыль не выпадают, а монеты и опыт урезаны на 90%.</b>';
-      }
-    }
-  };
-
-  if(gameLoaded && game){
-    game.unlockedRank = maxRank(game);
-    game.rank = selectedRank();
-    renderProgress();
-    renderChar();
-    renderEvent();
-    renderDg();
-  }
-
 })();
 </script>
 </body>
