@@ -4731,6 +4731,19 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     v20Data.activePetUuid = '';
   }
 
+  function syncV20DataToGame() {
+    if(!game) return;
+    game.subcls = v20Data.subcls;
+    game.lucky5 = v20Data.lucky5;
+    game.prestige = v20Data.prestige;
+    game.nearDeath = v20Data.nearDeath;
+    game.potions = v20Data.potions;
+    game.pets = v20Data.pets;
+    game.incubator = v20Data.incubator;
+    game.activeCompanion = v20Data.activeCompanion;
+    game.activePetUuid = v20Data.activePetUuid;
+  }
+
   function sanitizeLuckyFiveV20(arr){
     if(!Array.isArray(arr)) return [];
     var out = [], seen = {};
@@ -4767,19 +4780,6 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   function v20StorageKey(){
     return 'roulette_v20_clean_' + (sess && sess.uid ? sess.uid : 'guest');
-  }
-
-  function syncV20DataToGame() {
-    if(!game) return;
-    game.subcls = v20Data.subcls;
-    game.lucky5 = v20Data.lucky5;
-    game.prestige = v20Data.prestige;
-    game.nearDeath = v20Data.nearDeath;
-    game.potions = v20Data.potions;
-    game.pets = v20Data.pets;
-    game.incubator = v20Data.incubator;
-    game.activeCompanion = v20Data.activeCompanion;
-    game.activePetUuid = v20Data.activePetUuid;
   }
 
   function loadV20Local(){
@@ -4819,10 +4819,6 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     if(g.potions !== undefined){ if(!v20Data.potions) v20Data.potions = Number(g.potions)||0; delete g.potions; }
     if(g.fight && g.fight.trapped !== undefined) delete g.fight.trapped;
     if(g.dg) delete g.dg;
-    if(g.pets !== undefined){ if(!v20Data.pets || !v20Data.pets.length) v20Data.pets = g.pets; delete g.pets; }
-    if(g.incubator !== undefined){ if(!v20Data.incubator || !v20Data.incubator.active) v20Data.incubator = g.incubator; delete g.incubator; }
-    if(g.activeCompanion !== undefined){ if(!v20Data.activeCompanion || v20Data.activeCompanion==='miner') v20Data.activeCompanion = g.activeCompanion; delete g.activeCompanion; }
-    if(g.activePetUuid !== undefined){ if(!v20Data.activePetUuid) v20Data.activePetUuid = g.activePetUuid; delete g.activePetUuid; }
   }
 
   // --- ОПТИМИЗАЦИЯ O(1) ПУЛА ЛУТА (ВМЕСТО ПЕРЕБОРА 510 ПРЕДМЕТОВ НА КАЖДЫЙ ДРОП) ---
@@ -6108,7 +6104,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   var _origRenderCharBeforeV20 = renderChar;
   renderChar = function(){
-    if(game) 
+    
     // Оптимизация: если вкладка Персонажа скрыта, обновляем только шапку, прогресс и баннер При Смерти,
     // не перестраивая тяжёлый SVG-аватар и весь DOM инвентаря на каждый прокрут колеса!
     if(curTab !== 'char' && $('charPane') && $('charPane').hidden){
@@ -6785,7 +6781,7 @@ function startFirestoreListenersV20(){
   }
 
   // --- 11. ЧИСТОЕ СОХРАНЕНИЕ БЕЗ КОНФЛИКТА С ПРАВИЛАМИ RTDB И ШАХТЁРОМ ---
-  var _origSaveGameV19 = saveGame;
+  // --- ОПРЕДЕЛЯЕМ НОВЫЙ SAVEGAME, КОТОРЫЙ НЕ ПОРТИТ ОРИГИНАЛЬНЫЙ ОБЪЕКТ GAME ---
   saveGame = function(){
     if(!game || !sess || !gameLoaded || merchantBusy) return Promise.resolve();
     if(saving){again=true; return Promise.resolve();}
@@ -6807,7 +6803,7 @@ function startFirestoreListenersV20(){
     return token().then(function(t){
       game.v=APP_V; if(mySid) game.sid=mySid; else delete game.sid;
       
-      // CREATE A CLONE FOR FIREBASE AND STRIP NEW FIELDS SO RULES DON'T REJECT IT (401 Permission Denied)
+      // СОЗДАЕМ КЛОН ДЛЯ FIREBASE И УДАЛЯЕМ НОВЫЕ ПОЛЯ, ЧТОБЫ ПРАВИЛА (RULES) НЕ ОТКЛОНИЛИ ЗАПРОС (401 Permission Denied)
       var clone = JSON.parse(JSON.stringify(game));
       delete clone.subcls; delete clone.lucky5; delete clone.prestige; delete clone.nearDeath; delete clone.potions;
       if(clone.fight) delete clone.fight.trapped;
@@ -6890,7 +6886,7 @@ function startFirestoreListenersV20(){
     _origStartBeforeV20();
     setTimeout(function(){
       loadV20Local();
-      if(game) 
+      
       startFirestoreListenersV20();
       renderCoins();
       renderNearDeathBannerV20();
