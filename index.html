@@ -3178,7 +3178,62 @@ svg.chr{overflow:visible}
     } catch(e){}
   }
   
+  
+  window.getRaidBossNumbersV22 = function(dateKey){
+    var r = rng(hashStr('worldboss_nums_v22:' + dateKey));
+    var pool = [];
+    for(var i = 2; i <= 36; i++) pool.push(i);
+    var out = [];
+    while(out.length < 10 && pool.length){
+      var idx = Math.floor(r() * pool.length);
+      out.push(pool.splice(idx, 1)[0]);
+    }
+    out.sort(function(a, b){ return a - b; });
+    return out;
+  };
+  
+  window.handleRaidSpinV22 = function(n){
+    if(!raidActive || raidHp <= 0){
+      raidInCombat = false; updateRaidUI(); return;
+    }
+    var st = stats();
+    var rRace = (game && game.race) || 'human';
+    var bossFactor = (rRace === 'celestial') ? 1.25 : 1.0;
+    var effAtk = Math.max(1, Math.round(st.atk * bossFactor));
+    var eqEnch = getEquippedEnchants(game);
+    var dmg = 0;
+    
+    if(n === 0){
+      dmg = effAtk * 2;
+      fightLog = 'Зеро! Критический удар по Мировому Боссу: ' + dmg + ' урона!';
+    } else if(n === 1){
+      fightLog = 'Единица — промах по Мировому Боссу.';
+    } else {
+      var d = new Date();
+      var dateKey = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+      var bossNums = window.getRaidBossNumbersV22(dateKey);
+      if(bossNums.indexOf(n) !== -1){
+        fightLog = 'Выпало ' + n + '. Босс заблокировал атаку! (Опасное число)';
+      } else {
+        var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+        dmg = isCrit ? Math.round(effAtk * 1.75) : effAtk;
+        fightLog = 'Выпало ' + n + '. Удар по Боссу: ' + dmg + ' урона!' + (isCrit ? ' 💥 КРИТ!' : '');
+      }
+    }
+    if(dmg > 0){
+      dealRaidDamage(dmg);
+      var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100))) : 0;
+      if(vp && !v20Data.nearDeath) {
+         if(!game.fight) game.fight = {};
+         game.fight.p = Math.min(game.fight.ph || st.hp, (game.fight.p||st.hp) + vp);
+         fightLog += ' Вампиризм +' + vp + ' HP.';
+      }
+    }
+    renderFight();
+  };
+
   function updateRaidUI() {
+
     if($('raidHpText')) $('raidHpText').textContent = Math.floor(raidHp) + ' / ' + raidMaxHp;
     if($('raidHpFill')) $('raidHpFill').style.width = Math.max(0, Math.min(100, (raidHp/raidMaxHp)*100)) + '%';
     if($('raidMyDmg')) $('raidMyDmg').textContent = raidMyDmg;
@@ -4239,6 +4294,10 @@ svg.chr{overflow:visible}
       var s = Number(game.stones) || 0;
       if(s !== _cachedStones){ _cachedStones = s; $('stoneVal').textContent = String(s); }
     }
+    if($('potionBox')){
+      $('potionBox').hidden = hide;
+      $('potionVal').textContent = String(v20Data.potions || 0);
+    }
   };
 
   var _origRenderCharV19 = renderChar;
@@ -5022,7 +5081,32 @@ svg.chr{overflow:visible}
   };
 
   // --- БОЁВКА V20 ---
+  
+  function getActiveSetBonus(g){
+    if(!g || !g.eq) return null;
+    var eq = g.eq, countBySetId = {}, minLevelBySetId = {}, sampleItemBySetId = {};
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+      var id = eq[sl], idx = wornIndex(g, sl);
+      if(id && ITEMS[id] && ITEMS[id].setId){
+        var sId = ITEMS[id].setId;
+        countBySetId[sId] = (countBySetId[sId] || 0) + 1;
+        sampleItemBySetId[sId] = ITEMS[id];
+        var lv = idx >= 0 ? copyLevel(g, idx) : 0;
+        if(minLevelBySetId[sId] === undefined || lv < minLevelBySetId[sId]) minLevelBySetId[sId] = lv;
+      }
+    });
+    var bestSet = null, maxCount = 0;
+    for(var sId in countBySetId){
+      if(countBySetId[sId] >= 2 && countBySetId[sId] > maxCount){
+        maxCount = countBySetId[sId];
+        bestSet = {setId: sId, count: maxCount, rarity: sampleItemBySetId[sId].r, minLevel: minLevelBySetId[sId], type: 'armor'};
+      }
+    }
+    return bestSet;
+  }
+
   var currentFightTrapped = false;
+
   strikeCoreBase = function(f, mo, st, n){
     if(!Number.isFinite(f.dealt)) f.dealt = 0;
     if(!Number.isFinite(f.taken)) f.taken = 0;
@@ -7476,7 +7560,7 @@ svg.chr{overflow:visible}
     var pool = [];
     for(var i = 2; i <= 36; i++) pool.push(i);
     var out = [];
-    while(out.length < 10 && pool.length){
+    while(out.length < 5 && pool.length){
       var idx = Math.floor(r() * pool.length);
       out.push(pool.splice(idx, 1)[0]);
     }
@@ -7486,8 +7570,7 @@ svg.chr{overflow:visible}
 
   // Базовый урон способности Мирового Босса на уровне 8-го ранга сложности (~90 ед. урона)
   function getRaidBossAbilityDmgV22(){
-    var curRank = game ? (game.unlockedRank || maxRank(game)) : 8;
-    return Math.max(45, Math.round(15 * rankDMG(curRank) * 1.5));
+    return Math.max(45, Math.round(18 * rankDMG(8) * 1.25));
   }
 
   function getRaidWindowV22(){
@@ -8102,7 +8185,7 @@ svg.chr{overflow:visible}
   renderMerchant = function() {
     _origRenderMerchantV22b();
     var box = document.getElementById('merchantBody');
-    if (!box || !game) return;
+    if (!box || typeof game === 'undefined' || !game) return;
     
     if (!document.getElementById('exchangeDustBtn')) {
         var btnHTML = '<div class="card" style="border-color: #a855f7; margin-top:14px;">'
@@ -8115,18 +8198,24 @@ svg.chr{overflow:visible}
     
     var exBtn = document.getElementById('exchangeDustBtn');
     if (exBtn) {
-        var canExchange = (typeof merchantBusy !== 'undefined' ? !merchantBusy : true) && gameLoaded && (game.coins >= 1000);
+        var canExchange = (typeof merchantBusy !== 'undefined' ? !merchantBusy : true) && (typeof gameLoaded !== 'undefined' && gameLoaded) && (game.coins >= 1000);
         exBtn.disabled = !canExchange;
         exBtn.onclick = function() {
-            if (!canSell()) return;
+            if (typeof canSell === 'function' && !canSell()) return;
             if (game.coins >= 1000) {
+                merchantBusy = true;
                 game.coins -= 1000;
                 game.dust = Math.min(1000000, (Number(game.dust)||0) + 100);
-                saveGame();
-                renderCoins();
-                renderMerchant();
-                if (typeof renderEnchantPanel === 'function') renderEnchantPanel();
-                toast('Обмен успешен! Получено 100 ✨ Магической пыли.');
+                saveGame().then(function() {
+                    merchantBusy = false;
+                    renderCoins();
+                    renderMerchant();
+                    if (typeof renderEnchantPanel === 'function') renderEnchantPanel();
+                    toast('Обмен успешен! Получено 100 ✨ Магической пыли.');
+                }).catch(function() {
+                    merchantBusy = false;
+                    toast('Ошибка сети при обмене.');
+                });
             }
         };
     }
