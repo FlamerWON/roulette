@@ -673,6 +673,32 @@ svg.chr{overflow:visible}
   line-height: 1.4;
 }
 
+.hw-ball {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  transition: all 0.3s;
+}
+.hw-ball.done {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+  box-shadow: 0 0 8px rgba(31, 122, 77, 0.6);
+}
+.hw-ball.current {
+  border-color: #ff7518;
+  box-shadow: 0 0 8px rgba(255, 117, 24, 0.8);
+}
+
+
 </style>
 
 </head>
@@ -722,6 +748,7 @@ svg.chr{overflow:visible}
       <button id="tabMarket" class="tab">Рынок</button>
       <button id="tabPets" class="tab">Спутники</button>
       <button id="tabRaid" class="tab">Рейд 🌍</button>
+      <button id="tabEvents" class="tab">Ивенты 🎃</button>
     </div>
     
     <div id="toast" role="status" aria-live="polite"></div>
@@ -830,6 +857,24 @@ svg.chr{overflow:visible}
     <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
     <section class="shopPane" id="marketPane" hidden><div id="marketBody"></div></section>
     <section class="shopPane" id="petsPane" hidden><div id="petsBody"></div></section>
+    <section class="shopPane" id="eventsPane" hidden>
+      <div class="card" style="border-color:#ff7518">
+        <h3>🎃 Хэллоуинский ивент: Самайн</h3>
+        <p>Специальное событие! Выполняйте цепочку из 10 суровых испытаний по одному. Таймер ивента активен:</p>
+        <div id="halloweenTimer" style="font-family:'DM Serif Display',Georgia,serif; font-size:24px; color:#ff7518; text-align:center; margin:8px 0;">24:00:00</div>
+        
+        <div id="halloweenBalls" style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:12px 0;"></div>
+        
+        <div id="halloweenQuestBox" style="background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:14px; margin-top:10px;">
+          <h4 id="hwQuestTitle" style="margin:0 0 6px 0; font-size:18px;">Загрузка квеста...</h4>
+          <p id="hwQuestDesc" style="margin:0 0 10px 0; font-size:14px; color:var(--muted);"></p>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span id="hwQuestProg" style="font-weight:700; font-size:14px;">Прогресс: 0 / 0</span>
+            <button type="button" id="hwClaimBtn" disabled style="padding:8px 20px; font-size:14px;">Забрать награду</button>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="shopPane" id="raidPane" hidden>
       <div class="card" style="border-color:var(--gold)">
         <h3>🌍 Мировой Босс (Рейд)</h3>
@@ -2320,6 +2365,7 @@ svg.chr{overflow:visible}
     if($('marketPane')) $('marketPane').hidden=(which!=='market');
     if($('petsPane')) $('petsPane').hidden=(which!=='pets');
     if($('raidPane')) $('raidPane').hidden=(which!=='raid');
+    if($('eventsPane')) $('eventsPane').hidden=(which!=='events');
 
     $('tabGame').className='tab'+(which==='game'?' on':'');
     $('tabChar').className='tab'+(which==='char'?' on':'');
@@ -2329,6 +2375,7 @@ svg.chr{overflow:visible}
     if($('tabMarket')) $('tabMarket').className='tab'+(which==='market'?' on':'');
     if($('tabPets')) $('tabPets').className='tab'+(which==='pets'?' on':'');
     if($('tabRaid')) $('tabRaid').className='tab'+(which==='raid'?' on':'');
+    if($('tabEvents')) $('tabEvents').className='tab'+(which==='events'?' on':'');
 
     if(which==='game') draw();
     if(which==='char'){$('dot').hidden=true; renderChar();}
@@ -2336,6 +2383,7 @@ svg.chr{overflow:visible}
     if(which==='shop') renderShop();
     if(which==='dg') renderDg();
     if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
+    if(which==='events' && typeof renderHalloweenEventUI === 'function') renderHalloweenEventUI();
     
     updateFloatWheelState();
     drawMiniWheels();
@@ -2348,6 +2396,7 @@ svg.chr{overflow:visible}
   if($('tabMarket')) $('tabMarket').addEventListener('click',function(){showTab('market');});
   if($('tabPets')) $('tabPets').addEventListener('click',function(){showTab('pets');});
   if($('tabRaid')) $('tabRaid').addEventListener('click',function(){showTab('raid');});
+  if($('tabEvents')) $('tabEvents').addEventListener('click',function(){showTab('events');});
   $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
@@ -4676,6 +4725,247 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   window.hatchEggV23 = hatchEggV23;
   window.startIncubationV23 = startIncubationV23;
   window.feedPetWithItem = feedPetWithItem;
+
+
+  /* ================== ХЭЛЛОУИНСКИЙ ИВЕНТ (ВЕРСИЯ 23) ================== */
+  var HALLOWEEN_DURATION_MS = 24 * 3600 * 1000;
+  
+  function getHalloweenData(){
+    if(!game) return null;
+    if(!game.hwEvent || typeof game.hwEvent !== 'object'){
+      game.hwEvent = {
+        startTime: Date.now(),
+        questIndex: 0,
+        progress: 0,
+        claimed: []
+      };
+    }
+    return game.hwEvent;
+  }
+
+  var HALLOWEEN_QUESTS = [
+    { title: '1. Пробуждение духов', desc: 'Сделать 50 прокруток на колесе.', target: 50, rewardTxt: '150 монет', giveReward: function(){ game.coins += 150; } },
+    { title: '2. Кровавая жатва', desc: 'Выбить 10 секторов с красным цветом.', target: 10, rewardTxt: '60 ✨ пыли', giveReward: function(){ game.dust = Math.min(1000000, (Number(game.dust)||0)+60); } },
+    { title: '3. Охота на ночных тварей', desc: 'Победить 5 монстров в обычных боях.', target: 5, rewardTxt: '2 камня 🪨', giveReward: function(){ game.stones = Math.min(1000000, (Number(game.stones)||0)+2); } },
+    { title: '4. Пир упырей', desc: 'Скормить питомцу 3 предмета.', target: 3, rewardTxt: '300 монет', giveReward: function(){ game.coins += 300; } },
+    { title: '5. Магия хаоса', desc: 'Выбить чётное число 15 раз.', target: 15, rewardTxt: '120 ✨ пыли', giveReward: function(){ game.dust = Math.min(1000000, (Number(game.dust)||0)+120); } },
+    { title: '6. Кладбищенский марафон', desc: 'Успешно завершить 1 Экспедицию (все этажи).', target: 1, rewardTxt: '4 камня 🪨', giveReward: function(){ game.stones = Math.min(1000000, (Number(game.stones)||0)+4); } },
+    { title: '7. Благословение мертвецов', desc: 'Выбить сектор «Зеро» (0).', target: 1, rewardTxt: '800 монет', giveReward: function(){ game.coins += 800; } },
+    { title: '8. Проклятие полнолуния', desc: 'Сделать 150 прокруток.', target: 150, rewardTxt: '200 ✨ пыли', giveReward: function(){ game.dust = Math.min(1000000, (Number(game.dust)||0)+200); } },
+    { title: '9. Укрощение кошмаров', desc: 'Одержать победу над 1 элитным боссом.', target: 1, rewardTxt: 'Редкий предмет', giveReward: function(){ var it = rollLoot(2, false, true); if(it) game.inv.push(it); else game.coins += 500; } },
+    { title: '10. Лорд Самайн', desc: 'Завершить финальный ритуал Самайна.', target: 1, rewardTxt: 'Скин «Тыквенный кошмар» 🎃', giveReward: function(){ setWheelSkin('halloween'); toast('🎃 Эксклюзивный скин колеса «Тыквенный кошмар» разблокирован!'); } }
+  ];
+
+  function checkHalloweenProgress(type, amount){
+    var hw = getHalloweenData();
+    if(!hw || hw.questIndex >= HALLOWEEN_QUESTS.length) return;
+    var q = HALLOWEEN_QUESTS[hw.questIndex];
+    
+    // Проверка таймера 24 часа
+    if(Date.now() - hw.startTime > HALLOWEEN_DURATION_MS) return;
+
+    if(type === 'spin') {
+      if(hw.questIndex === 0 || hw.questIndex === 7) {
+        hw.progress += (amount || 1);
+      }
+    } else if(type === 'red_color') {
+      if(hw.questIndex === 1) hw.progress += 1;
+    } else if(type === 'monster_kill') {
+      if(hw.questIndex === 2) hw.progress += 1;
+    } else if(type === 'feed_pet') {
+      if(hw.questIndex === 3) hw.progress += 1;
+    } else if(type === 'even_number') {
+      if(hw.questIndex === 4) hw.progress += 1;
+    } else if(type === 'expedition_win') {
+      if(hw.questIndex === 5) hw.progress += 1;
+    } else if(type === 'zero') {
+      if(hw.questIndex === 6) hw.progress += 1;
+    } else if(type === 'elite_win') {
+      if(hw.questIndex === 8) hw.progress += 1;
+    } else if(type === 'samhain_ritual') {
+      if(hw.questIndex === 9) hw.progress += 1;
+    }
+
+    if(hw.progress >= q.target){
+      hw.progress = q.target;
+      toast('🎉 Квест ивента выполнен: «' + q.title + '»! Заберите награду во вкладке «Ивенты».');
+      var dot = $('dot'); if(dot) dot.hidden = false;
+    }
+    renderHalloweenEventUI();
+  }
+
+  function renderHalloweenEventUI(){
+    var timerEl = $('halloweenTimer'), ballsEl = $('halloweenBalls'), titleEl = $('hwQuestTitle'), descEl = $('hwQuestDesc'), progEl = $('hwQuestProg'), btnEl = $('hwClaimBtn');
+    if(!timerEl || !game) return;
+
+    var hw = getHalloweenData();
+    var timeLeft = HALLOWEEN_DURATION_MS - (Date.now() - hw.startTime);
+    if(timeLeft <= 0){
+      timerEl.textContent = 'Ивент завершён (время истекло)';
+      titleEl.textContent = 'Ивент окончен';
+      descEl.textContent = 'К сожалению, 24 часа истекли. Награды больше недоступны.';
+      progEl.textContent = '';
+      btnEl.disabled = true;
+      ballsEl.innerHTML = '';
+      return;
+    }
+
+    var hrs = Math.floor(timeLeft / 3600000), mins = Math.floor((timeLeft % 3600000) / 60000), secs = Math.floor((timeLeft % 60000) / 1000);
+    timerEl.textContent = (hrs < 10 ? '0' + hrs : hrs) + ':' + (mins < 10 ? '0' + mins : mins) + ':' + (secs < 10 ? '0' + secs : secs);
+
+    // Render balls
+    ballsEl.innerHTML = '';
+    HALLOWEEN_QUESTS.forEach(function(q, i){
+      var b = document.createElement('div');
+      b.className = 'hw-ball' + (i < hw.questIndex ? ' done' : (i === hw.questIndex ? ' current' : ''));
+      b.textContent = String(i + 1);
+      ballsEl.appendChild(b);
+    });
+
+    if(hw.questIndex >= HALLOWEEN_QUESTS.length){
+      titleEl.textContent = '🏆 Все квесты ивента пройдены!';
+      descEl.textContent = 'Поздравляем! Вы прошли хэллоуинскую цепочку и получили все награды.';
+      progEl.textContent = 'Ивент полностью завершён';
+      btnEl.textContent = 'Всё получено';
+      btnEl.disabled = true;
+      return;
+    }
+
+    var curQ = HALLOWEEN_QUESTS[hw.questIndex];
+    titleEl.textContent = curQ.title;
+    descEl.textContent = curQ.desc + ' Награда: ' + curQ.rewardTxt;
+    progEl.textContent = 'Прогресс: ' + hw.progress + ' / ' + curQ.target;
+
+    var canClaim = hw.progress >= curQ.target;
+    btnEl.disabled = !canClaim;
+    btnEl.textContent = 'Забрать награду';
+    btnEl.onclick = function(){
+      if(hw.progress < curQ.target) return;
+      curQ.giveReward();
+      hw.questIndex++;
+      hw.progress = 0;
+      saveGame();
+      renderCoins();
+      renderChar();
+      renderHalloweenEventUI();
+      toast('🎁 Награда получена! Открылся следующий этап ивента.');
+    };
+  }
+
+  setInterval(function(){
+    if(curTab === 'events') renderHalloweenEventUI();
+  }, 1000);
+
+  // Hook into game events
+  var _origOnSpinHw = onSpin;
+  onSpin = function(n){
+    _origOnSpinHw(n);
+    checkHalloweenProgress('spin', 1);
+    if(color(n) === 'red') checkHalloweenProgress('red_color', 1);
+    if(n > 0 && n % 2 === 0) checkHalloweenProgress('even_number', 1);
+    if(n === 0) checkHalloweenProgress('zero', 1);
+  };
+
+  var _origFightStrikeHw = fightStrike;
+  fightStrike = function(n){
+    var wasOn = game && game.fight && game.fight.on;
+    _origFightStrikeHw(n);
+    if(wasOn && game && game.fight && !game.fight.on && fightMsg.indexOf('Победа!') > -1){
+      checkHalloweenProgress('monster_kill', 1);
+      var mo = foeOfFight(game.fight || {});
+      if(mo && mo.elite) checkHalloweenProgress('elite_win', 1);
+    }
+  };
+
+  var _origDgStrikeHw = dgStrike;
+  dgStrike = function(n){
+    var wasOn = dgOn();
+    _origDgStrikeHw(n);
+    if(wasOn && !dgOn() && fightMsg.indexOf('ЭКСПЕДИЦИЯ ПРОЙДЕНА') > -1){
+      checkHalloweenProgress('expedition_win', 1);
+    }
+  };
+
+  var _origFeedPetHw = feedPetWithItem;
+  feedPetWithItem = function(u, idx){
+    _origFeedPetHw(u, idx);
+    checkHalloweenProgress('feed_pet', 1);
+  };
+
+  // Halloween Wheel Skin support
+  var _origCurrentWheelSkinHw = currentWheelSkin;
+  currentWheelSkin = function(){
+    if(hasHalloweenSkin()) {
+      try { if(localStorage.getItem('roulette_wheel_skin_'+sess.uid) === 'halloween') return 'halloween'; } catch(e){}
+    }
+    return _origCurrentWheelSkinHw();
+  };
+
+  function hasHalloweenSkin(){
+    if(!sess) return false;
+    try { if(localStorage.getItem('roulette_hw_skin_unlocked_'+sess.uid) === '1') return true; } catch(e){}
+    return !!(game && game.wheelSkin === 'halloween');
+  }
+
+  var _origSetWheelSkinHw = setWheelSkin;
+  setWheelSkin = function(skin){
+    if(skin === 'halloween' && sess){
+      try {
+        localStorage.setItem('roulette_hw_skin_unlocked_'+sess.uid, '1');
+        localStorage.setItem('roulette_wheel_skin_'+sess.uid, 'halloween');
+      } catch(e){}
+      renderWheelSkinBox(); draw();
+      return;
+    }
+    _origSetWheelSkinHw(skin);
+  };
+
+  var _origRenderInvSkinsHw = renderInvSkins;
+  renderInvSkins = function(){
+    _origRenderInvSkinsHw();
+    var box = $('invSkins'); if(!box || !game) return;
+    if(hasHalloweenSkin()){
+      var curSk = currentWheelSkin();
+      var b = document.createElement('button'); b.type='button';
+      var on = (curSk === 'halloween');
+      b.className = 'icell' + (on ? ' on' : '');
+      b.style.borderColor = '#ff7518';
+      b.title = 'Тыквенный кошмар (Хэллоуинский скин)';
+      var cv = document.createElement('canvas'); cv.width = 64; cv.height = 64; cv.style.width = '32px'; cv.style.height = '32px'; cv.style.borderRadius = '50%';
+      b.appendChild(cv);
+      var stxt = document.createElement('span'); stxt.textContent = 'Тыквенный кошмар'; b.appendChild(stxt);
+      var ssub = document.createElement('span'); ssub.className = 'enhancedBonus'; ssub.textContent = on ? 'Надет' : 'Надеть'; b.appendChild(ssub);
+      b.onclick = function(){
+        setWheelSkin('halloween');
+        if(game){ game.wheelSkin = 'halloween'; saveGame(); }
+        renderInvSkins(); drawMiniWheels();
+        toast('Установлен хэллоуинский скин колеса!');
+      };
+      box.appendChild(b);
+      drawWheelOnCanvas(cv, 'halloween');
+    }
+  };
+
+  var _origDrawWheelOnCanvasHw = drawWheelOnCanvas;
+  drawWheelOnCanvas = function(cv, skinName){
+    if(skinName === 'halloween'){
+      if(!cv) return;
+      var c = cv.getContext('2d'), s = cv.width, r = s/2;
+      var pal = FILL_HALLOWEEN;
+      c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,s,s); c.translate(r,r);
+      for(var i=0; i<N; i++){
+        var a = -Math.PI/2 + i*SEG + rot;
+        c.beginPath(); c.moveTo(0,0); c.arc(0,0,r, a-SEG/2, a+SEG/2); c.closePath();
+        c.fillStyle = pal[color(ORDER[i])]; c.fill();
+      }
+      c.beginPath(); c.arc(0,0, r*0.48, 0, TAU);
+      c.fillStyle = '#2b0f14'; c.fill();
+      c.lineWidth = 2; c.strokeStyle = '#ff7518'; c.stroke();
+      return;
+    }
+    _origDrawWheelOnCanvasHw(cv, skinName);
+  };
+  /* ================== КОНЕЦ ХЭЛЛОУИНСКОГО ИВЕНТА ================== */
 
 /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
