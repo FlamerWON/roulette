@@ -2323,12 +2323,18 @@ svg.chr{overflow:visible}
     if(which==='shop') renderShop();
     if(which==='dg') renderDg();
     if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
+    
+    var btnPets = document.getElementById('tabPets');
+    if(btnPets) btnPets.className = 'tab' + (which === 'pets' ? ' on' : '');
+    var panePets = document.getElementById('petsPane');
+    if(panePets) panePets.hidden = (which !== 'pets');
   }
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
   $('tabBoard').addEventListener('click',function(){showTab('board');});
   $('tabShop').addEventListener('click',function(){showTab('shop');});
   $('tabDg').addEventListener('click',function(){showTab('dg');});
+  var btnPets = document.getElementById('tabPets'); if(btnPets) btnPets.addEventListener('click',function(){showTab('pets');});
   $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
