@@ -1393,7 +1393,7 @@ svg.chr{overflow:visible}
       var write=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(plan.next)});
       if(!write.ok)throw Error(write.status===412?'Другая операция уже изменила сохранение':'Запись не подтверждена');
       if(sess!==session)return false;
-      game=plan.next;gameLoaded=true;again=false;merchantBusy=false;
+      game=plan.next;syncV20DataToGame();gameLoaded=true;again=false;merchantBusy=false;
       renderCoins();renderChar();renderMerchant();renderForge();renderEvent();toast(plan.message);return true;
     }catch(e){
       // Never re-roll or blindly repeat a possibly committed enhancement.
@@ -1554,14 +1554,28 @@ svg.chr{overflow:visible}
   }
   var lastDustEarned=0;
   function applySale(g,plan){var next=JSON.parse(JSON.stringify(g));var dustGain=0;Object.keys(plan.indices).forEach(function(i){var id=g.inv[Number(i)],it=ITEMS[id];if(it)dustGain+=(DUST_YIELD[it.r]||2);});filterInventory(next,function(id,i){return !plan.indices[i];});next.coins+=plan.total;next.dust=Math.min(1000000,(Number(next.dust)||0)+dustGain);lastDustEarned=dustGain;return next;}
+  function cleanGameForRTDB(src){
+    if(!src || typeof src !== 'object') return src;
+    var c = JSON.parse(JSON.stringify(src));
+    delete c.subcls; delete c.lucky5; delete c.prestige; delete c.nearDeath; delete c.potions;
+    delete c.pets; delete c.incubator; delete c.activeCompanion; delete c.activePetUuid;
+    delete c.hwEvent; delete c.dg;
+    if(c.fight && typeof c.fight === 'object'){
+      delete c.fight.trapped;
+      delete c.fight.startTime;
+      delete c.fight.usedPots;
+    }
+    return c;
+  }
   function canonicalGame(v){
+    var stripped = cleanGameForRTDB(v);
     function clean(x){
       if(x===null||typeof x==='undefined')return undefined;
       if(Array.isArray(x)){var a={};x.forEach(function(v,i){var c=clean(v);if(typeof c!=='undefined')a[i]=c;});return Object.keys(a).length?a:undefined;}
       if(typeof x==='object'){var o={};Object.keys(x).sort().forEach(function(k){var c=clean(x[k]);if(typeof c!=='undefined')o[k]=c;});return Object.keys(o).length?o:undefined;}
       return x;
     }
-    return JSON.stringify(clean(v));
+    return JSON.stringify(clean(stripped));
   }
   function canSell(){return !!(game&&gameLoaded&&sess&&mySid&&!merchantBusy&&!saving&&!opening&&!spinning&&!(game.fight&&game.fight.on)&&!dgOn());}
   function setFavorite(id){
@@ -2200,8 +2214,8 @@ svg.chr{overflow:visible}
   // если бой не закончен, а час уже сменился, это считается поражением
   function checkAbandon(){
  var f=game&&game.fight;if(!f||!f.on||merchantBusy)return;
- if(!f.startTime) f.startTime = Date.now();
- var expired=f.kind==='ambush'?Date.now()>=f.deadline:(Date.now() >= f.startTime + 2 * 3600000);
+ delete f.startTime; delete f.usedPots;
+ var expired=f.kind==='ambush'?Date.now()>=f.deadline:((slotNow() - (Number(f.s)||slotNow())) >= 4);
  if(expired){loseFight('Бой не был закончен, монстр победил.');saveGame();renderFight();renderEvent();}
 }
   $('evBtn').addEventListener('click',function(){
@@ -3622,7 +3636,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       var write=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json','if-match':etag},body:JSON.stringify(plan.next)});
       if(!write.ok)throw Error(write.status===412?'Другая запись уже изменила прогресс':'Нет подтверждения записи');
       if(sess!==session)return false;
-      game=plan.next;gameLoaded=true;again=false;merchantBusy=false;
+      game=plan.next;syncV20DataToGame();gameLoaded=true;again=false;merchantBusy=false;
       renderCoins();renderChar();renderMinerPanel();renderMiner();minerGains(game.miner);
       if(action==='claim')toast('Твой первый шахтёр: '+MINER_NAMES[game.miner.lastRole]+'. Он уже активен.');
       if(action==='hire')toast(game.miner.lastDuplicate?'Повтор роли «'+MINER_NAMES[game.miner.lastRole]+'». Возвращено 1000 из 1500 монет. Потрачено 500.':'Открыта роль «'+MINER_NAMES[game.miner.lastRole]+'». Активировать её можно в магазине.');
@@ -7095,12 +7109,7 @@ function startFirestoreListenersV20(){
       game.v=APP_V; if(mySid) game.sid=mySid; else delete game.sid;
       
       // СОЗДАЕМ КЛОН ДЛЯ FIREBASE И УДАЛЯЕМ НОВЫЕ ПОЛЯ, ЧТОБЫ ПРАВИЛА (RULES) НЕ ОТКЛОНИЛИ ЗАПРОС (401 Permission Denied)
-      var clone = JSON.parse(JSON.stringify(game));
-      delete clone.subcls; delete clone.lucky5; delete clone.prestige; delete clone.nearDeath; delete clone.potions;
-      if(clone.fight) delete clone.fight.trapped;
-      delete clone.dg;
-      delete clone.pets; delete clone.incubator; delete clone.activeCompanion; delete clone.activePetUuid;
-      delete clone.hwEvent; // <-- Важно! Удаляем данные ивента перед RTDB
+      var clone = cleanGameForRTDB(game);
       
       return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(clone)});
     }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
@@ -7527,23 +7536,37 @@ function startFirestoreListenersV20(){
       setTimeout(function(){ if(ft.parentNode) ft.remove(); }, 1200);
     }
 
+    var regularFightUsedPots = 0;
+    var regularFightSlotTracker = -1;
+    function getFightUsedPots(isExp, f){
+      if(isExp) return Number(f && f.usedPots) || 0;
+      var curKey = f ? (f.s + ':' + f.m + ':' + f.ph) : '';
+      if(regularFightSlotTracker !== curKey){
+        regularFightSlotTracker = curKey;
+        regularFightUsedPots = 0;
+      }
+      return regularFightUsedPots;
+    }
     function useCombatPotionV21(){
       var isExp = dgOn();
       var f = isExp ? v20Data.exp : (game && game.fight);
       var inCombat = isExp ? (f && f.on && f.inCombat) : (f && f.on);
       if(!inCombat || v21Data.pots.heal <= 0) return;
-      if(!f.usedPots) f.usedPots = 0;
-      if(f.usedPots >= 2){ toast('🚫 Лимит исчерпан: можно выпить максимум 2 зелья лечения за Экспедицию!'); return; }
+      var usedNow = getFightUsedPots(isExp, f);
+      if(usedNow >= 2){ toast('🚫 Лимит исчерпан: можно выпить максимум 2 зелья лечения за бой/Экспедицию!'); return; }
       if(v20Data.nearDeath){ toast('🩸 Зелье лечения не снимает статус «При смерти» (нужна Слеза Феникса)!'); return; }
       if(f.p >= f.ph){ toast('❤️ Здоровье уже полное!'); return; }
 
-      v21Data.pots.heal--; f.usedPots++;
-      saveV21Local(); if(isExp) saveV20Local();
+      v21Data.pots.heal--;
+      if(isExp){ f.usedPots = usedNow + 1; saveV20Local(); }
+      else { regularFightUsedPots = usedNow + 1; }
+      saveV21Local();
 
       var hAmt = Math.max(1, Math.floor(f.ph * 0.20));
       f.p = Math.min(f.ph, f.p + hAmt);
       spawnFloatingText('+' + hAmt + ' HP', true, 'heal');
-      fightLog = '🧪 Выпито Зелье лечения (+' + hAmt + ' HP, ' + f.usedPots + '/2). ' + fightLog;
+      fightLog = '🧪 Выпито Зелье лечения (+' + hAmt + ' HP, ' + (usedNow + 1) + '/2). ' + fightLog;
+      saveGame();
       renderFight();
     }
 
@@ -7565,7 +7588,7 @@ function startFirestoreListenersV20(){
       belt.style.display = inCombat ? 'flex' : 'none';
       
       if(inCombat){
-        var used = Number(f.usedPots) || 0;
+        var used = getFightUsedPots(isExp, f);
         var btn = $('btnPotHeal'), lbl = $('qtyPotHeal');
         if(lbl) lbl.textContent = v21Data.pots.heal + ' шт. (Лимит ' + used + '/2)';
         if(btn) btn.disabled = (v21Data.pots.heal <= 0 || (f.p >= f.ph && !v20Data.nearDeath) || used >= 2);
