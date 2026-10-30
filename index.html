@@ -678,9 +678,13 @@ svg.chr{overflow:visible}
 </head>
 <body>
 
-<div id="coinBox" class="coinBox" hidden aria-label="Монеты"></div>
-<div id="dustBox" class="dustBox" hidden title="Магическая пыль от Скупщика">✨ <span id="dustVal">0</span></div>
-<div id="stoneBox" class="stoneBox" hidden title="Камни заточки (Кузница)">🪨 <span id="stoneVal">0</span></div>
+<div id="v20TopBarWrap" class="v20TopBarWrap">
+  <div id="coinBox" class="coinBox" hidden aria-label="Монеты"></div>
+  <div id="dustBox" class="dustBox" hidden title="Магическая пыль">✨ <span id="dustVal">0</span></div>
+  <div id="stoneBox" class="stoneBox" hidden title="Камни заточки">🪨 <span id="stoneVal">0</span></div>
+  <button type="button" id="potionBox" class="potionBox" hidden title="Зелья восстановления">🧪 <span id="potionVal">0</span></button>
+  <button id="newsOpen" class="ghost" hidden title="Что нового">?</button>
+</div>
 <div id="floatWheelBox" class="floatWheel" aria-live="polite">
   <canvas id="floatWheelCanvas" width="92" height="92"></canvas>
   <div class="finfo"><b>Колесо</b><span id="floatWheelTxt">Готово</span></div>
@@ -718,7 +722,7 @@ svg.chr{overflow:visible}
       <button id="tabMarket" class="tab">Рынок</button>
       <button id="tabRaid" class="tab">Рейд 🌍</button>
     </div>
-    <button id="newsOpen" class="ghost" hidden title="Что нового" aria-label="Что нового">?</button>
+    
     <div id="toast" role="status" aria-live="polite"></div>
     <div class="eventBar" id="eventBar">
       <div><div class="evT" id="evT"></div><div class="evS" id="evS"></div></div>
@@ -1396,10 +1400,10 @@ svg.chr{overflow:visible}
     'Переключатель под персонажем скрывает головной убор без потери характеристик.'
   ]}];
   function hasPioneerSkin(){
-    if(!sess)return false;
-    try{if(localStorage.getItem('roulette_pioneer_unlocked_'+sess.uid)==='1')return true;}catch(e){}
-    return !!(game&&Number(game.releaseSeen||0)>=17);
-  }
+  if(!sess)return false;
+  try{if(localStorage.getItem('roulette_pioneer_unlocked_'+sess.uid)==='1')return true;}catch(e){}
+  return !!(game && game.wheelSkin === 'pioneer');
+}
   function currentWheelSkin(){
     if(!hasPioneerSkin()||!sess)return 'default';
     try{return localStorage.getItem('roulette_wheel_skin_'+sess.uid)==='pioneer'?'pioneer':'default';}catch(e){return 'default';}
@@ -1477,7 +1481,8 @@ svg.chr{overflow:visible}
   var mShield = 0;
   if(setBonus && setBonus.count >= 2 && setBonus.type !== 'relic' && game.cls === 'mage') {
       var rVal = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[setBonus.rarity] || 0;
-      if (rVal > 0) mShield = Math.floor(st.hp * (rVal + 5) / 100);
+      var baseHp = 100 + 4 * ((game.level || 1) - 1) + (typeof CLASS_BASE !== 'undefined' && CLASS_BASE[game.cls] ? CLASS_BASE[game.cls].hp : 0);
+      if (rVal > 0) mShield = Math.floor(baseHp * (rVal + 5) / 100);
   }
   game.fight={s:slotNow(),kind:'ambush',mid:mid,elite:elite,deadline:dl,r:rank,m:mo.hp,p:st.hp + mShield,ph:st.hp + mShield,pa:st.atk,buddy:minerActive(game),on:true,skip:false,dealt:0,taken:0};
 
@@ -2067,7 +2072,8 @@ svg.chr{overflow:visible}
   var mShield = 0;
   if(setBonus && setBonus.count >= 2 && setBonus.type !== 'relic' && game.cls === 'mage') {
       var rVal = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[setBonus.rarity] || 0;
-      if (rVal > 0) mShield = Math.floor(st.hp * (rVal + 5) / 100);
+      var baseHp = 100 + 4 * ((game.level || 1) - 1) + (typeof CLASS_BASE !== 'undefined' && CLASS_BASE[game.cls] ? CLASS_BASE[game.cls].hp : 0);
+      if (rVal > 0) mShield = Math.floor(baseHp * (rVal + 5) / 100);
   }
   game.eventSlot=slot;game.fight={s:slot,kind:'event',m:mo.hp,p:st.hp + mShield,on:true,skip:false,r:rank,ph:st.hp + mShield,pa:st.atk,buddy:minerActive(game),dealt:0,taken:0};
 
@@ -2075,10 +2081,10 @@ svg.chr{overflow:visible}
  saveGame();renderProgress();renderFight();renderEvent();
 }
   function loseFight(prefix,died){
- var rank=game.fight.r||1,lost=Math.min(Math.floor((Number(game.coins)||0)*.1),lossCap(rank));
+ var rank=game.fight.r||1,lost=rank<=2?0:Math.min(Math.floor((Number(game.coins)||0)*.1),lossCap(rank));
  if(died)battleTitles(0,game.fight,false);
  game.coins-=lost;game.fight.on=false;game.fight.skip=false;
- fightMsg=prefix+' Потеряно '+lost+' монет (10% кошелька, не больше '+lossCap(rank)+'). Опыт сохранён.';
+ fightMsg=prefix+(rank<=2?' Штрафа за смерть на 1-2 рангах нет.':' Потеряно '+lost+' монет (10% кошелька, не больше '+lossCap(rank)+').')+' Опыт сохранён.';
  renderCoins();renderProgress();
 }
   function fleeFight(){
@@ -4203,17 +4209,17 @@ svg.chr{overflow:visible}
   };
   var _origLoseFightV19 = loseFight;
   loseFight = function(prefix, died){
-    if(game && game.race === 'undead'){
-      var rank = game.fight.r || 1;
-      var lost = Math.min(Math.floor((Number(game.coins)||0) * 0.05), lossCap(rank));
-      if(died) battleTitles(0, game.fight, false);
-      game.coins -= lost; game.fight.on = false; game.fight.skip = false;
-      fightMsg = prefix + ' 💀 Пассивка Нежити «Холод могилы» снизила штраф вдвое: потеряно ' + lost + ' монет. Опыт сохранён.';
-      renderCoins(); renderProgress();
-      return;
-    }
-    _origLoseFightV19(prefix, died);
-  };
+  if(game && game.race === 'undead'){
+    var rank = game.fight.r || 1;
+    var lost = rank<=2?0:Math.min(Math.floor((Number(game.coins)||0) * 0.05), lossCap(rank));
+    if(died) battleTitles(0, game.fight, false);
+    game.coins -= lost; game.fight.on = false; game.fight.skip = false;
+    fightMsg = prefix + (rank<=2?' Штрафа за смерть на 1-2 рангах нет.':' 💀 Пассивка Нежити «Холод могилы» снизила штраф вдвое: потеряно ' + lost + ' монет.') + ' Опыт сохранён.';
+    renderCoins(); renderProgress();
+    return;
+  }
+  _origLoseFightV19(prefix, died);
+};
 
   // Человек (+10% пыли) и Небожитель (+20% пыли) у Скупщика
   var _origApplySaleV19 = applySale;
@@ -5339,7 +5345,8 @@ svg.chr{overflow:visible}
   var mShield = 0;
   if(setBonus && setBonus.count >= 2 && setBonus.type !== 'relic' && game.cls === 'mage') {
       var rVal = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[setBonus.rarity] || 0;
-      if (rVal > 0) mShield = Math.floor(st.hp * (rVal + 5) / 100);
+      var baseHp = 100 + 4 * ((game.level || 1) - 1) + (typeof CLASS_BASE !== 'undefined' && CLASS_BASE[game.cls] ? CLASS_BASE[game.cls].hp : 0);
+      if (rVal > 0) mShield = Math.floor(baseHp * (rVal + 5) / 100);
   }
   var startHp = v20Data.nearDeath ? 1 : st.hp + mShield;
 
@@ -5572,7 +5579,7 @@ svg.chr{overflow:visible}
     } else if(d.p <= 0){
       battleTitles(0, d, false);
       var rankLost = d.r || 1;
-      var lostGold = Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rankLost));
+      var lostGold = rankLost<=2?0:Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rankLost));
       game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
       v20Data.nearDeath = true;
       v20Data.exp = null;
@@ -5580,7 +5587,7 @@ svg.chr{overflow:visible}
       saveV20ToFirestore();
       updateLockedTabsV20();
       renderNearDeathBannerV20();
-      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! Потеряно ' + lostGold + ' монет и наложен статус «При смерти» (1 HP во всех боях, пока не выпьешь 🧪 Слёзы Феникса).';
+      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! ' + (rankLost<=2?'Штрафа монет нет (защита новичков)':'Потеряно ' + lostGold + ' монет') + ' и наложен статус «При смерти» (1 HP во всех боях, пока не выпьешь 🧪 Слёзы Феникса).';
       fightChest = false;
       renderCoins(); renderProgress(); renderDg();
       toast('💀 Гибель в Экспедиции! Наложен статус «При смерти» (1 HP).');
@@ -5925,74 +5932,2322 @@ svg.chr{overflow:visible}
     if(marketUnsubV20){ try{ marketUnsubV20(); }catch(e){} marketUnsubV20 = null; }
   }
 
-  function saveV20ToFirestore() {
+  function saveV20ToFirestore(){
     var db = initFirestoreV20();
     if(!db || !sess || !sess.uid || !game) return;
     sanitizeV20Data();
+    db.collection('players').doc(String(sess.uid)).set({
+      name: nick || sess.name || 'Игрок',
+      level: game.level || 1,
+      subcls: v20Data.subcls || '',
+      lucky5: Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [],
+      prestige: Number(v20Data.prestige) || 0,
+      nearDeath: Boolean(v20Data.nearDeath),
+      potions: Number(v20Data.potions) || 0,
+      lastSeen: Date.now()
+    }, {merge: true}).catch(function(){});
+  }
+
+  // Подписка на лоты Рынка запускается ТОЛЬКО когда открыта вкладка «Рынок» (экономит 90% квоты Firestore)
+  function ensureMarketListenerV20(active){
+    var db = initFirestoreV20();
+    if(!db) return;
+    if(!active){
+      if(marketUnsubV20){ try{ marketUnsubV20(); }catch(e){} marketUnsubV20 = null; }
+      return;
+    }
+    if(marketUnsubV20) return;
+    marketUnsubV20 = db.collection('market_listings')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .onSnapshot(function(snap){
+        marketListingsV20 = [];
+        snap.forEach(function(doc){
+          marketListingsV20.push(Object.assign({id: doc.id}, doc.data()));
+        });
+        if(curTab === 'market') renderMarketV20();
+      }, function(){});
+  }
+
+  // Запрос статусов онлайна с кэшем 30 секунд (только при просмотре таблицы Лидеров, без круглосуточного onSnapshot)
+  function refreshOnlinePresenceMapV20(){
+    var db = initFirestoreV20();
+    if(!db || Date.now() - lastPresenceFetchAtV20 < 30000) return Promise.resolve();
+    lastPresenceFetchAtV20 = Date.now();
+    return db.collection('players').limit(100).get().then(function(snap){
+      snap.forEach(function(doc){
+        var data = doc.data() || {};
+        onlinePlayersMapV20[doc.id] = Number(data.lastSeen) || 0;
+      });
+    }).catch(function(){});
+  }
+
+  
+function startFirestoreListenersV20(){
+    var db = initFirestoreV20();
+    if(!db || !sess || !sess.uid) return;
+
+    var myRef = db.collection('players').doc(String(sess.uid));
     
-    // Безопасное сохранение данных V20 в отдельную коллекцию players
-    db.collection('players').doc(sess.uid).set({
-      v20Data: v20Data
-    }, { merge: true }).catch(function(e) {
-      console.warn('Ошибка сохранения в Firestore:', e);
+    // СНАЧАЛА ЧИТАЕМ ИЗ БАЗЫ, ЧТОБЫ НЕ ЗАТЕРЕТЬ ДАННЫЕ С НОВОГО УСТРОЙСТВА!
+    myRef.get().then(function(doc){
+      if(doc.exists){
+        var d = doc.data() || {};
+        if(typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
+        if(Array.isArray(d.lucky5) && d.lucky5.length) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
+        if(d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
+        if(typeof d.nearDeath === 'boolean') v20Data.nearDeath = d.nearDeath;
+        if(typeof d.potions === 'number') v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        saveV20Local();
+      } else {
+        // Если профиля в Firestore ещё нет, сохраняем текущий локальный (или пустой)
+        saveV20ToFirestore();
+      }
+      
+      // ПОСЛЕ ПЕРВОГО ЧТЕНИЯ ЗАПУСКАЕМ СЛУШАТЕЛЬ
+      if(sellerGoldUnsubV20) sellerGoldUnsubV20();
+      sellerGoldUnsubV20 = myRef.onSnapshot(function(docSnap){
+        if(!docSnap.exists || !game) return;
+        var d = docSnap.data() || {};
+        if(!v20Data.subcls && typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
+        if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
+        if(!v20Data.prestige && d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
+        if(typeof d.nearDeath === 'boolean' && d.nearDeath) v20Data.nearDeath = true;
+        if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        saveV20Local();
+
+        if(d.pendingMarketGold && d.pendingMarketGold > 0 && !claimingMarketGoldBusy){
+          claimingMarketGoldBusy = true;
+          db.runTransaction(async function(tx){
+            var pRef = db.collection('players').doc(String(sess.uid));
+            var pSnap = await tx.get(pRef);
+            if(!pSnap.exists) return;
+            var pending = pSnap.data().pendingMarketGold || 0;
+            if(pending <= 0) return;
+            tx.update(pRef, {pendingMarketGold: firebase.firestore.FieldValue.increment(-pending)});
+            return pending;
+          }).then(function(claimed){
+            if(claimed > 0){
+              game.coins += claimed;
+              saveGame();
+              renderCoins();
+              toast('💰 Скупщик продал твои лоты! Получено: ' + claimed + ' монет.');
+            }
+            claimingMarketGoldBusy = false;
+          }).catch(function(e){
+            claimingMarketGoldBusy = false;
+          });
+        }
+      });
+    }); // <-- ВОТ ЗДЕСЬ НЕ ХВАТАЛО ЗАКРЫВАЮЩИХ СКОБОК
+  }
+
+  setInterval(function(){
+    if(sess && sess.uid && game && !document.hidden){
+      saveV20ToFirestore();
+    }
+  }, 60000);
+
+  function isPlayerOnlineV20(playerUid){
+    if(sess && String(playerUid) === String(sess.uid)) return true;
+    var ts = onlinePlayersMapV20[String(playerUid)] || 0;
+    return (Date.now() - ts) < 150000;
+  }
+
+  loadBoard = function(){
+    var box = $('board');
+    refreshOnlinePresenceMapV20();
+    token().then(function(t){
+      return fetch(DB_URL + '/users.json?orderBy=%22game%2F' + boardMode + '%22&limitToLast=20&auth=' + encodeURIComponent(t));
+    }).then(function(r){ return r.json(); }).then(function(obj){
+      if(!obj || obj.error){
+        box.innerHTML = '';
+        var e = document.createElement('div');
+        e.className = 'bempty';
+        e.textContent = 'Не удалось загрузить рейтинг. Проверь правила в Firebase.';
+        box.appendChild(e);
+        return;
+      }
+      var rows = Object.keys(obj).map(function(k){
+        var u = obj[k] || {}, g = u.game || {};
+        return {
+          uid: k,
+          name: u.name || 'Игрок',
+          spins: Number(g.spins)||0,
+          coins: Number(g.coins)||0,
+          title: g.title,
+          race: g.race,
+          cls: g.cls,
+          gear: gearFromGame(g),
+          cw: Number(g.cowardUntil)||0,
+          red: Number(g.red)||0,
+          black: Number(g.black)||0,
+          zero: Number(g.zero)||0,
+          wheelSkin: g.wheelSkin
+        };
+      }).filter(function(x){ return x[boardMode] > 0; }).sort(function(x,y){ return y[boardMode] - x[boardMode]; });
+      box.innerHTML = '';
+      if(!rows.length){
+        var e2 = document.createElement('div');
+        e2.className = 'bempty';
+        e2.textContent = boardMode === 'coins' ? 'Пока ни у кого нет монет.' : 'Пока никто не крутил колесо.';
+        box.appendChild(e2);
+        return;
+      }
+      rows.forEach(function(x, i){
+        var row = document.createElement('div');
+        row.className = 'brow' + ((sess && x.uid === sess.uid) ? ' me' : '');
+        row.setAttribute('data-uid', x.uid);
+        var rk = document.createElement('div'); rk.className = 'rk' + (i < 3 ? ' top' : ''); rk.textContent = String(i + 1);
+        var av = document.createElement('span'); av.className = 'av'; av.innerHTML = avatar(x.uid, x.title, x.race, x.gear || x.cls);
+        var nm = document.createElement('div'); nm.className = 'bn';
+        var online = isPlayerOnlineV20(x.uid);
+        var dot = document.createElement('span');
+        dot.className = 'online-dot ' + (online ? 'is-online' : 'is-offline');
+        dot.title = online ? 'Сейчас онлайн' : 'Не в сети';
+        nm.appendChild(dot);
+        nm.appendChild(document.createTextNode(nameOf(x.name, x.cw)));
+        var tn = titleName(x.title);
+        if(tn){ var tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = tn; nm.appendChild(tt); }
+        var sc = document.createElement('div'); sc.className = 'bs'; sc.appendChild(document.createTextNode(String(boardMode === 'coins' ? x.coins : x.spins) + ' '));
+        var sm = document.createElement('small'); sm.textContent = boardMode === 'coins' ? 'монет' : 'прокр.'; sc.appendChild(sm);
+        row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
+        row.setAttribute('role', 'button'); row.tabIndex = 0; row.title = 'Открыть профиль';
+        row.addEventListener('click', function(){ showProfile(x); });
+        row.addEventListener('keydown', function(e){ if(e.key === 'Enter') showProfile(x); });
+        box.appendChild(row);
+      });
+    }).catch(function(){});
+  };
+
+  // --- ЛОГИКА ОНЛАЙН-РЫНКА (С ЗАЩИТОЙ ОТ XSS И ДАБЛ-КЛИК ДЮПОВ) ---
+  var selectedMarketInvIdx = 0;
+
+  async function listGearOnMarketV20(invIdx, priceCoins){
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
+    var db = initFirestoreV20();
+    if(!db){ toast('Ошибка: Firestore не подключён.'); return; }
+    var price = Math.floor(Number(priceCoins) || 0);
+    if(price <= 0 || price > 10000000){
+      toast('Укажите корректную цену (от 1 до 10 000 000 монет)!');
+      return;
+    }
+    var itemId = game.inv[invIdx];
+    var it = ITEMS[itemId];
+    if(!it){ toast('Предмет не найден в инвентаре.'); return; }
+    if(invIdx === wornIndex(game, it.slot)){
+      toast('Сначала снимите предмет перед выставлением на Рынок!');
+      return;
+    }
+    if(game.favorites && game.favorites[itemId]){
+      toast('Предмет в избранном (★). Снимите звезду у Скупщика для продажи.');
+      return;
+    }
+    var sameCount = 0;
+    game.inv.forEach(function(k){ if(k === itemId) sameCount++; });
+    if(isStarterItem(itemId) && sameCount <= 1){
+      toast('Последний стартовый предмет класса продать нельзя.');
+      return;
+    }
+
+    var enhLv = copyLevel(game, invIdx);
+    var enchCode = (game.enchants && game.enchants[invIdx]) ? game.enchants[invIdx] : '';
+    var itemPayload = {
+      id: itemId,
+      name: it.name,
+      r: it.r,
+      cls: it.cls || '',
+      slot: it.slot || '',
+      enhanceLv: enhLv,
+      enchantCode: enchCode
+    };
+
+    marketBusyV20 = true;
+    filterInventory(game, function(id, i){ return i !== invIdx; });
+    saveGame(); renderChar(); renderInv(); renderMarketV20();
+
+    try{
+      await db.collection('market_listings').add({
+        sellerId: String(sess.uid),
+        sellerName: String(nick || sess.name || 'Игрок').slice(0, 20),
+        price: price,
+        isPotion: false,
+        item: itemPayload,
+        createdAt: Date.now()
+      });
+      toast('✅ Лот «' + it.name + (enhLv ? ' +' + enhLv : '') + '» выставлен на Рынок за ' + price + ' монет!');
+    }catch(e){
+      var newIdx = game.inv.length;
+      game.inv.push(itemId);
+      if(enhLv > 0) game.enhance[newIdx] = enhLv;
+      if(enchCode) game.enchants[newIdx] = enchCode;
+      saveGame(); renderChar();
+      toast('❌ Не удалось выставить лот на Рынок. Проверьте правила Firestore (Rules).');
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
+    }
+  }
+
+  async function listPotionOnMarketV20(priceCoins){
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
+    var db = initFirestoreV20();
+    if(!db){ toast('Ошибка: Firestore не подключён.'); return; }
+    if((v20Data.potions || 0) <= 0){
+      toast('🧪 У вас нет Зелья восстановления для продажи!');
+      return;
+    }
+    var price = Math.floor(Number(priceCoins) || 0);
+    if(price <= 0 || price > 10000000){
+      toast('Укажите корректную цену больше 0 монет!');
+      return;
+    }
+    marketBusyV20 = true;
+    v20Data.potions -= 1;
+    saveV20Local();
+    saveV20ToFirestore();
+    renderCoins(); renderMarketV20();
+
+    try{
+      await db.collection('market_listings').add({
+        sellerId: String(sess.uid),
+        sellerName: String(nick || sess.name || 'Игрок').slice(0, 20),
+        price: price,
+        isPotion: true,
+        item: {id:'recovery_potion', name:'🧪 Слёзы Феникса', r:'epic'},
+        createdAt: Date.now()
+      });
+      toast('✅ Слёзы Феникса выставлено на Рынок за ' + price + ' монет!');
+    }catch(e){
+      v20Data.potions += 1;
+      saveV20Local();
+      renderCoins();
+      toast('❌ Ошибка сети при выставлении зелья на Рынок.');
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
+    }
+  }
+
+  async function buyOrCancelMarketLotV20(lotId){
+    if(marketBusyV20 || !canUseTownServicesV20() || !canSell()) return;
+    var db = initFirestoreV20();
+    if(!db) return;
+    var lot = marketListingsV20.find(function(x){ return x.id === lotId; });
+    if(!lot){ toast('Этот лот уже куплен или снят с продажи.'); return; }
+    var lotPrice = Math.floor(Number(lot.price) || 0);
+    if(lotPrice <= 0 || lotPrice > 10000000){ toast('Некорректная цена лота.'); return; }
+    var isMine = sess && String(lot.sellerId) === String(sess.uid);
+    if(!isMine && (game.coins || 0) < lotPrice){
+      toast('🪙 Не хватает монет для покупки этого лота!');
+      return;
+    }
+
+    marketBusyV20 = true;
+    renderMarketV20();
+    var ref = db.collection('market_listings').doc(lotId);
+    try{
+      await db.runTransaction(async function(tx){
+        var snap = await tx.get(ref);
+        if(!snap.exists) throw new Error('Лот уже был куплен другим игроком!');
+        tx.delete(ref);
+      });
+
+      if(!isMine){
+        game.coins -= lotPrice;
+      }
+
+      if(lot.isPotion){
+        v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        saveV20Local();
+        saveV20ToFirestore();
+      } else if(lot.item && lot.item.id && ITEMS[lot.item.id]){
+        var idx = game.inv.length;
+        game.inv.push(lot.item.id);
+        var safeLv = Math.max(0, Math.min(10, Math.floor(Number(lot.item.enhanceLv) || 0)));
+        if(safeLv > 0){
+          if(!game.enhance) game.enhance = {};
+          game.enhance[idx] = safeLv;
+        }
+        if(lot.item.enchantCode && parseEnchant(String(lot.item.enchantCode))){
+          if(!game.enchants) game.enchants = {};
+          game.enchants[idx] = String(lot.item.enchantCode);
+        }
+      }
+
+      if(!isMine){
+        var payout = Math.max(1, Math.floor(lotPrice * 0.95));
+        await db.collection('players').doc(String(lot.sellerId)).set({
+          pendingMarketGold: firebase.firestore.FieldValue.increment(payout)
+        }, {merge: true});
+        var boughtName = lot.isPotion ? '🧪 Слёзы Феникса' : (lot.item && ITEMS[lot.item.id] ? ITEMS[lot.item.id].name : 'Предмет');
+        toast('🎉 Вы купили «' + boughtName + '» за ' + lotPrice + ' монет!');
+      } else {
+        toast('📦 Вы сняли свой лот с продажи, предмет возвращён в инвентарь.');
+      }
+
+      saveGame(); renderCoins(); renderChar(); renderInv();
+    }catch(e){
+      toast('⚠️ ' + (e && e.message ? e.message : 'Не удалось завершить сделку.'));
+    }finally{
+      marketBusyV20 = false;
+      renderMarketV20();
+    }
+  }
+
+  function renderMarketV20(){
+    var box = $('marketBody');
+    if(!box || !game) return;
+    var blocked = marketBusyV20 || isInActiveCombatV20() || isInExpeditionV20() || !canSell();
+
+    var sellableIndices = [];
+    (game.inv || []).forEach(function(id, i){
+      var it = ITEMS[id];
+      if(!it) return;
+      if(i === wornIndex(game, it.slot)) return;
+      if(game.favorites && game.favorites[id]) return;
+      sellableIndices.push(i);
+    });
+    if(sellableIndices.indexOf(selectedMarketInvIdx) < 0){
+      selectedMarketInvIdx = sellableIndices.length ? sellableIndices[0] : -1;
+    }
+
+    var h = '<div class="card"><h3>🏪 Онлайн-рынок игроков (Firestore)</h3>'
+      + '<p>Продавай заточенное и зачарованное снаряжение или редкие Зелья восстановления другим игрокам за монеты! Комиссия рынка при успешной продаже — 5%.</p>';
+
+    if(sellableIndices.length){
+      h += '<label for="marketItemSelect" style="font-size:13px;color:var(--muted)">Выбери предмет из инвентаря (ненадетый)</label>'
+        + '<select id="marketItemSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--card);color:var(--ink);border:1px solid var(--line)"' + (blocked ? ' disabled' : '') + '>';
+      sellableIndices.forEach(function(i){
+        var ench = (game.enchants && game.enchants[i]) ? parseEnchant(game.enchants[i]) : null;
+        h += '<option value="' + i + '"' + (i === selectedMarketInvIdx ? ' selected' : '') + '>'
+          + escapeHtmlV20(copyName(game, i)) + ' (' + RARITY[ITEMS[game.inv[i]].r].name + ')'
+          + (ench ? ' · ✨ ' + escapeHtmlV20(ench.name) + ' +' + ench.val + escapeHtmlV20(ench.unit) : '')
+          + '</option>';
+      });
+      h += '</select>'
+        + '<div class="tavernRow" style="margin-top:6px">'
+        + '<input type="number" id="marketPriceInput" min="10" max="10000000" value="300" placeholder="Цена в монетах" style="flex:1">'
+        + '<button type="button" id="btnListGearMarket"' + (blocked ? ' disabled' : '') + '>Выставить предмет</button>'
+        + '</div>';
+    } else {
+      h += '<p style="font-size:13px;color:var(--muted)">Нет свободных предметов для выставления (снимите вещь в Персонаже или выбейте новый лут).</p>';
+    }
+
+    h += '<div style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+      + '<span>🧪 Зелья восстановления в запасе: <b>' + (v20Data.potions||0) + ' шт.</b></span>'
+      + '<div style="display:flex;gap:6px;align-items:center">'
+      + '<input type="number" id="marketPotionPrice" min="100" max="10000000" value="3000" style="width:110px;padding:6px 10px">'
+      + '<button type="button" id="btnListPotionMarket" class="ghost"' + (blocked || (v20Data.potions||0) <= 0 ? ' disabled' : '') + '>Продать зелье 🧪</button>'
+      + '</div></div></div>';
+
+    h += '<div class="card"><h3>📦 Активные лоты (' + marketListingsV20.length + ')</h3>';
+    if(!marketListingsV20.length){
+      h += '<p style="text-align:center;color:var(--muted);padding:16px 0">На рынке пока нет активных товаров. Стань первым продавцом!</p>';
+    } else {
+      h += '<div class="market-grid">';
+      marketListingsV20.forEach(function(lot){
+        var isMine = sess && String(lot.sellerId) === String(sess.uid);
+        var itObj = lot.item || {};
+        var baseIt = (!lot.isPotion && itObj.id && ITEMS[itObj.id]) ? ITEMS[itObj.id] : null;
+        if(!lot.isPotion && !baseIt) return; // Игнорируем повреждённые/поддельные лоты
+        var rarKey = baseIt ? baseIt.r : 'epic';
+        var rarInfo = RARITY[rarKey] || RARITY.common;
+        var lv = Math.max(0, Math.min(10, Math.floor(Number(itObj.enhanceLv) || 0)));
+        var ench = itObj.enchantCode ? parseEnchant(String(itObj.enchantCode)) : null;
+        var stLine = '';
+        var safeTitle = lot.isPotion ? '🧪 Слёзы Феникса' : baseIt.name;
+        if(lot.isPotion){
+          stLine = 'Снимает статус «При смерти» (1 HP)';
+        } else if(baseIt){
+          var est = enhancedStats(baseIt, lv);
+          var parts = [];
+          if(est.hp) parts.push('HP +' + est.hp);
+          if(est.atk) parts.push('Урон +' + est.atk);
+          if(baseIt.cls && CLASSES[baseIt.cls]) parts.push(CLASSES[baseIt.cls].name);
+          stLine = parts.join(' · ');
+        }
+        var safePrice = Math.max(1, Math.floor(Number(lot.price) || 1));
+
+        h += '<div class="market-card" style="border-color:' + rarInfo.color + '">'
+          + '<div>'
+          + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
+          + '<strong>' + escapeHtmlV20(safeTitle) + (lv ? ' +' + lv : '') + '</strong>'
+          + rarPill(rarKey)
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + escapeHtmlV20(stLine) + '</div>'
+          + (ench ? '<div style="margin-top:4px"><span class="affixBadge" style="background:' + ench.rar.color + '">✨ ' + escapeHtmlV20(ench.name) + ' +' + ench.val + escapeHtmlV20(ench.unit) + '</span></div>' : '')
+          + '<div style="font-size:11px;color:var(--muted);margin-top:6px">Продавец: <b>' + escapeHtmlV20(String(lot.sellerName || 'Игрок').slice(0, 20)) + '</b></div>'
+          + '</div>'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">'
+          + '<span class="price">' + coinSvg() + safePrice + '</span>'
+          + '<button type="button" data-market-buy="' + escapeHtmlV20(lot.id) + '" style="padding:6px 14px;font-size:13px"' + (blocked || (!isMine && (game.coins||0) < safePrice) ? ' disabled' : '') + '>'
+          + (isMine ? 'Снять' : 'Купить')
+          + '</button>'
+          + '</div></div>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+    box.innerHTML = h;
+
+    var sel = $('marketItemSelect');
+    if(sel) sel.onchange = function(){ selectedMarketInvIdx = Number(this.value); };
+    var btnG = $('btnListGearMarket');
+    if(btnG) btnG.onclick = function(){
+      var p = Number($('marketPriceInput') && $('marketPriceInput').value) || 0;
+      listGearOnMarketV20(selectedMarketInvIdx, p);
+    };
+    var btnP = $('btnListPotionMarket');
+    if(btnP) btnP.onclick = function(){
+      var p = Number($('marketPotionPrice') && $('marketPotionPrice').value) || 0;
+      listPotionOnMarketV20(p);
+    };
+    box.querySelectorAll('[data-market-buy]').forEach(function(b){
+      b.onclick = function(){ buyOrCancelMarketLotV20(this.getAttribute('data-market-buy')); };
     });
   }
 
-  // Перехватчик вращения для Рейдов и Таверны
-  function onSpin(n){
-    if(!game||!gameLoaded||merchantBusy) return;
-    var wasInCombat = !!(game.fight && game.fight.on) || dgOn();
-    
-    resolveTavernBet(n); 
-    
-    var prev = game.last, c = color(n);
-    game.spins++; game.coins = (Number(game.coins)||0) + 1; game[c==='green'?'zero':c]++;
-    game.blackRun = (c === 'black') ? game.blackRun + 1 : 0;
-    game.last = n;
-    game.cols = (String(game.cols||'') + (c==='red'?'r':(c==='black'?'b':'g'))).slice(-10);
-    
-    var arr = game.nums ? String(game.nums).split(',').map(Number) : [];
-    arr.push(n); arr = arr.slice(-3); game.nums = arr.join(',');
-    
-    var sn = String(game.seen||''); while(sn.length < 37) sn += '0';
-    game.seen = sn.slice(0,n) + '1' + sn.slice(n+1,37);
-    
-    if(typeof raidInCombat !== 'undefined' && raidInCombat && typeof raidActive !== 'undefined' && raidActive && !dgOn() && !(game.fight && game.fight.on)){
-       if(typeof handleRaidSpinV22 === 'function') handleRaidSpinV22(n); 
-       wasInCombat = true;
-    } else {
-       if(typeof fightStrike === 'function') fightStrike(n); 
-       if(typeof dgStrike === 'function') dgStrike(n);
+  // --- 11. ЧИСТОЕ СОХРАНЕНИЕ БЕЗ КОНФЛИКТА С ПРАВИЛАМИ RTDB И ШАХТЁРОМ ---
+  var _origSaveGameV19 = saveGame;
+  saveGame = function(){
+    if(!game || !sess || !gameLoaded || merchantBusy) return Promise.resolve();
+    stripV20FromGameObj(game);
+    saveV20Local();
+    return _origSaveGameV19();
+  };
+
+  // --- 12. ОБНОВЛЕНИЕ ШАПКИ, ВЫХОДА ИЗ АККАУНТА И ЖЁСТКАЯ ИЗОЛЯЦИЯ ВКЛАДКИ РЫНКА ---
+  var _cachedPotionsV20 = -1;
+  var _origRenderCoinsBeforeV20 = renderCoins;
+  renderCoins = function(){
+    _origRenderCoinsBeforeV20();
+    if(!game) return;
+    var hide = $('coinBox').hidden;
+    var pBox = $('potionBox');
+    if(pBox){
+      pBox.hidden = hide;
+      var p = Number(v20Data.potions) || 0;
+      if(p !== _cachedPotionsV20){
+        _cachedPotionsV20 = p;
+        var pv = $('potionVal');
+        if(pv) pv.textContent = String(p);
+      }
+      pBox.style.borderColor = v20Data.nearDeath ? '#ef4444' : 'var(--line)';
     }
-    
-    if(!wasInCombat && typeof maybeAmbush === 'function') maybeAmbush();
-    
-    var titleIds=[];
-    if(typeof TITLES !== 'undefined') {
-      TITLES.forEach(function(t){ if(!game.earned[t.id] && t.check(n, prev, game, arr)) titleIds.push(t.id); });
-      if(typeof awardTitles === 'function') awardTitles(titleIds);
+    renderNearDeathBannerV20();
+  };
+
+  var _origShowTabBeforeV20 = showTab;
+  showTab = function(which){
+    if((which === 'market' || which === 'shop') && !canUseTownServicesV20()){
+      return;
     }
-    
-    renderCoins(); if(typeof renderFight === 'function') renderFight(); if(typeof renderEvent === 'function') renderEvent(); 
-    if(typeof saveGame === 'function') saveGame(); renderChar();
+    _origShowTabBeforeV20(which);
+    var mp = $('marketPane');
+    if(mp){
+      mp.hidden = (which !== 'market');
+      mp.style.display = (which === 'market') ? 'flex' : 'none';
+    }
+    if($('shopPane')){
+      $('shopPane').hidden = (which !== 'shop');
+      $('shopPane').style.display = (which === 'shop') ? 'flex' : 'none';
+    }
+    if($('tabMarket')) $('tabMarket').className = 'tab' + (which === 'market' ? ' on' : '');
+    updateLockedTabsV20();
+    ensureMarketListenerV20(which === 'market');
+    if(which === 'market') renderMarketV20();
+  };
+
+  if($('tabMarket')){
+    $('tabMarket').addEventListener('click', function(){ showTab('market'); });
+  }
+  if($('marketPane')){
+    $('marketPane').hidden = true;
+    $('marketPane').style.display = 'none';
   }
 
-  // ИНИЦИАЛИЗАЦИЯ (СТАРТ)
-  window.addEventListener('load', function(){
+  // Перехват кнопки выхода для полной очистки состояния V20 и отписки от Firestore
+  var logoutBtnEl = $('logout');
+  if(logoutBtnEl){
+    logoutBtnEl.addEventListener('click', function(){
+      if(merchantBusy) return;
+      stopFirestoreListenersV20();
+      resetV20Data();
+      _cachedPotionsV20 = -1;
+      if($('potionBox')) $('potionBox').hidden = true;
+      var banner = $('v20NearDeathBanner');
+      if(banner) banner.remove();
+    });
+  }
+
+  var _origStartBeforeV20 = start;
+  start = function(){
     loadV20Local();
-    if(typeof setupUnifiedTopBarV20 === 'function') setupUnifiedTopBarV20();
+    _origStartBeforeV20();
+    setTimeout(function(){
+      loadV20Local();
+      if(game) stripV20FromGameObj(game);
+      startFirestoreListenersV20();
+      renderCoins();
+      renderNearDeathBannerV20();
+    }, 600);
+  };
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 20 ================== */
+
+
+/* ================== МОДУЛЬ UPDATE 21 (ФИНАЛ: АЛХИМИЯ, АНТИ-АБУЗ, СЕТЫ, ФИКСЫ) ================== */
+  APP_V = 22;
+  RELEASE_ID = 22;
+  
+  if(!window.v21PatchApplied){
+    window.v21PatchApplied = true;
+
+    RARITY['relic'] = {name:'Реликтовая', color:'#06b6d4'};
+    SELL_PRICES['relic'] = 15000;
+    DUST_YIELD['relic'] = 1000;
+
+    var v21Data = { pots: {heal: 0} };
+    function loadV21Local(){
+      try{
+        var raw = localStorage.getItem('roulette_v21_' + (sess && sess.uid ? sess.uid : 'guest'));
+        if(raw){
+          var p = JSON.parse(raw);
+          if(p && p.pots) v21Data.pots.heal = Math.max(0, Math.min(10000, Math.floor(Number(p.pots.heal)||0)));
+        }
+      }catch(e){}
+    }
+    function saveV21Local(){
+      try{ localStorage.setItem('roulette_v21_' + (sess && sess.uid ? sess.uid : 'guest'), JSON.stringify(v21Data)); }catch(e){}
+    }
+
+    var _origStartBeforeV21 = start;
+    start = function(){
+      loadV21Local();
+      _origStartBeforeV21();
+    };
+
+    var _origLogoutBeforeV21 = logout;
+    logout = function(){
+      v21Data.pots = {heal: 0};
+      _origLogoutBeforeV21();
+    };
+
+    var SET_NAMES_MAP_V21 = {
+      'set_nosferatu': 'Сет Кровавого Графа', 'set_colossus': 'Сет Древнего Механизма', 'set_xalatah': 'Сет Вестника Пустоты',
+      'set_pyro': 'Сет Истинного Пламени', 'set_malganis': 'Сет Короля Личей', 'set_arachna': 'Сет Матери Роя'
+    };
+    var BOSS_TO_RELIC_SET_V21 = {
+      'boss_nosferatu': 'set_nosferatu', 'boss_colossus': 'set_colossus', 'boss_xalatah': 'set_xalatah',
+      'boss_pyrodragon': 'set_pyro', 'boss_malganis': 'set_malganis', 'boss_arachna': 'set_arachna'
+    };
+
+    var V21_NEW_ITEMS = [
+      {id:'ring_gambler', name:'Кольцо Игрока', slot:'ring', r:'uncommon', hp:15, atk:1, desc:'+5% бонус монет, +3% шанс крита.'},
+      {id:'amulet_vampire', name:'Амулет Вампира', slot:'amulet', r:'epic', hp:30, atk:5, desc:'Вампиризм +10%. Если HP ниже 30%, весь вампиризм удваивается!'},
+      {id:'ring_reflection', name:'Перстень Отражения', slot:'ring', r:'epic', hp:25, atk:4, desc:'Шипы +15%. Враг получает 5% своего урона обратно.'},
+      {id:'amulet_truth', name:'Око Истины', slot:'amulet', r:'legendary', hp:45, atk:8, desc:'Снижает получаемый урон на 40% при выпадении Единицы.'},
+      {id:'ring_executioner', name:'Знак Палача', slot:'ring', r:'mythic', hp:60, atk:12, desc:'Если у монстра <15% HP, удар наносит х3 урона и добивает.'},
+      {id:'amulet_titan', name:'Сердце Титана', slot:'amulet', r:'divine', hp:200, atk:15, desc:'Лечение в Экспедиции между комнатами увеличено до 40%.'},
+      {id:'boss_head_nosferatu', name:'Корона Кровавого Графа', slot:'slotHead', r:'relic', hp:140, atk:26, setId:'set_nosferatu'},
+      {id:'boss_body_nosferatu', name:'Мантия Кровавого Графа', slot:'slotBody', r:'relic', hp:220, atk:24, setId:'set_nosferatu'},
+      {id:'boss_arms_nosferatu', name:'Коготь Кровавого Графа', slot:'slotArms', r:'relic', hp:45, atk:90, setId:'set_nosferatu'},
+      {id:'boss_legs_nosferatu', name:'Поступь Кровавого Графа', slot:'slotLegs', r:'relic', hp:100, atk:20, setId:'set_nosferatu'},
+      {id:'boss_head_colossus', name:'Визор Древнего Механизма', slot:'slotHead', r:'relic', hp:160, atk:20, setId:'set_colossus'},
+      {id:'boss_body_colossus', name:'Каркас Древнего Механизма', slot:'slotBody', r:'relic', hp:250, atk:18, setId:'set_colossus'},
+      {id:'boss_arms_colossus', name:'Молот Древнего Механизма', slot:'slotArms', r:'relic', hp:60, atk:75, setId:'set_colossus'},
+      {id:'boss_legs_colossus', name:'Поршни Древнего Механизма', slot:'slotLegs', r:'relic', hp:120, atk:15, setId:'set_colossus'},
+      {id:'boss_head_xalatah', name:'Ореол Вестника Пустоты', slot:'slotHead', r:'relic', hp:110, atk:30, setId:'set_xalatah'},
+      {id:'boss_body_xalatah', name:'Покров Вестника Пустоты', slot:'slotBody', r:'relic', hp:190, atk:28, setId:'set_xalatah'},
+      {id:'boss_arms_xalatah', name:'Сфера Вестника Пустоты', slot:'slotArms', r:'relic', hp:40, atk:95, setId:'set_xalatah'},
+      {id:'boss_legs_xalatah', name:'Тень Вестника Пустоты', slot:'slotLegs', r:'relic', hp:85, atk:25, setId:'set_xalatah'},
+      {id:'boss_head_pyro', name:'Шлем Истинного Пламени', slot:'slotHead', r:'relic', hp:125, atk:28, setId:'set_pyro'},
+      {id:'boss_body_pyro', name:'Чешуя Истинного Пламени', slot:'slotBody', r:'relic', hp:200, atk:25, setId:'set_pyro'},
+      {id:'boss_arms_pyro', name:'Клык Истинного Пламени', slot:'slotArms', r:'relic', hp:40, atk:95, setId:'set_pyro'},
+      {id:'boss_legs_pyro', name:'Коготь Истинного Пламени', slot:'slotLegs', r:'relic', hp:90, atk:22, setId:'set_pyro'},
+      {id:'boss_head_malganis', name:'Венец Короля Личей', slot:'slotHead', r:'relic', hp:130, atk:27, setId:'set_malganis'},
+      {id:'boss_body_malganis', name:'Саван Короля Личей', slot:'slotBody', r:'relic', hp:210, atk:25, setId:'set_malganis'},
+      {id:'boss_arms_malganis', name:'Жезл Короля Личей', slot:'slotArms', r:'relic', hp:40, atk:92, setId:'set_malganis'},
+      {id:'boss_legs_malganis', name:'Походка Короля Личей', slot:'slotLegs', r:'relic', hp:90, atk:23, setId:'set_malganis'},
+      {id:'boss_head_arachna', name:'Глаза Матери Роя', slot:'slotHead', r:'relic', hp:135, atk:26, setId:'set_arachna'},
+      {id:'boss_body_arachna', name:'Хитин Матери Роя', slot:'slotBody', r:'relic', hp:215, atk:23, setId:'set_arachna'},
+      {id:'boss_arms_arachna', name:'Жало Матери Роя', slot:'slotArms', r:'relic', hp:42, atk:93, setId:'set_arachna'},
+      {id:'boss_legs_arachna', name:'Лапы Матери Роя', slot:'slotLegs', r:'relic', hp:95, atk:21, setId:'set_arachna'}
+    ];
+
+    V21_NEW_ITEMS.forEach(function(a){
+      var realSlot = a.slot.replace('slot', '').toLowerCase();
+      var it = {name: a.name, slot: realSlot, r: a.r, hp: a.hp, atk: a.atk, drop: (a.r !== 'relic'), visualStyle: 'none', vb: '0 0 40 40', draw: ''};
+      if(a.desc) it.desc = a.desc;
+      if(a.setId) it.setId = a.setId;
+      if(a.r === 'relic') it.cls = 'all'; else if(a.cls) it.cls = a.cls;
+      var c1 = RARITY[a.r] ? RARITY[a.r].color : '#06b6d4';
+      if(realSlot === 'ring') it.draw = '<circle cx="20" cy="20" r="14" fill="none" stroke="#eab308" stroke-width="4"/><circle cx="20" cy="6" r="5" fill="'+c1+'" stroke="#000" stroke-width="1.5"/>';
+      else if(realSlot === 'amulet') it.draw = '<path d="M10 10 Q20 35 30 10" fill="none" stroke="#d4d4d8" stroke-width="3"/><polygon points="20,15 28,30 20,38 12,30" fill="'+c1+'" stroke="#000" stroke-width="1.5"/>';
+      else it.draw = '<rect x="6" y="6" width="28" height="28" rx="6" fill="#0f172a" stroke="'+c1+'" stroke-width="2.5"/><polygon points="20,10 28,20 20,30 12,20" fill="'+c1+'"/>';
+      ITEMS[a.id] = it;
+    });
+
+    gearFromGame = function(g){
+      var out = {}, eq = (g && g.eq) || {}, base = (g && !g.gm) ? gearOf(g.cls) : {};
+      ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+        var id = eq[sl];
+        var valid = id && ITEMS[id] && ITEMS[id].slot === sl && (!ITEMS[id].cls || ITEMS[id].cls === 'all' || ITEMS[id].cls === g.cls);
+        var finalId = valid ? id : base[sl];
+        if(finalId) out[sl] = finalId;
+      });
+      return out;
+    };
+
+    filterInventory = function(g, keep){
+      var inv = [], levels = {}, ench = {}, copies = {}, mapping = {};
+      (g.inv || []).forEach(function(id, i){
+        if(keep(id, i)){
+          var j = inv.length; mapping[i] = j; inv.push(id);
+          var n = copyLevel(g, i); if(n) levels[j] = n;
+          if(g.enchants && g.enchants[i]) ench[j] = g.enchants[i];
+        }
+      });
+      g.enchants = ench;
+      ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+        var i = wornIndex(g, sl);
+        if(Object.prototype.hasOwnProperty.call(mapping, i)) copies[sl] = mapping[i];
+      });
+      g.inv = inv; g.enhance = levels; g.eqCopies = copies;
+    };
+
+    var LOOT_POOL_BY_RARITY = {}, LOOT_POOL_BY_RARITY_AND_CLASS = {};
+    function buildLootPoolsCacheV21(){
+      LOOT_POOL_BY_RARITY = {}; LOOT_POOL_BY_RARITY_AND_CLASS = {};
+      Object.keys(ITEMS).forEach(function(id){
+        var it = ITEMS[id];
+        if(!it) return;
+        if(it.r === 'relic'){
+          if(!LOOT_POOL_BY_RARITY['relic']) LOOT_POOL_BY_RARITY['relic'] = [];
+          LOOT_POOL_BY_RARITY['relic'].push(id); return;
+        }
+        if(!it.drop) return;
+        if(!LOOT_POOL_BY_RARITY[it.r]) LOOT_POOL_BY_RARITY[it.r] = [];
+        LOOT_POOL_BY_RARITY[it.r].push(id);
+        var classesToAssign = (!it.cls || it.cls === 'all') ? Object.keys(CLASSES) : [it.cls];
+        classesToAssign.forEach(function(c){
+          var key = it.r + ':' + c;
+          if(!LOOT_POOL_BY_RARITY_AND_CLASS[key]) LOOT_POOL_BY_RARITY_AND_CLASS[key] = [];
+          LOOT_POOL_BY_RARITY_AND_CLASS[key].push(id);
+        });
+      });
+    }
+    buildLootPoolsCacheV21();
+
+    var _origLootWeightsV21 = lootWeights;
+    lootWeights = function(rank, dungeon, elite){
+      var vOriginal = _origLootWeightsV21(rank, dungeon, elite);
+      var playerMax = (game && gameLoaded) ? maxRank(game) : rank;
+      var rankGap = Math.max(0, playerMax - rank);
+      if(rankGap > 0){
+        var penaltyMult = (rankGap === 1) ? 0.70 : ((rankGap === 2) ? 0.30 : 0);
+        for(var i = 2; i < vOriginal.length; i++){
+          var removed = vOriginal[i][1] * (1 - penaltyMult);
+          vOriginal[i][1] = Number((vOriginal[i][1] - removed).toFixed(3));
+          vOriginal[0][1] += removed;
+        }
+      }
+      var relicChance = 0;
+      if(dungeon && elite && rank >= 10){
+        relicChance = (rank >= 15) ? 2.0 : 1.5;
+        if(rankGap > 0) relicChance = Number((relicChance * (rankGap === 1 ? 0.70 : (rankGap === 2 ? 0.30 : 0))).toFixed(3));
+        var takeCommon = Math.min(vOriginal[0][1], relicChance);
+        vOriginal[0][1] -= takeCommon;
+      }
+      vOriginal.push(['relic', relicChance]);
+      return vOriginal;
+    };
+
+    rollLoot = function(rank, dungeon, elite, specificBossId){
+      var w = lootWeights(rank, dungeon, elite), total = 0;
+      for(var i = 0; i < w.length; i++) total += w[i][1];
+      var x = Math.random() * (total || 100), acc = 0, r = 'common';
+      for(var j = 0; j < w.length; j++){ acc += w[j][1]; if(x <= acc){ r = w[j][0]; break; } }
+      if(r === 'relic'){
+        var relicSetId = specificBossId ? BOSS_TO_RELIC_SET_V21[specificBossId] : '';
+        var relicPool = (LOOT_POOL_BY_RARITY['relic'] || []).filter(function(id){ return !relicSetId || ITEMS[id].setId === relicSetId; });
+        if(relicPool.length) return relicPool[Math.floor(Math.random() * relicPool.length)];
+        r = 'divine';
+      }
+      var targetCls = '';
+      if(dungeon && game && game.cls){
+        if(Math.random() < 0.5) targetCls = game.cls;
+        else {
+          var others = Object.keys(CLASSES).filter(function(c){ return c !== game.cls; });
+          targetCls = others[Math.floor(Math.random() * others.length)];
+        }
+      }
+      var pool = (dungeon && targetCls) ? (LOOT_POOL_BY_RARITY_AND_CLASS[r + ':' + targetCls] || []) : (LOOT_POOL_BY_RARITY[r] || []);
+      if(!pool.length) pool = LOOT_POOL_BY_RARITY[r] || LOOT_POOL_BY_RARITY['common'] || [];
+      return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+    };
+
+    rollBossChestLootV20 = function(rank){
+      var bossId = (v20Data.exp && v20Data.exp.bossId) ? v20Data.exp.bossId : '';
+      var playerMax = (game && gameLoaded) ? maxRank(game) : rank;
+      var rankGap = Math.max(0, playerMax - rank);
+      var id = rollLoot(rank, true, true, bossId);
+      if(rankGap <= 1 && id && ITEMS[id] && (ITEMS[id].r === 'common' || ITEMS[id].r === 'uncommon')){
+        var rarePool = LOOT_POOL_BY_RARITY_AND_CLASS['rare:' + game.cls] || LOOT_POOL_BY_RARITY['rare'] || [];
+        if(rarePool.length) id = rarePool[Math.floor(Math.random() * rarePool.length)];
+      }
+      return id;
+    };
+
+    // ФИКС ИМЕННЫХ СЕТОВ И КЛАССОВОЙ БРОНИ
+    window.getActiveSetBonus = getActiveSetBonus;
+    function getActiveSetBonus(g){
+      if(!g || !g.eq) return null;
+      var eq = g.eq, countBySetId = {}, minLevelBySetId = {}, sampleItemBySetId = {};
+      ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+        var id = eq[sl];
+        if(id && ITEMS[id] && ITEMS[id].setId){
+          var sid = ITEMS[id].setId, wIdx = wornIndex(g, sl), lv = wIdx >= 0 ? copyLevel(g, wIdx) : 0;
+          countBySetId[sid] = (countBySetId[sid] || 0) + 1;
+          sampleItemBySetId[sid] = ITEMS[id];
+          if(minLevelBySetId[sid] === undefined || lv < minLevelBySetId[sid]) minLevelBySetId[sid] = lv;
+        }
+      });
+      var bestMatch = { count: 0, type: 'none', key: '', minLv: 0, rarity: 'common' };
+      Object.keys(countBySetId).forEach(function(sid){
+        var c = countBySetId[sid];
+        if(c >= 2 && c > bestMatch.count){
+          var isRelic = (sid.indexOf('set_') === 0);
+          bestMatch = { count: c, type: isRelic ? 'relic' : 'named', key: sid, minLv: minLevelBySetId[sid] || 0, rarity: sampleItemBySetId[sid].r };
+        }
+      });
+
+      if(bestMatch.count < 2) return null;
+      var baseBonus = {
+        'common': {2:4, 3:7, 4:10}, 'uncommon': {2:6, 3:10, 4:15}, 'rare': {2:10, 3:15, 4:22},
+        'epic': {2:14, 3:20, 4:30}, 'legendary': {2:18, 3:26, 4:38}, 'mythic': {2:24, 3:34, 4:48}, 'divine': {2:30, 3:42, 4:60}
+      }[bestMatch.rarity] || {2:0, 3:0, 4:0};
+
+      var rawPct = (bestMatch.type === 'relic') ? 0 : (baseBonus[bestMatch.count] || 0);
+      var resonanceMult = 1 + (bestMatch.minLv * 0.05);
+      
+      return {
+        count: bestMatch.count, type: bestMatch.type, key: bestMatch.key, rarity: bestMatch.rarity,
+        pctBonus: Math.floor(rawPct * resonanceMult), minLv: bestMatch.minLv,
+        name: SET_NAMES_MAP_V21[bestMatch.key] || 'Именной комплект'
+      };
+    }
+
+    function renderActiveSetBonus(){
+      var evoBox = $('v20EvolutionCard'), sbBox = $('v21SetBonusCard');
+      if(!sbBox && $('charPane')){
+        sbBox = document.createElement('div');
+        sbBox.id = 'v21SetBonusCard';
+        sbBox.className = 'set-bonus-card';
+        if(evoBox) evoBox.parentNode.insertBefore(sbBox, evoBox.nextSibling);
+        else {
+          var progPanel = $('charPane').querySelector('.progressPanel');
+          $('charPane').insertBefore(sbBox, progPanel ? progPanel.nextSibling : $('charPane').firstChild);
+        }
+      }
+      if(!sbBox || !game) return;
+      var b = getActiveSetBonus(game);
+      if(b){
+        var txt = '🔮 <b>' + b.name + '</b> (' + b.count + '/4 шт.)<br>';
+        if(b.type !== 'relic'){
+          txt += 'Резонанс заточки: <b>+' + b.minLv + '</b> · Бонус комплекта: <b style="color:var(--green)">+' + b.pctBonus + '% к HP и Урону</b>.';
+          var defDesc = '';
+          if(b.count >= 2 && ['common', 'uncommon'].indexOf(b.rarity) < 0){
+            var rVal = { 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[b.rarity] || 0;
+            if(game.cls === 'warrior') defDesc = '🛡️ Глухая оборона: блокирует ' + rVal + '% урона монстра.';
+            else if(game.cls === 'archer') defDesc = '🏹 Ловкость: ' + rVal + '% шанс уклониться от атаки.';
+            else if(game.cls === 'mage') defDesc = '✨ Магический Барьер: даёт щит на ' + (rVal + 5) + '% макс. HP.';
+          }
+          if(defDesc) txt += '<br><span style="color:var(--gold)">' + defDesc + '</span>';
+        } else {
+          var rDesc = '';
+          if(b.key === 'set_nosferatu') rDesc = '<b>2 вещи:</b> +20% Макс HP.<br><b>4 вещи:</b> «Жажда Крови». Избыточный вампиризм превращается в Кровавый Щит.';
+          else if(b.key === 'set_colossus') rDesc = '<b>2 вещи:</b> Урон монстров снижен на 15%.<br><b>4 вещи:</b> «Реактивная броня». При 1 отражает урон.';
+          else if(b.key === 'set_xalatah') rDesc = '<b>2 вещи:</b> +25% к Урону.<br><b>4 вещи:</b> «Искажение Реальности». При ударе монстра 50% шанс уклониться и нанести крит.';
+          else if(b.key === 'set_pyro') rDesc = '<b>2 вещи:</b> +20% чистого урона сквозь защиту.<br><b>4 вещи:</b> «Испепеление». Каждая атака накладывает Ожог.';
+          else if(b.key === 'set_malganis') rDesc = '<b>2 вещи:</b> Снижает атаку монстров на 10%.<br><b>4 вещи:</b> «Власть Смерти». +50% урона и +15% вампиризма.';
+          else if(b.key === 'set_arachna') rDesc = '<b>2 вещи:</b> Яд Роя: +15% к урону.<br><b>4 вещи:</b> «Королева Роя». Отравляет врага каждый ход на 2% его макс. HP.';
+          txt += '<span style="color:#06b6d4">' + rDesc + '</span>';
+        }
+        sbBox.innerHTML = txt;
+        sbBox.style.display = 'block';
+      } else {
+        sbBox.innerHTML = '🛡️ <b>Комплект не собран:</b> наденьте минимум 2 вещи из <b>одного именного комплекта</b>, чтобы активировать бонус статов и классовую защиту.';
+        sbBox.style.display = 'block';
+      }
+    }
+
+    var _origRenderCharBeforeV21 = renderChar;
+    renderChar = function(){
+      _origRenderCharBeforeV21();
+      if(!game) return;
+      var gear = equipped();
+      var slots = [
+        ['slotHead','head','Голова'], ['slotBody','body','Тело'], ['slotRing','ring','Кольцо'],
+        ['slotArms','arms','Руки'], ['slotLegs','legs','Ноги'], ['slotAmulet','amulet','Амулет']
+      ];
+      slots.forEach(function(sl){
+        var el = $(sl[0]), id = gear[sl[1]];
+        if(!el) return;
+        el.onclick = (game.eq && game.eq[sl[1]]) ? function(){
+          if(merchantBusy || !gameLoaded) return;
+          if(!canChangeGearV20()) return;
+          delete game.eq[sl[1]]; delete game.eqCopies[sl[1]];
+          saveGame(); renderChar();
+        } : null;
+        el.title = (game.eq && game.eq[sl[1]]) ? 'Нажми, чтобы снять' : '';
+        if(id && ITEMS[id]){
+          var it = ITEMS[id];
+          var ci = wornIndex(game, sl[1]), lv = ci >= 0 ? copyLevel(game, ci) : 0;
+          el.innerHTML = itemIcon(id) + '<span class="sn">' + it.name + (lv ? ' +' + lv : '') + '</span>';
+          el.title = (ci >= 0 ? copyStatsLine(game, ci) : itemLine(id)) + (it.desc ? '\n' + it.desc : '') + '. Нажми, чтобы снять';
+          el.style.borderStyle = 'solid'; el.style.borderColor = RARITY[it.r] ? RARITY[it.r].color : '#06b6d4';
+          el.setAttribute('aria-label', sl[2] + ': ' + it.name);
+        } else {
+          el.textContent = sl[2]; el.style.borderStyle = ''; el.style.borderColor = '';
+          el.setAttribute('aria-label', sl[2] + ': пусто');
+        }
+      });
+      renderActiveSetBonus();
+    };
+
+    // ФИКС ЗЕЛЬЯ ЛЕЧЕНИЯ В БОЮ (Создаём пояс и кнопку, которых не хватало!)
+    function spawnFloatingText(text, isHero, type){
+      if(document.hidden || reduce) return;
+      var container = $('fight');
+      if(!container || container.hidden) return;
+      var barEl = container.querySelector('.bar.p');
+      var target = isHero ? (barEl ? barEl.parentNode : container) : (container.querySelector('.mon') || container);
+      if(!target) return;
+      var ft = document.createElement('div');
+      ft.className = 'floating-text';
+      ft.textContent = text;
+      ft.style.color = type === 'heal' ? '#4ade80' : (type === 'crit' ? '#fcd34d' : (type === 'shield' ? '#60a5fa' : (type === 'boss' ? '#c026d3' : '#f87171')));
+      if(type === 'crit' || type === 'boss') ft.style.fontSize = '30px';
+      var rect = target.getBoundingClientRect(), cRect = container.getBoundingClientRect();
+      ft.style.left = Math.max(10, (rect.left - cRect.left + (Math.random() * 40))) + 'px';
+      ft.style.top = Math.max(10, (rect.top - cRect.top + (Math.random() * 20 - 10))) + 'px';
+      container.appendChild(ft);
+      setTimeout(function(){ if(ft.parentNode) ft.remove(); }, 1200);
+    }
+
+    function useCombatPotionV21(){
+      var isExp = dgOn();
+      var f = isExp ? v20Data.exp : (game && game.fight);
+      var inCombat = isExp ? (f && f.on && f.inCombat) : (f && f.on);
+      if(!inCombat || v21Data.pots.heal <= 0) return;
+      if(!f.usedPots) f.usedPots = 0;
+      if(f.usedPots >= 2){ toast('🚫 Лимит исчерпан: можно выпить максимум 2 зелья лечения за Экспедицию!'); return; }
+      if(v20Data.nearDeath){ toast('🩸 Зелье лечения не снимает статус «При смерти» (нужна Слеза Феникса)!'); return; }
+      if(f.p >= f.ph){ toast('❤️ Здоровье уже полное!'); return; }
+
+      v21Data.pots.heal--; f.usedPots++;
+      saveV21Local(); if(isExp) saveV20Local();
+
+      var hAmt = Math.max(1, Math.floor(f.ph * 0.20));
+      f.p = Math.min(f.ph, f.p + hAmt);
+      spawnFloatingText('+' + hAmt + ' HP', true, 'heal');
+      fightLog = '🧪 Выпито Зелье лечения (+' + hAmt + ' HP, ' + f.usedPots + '/2). ' + fightLog;
+      renderFight();
+    }
+
+    function updateAlchemyBeltUI(){
+      var box = $('fight');
+      if(!box || box.hidden) return;
+      var belt = $('alchemyBelt');
+      if(!belt){
+        belt = document.createElement('div');
+        belt.id = 'alchemyBelt';
+        belt.className = 'alchemy-belt';
+        belt.innerHTML = '<button type="button" class="pot-btn" id="btnPotHeal">❤️ Зелье лечения <br><span class="qty" id="qtyPotHeal">0 шт.</span></button>';
+        box.appendChild(belt);
+        $('btnPotHeal').onclick = useCombatPotionV21;
+      }
+      var isExp = dgOn();
+      var f = isExp ? v20Data.exp : (game && game.fight);
+      var inCombat = isExp ? (f && f.on && f.inCombat) : (f && f.on);
+      belt.style.display = inCombat ? 'flex' : 'none';
+      
+      if(inCombat){
+        var used = Number(f.usedPots) || 0;
+        var btn = $('btnPotHeal'), lbl = $('qtyPotHeal');
+        if(lbl) lbl.textContent = v21Data.pots.heal + ' шт. (Лимит ' + used + '/2)';
+        if(btn) btn.disabled = (v21Data.pots.heal <= 0 || (f.p >= f.ph && !v20Data.nearDeath) || used >= 2);
+      }
+    }
+
+    var _origRenderFightBeforeV21 = renderFight;
+    renderFight = function(){
+      _origRenderFightBeforeV21();
+      updateAlchemyBeltUI();
+    };
     
-    // Скрываем/Показываем плавающее колесо
-    if(window.IntersectionObserver && $('wheel')){
-      var wObs = new IntersectionObserver(function(entries){
-        entries.forEach(function(en){ wheelVisibleRatio = en.intersectionRatio; if(typeof updateFloatWheelState === 'function') updateFloatWheelState(); });
-      }, {threshold:[0,0.1,0.2,0.5,1]});
-      wObs.observe($('wheel'));
+    var _origRenderDgFightBeforeV21 = renderDgFight;
+    renderDgFight = function(box){
+      _origRenderDgFightBeforeV21(box);
+      updateAlchemyBeltUI();
+    };
+
+    // Чтобы сохранения работали гарантированно после боя
+    var _origFightStrikeV21 = fightStrike;
+    fightStrike = function(n){
+       _origFightStrikeV21(n);
+       if(game && game.fight && !game.fight.on) saveGame(); 
+    };
+
+    var _origDgStrikeV21 = dgStrike;
+    dgStrike = function(n){
+       _origDgStrikeV21(n);
+       var d = v20Data.exp;
+       if(!d || !d.inCombat) saveGame();
+    };
+    
+    // Кузница
+    var _origRenderForgeBeforeV21 = renderForge;
+    renderForge = function(){
+      _origRenderForgeBeforeV21();
+      var box = $('forgeBody');
+      if(!box || !game) return;
+
+      var pCraftCard = $('v20PotionCraftCard');
+      if(pCraftCard){
+        var h3 = pCraftCard.querySelector('h3');
+        if(h3) h3.textContent = '💧 Алхимия: Слеза Феникса (Снятие «При смерти»)';
+        var btnP = $('btnCraftPotionV20');
+        if(btnP) btnP.textContent = 'Скрафтить Слезу Феникса 💧';
+      }
+
+      var alchCard = $('v21AlchemyCraftCard');
+      if(alchCard) alchCard.remove();
+      alchCard = document.createElement('div');
+      alchCard.id = 'v21AlchemyCraftCard';
+      alchCard.className = 'card';
+      alchCard.style.marginTop = '12px';
+      alchCard.style.borderColor = '#3b82f6';
+
+      var coins = Number(game.coins) || 0, dust = Number(game.dust) || 0;
+      var canH = !isInActiveCombatV20() && !isInExpeditionV20() && coins >= 300 && dust >= 200;
+
+      alchCard.innerHTML = '<h3>🧪 Боевая Алхимия: Зелье лечения</h3>'
+        + '<p>Восстанавливает <b>20% макс. HP</b> в бою без траты хода! <b>Максимум 2 зелья на Экспедицию</b>.</p>'
+        + '<p>Цена: <b>300 монет + 200 ✨</b> · В запасе: <b>' + v21Data.pots.heal + ' ❤️</b></p>'
+        + '<div class="forgeButtons">'
+        + '<button type="button" id="btnCraftHeal"' + (canH ? '' : ' disabled') + '>Сварить Зелье ❤️</button></div>';
+
+      if(pCraftCard) box.insertBefore(alchCard, pCraftCard);
+      else box.appendChild(alchCard);
+
+      var bHeal = $('btnCraftHeal');
+      if(bHeal){
+        bHeal.onclick = function(){
+          if(!canUseTownServicesV20() || (game.coins||0) < 300 || (game.dust||0) < 200) return;
+          game.coins -= 300; game.dust -= 200; v21Data.pots.heal++;
+          saveV21Local(); saveGame(); renderCoins(); renderForge();
+          toast('❤️ Сварено Зелье лечения (+20% HP)!');
+        };
+      }
+    };
+  }
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 21 ================== */
+  restore();
+
+  /* ================== МЕГА-ПАТЧ V22 (ВСЕ 7 ПУНКТОВ + ФИКС ВЕЧНОГО ОБНОВЛЕНИЯ) ================== */
+  APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 22;
+  RELEASE_ID = 22;
+
+  // --- ПУНКТ 3 (часть 1): Универсальный класс "all" для Реликтовой брони Боссов ---
+  // В Кузнице/Инвентаре/Зачаровании добавляем 'all' только для отображения, но не в магазин покупки классов!
+  var _origRenderShopV22 = renderShop;
+  renderShop = function(){
+    var hadAll = false;
+    if(CLASSES['all']){ hadAll = true; delete CLASSES['all']; }
+    try { _origRenderShopV22(); }
+    finally { if(hadAll) CLASSES['all'] = {name: 'Все классы (Реликвия)', gear: {}, desc: 'Древняя броня Боссов'}; }
+  };
+  CLASSES['all'] = {name: 'Все классы (Реликвия)', gear: {}, desc: 'Древняя броня Боссов'};
+
+  // --- ПУНКТ 4: Стоимость зачарования 150 монет + 100 пыли, перезачар на 50 пыли меньше (50 пыли) ---
+  ENCHANT_COST_COINS = 150;
+  ENCHANT_COST_DUST = 100;
+  ENCHANT_REROLL_DUST = 50;
+
+  // Разрешаем зачаровывать Реликвии ('all') в Алтаре Зачарования
+  var _origRenderEnchantPanelV22 = renderEnchantPanel;
+  renderEnchantPanel = function(){
+    var savedAll = [];
+    if(game && game.cls){
+      Object.keys(ITEMS).forEach(function(id){
+        if(ITEMS[id].cls === 'all'){ savedAll.push(id); ITEMS[id].cls = game.cls; }
+      });
+    }
+    try { _origRenderEnchantPanelV22(); }
+    finally { savedAll.forEach(function(id){ ITEMS[id].cls = 'all'; }); }
+  };
+
+  // --- Слёзы Феникса: 1500 монет, 10 камней, 200 пыли (Зелье лечения остаётся 300 монет + 200 пыли) ---
+  POTION_CRAFT_COST = {coins: 1500, stones: 10, dust: 200};
+
+  // --- ПУНКТ 2: Пересмотр выпадения рас (сумма весов ровно 100%, все 10 рас доступны) ---
+  RACES = [
+    {id:'human',     name:'Человек',          r:'common',    w:44, skill:'Мастер на все руки',       desc:'+15% XP за победы и +10% Магической пыли у Скупщика'},
+    {id:'beast',     name:'Зверолюд',         r:'uncommon',  w:22, skill:'Охотничий азарт',          desc:'+7% к шансу крита и +5% к базовому урону'},
+    {id:'dwarf',     name:'Дворф',            r:'rare',      w:7,  skill:'Горняцкая жилка',          desc:'+25% к скорости шахтёра-спутника и +25 Макс. HP'},
+    {id:'orc',       name:'Орк',              r:'rare',      w:7,  skill:'Несокрушимая мощь',        desc:'+12% к базовому урону (вампиризм и лечение на 10% слабее)'},
+    {id:'undead',    name:'Нежить',           r:'rare',      w:7,  skill:'Холод могилы',             desc:'Пассивный Вампиризм +6% с каждого удара и -50% штрафа монет при смерти'},
+    {id:'demon',     name:'Демон',            r:'epic',      w:5,  skill:'Сделка с удачей',          desc:'+25% к выплатам по ставкам в Таверне и +5% шанс нанести тройной урон при Зеро'},
+    {id:'elf',       name:'Эльф',             r:'epic',      w:4,  skill:'Благословение магии',      desc:'+20% к силе всех зачарований и аффиксов на экипировке'},
+    {id:'drake',     name:'Драконорождённый', r:'legendary', w:2,  skill:'Чешуйчатая броня и Пламя', desc:'Пассивные Шипы (+15%) и +15% к золоту со всех побед'},
+    {id:'automaton', name:'Автоматон',        r:'legendary', w:1,  skill:'Стальной механизм',        desc:'Иммунитет к критической неудаче (на 1 монстр бьёт обычно, а не х2) + 20% к скорости шахты'},
+    {id:'celestial', name:'Небожитель',       r:'legendary', w:1,  skill:'Очищение скверны',         desc:'+25% урона по боссам в Данжах и +20% Магической пыли при разборе'}
+  ];
+
+  rollRace = function(){
+    var total = 0;
+    for(var i = 0; i < RACES.length; i++) total += RACES[i].w;
+    var x = Math.random() * total, acc = 0;
+    for(var j = 0; j < RACES.length; j++){
+      acc += RACES[j].w;
+      if(x < acc) return RACES[j];
+    }
+    return RACES[0];
+  };
+
+  // --- ПУНКТ 3 (часть 2): Шанс на Реликвию Босса (на уровне мифика/ниже) и поддержка в Кузнице/Инвентаре ---
+  var BOSS_TO_RELIC_SET_V22 = {
+    'boss_nosferatu': 'set_nosferatu',
+    'boss_colossus':  'set_colossus',
+    'boss_xalatah':   'set_xalatah',
+    'boss_pyrodragon':'set_pyro',
+    'boss_malganis':  'set_malganis',
+    'boss_arachna':   'set_arachna'
+  };
+
+  var _origForgePlanV22 = forgePlan;
+  forgePlan = function(g, type, i, count, random){
+    if(type === 'enhance' && Number.isInteger(i) && g.inv && ITEMS[g.inv[i]] && ITEMS[g.inv[i]].cls === 'all'){
+      var savedCls = ITEMS[g.inv[i]].cls;
+      ITEMS[g.inv[i]].cls = g.cls;
+      try { return _origForgePlanV22(g, type, i, count, random); }
+      finally { ITEMS[g.inv[i]].cls = savedCls; }
+    }
+    return _origForgePlanV22(g, type, i, count, random);
+  };
+
+  var _origRenderForgeAllCls = renderForge;
+  renderForge = function(){
+    var savedAll = [];
+    if(game && game.cls){
+      Object.keys(ITEMS).forEach(function(id){
+        if(ITEMS[id].cls === 'all'){ savedAll.push(id); ITEMS[id].cls = game.cls; }
+      });
+    }
+    try { _origRenderForgeAllCls(); }
+    finally { savedAll.forEach(function(id){ ITEMS[id].cls = 'all'; }); }
+  };
+
+  // Шансы лута: Реликвия падает с шансом 0.20%–0.35% (на уровне мифика и ниже) в данжах/элите с 5 ранга
+  lootWeights = function(rank, dungeon, elite){
+    var rows = [
+      [67, 25, 7, 0.6, 0,    0.35, 0.05],
+      [50, 31, 16, 2,  0.6,  0.35, 0.05],
+      [32, 37, 25, 4,  1.6,  0.35, 0.05],
+      [18, 31, 38, 10, 2.6,  0.35, 0.05],
+      [9,  24, 44, 17, 5.6,  0.35, 0.05],
+      [3,  17, 44, 25, 10.6, 0.35, 0.05]
+    ];
+    var v = rows[Math.min(Math.max(1, rank), 6) - 1].slice();
+    if(dungeon){ v[0] -= 0.4; v[5] += 0.3; v[6] += 0.1; var ds = Math.min(v[0], 10); v[0] -= ds; v[2] += ds; }
+    if(elite){   v[0] -= 0.55; v[5] += 0.4; v[6] += 0.15; var es = Math.min(v[0], 10); v[0] -= es; v[3] += es; }
+
+    var relicW = 0;
+    if((dungeon || elite) && rank >= 5){
+      relicW = (dungeon && elite) ? 0.35 : 0.20; // На уровне мифика и ниже!
+      var take = Math.min(v[0], relicW);
+      v[0] = Number((v[0] - take).toFixed(3));
+    }
+    var out = ['common','uncommon','rare','epic','legendary','mythic','divine'].map(function(r, i){ return [r, Number(v[i].toFixed(3))]; });
+    if(relicW > 0) out.push(['relic', relicW]);
+    return out;
+  };
+
+  rollLoot = function(rank, dungeon, elite, specificBossId){
+    var w = lootWeights(rank, dungeon, elite), total = 0;
+    for(var i = 0; i < w.length; i++) total += w[i][1];
+    var x = Math.random() * (total || 100), acc = 0, r = 'common';
+    for(var j = 0; j < w.length; j++){ acc += w[j][1]; if(x <= acc){ r = w[j][0]; break; } }
+
+    if(r === 'relic'){
+      var relicSetId = specificBossId ? BOSS_TO_RELIC_SET_V22[specificBossId] : '';
+      var relicPool = Object.keys(ITEMS).filter(function(id){
+        return ITEMS[id].r === 'relic' && (!relicSetId || ITEMS[id].setId === relicSetId);
+      });
+      if(relicPool.length) return relicPool[Math.floor(Math.random() * relicPool.length)];
+      r = 'mythic';
+    }
+
+    var targetCls = '';
+    if(dungeon && game && game.cls){
+      if(Math.random() < 0.5) targetCls = game.cls;
+      else {
+        var others = ['warrior','archer','mage'].filter(function(c){ return c !== game.cls; });
+        targetCls = others[Math.floor(Math.random() * others.length)];
+      }
+    }
+    var pool = Object.keys(ITEMS).filter(function(id){
+      var it = ITEMS[id];
+      if(!it || !it.drop || it.r !== r) return false;
+      if(rank < 10 && (it.slot === 'ring' || it.slot === 'amulet')) return false;
+      if(dungeon && targetCls && it.cls && it.cls !== 'all') return it.cls === targetCls;
+      return true;
+    });
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  };
+
+  rollBossChestLootV20 = function(rank){
+    var bossId = (v20Data.exp && v20Data.exp.bossId) ? v20Data.exp.bossId : '';
+    var bossRelicChance = Math.min(1.5, 0.4 + rank * 0.08); // На уровне мифика (0.48% - 1.5%)
+    if(Math.random() * 100 < bossRelicChance){
+      var relicSetId = bossId ? BOSS_TO_RELIC_SET_V22[bossId] : '';
+      var rPool = Object.keys(ITEMS).filter(function(id){
+        return ITEMS[id].r === 'relic' && (!relicSetId || ITEMS[id].setId === relicSetId);
+      });
+      if(rPool.length) return rPool[Math.floor(Math.random() * rPool.length)];
+    }
+    var id = rollLoot(Math.max(3, rank), true, true, bossId);
+    if(id && ITEMS[id] && (ITEMS[id].r === 'common' || ITEMS[id].r === 'uncommon')){
+      var rarePool = Object.keys(ITEMS).filter(function(k){
+        var it = ITEMS[k];
+        return it && it.drop && (it.r === 'rare' || it.r === 'epic' || it.r === 'legendary') && (!it.cls || it.cls === 'all' || it.cls === game.cls);
+      });
+      if(rarePool.length) id = rarePool[Math.floor(Math.random() * rarePool.length)];
+    }
+    return id;
+  };
+
+  var _origRenderInvV22 = renderInv;
+  renderInv = function(){
+    var savedAll = [];
+    if(game && game.cls){
+      Object.keys(ITEMS).forEach(function(id){
+        if(ITEMS[id].cls === 'all'){ savedAll.push(id); ITEMS[id].cls = game.cls; }
+      });
+    }
+    try { _origRenderInvV22(); }
+    finally { savedAll.forEach(function(id){ ITEMS[id].cls = 'all'; }); }
+    var box = $('inv');
+    if(!box || !game) return;
+    var curRank = game.unlockedRank || maxRank(game);
+    var cells = box.querySelectorAll('.icell');
+    cells.forEach(function(cell, index){
+      var id = game.inv[index], it = ITEMS[id];
+      if(!it) return;
+      var canWearRelic = (it.r !== 'relic') || (curRank >= 5 || (v20Data && Number(v20Data.prestige) > 0));
+      var canWearSlot = (it.slot !== 'ring' && it.slot !== 'amulet') || curRank >= 10;
+      var clsOk = (!it.cls || it.cls === 'all' || it.cls === game.cls);
+      if(clsOk && canWearRelic && canWearSlot){
+        cell.disabled = false;
+        cell.style.opacity = '1';
+        cell.onclick = function(e){
+          e.stopImmediatePropagation();
+          if(merchantBusy || !gameLoaded || !canChangeGearV20()) return;
+          game.eq[it.slot] = id;
+          game.eqCopies[it.slot] = index;
+          saveGame();
+          renderChar();
+        };
+      }
+    });
+  };
+
+  // --- ПУНКТ 5: Исправление Гладиатора (не срабатывает от урона Шипов на промахе игрока) ---
+  var lastPlayerDirectAttack = false;
+  minerCombat = function(f, beforeP, beforeM, st){
+    var role = f.buddy || '', incoming = Math.max(0, beforeP - f.p), hit = Math.max(0, beforeM - f.m), msg = '';
+    if(role === 'defender' && incoming > 0){
+      var block = Math.min(incoming - 1, Math.floor(incoming * 0.15));
+      if(block > 0){ f.p += block; f.taken -= block; msg = ' 🛡️ Защитник прикрыл щитом: −' + block + ' урона.'; }
+    }
+    if(role === 'gladiator' && lastPlayerDirectAttack && hit > 0 && f.m > 0){
+      var extra = Math.max(1, Math.floor(st.atk * 0.08));
+      f.m = Math.max(0, f.m - extra);
+      f.dealt += extra;
+      msg += ' ⚔️ Гладиатор добавил ' + extra + ' урона.';
+    }
+    return msg;
+  };
+
+  // --- ПУНКТ 6: Пересмотр Боссов Экспедиции (3 коронных числа для активных навыков + Носферату хилится от нанесённого урона) ---
+  EXP_BOSSES_V20 = [
+    {id:'boss_malganis',   name:'Король Личей Мал\'Ганис',     hp:105, dmg:13, skillNums:[6,13,26],  skillName:'Ледяная скорбь',    rule:'чётное или 25–36 (Числа босса: 6, 13, 26 — удар ×1.5 и кража HP)', hit:function(n){return n>0&&(n%2===0||n>=25);}},
+    {id:'boss_pyrodragon', name:'Архидракон Пиромант',         hp:120, dmg:12, skillNums:[5,15,25],  skillName:'Огненное дыхание',   rule:'красное или кратное 5 (Числа босса: 5, 15, 25 — ожог ×1.6 урона)', hit:function(n){return n>0&&(color(n)==='red'||n%5===0);}},
+    {id:'boss_arachna',    name:'Арахна, Мать Роя',            hp:98,  dmg:13, skillNums:[8,18,28],  skillName:'Ядовитый кокон',     rule:'число от 1 до 18 (Числа босса: 8, 18, 28 — ядовитый укус ×1.4)', hit:function(n){return n>=1&&n<=18;}},
+    {id:'boss_colossus',   name:'Механический Колосс Древних', hp:130, dmg:11, skillNums:null,       skillName:'Титановая броня',    rule:'нечётное кроме 1 (Пассивка: снижает обычный урон по себе на 15%)', hit:function(n){return n>1&&n%2===1;}},
+    {id:'boss_nosferatu',  name:'Кровавый Граф Носферату',     hp:100, dmg:12, skillNums:null,       skillName:'Кровавый пир',       rule:'чёрное число (Пассивка: лечит себя на 50% от нанесённого тебе урона)', hit:function(n){return n>0&&color(n)==='black';}},
+    {id:'boss_xalatah',    name:'Вестник Пустоты Ксалатат',    hp:110, dmg:13, skillNums:[7,17,27],  skillName:'Разлом Бездны',      rule:'число от 10 до 28 (Числа босса: 7, 17, 27 — чистый урон ×1.7 сквозь защиту)', hit:function(n){return n>=10&&n<=28;}}
+  ];
+
+  strikeCoreBase = function(f, mo, st, n){
+    if(!Number.isFinite(f.dealt)) f.dealt = 0;
+    if(!Number.isFinite(f.taken)) f.taken = 0;
+    f.skip = false;
+    lastPlayerDirectAttack = false;
+    if(v20Data.nearDeath && f.p > 1){ f.p = 1; f.ph = 1; }
+
+    var setBonus = (typeof getActiveSetBonus === 'function') ? getActiveSetBonus(game) : null;
+    var blockDmg = 0, dodgeChance = 0;
+    if(setBonus && setBonus.count >= 2 && setBonus.type !== 'relic'){
+      var defVal = (typeof window.getClassSetDefPctV22 === 'function') ? window.getClassSetDefPctV22(setBonus, game.cls) : 0;
+      if(game.cls === 'warrior') blockDmg = defVal / 100;
+      else if(game.cls === 'archer') dodgeChance = defVal;
+    }
+    var relicKey = (setBonus && setBonus.type === 'relic') ? setBonus.key : '';
+    var relicCount = (setBonus && setBonus.type === 'relic') ? setBonus.count : 0;
+    if(relicKey === 'set_colossus' && relicCount >= 2) blockDmg = Math.min(0.6, blockDmg + 0.15);
+    if(relicKey === 'set_malganis' && relicCount >= 2) blockDmg = Math.min(0.6, blockDmg + 0.10);
+
+    var r = (game && game.race) || 'human';
+    var sub = findSubclassV20(v20Data.subcls);
+    var eqEnch = getEquippedEnchants(game);
+    var healFactor = (r === 'orc') ? 0.9 : 1.0;
+    var bossFactor = (r === 'celestial' && mo && (mo.boss || mo.elite)) ? 1.25 : 1.0;
+    var berserkMult = 1.0;
+    if(sub && sub.id === 'berserk' && (f.ph || st.hp) > 0){
+      berserkMult = 1 + Math.max(0, 1 - (f.p / (f.ph || st.hp))) * 0.35;
+    }
+    var relicAtkMult = 1.0;
+    if(relicKey === 'set_xalatah' && relicCount >= 2) relicAtkMult += 0.25;
+    if(relicKey === 'set_pyro' && relicCount >= 2) relicAtkMult += 0.20;
+    if(relicKey === 'set_arachna' && relicCount >= 2) relicAtkMult += 0.15;
+    if(relicKey === 'set_malganis' && relicCount >= 4){ relicAtkMult += 0.50; eqEnch.vamp = Math.min(60, (eqEnch.vamp||0) + 15); }
+
+    var effAtk = Math.max(1, Math.round(st.atk * bossFactor * berserkMult * relicAtkMult));
+    var maxPlayerHp = v20Data.nearDeath ? 1 : (f.ph || st.hp);
+    var bossData = EXP_BOSSES_V20.find(function(b){ return b.id === mo.id; });
+
+    // 1. Зеро — крит игрока
+    if(n === 0){
+      lastPlayerDirectAttack = true;
+      var isTriple = (r === 'demon' && Math.random() < 0.05);
+      var d0 = effAtk * (isTriple ? 3 : 2);
+      f.m -= d0; f.dealt += d0;
+      var v0 = eqEnch.vamp > 0 ? Math.max(1, Math.round(d0 * (eqEnch.vamp / 100) * healFactor)) : 0;
+      if(v0 && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + v0);
+      return 'Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (x3): ' : 'Критический удар (x2): ') + mo.name + ' теряет ' + d0 + ' HP.' + (v0 && !v20Data.nearDeath ? ' Вампиризм +' + v0 + ' HP.' : '');
+    }
+
+    // 2. Единица — критическая неудача
+    if(n === 1){
+      var autoSaved = (r === 'automaton');
+      var monBaseDmg = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+      var dd = autoSaved ? monBaseDmg : (monBaseDmg * 2);
+      if(relicKey === 'set_colossus' && relicCount >= 4){
+        f.m -= dd; f.dealt += dd;
+        return 'Единица! 🛡️ Реактивная броня Колосса полностью отразила двойной удар (' + dd + ' урона) обратно во врага!';
+      }
+      if(dodgeChance > 0 && Math.random()*100 < dodgeChance) dd = 0;
+      else if(blockDmg > 0) dd = Math.max(1, Math.floor(dd * (1 - blockDmg)));
+      f.p -= dd; f.taken += dd;
+      var th1 = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(dd * eqEnch.thorns / 100))) : 0;
+      if(th1 > 0){ f.m -= th1; f.dealt += th1; }
+      var nosfHeal1 = '';
+      if(mo.id === 'boss_nosferatu' && dd > 0 && f.m > 0){
+        var nh1 = Math.max(1, Math.round(dd * 0.5));
+        f.m = Math.min(mo.hp, f.m + nh1);
+        nosfHeal1 = ' 🩸 Носферату исцелился от нанесённого урона (+' + nh1 + ' HP)!';
+      }
+      return (autoSaved ? 'Единица! ⚙️ Автоматон погасил крит: ' : 'Единица — крит-неудача! ') + mo.name + ' наносит ' + dd + ' HP!' + nosfHeal1 + (th1 ? ' 🌵 Шипы вернули ' + th1 + ' урона.' : '');
+    }
+
+    // 3. Проверка 3 коронных чисел Босса
+    if(bossData && Array.isArray(bossData.skillNums) && bossData.skillNums.indexOf(n) !== -1){
+      var bBase = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+      var bDmg = bBase, bExtra = '';
+      if(mo.id === 'boss_malganis'){
+        bDmg = Math.round(bBase * 1.5);
+        f.p -= bDmg; f.taken += bDmg;
+        var mHeal = Math.max(1, Math.round(bDmg * 0.6));
+        f.m = Math.min(mo.hp, f.m + mHeal);
+        bExtra = ' ❄️ Мал\'Ганис похитил ' + mHeal + ' HP!';
+      } else if(mo.id === 'boss_pyrodragon'){
+        var burnHp = v20Data.nearDeath ? 0 : Math.max(1, Math.round(f.p * 0.05));
+        bDmg = Math.round(bBase * 1.6) + burnHp;
+        f.p -= bDmg; f.taken += bDmg;
+        bExtra = ' 🔥 Ожог спалил ещё ' + burnHp + ' HP!';
+      } else if(mo.id === 'boss_arachna'){
+        bDmg = Math.round(bBase * 1.45);
+        f.p -= bDmg; f.taken += bDmg;
+        bExtra = ' 🕷️ Паучий яд ослабил защиту!';
+      } else if(mo.id === 'boss_xalatah'){
+        bDmg = Math.round(bBase * 1.7);
+        f.p -= bDmg; f.taken += bDmg;
+        bExtra = ' 🌌 Чистый урон Бездны сквозь защиту!';
+      }
+      var thB = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(bDmg * eqEnch.thorns / 100))) : 0;
+      if(thB > 0){ f.m -= thB; f.dealt += thB; }
+      return '⚠️ ЧИСЛО БОССА ' + n + '! «' + bossData.skillName + '»: ' + mo.name + ' наносит ' + bDmg + ' урона!' + bExtra + (thB ? ' 🌵 Шипы вернули ' + thB + ' урона.' : '');
+    }
+
+    // 4. Счастливая пятёрка игрока
+    var isLuckyFive = sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.indexOf(n) !== -1;
+    if(isLuckyFive){
+      lastPlayerDirectAttack = true;
+      var lMult = 2.5, extraEffect = '';
+      if(sub.id === 'witcher'){ lMult = 2.5; var burn = Math.max(1, Math.round(mo.hp * 0.05)); f.m -= burn; f.dealt += burn; extraEffect = ' 🔥 Игни сжёг ' + burn + ' HP!'; }
+      else if(sub.id === 'berserk'){ lMult = 2.8; if(!v20Data.nearDeath){ var bH = Math.max(1, Math.round(maxPlayerHp * 0.15)); f.p = Math.min(maxPlayerHp, f.p + bH); extraEffect = ' 🩸 Ярость +' + bH + ' HP!'; } }
+      else if(sub.id === 'paladin'){ lMult = 2.2; if(!v20Data.nearDeath){ var pH = Math.max(1, Math.round(maxPlayerHp * 0.20)); f.p = Math.min(maxPlayerHp, f.p + pH); extraEffect = ' 🛡️ Свет +' + pH + ' HP!'; } }
+      else if(sub.id === 'legolas'){ lMult = 2.6; extraEffect = ' 🏹 Залп стрел!'; }
+      else if(sub.id === 'sniper'){ lMult = 3.0; extraEffect = ' 🎯 Выстрел в яблочко (x3.0)!'; }
+      else if(sub.id === 'trapper'){ lMult = 2.3; currentFightTrapped = true; extraEffect = ' 🪤 Капкан (-20% атаки врага)!'; }
+      else if(sub.id === 'archmage'){ lMult = 2.8; extraEffect = ' ☄️ Метеоритный шторм!'; }
+      else if(sub.id === 'necromancer'){ lMult = 2.4; }
+      else if(sub.id === 'chronomage'){ lMult = 2.5; if(!v20Data.nearDeath){ var cH = Math.max(1, Math.round(maxPlayerHp * 0.20)); f.p = Math.min(maxPlayerHp, f.p + cH); extraEffect = ' ⏳ Разлом +' + cH + ' HP!'; } }
+      var lDmg = Math.max(1, Math.round(effAtk * lMult));
+      f.m -= lDmg; f.dealt += lDmg;
+      var lVampPct = eqEnch.vamp + (sub.id === 'necromancer' ? 50 : 0);
+      var lVp = lVampPct > 0 ? Math.max(1, Math.round(lDmg * (lVampPct / 100) * healFactor)) : 0;
+      if(lVp && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + lVp);
+      return '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + '! [' + sub.name + ' · ' + sub.skill + '] наносит ' + lDmg + ' урона!' + extraEffect + (lVp && !v20Data.nearDeath ? ' Вампиризм +' + lVp + ' HP.' : '');
+    }
+
+    // 5. Обычное попадание игрока по правилу монстра
+    if(mo.hit(n)){
+      lastPlayerDirectAttack = true;
+      var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      var critMult = (sub && sub.id === 'sniper') ? 2.25 : 1.75;
+      var dmg = isCrit ? Math.round(effAtk * critMult) : effAtk;
+      var colossusMsg = '';
+      if(mo.id === 'boss_colossus' && relicKey !== 'set_pyro'){
+        dmg = Math.max(1, Math.round(dmg * 0.85));
+        colossusMsg = ' [Броня Колосса -15%]';
+      }
+      if(relicKey === 'set_pyro' && relicCount >= 4){
+        dmg += Math.max(1, Math.round(mo.hp * 0.02));
+      }
+      if(relicKey === 'set_arachna' && relicCount >= 4){
+        dmg += Math.max(1, Math.round(mo.hp * 0.02));
+      }
+      f.m -= dmg; f.dealt += dmg;
+      var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100) * healFactor)) : 0;
+      if(vp && !v20Data.nearDeath) f.p = Math.min(maxPlayerHp, f.p + vp);
+      return 'Выпало ' + n + ': попал!' + (isCrit ? ' 💥 КРИТ!' : '') + ' ' + mo.name + ' теряет ' + dmg + ' HP.' + colossusMsg + (vp && !v20Data.nearDeath ? ' Вампиризм +' + vp + ' HP.' : '');
+    }
+
+    // 6. Промах игрока — удар монстра
+    if(relicKey === 'set_xalatah' && relicCount >= 4 && Math.random() < 0.50){
+      lastPlayerDirectAttack = true;
+      var voidCounter = Math.round(effAtk * 1.75);
+      f.m -= voidCounter; f.dealt += voidCounter;
+      return 'Выпало ' + n + ': 🌌 Искажение Реальности (Сет Ксалатат)! Ты уклонился и нанёс ответный крит на ' + voidCounter + ' урона!';
+    }
+    var incomingDmg = currentFightTrapped ? Math.max(1, Math.round(mo.dmg * 0.8)) : mo.dmg;
+    var dodged = false;
+    if(dodgeChance > 0 && Math.random()*100 < dodgeChance){ incomingDmg = 0; dodged = true; }
+    else if(blockDmg > 0){ incomingDmg = Math.max(1, Math.floor(incomingDmg * (1 - blockDmg))); }
+    f.p -= incomingDmg; f.taken += incomingDmg;
+
+    var th = eqEnch.thorns > 0 ? Math.min(f.m, Math.max(1, Math.round(incomingDmg * eqEnch.thorns / 100))) : 0;
+    if(th > 0){ f.m -= th; f.dealt += th; }
+
+    var drainMsg = '';
+    if(mo.id === 'boss_nosferatu' && incomingDmg > 0 && f.m > 0){
+      var healBoss = Math.max(1, Math.round(incomingDmg * 0.50));
+      f.m = Math.min(mo.hp, f.m + healBoss);
+      drainMsg = ' 🩸 Носферату исцелился на 50% от нанесённого урона (+' + healBoss + ' HP)!';
+    }
+    var dodgeMsg2 = dodged ? ' [Ловкость: уклонение!]' : (blockDmg > 0 ? ' [Блок ' + Math.round(blockDmg*100) + '%]' : '');
+    return 'Выпало ' + n + ': промах. ' + mo.name + ' бьёт на ' + incomingDmg + '.' + dodgeMsg2 + drainMsg + (th ? ' 🌵 Шипы (' + eqEnch.thorns + '%) вернули ' + th + ' урона.' : '');
+  };
+
+  // --- ПУНКТ 1: Анти-фарм с полным золотом (100%) в статусе «При смерти» ---
+  function getFarmPenaltyV22(targetRank){
+    if(!game) return false;
+    return (maxRank(game) - targetRank) >= 2;
+  }
+
+  var _origRenderProgressV22 = renderProgress;
+  renderProgress = function(){
+    _origRenderProgressV22();
+    var rh = $('rankHint');
+    if(rh && game && getFarmPenaltyV22(game.rank)){
+      if(v20Data && v20Data.nearDeath){
+        rh.innerHTML += '<br><b style="color:var(--gold)">🩸 Режим выживания («При смерти»): на низком ранге вы получаете 100% монет в полном объёме для накопления на Слёзы Феникса (опыт и лут отключены).</b>';
+      } else {
+        rh.innerHTML += '<br><b style="color:var(--red)">⚠️ ШТРАФ АНТИ-ФАРМА: Ранг слишком низкий! Предметы и пыль не выпадают, а монеты и опыт урезаны на 90%.</b>';
+      }
+    }
+  };
+
+  var _origRenderDgV22 = renderDg;
+  renderDg = function(){
+    _origRenderDgV22();
+    var box = $('dgBody');
+    var on = dgOn(), rank = on ? v20Data.exp.r : selectedRank();
+    if(box && getFarmPenaltyV22(rank)){
+      var btn = $('dgIn');
+      if(btn){
+        var p = document.createElement('p');
+        p.style.fontWeight = 'bold';
+        p.style.fontSize = '13px';
+        if(v20Data && v20Data.nearDeath){
+          p.style.color = 'var(--gold)';
+          p.innerHTML = '🩸 Выживание («При смерти»): монеты в этом походе падают в полном объёме (100%), но сундуки и опыт заблокированы.';
+        } else {
+          p.style.color = 'var(--red)';
+          p.innerHTML = '⚠️ Сработает Анти-Фарм: сундуки боссов и тайники будут пустыми (без лута и пыли), а монеты урезаны на 90%!';
+        }
+        btn.parentNode.insertBefore(p, btn);
+      }
+    }
+  };
+
+  fightStrike = function(n){
+    var f = game && game.fight; if(!f || !f.on) return;
+    var mo = foeOfFight(f), st = battleStats(f);
+    fightLog = strikeCore(f, mo, st, n);
+    if(f.m <= 0){
+      f.m = 0; f.on = false; f.skip = false;
+      var penalty = getFarmPenaltyV22(mo.rank);
+      var base = rewardBase(mo), factor = f.kind === 'ambush' ? AMBUSH_REWARD : 1;
+      var coins = rollReward(base.coins * factor);
+      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(mo.rank) * factor);
+      var isNearDeath = !!(v20Data && v20Data.nearDeath);
+
+      if(penalty){
+        xp = isNearDeath ? 0 : Math.floor(xp * 0.1);
+        if(!isNearDeath) coins = Math.floor(coins * 0.1); // При смерти 100% монет!
+      }
+      var chance = f.kind === 'ambush' ? (mo.elite ? 0.35 : 0.2) : (mo.elite ? 0.7 : 0.4);
+      var id = (!penalty && Math.random() < chance) ? rollLoot(mo.rank, false, mo.elite) : null;
+
+      game.coins += coins; if(id) game.inv.push(id); var up = gainXP(xp);
+      var penMsg = penalty ? (isNearDeath ? ' <b style="color:var(--gold)">(Выживание 1 HP: 100% золота сохранено!)</b>' : ' <b style="color:var(--red)">(Анти-фарм: лута нет, -90% наград)</b>') : '';
+      fightMsg = fightLog + ' Победа! +' + coins + ' монет · +' + xp + ' XP.' + up + (id ? ' Добыча: ' + ITEMS[id].name + ' (' + RARITY[ITEMS[id].r].name + ').' : '') + penMsg;
+      if(id){ toast('Выпал предмет: ' + ITEMS[id].name); $('dot').hidden = false; } else if(up) toast(up);
+      battleTitles(coins, f, true);
+      saveGame(); renderCoins(); renderProgress();
+    } else if(f.p <= 0){
+      f.p = 0; f.skip = false; loseFight(fightLog + ' Ты погиб.', true); saveGame();
+    }
+  };
+
+  var _origSelectExpeditionPathV22 = selectExpeditionPathV20;
+  selectExpeditionPathV20 = function(choiceIdx){
+    if(!dgOn() || merchantBusy) return;
+    var d = v20Data.exp;
+    if(d.inCombat || d.inAltar) return;
+    var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    var picked = choices[choiceIdx];
+    if(!picked) return;
+
+    if(picked.type === 'cache'){
+      d.cacheUsed = true;
+      var rank = d.r || 1;
+      var penalty = getFarmPenaltyV22(rank);
+      var isNearDeath = !!(v20Data && v20Data.nearDeath);
+      var goldGain = Math.max(5, rollReward(dungeonPrice(rank) * 0.12));
+      var dustGain = 8 + Math.floor(Math.random() * 11) + rank;
+      var dropId = (Math.random() < 0.35) ? rollLoot(rank, true, false) : null;
+
+      if(penalty){
+        if(!isNearDeath) goldGain = Math.floor(goldGain * 0.1);
+        dustGain = 0; dropId = null;
+      }
+      game.coins += goldGain;
+      game.dust = Math.min(1000000, (Number(game.dust)||0) + dustGain);
+      if(dropId) game.inv.push(dropId);
+
+      d.st++;
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      saveV20Local(); saveGame(); renderCoins(); renderChar(); renderDg();
+      toast('📦 Древний Тайник открыт! +' + goldGain + ' монет' + (dustGain ? ', +' + dustGain + ' ✨ пыли' : '') + (dropId ? ' и предмет «' + ITEMS[dropId].name + '»!' : '!'));
+      return;
+    }
+    _origSelectExpeditionPathV22(choiceIdx);
+  };
+
+  dgStrike = function(n){
+    var d = v20Data.exp;
+    if(!d || !d.on || !d.inCombat) return;
+    var mo = dgFoe(), st = battleStats(d);
+    fightLog = strikeCore(d, mo, st, n);
+
+    if(d.m <= 0){
+      d.m = 0; d.inCombat = false;
+      var penalty = getFarmPenaltyV22(d.r);
+      var isNearDeath = !!(v20Data && v20Data.nearDeath);
+      var base = rewardBase(mo);
+      var sub = findSubclassV20(v20Data.subcls);
+      var xpMult = (sub && sub.xpBonus) ? (1 + sub.xpBonus / 100) : 1;
+      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * xpFactor(d.r) * xpMult);
+      var coins = rollReward(dungeonPrice(d.r) * (d.roomType === 'elite' ? 0.34 : 0.18));
+
+      if(penalty){
+        xp = isNearDeath ? 0 : Math.floor(xp * 0.1);
+        if(!isNearDeath) coins = Math.floor(coins * 0.1); // При смерти 100% монет!
+      }
+      game.coins += coins;
+      var up = gainXP(xp);
+      var wonState = {dealt: d.dealt, taken: d.taken};
+      var extraLootMsg = '';
+
+      if(d.roomType === 'elite' && d.st < 4 && !penalty){
+        var eliteDust = 5 + Math.floor(Math.random() * 8) + d.r;
+        game.dust = Math.min(1000000, (Number(game.dust)||0) + eliteDust);
+        extraLootMsg += ' +' + eliteDust + ' ✨ пыли.';
+        if(Math.random() < 0.50){
+          var eItem = rollLoot(d.r, true, true);
+          if(eItem){ game.inv.push(eItem); extraLootMsg += ' Добыча: ' + ITEMS[eItem].name + '!'; }
+        }
+      }
+
+      var earned = ' +' + xp + ' XP · +' + coins + ' монет.' + up + extraLootMsg + (penalty ? (isNearDeath ? ' <b style="color:var(--gold)">(Выживание: 100% золота)</b>' : ' <b style="color:var(--red)">(Анти-фарм -90%)</b>') : '');
+
+      if(d.st + 1 >= EXP_FLOORS || d.roomType === 'boss'){
+        var bossItem = penalty ? null : rollBossChestLootV20(d.r);
+        var bossDust = penalty ? 0 : (15 + d.r * 5 + Math.floor(Math.random() * 15));
+        var gotPotion = penalty ? false : (Math.random() < 0.08);
+        var bonusXp = (game.level >= LEVEL_CAP || (penalty && isNearDeath)) ? 0 : rollReward(75 * Math.pow(d.r, 1.65) * xpFactor(d.r) * xpMult);
+        if(penalty && !isNearDeath) bonusXp = Math.floor(bonusXp * 0.1);
+
+        if(bossItem) game.inv.push(bossItem);
+        game.dust = Math.min(1000000, (Number(game.dust)||0) + bossDust);
+        if(gotPotion) v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        var moreUp = gainXP(bonusXp);
+        v20Data.exp = null;
+        saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20();
+        fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP' + moreUp
+          + (penalty ? '' : (', +' + bossDust + ' ✨ пыли' + (bossItem ? ', предмет «' + ITEMS[bossItem].name + '» (' + RARITY[ITEMS[bossItem].r].name + ')' : '') + (gotPotion ? ' и 🧪 СЛЁЗЫ ФЕНИКСА!' : '!')));
+        fightChest = !penalty;
+        saveGame();
+      } else {
+        d.st++;
+        d.p = v20Data.nearDeath ? 1 : healBetween(d.p, d.ph);
+        d.skip = false; d.dealt = 0; d.taken = 0;
+        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        saveV20Local(); saveGame();
+        fightMsg = fightLog + ' Враг повержен!' + earned + ' Восстановлено 25% HP. Выбери путь на Этаже ' + (d.st + 1) + '!';
+      }
+      battleTitles(coins, wonState, true);
+      renderCoins(); renderProgress(); renderDg();
+    } else if(d.p <= 0){
+      battleTitles(0, d, false);
+      var lostGold = Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(d.r || 1));
+      game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
+      v20Data.nearDeath = true; v20Data.exp = null;
+      saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20(); renderNearDeathBannerV20(); saveGame();
+      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! Потеряно ' + lostGold + ' монет и наложен статус «При смерти» (1 HP, пока не выпьешь 🧪 Слёзы Феникса).';
+      fightChest = false; renderCoins(); renderProgress(); renderDg();
+    }
+  };
+
+  // --- ПУНКТ 7: МИРОВОЙ БОСС В 18:00 НА 30 МИНУТ + БОЕВОЕ ОКНО, 5 ЧИСЕЛ БОССА (РАНГ 8) И КД 5 МИНУТ ---
+  var RAID_START_HOUR = 18, RAID_DURATION_MIN = 30, RAID_BOSS_MAX_HP = 1500000;
+  var RAID_DEATH_CD_MS = 5 * 60000; // 5 минут КД после гибели в рейде
+  var RAID_BOSS_SPELLS = [
+    '☄️ Катаклизм Бездны',
+    '🩸 Жатва Душ',
+    '🔥 Кольцо Адского Пламени',
+    '⚡ Гнев Пожирателя',
+    '💀 Дыхание Небытия'
+  ];
+  var raidStateV22 = {
+    dateKey: '',
+    hp: RAID_BOSS_MAX_HP,
+    maxHp: RAID_BOSS_MAX_HP,
+    players: {},
+    loaded: false,
+    bossNums: [6, 13, 19, 27, 34],
+    pHp: 100,
+    pMaxHp: 100,
+    pAtk: 10,
+    usedPots: 0,
+    combatLog: ''
+  };
+
+  function getRaidDeathCdKeyV22(){
+    return 'roulette_raid_cd_' + (sess && sess.uid ? sess.uid : 'guest');
+  }
+  function getRaidCooldownUntilV22(){
+    try{ return Number(localStorage.getItem(getRaidDeathCdKeyV22())) || 0; }catch(e){ return 0; }
+  }
+  function setRaidCooldownUntilV22(ts){
+    try{ localStorage.setItem(getRaidDeathCdKeyV22(), String(ts)); }catch(e){}
+  }
+  function getRaidCooldownLeftMsV22(){
+    return Math.max(0, getRaidCooldownUntilV22() - Date.now());
+  }
+
+  // Детерминированные 5 проклятых чисел Босса на сегодняшний день (одинаковые у всех игроков сервера)
+  function getRaidBossNumbersV22(dateKey){
+    var r = rng(hashStr('worldboss_nums_v22:' + dateKey));
+    var pool = [];
+    for(var i = 2; i <= 36; i++) pool.push(i);
+    var out = [];
+    while(out.length < 5 && pool.length){
+      var idx = Math.floor(r() * pool.length);
+      out.push(pool.splice(idx, 1)[0]);
+    }
+    out.sort(function(a, b){ return a - b; });
+    return out;
+  }
+
+  // Базовый урон способности Мирового Босса на уровне 8-го ранга сложности (~90 ед. урона)
+  function getRaidBossAbilityDmgV22(){
+    return Math.max(45, Math.round(18 * rankDMG(8) * 1.25));
+  }
+
+  function getRaidWindowV22(){
+    var now = new Date();
+    var yyyy = now.getFullYear(), mm = ('0'+(now.getMonth()+1)).slice(-2), dd = ('0'+now.getDate()).slice(-2);
+    var dateKey = yyyy + '-' + mm + '-' + dd;
+    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), RAID_START_HOUR, 0, 0, 0);
+    var end = new Date(start.getTime() + RAID_DURATION_MIN * 60000);
+    var isLive = (now >= start && now < end);
+    var isPastToday = (now >= end);
+    var nextStart = isPastToday ? new Date(start.getTime() + 86400000) : start;
+    return { dateKey: dateKey, isLive: isLive, isPastToday: isPastToday, msLeft: end - now, msToStart: nextStart - now };
+  }
+
+  function enterRaidCombatV22(){
+    if(!game || !gameLoaded || merchantBusy) return;
+    if(dgOn() || (game.fight && game.fight.on)){
+      toast('⚔️ Сначала завершите текущий бой или Экспедицию!');
+      return;
+    }
+    var w = getRaidWindowV22();
+    if(!w.isLive || raidStateV22.hp <= 0){
+      toast('⏳ Мировой Босс сейчас не активен.');
+      return;
+    }
+    var cdLeft = getRaidCooldownLeftMsV22();
+    if(cdLeft > 0){
+      toast('💀 Вы пали в Рейде! Вернуться в бой можно через ' + fmt(cdLeft) + '.');
+      return;
+    }
+    var st = stats(game);
+    raidStateV22.bossNums = getRaidBossNumbersV22(w.dateKey);
+    raidStateV22.pMaxHp = (v20Data && v20Data.nearDeath) ? 1 : st.hp;
+    raidStateV22.pHp = raidStateV22.pMaxHp;
+    raidStateV22.pAtk = st.atk;
+    raidStateV22.usedPots = 0;
+
+    var sh = (!(v20Data && v20Data.nearDeath) && typeof window.calcMageShieldV22 === 'function') ? window.calcMageShieldV22(game, st.hp) : 0;
+    window.mageMaxBattleShield = sh;
+    window.mageCurrentBattleShield = sh;
+
+    raidInCombat = true;
+    raidStateV22.combatLog = '🌍 Ты вступил в бой с Пожирателем Душ! Остерегайся его чисел: [' + raidStateV22.bossNums.join(', ') + ']!'
+      + (sh > 0 ? ' ✨ Магический Барьер: ' + sh + ' ед. щита!' : '');
+    fightMsg = ''; fightChest = false;
+    updateLockedTabsV20();
+    renderFight(); renderRaidPaneV22();
+    showTab('game');
+    toast('⚔️ Бой с Мировым Боссом начался! Крути колесо!');
+  }
+
+  function leaveRaidCombatV22(byDeath){
+    raidInCombat = false;
+    window.mageMaxBattleShield = 0;
+    window.mageCurrentBattleShield = 0;
+    updateLockedTabsV20();
+    if(!byDeath){
+      fightMsg = '🏳️ Ты отступил из боя с Мировым Боссом. Весь нанесённый урон сохранён в рейтинге вклада!';
+    }
+    renderFight(); renderRaidPaneV22();
+  }
+
+  window.handleRaidSpinV22 = function(n){
+    var w = getRaidWindowV22();
+    if(!w.isLive || raidStateV22.hp <= 0){
+      leaveRaidCombatV22(false);
+      return;
+    }
+    var st = stats(game);
+    raidStateV22.pMaxHp = (v20Data && v20Data.nearDeath) ? 1 : st.hp;
+    raidStateV22.pAtk = st.atk;
+    var bossNums = getRaidBossNumbersV22(w.dateKey);
+    raidStateV22.bossNums = bossNums;
+
+    var eqEnch = getEquippedEnchants(game);
+    var r = (game && game.race) || 'human';
+    var healFactor = (r === 'orc') ? 0.9 : 1.0;
+    var bossFactor = (r === 'celestial') ? 1.25 : 1.0;
+    var sub = findSubclassV20(v20Data.subcls);
+    var effAtk = Math.max(1, Math.round(st.atk * bossFactor));
+
+    var logParts = [];
+    var dmgToBoss = 0;
+
+    // 1. Расчёт урона ИГРОКА по Мировому Боссу
+    var isLuckyFive = sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.indexOf(n) !== -1;
+    if(n === 0){
+      var isTriple = (r === 'demon' && Math.random() < 0.05);
+      dmgToBoss = effAtk * (isTriple ? 4 : 3);
+      logParts.push('Зеро! ' + (isTriple ? '🔥 СДЕЛКА ДЕМОНА (×4): ' : '💥 Критический удар (×3): ') + 'Пожиратель Душ теряет ' + dmgToBoss + ' HP!');
+    } else if(isLuckyFive){
+      dmgToBoss = Math.round(effAtk * 2.6);
+      logParts.push('🌟 Счастливое число ' + n + ' [' + sub.skill + ']! Нанесено ' + dmgToBoss + ' урона!');
+    } else if(n === 1){
+      dmgToBoss = 0;
+      logParts.push('Выпала 1 — критический промах (0 урона)!');
+    } else if(n % 2 === 0){
+      var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      dmgToBoss = Math.round(effAtk * 1.5 * (isCrit ? 1.6 : 1));
+      logParts.push('Выпало ' + n + ' (чётное):' + (isCrit ? ' 💥 КРИТ!' : '') + ' Удар на ' + dmgToBoss + ' урона!');
+    } else {
+      var isCritOdd = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+      dmgToBoss = Math.max(1, Math.round(effAtk * 0.5 * (isCritOdd ? 1.6 : 1)));
+      logParts.push('Выпало ' + n + ' (нечётное): касательный удар на ' + dmgToBoss + ' урона.');
+    }
+
+    if(minerActive(game) === 'gladiator' && dmgToBoss > 0){
+      var gladBonus = Math.max(1, Math.floor(st.atk * 0.08));
+      dmgToBoss += gladBonus;
+      logParts.push('⚔️ Гладиатор +' + gladBonus + ' урона.');
+    }
+
+    // Вампиризм игрока от удара
+    if(dmgToBoss > 0 && eqEnch.vamp > 0 && !(v20Data && v20Data.nearDeath)){
+      var vampHeal = Math.max(1, Math.round(dmgToBoss * (eqEnch.vamp / 100) * healFactor));
+      raidStateV22.pHp = Math.min(raidStateV22.pMaxHp, raidStateV22.pHp + vampHeal);
+      logParts.push('🩸 Вампиризм +' + vampHeal + ' HP.');
+    }
+
+    // 2. ПРОВЕРКА СПОСОБНОСТИ МИРОВОГО БОССА (если выпало одно из 5 его чисел ИЛИ единица)
+    var bossNumIdx = bossNums.indexOf(n);
+    if(bossNumIdx !== -1 || n === 1){
+      var baseAbilityDmg = getRaidBossAbilityDmgV22(); // Урон 8-го ранга (~90 HP)
+      var rawDmg = (n === 1) ? Math.round(baseAbilityDmg * ((r === 'automaton') ? 0.6 : 0.85)) : baseAbilityDmg;
+      var spellName = (n === 1) ? '💀 Кара Неудачи' : RAID_BOSS_SPELLS[bossNumIdx % RAID_BOSS_SPELLS.length];
+
+      // Классовая защита (Уворот Лучника / Блок Воина)
+      var setBonus = (typeof window.getActiveSetBonus === 'function') ? window.getActiveSetBonus(game) : null;
+      var defVal = (setBonus && setBonus.count >= 2 && setBonus.type !== 'relic' && typeof window.getClassSetDefPctV22 === 'function')
+        ? window.getClassSetDefPctV22(setBonus, game.cls) : 0;
+      var dodged = (game.cls === 'archer' && defVal > 0 && Math.random() * 100 < defVal);
+
+      if(dodged){
+        logParts.push('🏹 Босс применил «' + spellName + '», но твоя Ловкость позволила уклониться (0 урона)!');
+      } else {
+        var inc = rawDmg;
+        var mitNotes = [];
+        if(game.cls === 'warrior' && defVal > 0){
+          inc = Math.max(1, Math.floor(inc * (1 - defVal / 100)));
+          mitNotes.push('Блок Воина -' + defVal + '%');
+        }
+        if(minerActive(game) === 'defender' && inc > 1){
+          var defBlock = Math.floor(inc * 0.15);
+          inc -= defBlock;
+          mitNotes.push('Защитник -' + defBlock);
+        }
+        // Поглощение отдельным Магическим Щитом Мага
+        if(game.cls === 'mage' && window.mageCurrentBattleShield > 0){
+          var absorbed = Math.min(inc, window.mageCurrentBattleShield);
+          window.mageCurrentBattleShield -= absorbed;
+          inc -= absorbed;
+          mitNotes.push('Щит Мага поглотил ' + absorbed + ' (осталось ' + window.mageCurrentBattleShield + ')');
+        }
+
+        raidStateV22.pHp = Math.max(0, raidStateV22.pHp - inc);
+        logParts.push('🔥 СПОСОБНОСТЬ БОССА «' + spellName + '» (число ' + n + ')! Нанесено ' + inc + ' урона (Ранг 8)' + (mitNotes.length ? ' [' + mitNotes.join(', ') + ']' : '') + '!');
+
+        // Шипы игрока
+        if(eqEnch.thorns > 0 && rawDmg > 0){
+          var thDmg = Math.max(1, Math.round(rawDmg * eqEnch.thorns / 100));
+          dmgToBoss += thDmg;
+          logParts.push('🌵 Шипы вернули боссу +' + thDmg + ' урона.');
+        }
+      }
+    }
+
+    if(dmgToBoss > 0){
+      dealRaidDamage(dmgToBoss);
+    }
+
+    raidStateV22.combatLog = logParts.join(' ');
+
+    // 3. Проверка смерти игрока в Рейде -> 5 минут КД
+    if(raidStateV22.pHp <= 0){
+      var cdUntil = Date.now() + RAID_DEATH_CD_MS;
+      setRaidCooldownUntilV22(cdUntil);
+      leaveRaidCombatV22(true);
+      fightMsg = raidStateV22.combatLog + ' 💀 ТЫ ПАЛ ОТ СПОСОБНОСТИ МИРОВОГО БОССА! Наложен тайм-аут возрождения: ты не сможешь вернуться в Рейд в течение 5 минут (нанесённый урон полностью сохранён).';
+      toast('💀 Вы погибли в Рейде! Повторный вход в Рейд заблокирован на 5 минут.');
+    }
+    renderFight();
+  };
+
+  function fetchRaidDataV22(){
+    if(!sess || !configured()) return Promise.resolve();
+    var w = getRaidWindowV22();
+    raidStateV22.bossNums = getRaidBossNumbersV22(w.dateKey);
+    return token().then(function(t){
+      return fetch(DB_URL + '/raids/' + w.dateKey + '.json?auth=' + encodeURIComponent(t));
+    }).then(function(r){ return r.json(); }).then(function(d){
+      raidStateV22.dateKey = w.dateKey;
+      raidStateV22.players = (d && d.players && typeof d.players === 'object') ? d.players : {};
+      var totalDmg = 0;
+      Object.keys(raidStateV22.players).forEach(function(k){
+        totalDmg += Math.max(0, Number(raidStateV22.players[k].dmg) || 0);
+      });
+      raidStateV22.totalDmg = totalDmg;
+      raidStateV22.hp = Math.max(0, RAID_BOSS_MAX_HP - totalDmg);
+      raidStateV22.maxHp = RAID_BOSS_MAX_HP;
+      raidStateV22.loaded = true;
+      raidActive = w.isLive && raidStateV22.hp > 0;
+      raidHp = raidStateV22.hp;
+      raidMaxHp = raidStateV22.maxHp;
+      raidMyDmg = (sess && raidStateV22.players[sess.uid]) ? (Number(raidStateV22.players[sess.uid].dmg)||0) : 0;
+      if(!raidActive && raidInCombat){
+        raidInCombat = false;
+        fightMsg = (raidStateV22.hp <= 0) ? '🏆 МИРОВОЙ БОСС ПОВЕРЖЕН! Перейди во вкладку «Рейд 🌍», чтобы забрать награду!' : '⏳ Время Рейда подошло к концу!';
+        renderFight();
+      }
+      renderRaidPaneV22();
+      if(raidInCombat && curTab === 'game') renderFight();
+    }).catch(function(){});
+  }
+
+  dealRaidDamage = function(dmg){
+    var w = getRaidWindowV22();
+    if(!w.isLive || !raidInCombat || !sess || !sess.uid || dmg <= 0) return;
+    var cur = (raidStateV22.players[sess.uid] && Number(raidStateV22.players[sess.uid].dmg)) || 0;
+    var nextDmg = cur + dmg;
+    if(!raidStateV22.players[sess.uid]) raidStateV22.players[sess.uid] = {name: nick || sess.name || 'Игрок', dmg: 0};
+    raidStateV22.players[sess.uid].dmg = nextDmg;
+    raidStateV22.players[sess.uid].name = nick || sess.name || 'Игрок';
+    raidStateV22.totalDmg = (Number(raidStateV22.totalDmg)||0) + dmg;
+    raidStateV22.hp = Math.max(0, RAID_BOSS_MAX_HP - raidStateV22.totalDmg);
+    token().then(function(t){
+      return fetch(DB_URL + '/raids/' + w.dateKey + '/players/' + sess.uid + '.json?auth=' + encodeURIComponent(t), {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: nick || sess.name || 'Игрок', dmg: nextDmg, t: Date.now() })
+      });
+    }).then(function(){ fetchRaidDataV22(); }).catch(function(){});
+  };
+
+  function claimRaidRewardV22(){
+    if(!game || !gameLoaded || !sess || merchantBusy) return;
+    var w = getRaidWindowV22();
+    var me = raidStateV22.players && raidStateV22.players[sess.uid];
+    if(!me || !me.dmg || me.claimed){ toast('Награда уже получена или вы не нанесли урона.'); return; }
+    if(w.isLive && raidStateV22.hp > 0){ toast('Дождитесь окончания рейда (18:30) или гибели Босса!'); return; }
+
+    var myDmg = Number(me.dmg) || 0;
+    var total = Math.max(1, raidStateV22.totalDmg || myDmg);
+    var share = Math.min(1, myDmg / total);
+    var killedBonus = (raidStateV22.hp <= 0) ? 1.5 : 1.0;
+
+    var coinsReward = Math.round((300 + 4700 * share + Math.min(1500, Math.floor(myDmg * 0.08))) * killedBonus);
+    var dustReward  = Math.round((25  + 225  * share) * killedBonus);
+    var stoneReward = Math.max(1, Math.round((2 + 13 * share) * killedBonus));
+    var gotTears = (share >= 0.15 && Math.random() < 0.35);
+
+    me.claimed = true;
+    token().then(function(t){
+      return fetch(DB_URL + '/raids/' + w.dateKey + '/players/' + sess.uid + '.json?auth=' + encodeURIComponent(t), {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ claimed: true })
+      });
+    }).then(function(){
+      game.coins = (Number(game.coins)||0) + coinsReward;
+      game.dust  = Math.min(1000000, (Number(game.dust)||0) + dustReward);
+      game.stones = Math.min(1000000, (Number(game.stones)||0) + stoneReward);
+      if(gotTears){ v20Data.potions = (Number(v20Data.potions)||0) + 1; saveV20Local(); saveV20ToFirestore(); }
+      saveGame(); renderCoins(); renderRaidPaneV22();
+      toast('🏆 Награда за вклад (' + (share*100).toFixed(1) + '%): +' + coinsReward + ' мон., +' + dustReward + ' ✨ пыли, +' + stoneReward + ' 🪨 камней' + (gotTears ? ' и 🧪 Слёзы Феникса!' : '!'));
+    });
+  }
+
+  // Отрисовка полноценного окна боя с Мировым Боссом прямо над рулеткой
+  function renderRaidFightBoxV22(box){
+    var w = getRaidWindowV22();
+    var bossNums = getRaidBossNumbersV22(w.dateKey);
+    var pm = Math.max(0, Math.min(100, Math.round(raidStateV22.hp / raidStateV22.maxHp * 100)));
+    var pp = Math.max(0, Math.min(100, Math.round(raidStateV22.pHp / raidStateV22.pMaxHp * 100)));
+    var abilDmg = getRaidBossAbilityDmgV22();
+
+    box.hidden = false;
+    box.className = 'fight elite';
+    box.innerHTML = '<div class="fhead"><div class="mon">' + monsterSvg('boss_xalatah') + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="rn">🌍 Пожиратель Душ · Ранг 8</div>'
+      + '<div class="rd">Зеро: ×3 урона · Чёт: ×1.5 · Нечёт: ×0.5.<br>'
+      + '<span style="color:#f87171;font-weight:700">⚠️ Числа способности Босса (' + abilDmg + ' урона): [' + bossNums.join(', ') + '] и [1]</span></div>'
+      + '</div></div>'
+      + '<div><div class="hpl"><span>👑 Пожиратель Душ (Общее HP)</span><span>' + raidStateV22.hp + ' / ' + raidStateV22.maxHp + ' (' + pm + '%)</span></div><div class="bar m"><i style="width:' + pm + '%"></i></div></div>'
+      + '<div><div class="hpl"><span>Ты' + (v20Data.nearDeath ? ' [ПРИ СМЕРТИ]' : '') + '</span><span>' + raidStateV22.pHp + ' / ' + raidStateV22.pMaxHp + ' HP</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
+      + '<div class="flog">' + (raidStateV22.combatLog || 'Крути рулетку, чтобы наносить урон Мировому Боссу!') + '</div>'
+      + '<div class="alchemy-belt" id="raidAlchemyBelt" style="margin-top:4px">'
+      + '<button type="button" class="pot-btn" id="btnRaidPotHeal"' + ((v21Data && v21Data.pots && v21Data.pots.heal > 0 && raidStateV22.pHp < raidStateV22.pMaxHp && raidStateV22.usedPots < 2 && !v20Data.nearDeath) ? '' : ' disabled') + '>❤️ Зелье лечения <span class="qty">' + ((v21Data && v21Data.pots && v21Data.pots.heal) || 0) + ' шт. (' + raidStateV22.usedPots + '/2)</span></button>'
+      + '</div>'
+      + '<button type="button" id="btnLeaveRaidFight" class="ghost">Отступить из Рейда</button>';
+
+    var hBtn = $('btnRaidPotHeal');
+    if(hBtn) hBtn.onclick = function(){
+      if(!v21Data || v21Data.pots.heal <= 0 || raidStateV22.usedPots >= 2 || raidStateV22.pHp >= raidStateV22.pMaxHp || v20Data.nearDeath) return;
+      v21Data.pots.heal--;
+      raidStateV22.usedPots++;
+      if(typeof saveV21Local === 'function') saveV21Local();
+      var healAmt = Math.max(1, Math.floor(raidStateV22.pMaxHp * 0.20));
+      raidStateV22.pHp = Math.min(raidStateV22.pMaxHp, raidStateV22.pHp + healAmt);
+      raidStateV22.combatLog = '🧪 Выпито Зелье лечения (+' + healAmt + ' HP, ' + raidStateV22.usedPots + '/2). ' + raidStateV22.combatLog;
+      renderFight();
+    };
+    var lBtn = $('btnLeaveRaidFight');
+    if(lBtn) lBtn.onclick = function(){ leaveRaidCombatV22(false); };
+  }
+
+  var _origRenderFightRaidWrapV22 = renderFight;
+  renderFight = function(){
+    if(raidInCombat && raidActive && !dgOn() && !(game && game.fight && game.fight.on)){
+      var box = $('fight');
+      if(box){
+        renderRaidFightBoxV22(box);
+        if(typeof injectMageShieldBarUI === 'function') injectMageShieldBarUI(box);
+        return;
+      }
+    }
+    _origRenderFightRaidWrapV22();
+  };
+
+  function renderRaidPaneV22(){
+    var pane = $('raidPane'); if(!pane) return;
+    var w = getRaidWindowV22();
+    var bossNums = getRaidBossNumbersV22(w.dateKey);
+    var abilDmg = getRaidBossAbilityDmgV22();
+    var cdLeft = getRaidCooldownLeftMsV22();
+    var total = Math.max(1, raidStateV22.totalDmg || 0);
+    var myEntry = (sess && raidStateV22.players && raidStateV22.players[sess.uid]) || {dmg: 0, claimed: false};
+    var myDmg = Number(myEntry.dmg) || 0;
+    var myShare = total > 0 ? ((myDmg / total) * 100).toFixed(1) : '0.0';
+    var pctHp = Math.max(0, Math.min(100, Math.round((raidStateV22.hp / raidStateV22.maxHp) * 100)));
+
+    var rows = Object.keys(raidStateV22.players || {}).map(function(uidKey){
+      var p = raidStateV22.players[uidKey] || {};
+      return { uid: uidKey, name: p.name || 'Игрок', dmg: Number(p.dmg)||0, claimed: !!p.claimed };
+    }).filter(function(x){ return x.dmg > 0; }).sort(function(a,b){ return b.dmg - a.dmg; });
+
+    var statusHtml = '';
+    if(w.isLive && raidStateV22.hp > 0){
+      statusHtml = '<div style="color:var(--green);font-weight:700">🔥 РЕЙД АКТИВЕН! (18:00–18:30) · Осталось времени: ' + fmt(w.msLeft) + '</div>';
+    } else if(raidStateV22.hp <= 0 && (w.isLive || w.isPastToday)){
+      statusHtml = '<div style="color:var(--gold);font-weight:700">🏆 МИРОВОЙ БОСС ПОВЕРЖЕН! Заберите награду за свой вклад ниже.</div>';
+    } else {
+      statusHtml = '<div style="color:var(--muted)">⏳ Мировой Босс появляется ежедневно в <b>18:00</b> ровно на <b>30 минут</b>.<br>До начала следующего рейда: <b>' + fmt(w.msToStart) + '</b></div>';
+    }
+
+    if(cdLeft > 0){
+      statusHtml += '<div style="color:var(--red);font-weight:700;margin-top:6px">💀 Вы пали в Рейде! Возрождение и повторный вход через: ' + fmt(cdLeft) + '</div>';
+    }
+
+    var canClaim = (myDmg > 0 && !myEntry.claimed && (!w.isLive || raidStateV22.hp <= 0));
+    var h = '<div class="card" style="border-color:var(--gold)">'
+      + '<h3>🌍 Мировой Босс · Пожиратель Душ</h3>'
+      + '<p>Ежедневное событие сервера с <b>18:00 до 18:30</b>. Крути колесо во время рейда: Зеро — <b>×3 урона</b>, Чётное — <b>×1.5 урона</b>, Нечётное — <b>×0.5 урона</b>, Единица — промах и ответный удар.</p>'
+      + '<div style="background:rgba(239,68,68,.12);border:1px solid #ef4444;border-radius:12px;padding:10px;font-size:13px">'
+      + '<b>🔥 Способности Босса (Уровень 8-го ранга — ~' + abilDmg + ' урона):</b><br>'
+      + 'Если на рулетке выпадает одно из 5 проклятых чисел Босса сегодня, он применяет разрушительную способность по герою! При гибели в Рейде вход блокируется на <b>5 минут</b>.<br>'
+      + '<div class="luckyFiveWrap" style="margin-top:6px">'
+      + bossNums.map(function(num){ return '<span class="luckyBall" style="background:#ef4444;color:#fff">' + num + '</span>'; }).join('')
+      + '</div></div>'
+      + statusHtml
+      + '<div style="margin-top:8px">'
+      + '<div class="hpl"><span>👑 Мировой Пожиратель Душ</span><span>' + raidStateV22.hp + ' / ' + raidStateV22.maxHp + ' HP (' + pctHp + '%)</span></div>'
+      + '<div class="bar m"><i style="width:' + pctHp + '%"></i></div>'
+      + '<div style="margin-top:8px;font-size:13px">Твой урон сегодня: <b>' + myDmg + '</b> (' + myShare + '% от общего урона сервера)</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+      + (w.isLive && raidStateV22.hp > 0 ? '<button type="button" id="btnRaidJoinV22"' + (cdLeft > 0 && !raidInCombat ? ' disabled' : '') + '>' + (raidInCombat ? '⚔️ Ты в Рейде (Перейти к рулетке)' : (cdLeft > 0 ? '⏳ КД возрождения (' + fmt(cdLeft) + ')' : '⚔️ Вступить в Рейд')) + '</button>' : '')
+      + (canClaim ? '<button type="button" id="btnRaidClaimV22" style="background:var(--green);color:#fff">🎁 Забрать награду за вклад (' + myShare + '%)</button>' : '')
+      + (myEntry.claimed ? '<span style="font-size:12px;color:var(--green);font-weight:700">✓ Награда за сегодняшний рейд получена</span>' : '')
+      + '</div></div></div>';
+
+    h += '<div class="card"><h3>📊 Рейтинг вклада игроков (' + raidStateV22.dateKey + ')</h3>';
+    if(!rows.length){
+      h += '<p>Сегодня ещё никто не нанёс урона Мировому Боссу.</p>';
+    } else {
+      rows.slice(0, 20).forEach(function(r, idx){
+        var pct = ((r.dmg / total) * 100).toFixed(1);
+        h += '<div class="rrow"><div><span class="rn">#' + (idx+1) + ' ' + escapeHtmlV20(r.name) + '</span></div>'
+          + '<div class="rd"><b>' + r.dmg + '</b> урона (' + pct + '%)</div></div>';
+      });
+    }
+    h += '</div>';
+    pane.innerHTML = h;
+
+    var jBtn = $('btnRaidJoinV22');
+    if(jBtn) jBtn.onclick = function(){
+      if(raidInCombat){ showTab('game'); return; }
+      enterRaidCombatV22();
+    };
+    var cBtn = $('btnRaidClaimV22');
+    if(cBtn) cBtn.onclick = claimRaidRewardV22;
+  }
+
+  var _origShowTabV22 = showTab;
+  showTab = function(which){
+    _origShowTabV22(which);
+    var rp = $('raidPane');
+    if(rp){
+      rp.hidden = (which !== 'raid');
+      rp.style.display = (which === 'raid') ? 'flex' : 'none';
+    }
+    if($('tabRaid')) $('tabRaid').className = 'tab' + (which === 'raid' ? ' on' : '');
+    if(which === 'raid') fetchRaidDataV22();
+  };
+  if($('tabRaid')) $('tabRaid').onclick = function(){ showTab('raid'); };
+  if($('raidPane')){ $('raidPane').hidden = true; $('raidPane').style.display = 'none'; }
+
+  setInterval(function(){
+    if(!document.hidden && sess){
+      var w = getRaidWindowV22();
+      if(curTab === 'raid' || w.isLive) fetchRaidDataV22();
+    }
+  }, 5000);
+  setInterval(function(){
+    if(!document.hidden && curTab === 'raid' && getRaidCooldownLeftMsV22() > 0){
+      renderRaidPaneV22();
+    }
+  }, 1000);
+  setTimeout(fetchRaidDataV22, 1500);
+
+  // --- ФИКС ИМЕННЫХ КОМПЛЕКТОВ (СТАТЫ 2/3/4 ВЕЩИ) И МАГИЧЕСКОГО БАРЬЕРА МАГА (ЗАВИСИТ ОТ 2/3/4 ВЕЩЕЙ) ---
+  // Вычисляем % классовой защиты (у Воина блок, у Лучника уворот, у Мага щит) в зависимости от редкости И числа вещей (2, 3 или 4)!
+  window.getClassSetDefPctV22 = function(b, cls){
+    if(!b || b.type === 'relic' || b.count < 2) return 0;
+    var baseVal = { 'common': 3, 'uncommon': 5, 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[b.rarity] || 0;
+    if(!baseVal) return 0;
+    // Масштабирование от собранности комплекта: 2 вещи = x1.0, 3 вещи = x1.35, 4 вещи = x1.75
+    var countScale = (b.count >= 4) ? 1.75 : ((b.count === 3) ? 1.35 : 1.0);
+    var val = Math.round(baseVal * countScale);
+    if(cls === 'mage') return val + (b.count >= 4 ? 10 : (b.count === 3 ? 7 : 5));
+    return val;
+  };
+
+  // Применяем бонус комплекта (+% к HP и Урону от 2/3/4 вещей + бонус 2 вещей Реликвий) реально в stats()!
+  var _origStatsBeforeSetFixV22 = stats;
+  stats = function(source){
+    var st = _origStatsBeforeSetFixV22(source);
+    var g = source || game;
+    if(!g || typeof window.getActiveSetBonus !== 'function') return st;
+    var b = window.getActiveSetBonus(g);
+    if(b){
+      if(b.type !== 'relic' && b.pctBonus > 0){
+        st.hp  = Math.round(st.hp  * (1 + b.pctBonus / 100));
+        st.atk = Math.round(st.atk * (1 + b.pctBonus / 100));
+      } else if(b.type === 'relic' && b.count >= 2 && b.key === 'set_nosferatu'){
+        st.hp  = Math.round(st.hp * 1.20);
+      }
+    }
+    return st;
+  };
+
+  // Функция расчёта щита Мага при старте боя или комнаты Экспедиции
+  window.calcMageShieldV22 = function(g, maxHp){
+    if(!g || g.cls !== 'mage' || typeof window.getActiveSetBonus !== 'function') return 0;
+    var b = window.getActiveSetBonus(g);
+    var shieldPct = window.getClassSetDefPctV22(b, 'mage');
+    return shieldPct > 0 ? Math.max(1, Math.floor(maxHp * shieldPct / 100)) : 0;
+  };
+
+  // Обновляем описание в карточке комплекта (показываем точный % для 2, 3 и 4 вещей)
+  var _origRenderCharSetCardV22 = renderChar;
+  renderChar = function(){
+    _origRenderCharSetCardV22();
+    var sbBox = $('v21SetBonusCard');
+    if(sbBox && game && typeof window.getActiveSetBonus === 'function'){
+      var b = window.getActiveSetBonus(game);
+      if(b && b.type !== 'relic'){
+        var defPct = window.getClassSetDefPctV22(b, game.cls);
+        var defDesc = '';
+        if(defPct > 0){
+          if(game.cls === 'warrior') defDesc = '🛡️ Глухая оборона (' + b.count + '/4 шт.): блокирует <b>' + defPct + '%</b> урона монстра.';
+          else if(game.cls === 'archer') defDesc = '🏹 Ловкость (' + b.count + '/4 шт.): <b>' + defPct + '%</b> шанс уклониться от атаки.';
+          else if(game.cls === 'mage'){
+            var stNow = stats(game);
+            var shVal = window.calcMageShieldV22(game, stNow.hp);
+            defDesc = '✨ Магический Барьер (' + b.count + '/4 шт.): даёт щит <b>+' + defPct + '% макс. HP (+' + shVal + ' HP)</b> в начале каждого боя!';
+          }
+        }
+        sbBox.innerHTML = '🔮 <b>' + b.name + '</b> (' + b.count + '/4 шт.)<br>'
+          + 'Резонанс заточки: <b>+' + b.minLv + '</b> · Бонус комплекта: <b style="color:var(--green)">+' + b.pctBonus + '% к HP и Урону</b>.'
+          + (defDesc ? '<br><span style="color:var(--gold)">' + defDesc + '</span>' : '');
+      }
+    }
+  };
+
+  // --- ОТДЕЛЬНАЯ ПОЛОСКА ЩИТА МАГА В БОЮ (НЕ ПРИБАВЛЯЕТСЯ К HP, СБИВАЕТСЯ ПЕРВОЙ, ВОССТАНАВЛИВАЕТСЯ В СЛЕДУЮЩЕМ БОЮ) ---
+  window.mageCurrentBattleShield = 0;
+  window.mageMaxBattleShield = 0;
+
+  var _origStartFightMageShieldV22 = startFight;
+  startFight = function(){
+    _origStartFightMageShieldV22();
+    if(game && game.fight && game.fight.on && !(v20Data && v20Data.nearDeath)){
+      var st = stats(game);
+      // Фиксируем чистое здоровье без прибавления щита в зеленую полоску
+      game.fight.ph = st.hp;
+      game.fight.p  = st.hp;
+      game.fight.pa = st.atk;
+      var sh = window.calcMageShieldV22(game, st.hp);
+      window.mageMaxBattleShield = sh;
+      window.mageCurrentBattleShield = sh;
+      if(sh > 0) fightLog = '✨ Магический Барьер активирован: ' + sh + ' ед. щита! ' + fightLog;
+      saveGame(); renderFight();
+    } else {
+      window.mageMaxBattleShield = 0;
+      window.mageCurrentBattleShield = 0;
+    }
+  };
+
+  var _origMaybeAmbushMageShieldV22 = maybeAmbush;
+  maybeAmbush = function(){
+    var res = _origMaybeAmbushMageShieldV22();
+    if(res && game && game.fight && game.fight.on && !(v20Data && v20Data.nearDeath)){
+      var st = stats(game);
+      game.fight.ph = st.hp;
+      game.fight.p  = st.hp;
+      game.fight.pa = st.atk;
+      var sh = window.calcMageShieldV22(game, st.hp);
+      window.mageMaxBattleShield = sh;
+      window.mageCurrentBattleShield = sh;
+      if(sh > 0) fightLog = '✨ Магический Барьер активирован: ' + sh + ' ед. щита! ' + fightLog;
+      renderFight();
+    }
+    return res;
+  };
+
+  var _origDgEnterShieldV22 = dgEnter;
+  dgEnter = function(){
+    _origDgEnterShieldV22();
+    if(v20Data && v20Data.exp && v20Data.exp.on && !v20Data.nearDeath){
+      var st = stats(game);
+      v20Data.exp.ph = st.hp;
+      v20Data.exp.p  = st.hp;
+      saveV20Local(); renderDg();
+    }
+  };
+
+  var _origSelectExpPathMageShieldV22 = selectExpeditionPathV20;
+  selectExpeditionPathV20 = function(choiceIdx){
+    var d = v20Data.exp;
+    var choices = (d && d.choices) ? d.choices : [];
+    var picked = choices[choiceIdx];
+    _origSelectExpPathMageShieldV22(choiceIdx);
+    if(d && d.on && picked && (picked.type === 'combat' || picked.type === 'elite' || picked.type === 'boss') && !v20Data.nearDeath){
+      var stNow = stats(game);
+      d.ph = stNow.hp;
+      d.p  = Math.min(d.ph, Math.max(1, d.p));
+      var sh = window.calcMageShieldV22(game, stNow.hp);
+      window.mageMaxBattleShield = sh;
+      window.mageCurrentBattleShield = sh;
+      if(sh > 0){
+        fightLog = '✨ Магический Барьер активирован: ' + sh + ' ед. щита! ' + fightLog;
+        saveV20Local(); renderFight(); renderDg();
+      }
+    }
+  };
+
+  // При получении урона сначала тратится синяя полоска щита Мага (внутри боя щит не лечится)
+  var _origStrikeCoreBaseV22 = strikeCoreBase;
+  strikeCoreBase = function(f, mo, st, n){
+    var beforeP = f.p;
+    var resText = _origStrikeCoreBaseV22(f, mo, st, n);
+    var dmgTaken = beforeP - f.p;
+
+    if(game && game.cls === 'mage' && dmgTaken > 0 && window.mageCurrentBattleShield > 0){
+      var absorbed = Math.min(dmgTaken, window.mageCurrentBattleShield);
+      window.mageCurrentBattleShield -= absorbed;
+      f.p = Math.min(f.ph || st.hp, f.p + absorbed);
+      resText += ' 🛡️ Щит Мага поглотил ' + absorbed + ' урона (осталось щита: ' + window.mageCurrentBattleShield + '/' + window.mageMaxBattleShield + ').';
+    }
+    return resText;
+  };
+
+  function injectMageShieldBarUI(box){
+    if(!box || box.hidden || !game || game.cls !== 'mage' || window.mageMaxBattleShield <= 0) return;
+    var isActiveFight = (dgOn() && v20Data.exp && v20Data.exp.inCombat) || (game.fight && game.fight.on) || (raidInCombat && raidActive);
+    if(!isActiveFight) return;
+    var curSh = window.mageCurrentBattleShield, maxSh = window.mageMaxBattleShield;
+    var pctSh = Math.max(0, Math.min(100, Math.round(curSh / maxSh * 100)));
+    var barsContainer = box.querySelector('.bar.p');
+    if(barsContainer && barsContainer.parentNode && !box.querySelector('#mageShieldBarWrap')){
+      var wrap = document.createElement('div');
+      wrap.id = 'mageShieldBarWrap';
+      wrap.innerHTML = '<div class="hpl"><span style="color:#60a5fa;font-weight:700">✨ Магический Щит</span><span style="color:#60a5fa;font-weight:700">' + curSh + ' / ' + maxSh + '</span></div>'
+        + '<div class="bar" style="border-color:#3b82f6"><i style="display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#60a5fa);width:' + pctSh + '%"></i></div>';
+      barsContainer.parentNode.parentNode.insertBefore(wrap, barsContainer.parentNode.nextSibling);
+    } else {
+      var fillEl = box.querySelector('#mageShieldBarWrap i');
+      var txtEl  = box.querySelector('#mageShieldBarWrap .hpl span:last-child');
+      if(fillEl) fillEl.style.width = pctSh + '%';
+      if(txtEl) txtEl.textContent = curSh + ' / ' + maxSh;
+    }
+  }
+
+  var _origRenderFightMageBarV22 = renderFight;
+  renderFight = function(){
+    _origRenderFightMageBarV22();
+    injectMageShieldBarUI($('fight'));
+  };
+
+  var _origRenderDgFightMageBarV22 = renderDgFight;
+  renderDgFight = function(box){
+    _origRenderDgFightMageBarV22(box);
+    injectMageShieldBarUI(box || $('fight'));
+  };
+
+  if(gameLoaded){ renderChar(); renderForge(); renderEnchantPanel(); renderDg(); }
+
+  // =====================================================================
+  // ТЕНЕВОЙ ОБМЕННИК (1000 Золота -> 100 Пыли)
+  // =====================================================================
+  var _origRenderMerchantV22b = renderMerchant;
+  renderMerchant = function() {
+    _origRenderMerchantV22b();
+    var box = document.getElementById('merchantBody');
+    if (!box || typeof game === 'undefined' || !game) return;
+    
+    if (!document.getElementById('exchangeDustBtn')) {
+        var btnHTML = '<div class="card" style="border-color: #a855f7; margin-top:14px;">'
+          + '<h3>✨ Теневой Обменник</h3>'
+          + '<p>У тебя накопилось излишне много золота? Скупщик готов обменять его на Магическую пыль.</p>'
+          + '<button type="button" id="exchangeDustBtn">Купить 100 ✨ за 1000 мон.</button>'
+          + '</div>';
+        box.insertAdjacentHTML('beforeend', btnHTML);
     }
     
-    if(typeof restore === 'function') restore(); // Пытаемся восстановить сессию Firebase
-  });
-
+    var exBtn = document.getElementById('exchangeDustBtn');
+    if (exBtn) {
+        var canExchange = (typeof merchantBusy !== 'undefined' ? !merchantBusy : true) && (typeof gameLoaded !== 'undefined' && gameLoaded) && (game.coins >= 1000);
+        exBtn.disabled = !canExchange;
+        exBtn.onclick = function() {
+            if (typeof canSell === 'function' && !canSell()) return;
+            if (game.coins >= 1000) {
+                merchantBusy = true;
+                game.coins -= 1000;
+                game.dust = Math.min(1000000, (Number(game.dust)||0) + 100);
+                saveGame().then(function() {
+                    merchantBusy = false;
+                    renderCoins();
+                    renderMerchant();
+                    if (typeof renderEnchantPanel === 'function') renderEnchantPanel();
+                    toast('Обмен успешен! Получено 100 ✨ Магической пыли.');
+                }).catch(function() {
+                    merchantBusy = false;
+                    toast('Ошибка сети при обмене.');
+                });
+            }
+        };
+    }
+  };
 })();
 </script>
 </body>
