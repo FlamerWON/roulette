@@ -720,6 +720,7 @@ svg.chr{overflow:visible}
       <button id="tabShop" class="tab">Магазин</button>
       <button id="tabDg" class="tab">Экспедиция</button>
       <button id="tabMarket" class="tab">Рынок</button>
+      <button id="tabPets" class="tab">Спутники</button>
       <button id="tabRaid" class="tab">Рейд 🌍</button>
     </div>
     
@@ -828,6 +829,7 @@ svg.chr{overflow:visible}
     </section>
     <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
     <section class="shopPane" id="marketPane" hidden><div id="marketBody"></div></section>
+    <section class="shopPane" id="petsPane" hidden><div id="petsBody"></div></section>
     <section class="shopPane" id="raidPane" hidden>
       <div class="card" style="border-color:var(--gold)">
         <h3>🌍 Мировой Босс (Рейд)</h3>
@@ -1177,6 +1179,7 @@ svg.chr{overflow:visible}
     arr.push(n); arr=arr.slice(-3); game.nums=arr.join(',');
     var sn=String(game.seen||''); while(sn.length<37) sn+='0';
     game.seen=sn.slice(0,n)+'1'+sn.slice(n+1,37);
+    updateIncubatorOnSpin();
     fightStrike(n); dgStrike(n);
     if (raidInCombat && raidActive && !dgOn() && !(game.fight && game.fight.on)) {
        if(typeof window.handleRaidSpinV22 === 'function') window.handleRaidSpinV22(n);
@@ -1454,6 +1457,7 @@ svg.chr{overflow:visible}
 
   function initV11(g){
     initMiner(g);
+    initPetsGameData(g);
     initEnhancement(g);
     if(RELEASE_ID===17&&sess){try{if(!localStorage.getItem('roulette_pioneer_unlocked_'+sess.uid)){localStorage.setItem('roulette_pioneer_unlocked_'+sess.uid,'1');localStorage.setItem('roulette_wheel_skin_'+sess.uid,'pioneer');}}catch(e){}}
     renderWheelSkinBox();
@@ -1492,7 +1496,7 @@ svg.chr{overflow:visible}
   }
   function saleCounts(g){var out={};(g.inv||[]).forEach(function(id){if(ITEMS[id])out[id]=(out[id]||0)+1;});return out;}
   function isStarterItem(id){return Object.keys(CLASSES).some(function(cls){return Object.values(gearOf(cls)).indexOf(id)>=0;});}
-  function saleProtected(g,id){return !!(g.favorites&&g.favorites[id])||!ITEMS[id];}
+  function saleProtected(g,id){return !!(g.favorites&&g.favorites[id])||!ITEMS[id]||id==='mystery_egg';}
   function saleAvailable(g,id){
     if(saleProtected(g,id))return 0;var it=ITEMS[id],w=wornIndex(g,it.slot),n=0,protectedCount=0;
     g.inv.forEach(function(key,i){if(key===id){if(i===w)protectedCount++;else n++;}});
@@ -2140,6 +2144,7 @@ svg.chr{overflow:visible}
   if (isAntiFarm && !v20Data.nearDeath) { xp = 0; chance = 0; coins = 0; extraAntiMsg = ' [Анти-фарм: награды заблокированы]'; }
   else if (isAntiFarm && v20Data.nearDeath) { xp = 0; chance = 0; coins = Math.max(1, Math.floor(coins * 0.15)); extraAntiMsg = ' [Выживание: добыто только базовое золото]'; }
   var id=Math.random()<chance?rollLoot(mo.rank,false,mo.elite):null;
+  if(f.kind === 'ambush') maybeDropMysteryEggV23(f.kind);
 
   game.coins+=coins;if(id)game.inv.push(id);var up=gainXP(xp);
   fightMsg=fightLog+' Победа! +'+coins+' монет · +'+xp+' XP.'+up+(id?' Добыча: '+ITEMS[id].name+' ('+RARITY[ITEMS[id].r].name+').':' Предметов не выпало.') + extraAntiMsg;
@@ -2608,7 +2613,11 @@ svg.chr{overflow:visible}
       it.vb=kind==='hood'?'15 8 70 74':kind==='helm'?'18 10 64 63':kind==='hat'?'15 0 70 50':'18 6 64 42';
     }
   });
-  ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_hat.vb='15 0 70 50';
+  ITEMS.mystery_egg = {
+  name: 'Загадочное яйцо', slot: 'none', cls: '', r: 'rare', hp: 0, atk: 0, drop: false, vb: '0 0 100 100',
+  draw: '<ellipse cx="50" cy="55" rx="30" ry="40" fill="#fcd34d" stroke="#b45309" stroke-width="4"/><path d="M 40 15 Q 60 50 40 85" fill="none" stroke="#d97706" stroke-width="3" opacity="0.5"/><circle cx="35" cy="35" r="4" fill="#f59e0b"/><circle cx="65" cy="65" r="6" fill="#f59e0b"/>'
+};
+ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_hat.vb='15 0 70 50';
   ITEMS.war_helm.draw=armorPath('M24 38 Q24 16 50 16 Q76 16 76 38Z','#aab3bd')+armorPath('M27 35 Q50 27 73 35 L76 40 L24 40Z','#8a939d')+armorPath('M30 28 Q35 21 43 21','none','#edf2f6',2)+armorPath('M49 17 V30','none','#73818d',1.5)+armorDot(29,37,'#e9d3a3',1)+armorDot(71,37,'#e9d3a3',1);ITEMS.war_helm.vb='18 10 64 36';
   ITEMS.robin_hat.draw=armorPath('M23 37 Q27 18 53 19 L76 14 L69 31 L77 36 Q50 31 24 42Z','#478b44')+armorPath('M26 37 Q50 28 73 35','none','#b4c987',2)+armorPath('M63 28 Q73 9 84 7 Q83 20 65 29Z','#c65849',INK,1.3)+armorPath('M65 28 L80 11','none','#f3d7aa',.9);ITEMS.robin_hat.vb='18 3 71 43';
 
@@ -4333,7 +4342,322 @@ svg.chr{overflow:visible}
     if(document.hidden) document.body.classList.add('v19-paused');
     else document.body.classList.remove('v19-paused');
   });
-  /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
+  
+  /* ================== МОДУЛЬ ПИТОМЦЕВ И ИНКУБАТОРА (V23) ================== */
+  var PET_RARITIES = {
+    common:     {name:'Обычный', color:'#6b7280', chance:50.0},
+    uncommon:   {name:'Необычный', color:'#2f8f4e', chance:25.0},
+    rare:       {name:'Редкий', color:'#2a6fd6', chance:12.0},
+    epic:       {name:'Эпический', color:'#7e3fc4', chance:6.0},
+    legendary:  {name:'Легендарный', color:'#b8610a', chance:1.8},
+    divine:     {name:'Божественный', color:'#e0b100', chance:0.2}
+  };
+
+  var PET_DATABASE = {
+    common: [
+      {id:'dog_fang', name:'Щенок Клык', stat:'+5 Атаки', buff:function(st){ st.atk += 5; }},
+      {id:'cat_mur', name:'Кот Мурлыка', stat:'+10 HP', buff:function(st){ st.hp += 10; }},
+      {id:'bunny', name:'Лесной Кролик', stat:'+5 Атаки', buff:function(st){ st.atk += 5; }},
+      {id:'hamster', name:'Рыжий Хомяк', stat:'+15 HP', buff:function(st){ st.hp += 15; }},
+      {id:'slime_pet', name:'Грязевой Слизень', stat:'+20 HP', buff:function(st){ st.hp += 20; }},
+      {id:'bat_baby', name:'Летучая Мышка', stat:'+4 Атаки', buff:function(st){ st.atk += 4; }},
+      {id:'hedgehog', name:'Лесной Ёжик', stat:'+15 HP', buff:function(st){ st.hp += 15; }},
+      {id:'rock_chick', name:'Каменный Птенчик', stat:'+10 HP', buff:function(st){ st.hp += 10; }}
+    ],
+    uncommon: [
+      {id:'salamander', name:'Огненная Саламандра', stat:'+10 Атаки', buff:function(st){ st.atk += 10; }},
+      {id:'falcon', name:'Небесный Сокол', stat:'+8 Атаки', buff:function(st){ st.atk += 8; }},
+      {id:'wolf_pup', name:'Лесной Вольчонок', stat:'+12 Атаки', buff:function(st){ st.atk += 12; }},
+      {id:'automaton_pet', name:'Медный Големчик', stat:'+30 HP', buff:function(st){ st.hp += 30; }},
+      {id:'phantom_cat', name:'Призрачный Кот', stat:'+15 HP, +6 Атаки', buff:function(st){ st.hp += 15; st.atk += 6; }},
+      {id:'spider_pet', name:'Кристальный Паучок', stat:'+10 Атаки', buff:function(st){ st.atk += 10; }},
+      {id:'crab_pet', name:'Панцирный Краб', stat:'+40 HP', buff:function(st){ st.hp += 40; }},
+      {id:'scorpion_pet', name:'Песчаный Скорпион', stat:'+14 Атаки', buff:function(st){ st.atk += 14; }}
+    ],
+    rare: [
+      {id:'unicorn', name:'Кристальный Единорог', stat:'+25 HP, +12 Атаки', buff:function(st){ st.hp += 25; st.atk += 12; }},
+      {id:'griffin_pet', name:'Грозовой Грифон', stat:'+20 Атаки', buff:function(st){ st.atk += 20; }},
+      {id:'firefly', name:'Магический Светлячок', stat:'+30 HP', buff:function(st){ st.hp += 30; }},
+      {id:'cerberus', name:'Лавовый Цербер', stat:'+30 Атаки', buff:function(st){ st.atk += 30; }},
+      {id:'imp_pet', name:'Ледяной Демонёнок', stat:'+50 HP', buff:function(st){ st.hp += 50; }},
+      {id:'ent_pet', name:'Лесной Энт', stat:'+80 HP', buff:function(st){ st.hp += 80; }},
+      {id:'kitsune', name:'Звёздная Лисица', stat:'+18 Атаки', buff:function(st){ st.atk += 18; }},
+      {id:'boar_pet', name:'Бронированный Кабан', stat:'+60 HP, +15 Атаки', buff:function(st){ st.hp += 60; st.atk += 15; }}
+    ],
+    epic: [
+      {id:'phoenix_pet', name:'Пепельный Феникс', stat:'+70 HP, +25 Атаки', buff:function(st){ st.hp += 70; st.atk += 25; }},
+      {id:'shadow_panther', name:'Теневая Пантера', stat:'+40 Атаки', buff:function(st){ st.atk += 40; }},
+      {id:'young_dragon', name:'Древний Драконий Детёныш', stat:'+60 HP, +35 Атаки', buff:function(st){ st.hp += 60; st.atk += 35; }},
+      {id:'pegasus', name:'Небесный Пегас', stat:'+90 HP', buff:function(st){ st.hp += 90; }},
+      {id:'abyss_lord', name:'Владыка Бездны', stat:'+45 Атаки', buff:function(st){ st.atk += 45; }},
+      {id:'crystal_basilisk', name:'Хрустальный Василиск', stat:'+120 HP', buff:function(st){ st.hp += 120; }},
+      {id:'ghost_rider', name:'Призрачный Всадник', stat:'+80 HP, +30 Атаки', buff:function(st){ st.hp += 80; st.atk += 30; }}
+    ],
+    legendary: [
+      {id:'gold_dragon', name:'Императорский Дракон', stat:'+150 HP, +60 Атаки', buff:function(st){ st.hp += 150; st.atk += 60; }},
+      {id:'chaos_demon', name:'Архидемон Хаоса', stat:'+85 Атаки', buff:function(st){ st.atk += 85; }},
+      {id:'seraphim', name:'Небесный Серафим', stat:'+200 HP, +40 Атаки', buff:function(st){ st.hp += 200; st.atk += 40; }},
+      {id:'storm_lord', name:'Повелитель Штормов', stat:'+75 Атаки', buff:function(st){ st.atk += 75; }},
+      {id:'behemoth', name:'Кристальный Бегемот', stat:'+350 HP', buff:function(st){ st.hp += 350; }}
+    ],
+    divine: [
+      {id:'eternity_dragon', name:'Космический Дракон Вечности', stat:'+500 HP, +120 Атаки', buff:function(st){ st.hp += 500; st.atk += 120; }},
+      {id:'chaos_avatar', name:'Аватара Первозданного Хаоса', stat:'+400 HP, +150 Атаки', buff:function(st){ st.hp += 400; st.atk += 150; }},
+      {id:'sun_phoenix', name:'Феникс Золотого Рассвета', stat:'+450 HP, +130 Атаки', buff:function(st){ st.hp += 450; st.atk += 130; }}
+    ]
+  };
+
+  var PET_FEED_XP = { common: 15, uncommon: 40, rare: 100, epic: 250, legendary: 600, mythic: 1500, divine: 4000 };
+
+  function initPetsGameData(g){
+    if(!g.pets || !Array.isArray(g.pets)) g.pets = [];
+    if(!g.incubator || typeof g.incubator !== 'object') g.incubator = { active: false, started: false, eggId: '', startSpins: 0, requiredSpins: 1500 };
+    if(g.activeCompanion !== 'miner' && g.activeCompanion !== 'pet') g.activeCompanion = 'miner';
+    if(typeof g.activePetUuid !== 'string') g.activePetUuid = '';
+  }
+
+  function petXpNeeded(lvl){ return Math.round(100 * Math.pow(1.2, Math.max(0, lvl - 1))); }
+
+  function maybeDropMysteryEggV23(fKind){
+    if(!game || !gameLoaded) return;
+    if(fKind === 'ambush' && Math.random() < 0.09){
+      game.inv.push('mystery_egg');
+      toast('🥚 Внезапная засада принесла трофей: «Загадочное яйцо» добавлено в инвентарь!');
+      var d = document.getElementById('dot'); if(d) d.hidden = false;
+      saveGame();
+    }
+  }
+
+  function updateIncubatorOnSpin(){
+    if(!game || !game.incubator || !game.incubator.active || !game.incubator.started) return;
+    var inc = game.incubator;
+    var currentSpins = Number(game.spins) || 0;
+    if(currentSpins >= inc.startSpins + inc.requiredSpins && !inc.hatchNotified){
+      inc.hatchNotified = true;
+      toast('🐣 Яйцо в инкубаторе полностью созрело и готово к вылуплению!');
+      var d = document.getElementById('dot'); if(d) d.hidden = false;
+    }
+  }
+
+  function applyPetStatsBonusV23(st){
+    if(!game || game.activeCompanion !== 'pet' || !game.activePetUuid) return;
+    var pet = (game.pets || []).find(function(p){ return p.uuid === game.activePetUuid; });
+    if(!pet) return;
+    var def = null;
+    for(var rar in PET_DATABASE){
+      var found = PET_DATABASE[rar].find(function(item){ return item.id === pet.baseId; });
+      if(found){ def = found; break; }
+    }
+    if(def && typeof def.buff === 'function'){
+      // Apply buff scaling by level (1 to 20)
+      var origAtk = st.atk;
+      var origHp = st.hp;
+      def.buff(st);
+      st.atk = origAtk + Math.round((st.atk - origAtk) * (pet.level / 20));
+      st.hp = origHp + Math.round((st.hp - origHp) * (pet.level / 20));
+    }
+  }
+
+  function hatchEggV23(){
+    if(!game || !game.incubator || !game.incubator.active || !game.incubator.started) return;
+    var inc = game.incubator;
+    var currentSpins = Number(game.spins) || 0;
+    if(currentSpins < inc.startSpins + inc.requiredSpins) {
+      toast('⏳ Яйцо ещё не созрело! Нужно больше прокруток.');
+      return;
+    }
+    
+    // Удаляем яйцо из инвентаря
+    var eggIdx = game.inv.indexOf('mystery_egg');
+    if(eggIdx > -1) {
+      filterInventory(game, function(id, idx) { return idx !== eggIdx || id !== 'mystery_egg'; });
+    }
+
+    var r = Math.random() * 100, acc = 0, rarity = 'common';
+    var order = ['divine', 'legendary', 'epic', 'rare', 'uncommon', 'common'];
+    for(var i = 0; i < order.length; i++){
+      var rnd = order[i];
+      if(r < PET_RARITIES[rnd].chance){ rarity = rnd; break; }
+    }
+    var pool = PET_DATABASE[rarity];
+    var def = pool[Math.floor(Math.random() * pool.length)];
+    
+    var newPet = {
+      uuid: newSid(),
+      baseId: def.id,
+      name: def.name,
+      rarity: rarity,
+      level: 1,
+      xp: 0
+    };
+    if(!game.pets) game.pets = [];
+    game.pets.push(newPet);
+    
+    game.incubator = { active: false, started: false, eggId: '', startSpins: 0, requiredSpins: 1500 };
+    saveGame();
+    renderPetsV23();
+    toast('✨ Поздравляем! Вылупился питомец: ' + def.name + ' (' + PET_RARITIES[rarity].name + ')!');
+  }
+
+  function feedPetWithItem(petUuid, invIndex){
+    if(!game || merchantBusy) return;
+    var pet = (game.pets || []).find(function(p){ return p.uuid === petUuid; });
+    if(!pet) return;
+    var maxLvl = Math.min(20, game.level || 100);
+    if(pet.level >= 20 || pet.level >= maxLvl){ toast('🌟 Питомец достиг максимально возможного уровня (кап: ' + maxLvl + ')!'); return; }
+    
+    var itemId = game.inv[invIndex];
+    var it = ITEMS[itemId];
+    if(!it) return;
+
+    var eq = equipped();
+    var isWorn = false;
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+      if(eq[sl] === itemId && wornIndex(game, sl) === invIndex) isWorn = true;
+    });
+    if(isWorn || (game.favorites && game.favorites[itemId]) || itemId === 'mystery_egg'){
+      toast('🛡️ Этот предмет надет, избран или является яйцом. Его нельзя скармливать!');
+      return;
+    }
+
+    var xpGain = PET_FEED_XP[it.r] || 15;
+    filterInventory(game, function(id, idx){ return idx !== invIndex; });
+    
+    pet.xp = (Number(pet.xp) || 0) + xpGain;
+    while(pet.level < maxLvl && pet.xp >= petXpNeeded(pet.level)){
+      pet.xp -= petXpNeeded(pet.level);
+      pet.level++;
+      toast('🎉 Питомец «' + pet.name + '» повысил уровень до ' + pet.level + '!');
+    }
+    saveGame();
+    renderPetsV23();
+    renderChar();
+    toast('🍖 Питомец съел предмет и получил +' + xpGain + ' XP.');
+  }
+
+  function setActiveCompanionType(type){
+    if(!game) return;
+    game.activeCompanion = type; 
+    saveGame();
+    renderPetsV23();
+    renderMiner();
+    renderChar();
+    toast(type === 'miner' ? '⛏️ Активный компаньон: Шахтёр' : '🐾 Активный компаньон: Питомец');
+  }
+
+  function renderPetsV23(){
+    var box = document.getElementById('petsBody');
+    if(!box || !game) return;
+    initPetsGameData(game);
+
+    var h = '<div class="card"><h3>🐾 Спутники (Инкубатор и Питомцы)</h3>';
+    h += '<p>Здесь вы можете переключаться между <b>Шахтёром</b> (пассивно добывает золото/камни) и <b>Питомцем</b> (даёт боевые/рулеточные баффы).</p>';
+    
+    h += '<div style="display:flex;gap:8px;margin-bottom:12px;">';
+    h += '<button type="button" ' + (game.activeCompanion === 'miner' ? 'class="tab on"' : 'class="tab"') + ' onclick="setActiveCompanionType(\'miner\')">⛏️ Шахтёр</button>';
+    h += '<button type="button" ' + (game.activeCompanion === 'pet' ? 'class="tab on"' : 'class="tab"') + ' onclick="setActiveCompanionType(\'pet\')">🐾 Питомец</button>';
+    h += '</div>';
+
+    h += '<div class="card" style="border-color:var(--gold)"><h4>🥚 Инкубатор</h4>';
+    var inc = game.incubator;
+    if(inc.active && inc.started){
+      var current = Number(game.spins) || 0;
+      var prog = Math.min(inc.requiredSpins, Math.max(0, current - inc.startSpins));
+      var pct = Math.floor(prog / inc.requiredSpins * 100);
+      var cracks = pct < 30 ? '' : (pct < 70 ? '⚡ (появляются трещины)' : '💥 (яйцо трясётся!)');
+      h += '<p>Яйцо созревает в Инкубаторе... Прогресс: <b>' + prog + ' / ' + inc.requiredSpins + '</b> прокрутов ' + cracks + '</p>';
+      h += '<div class="bar" style="height:16px; margin: 10px 0;"><i style="width:' + pct + '%; background:var(--gold);"></i></div>';
+      
+      if(prog >= inc.requiredSpins){
+        h += '<button type="button" onclick="hatchEggV23()" style="width:100%; background:var(--gold); color:#111;">🐣 РАСКОЛОТЬ ЯЙЦО!</button>';
+      } else {
+        h += '<button type="button" disabled style="width:100%">Нужно крутить колесо</button>';
+      }
+    } else {
+      var eggCount = 0;
+      game.inv.forEach(function(id){ if(id === 'mystery_egg') eggCount++; });
+      if(eggCount > 0){
+        h += '<p>В инвентаре есть <b>Загадочное яйцо (' + eggCount + ' шт.)</b>. Положить одно в инкубатор?</p>';
+        h += '<button type="button" onclick="startIncubationV23()">Заложить яйцо и Начать</button>';
+      } else {
+        h += '<p style="color:var(--muted)">У вас нет Загадочных яиц. Они выпадают с шансом ~9% при победе над монстрами из засады во время прокруток.</p>';
+      }
+    }
+    h += '</div>';
+
+    h += '<h4>Ваши Питомцы</h4>';
+    if(game.pets && game.pets.length > 0){
+      h += '<div style="display:flex;flex-direction:column;gap:12px;">';
+      game.pets.forEach(function(p){
+        var prar = PET_RARITIES[p.rarity];
+        var isAct = (game.activePetUuid === p.uuid);
+        var def = PET_DATABASE[p.rarity].find(function(x){ return x.id === p.baseId; });
+        var xpReq = petXpNeeded(p.level);
+        var maxLvl = Math.min(20, game.level || 100);
+        var isMax = p.level >= maxLvl;
+        
+        h += '<div class="card" style="border-color:' + prar.color + '">';
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        h += '<div><div class="rn">' + p.name + ' <span class="rar" style="background:' + prar.color + '">' + prar.name + '</span></div>';
+        h += '<div class="rd">Ур. ' + p.level + ' (Макс ' + maxLvl + ')' + (isMax ? ' [MAX]' : ' · Опыт: ' + p.xp + ' / ' + xpReq) + '<br><b>Бафф:</b> ' + (def?def.stat:'') + '</div></div>';
+        if(isAct) h += '<button type="button" disabled style="background:#4a5568">Активен</button>';
+        else h += '<button type="button" onclick="game.activePetUuid=\'' + p.uuid + '\';saveGame();renderPetsV23();renderChar();">Сделать активным</button>';
+        h += '</div>';
+        
+        // Feed section
+        if(!isMax){
+          h += '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);">';
+          h += '<select id="feed_' + p.uuid + '" style="max-width:100%">';
+          var hasFood = false;
+          game.inv.forEach(function(itemId, idx){
+            if(itemId === 'mystery_egg' || (game.favorites && game.favorites[itemId])) return;
+            var it = ITEMS[itemId];
+            if(it){
+              hasFood = true;
+              h += '<option value="' + idx + '">' + copyName(game, idx) + ' (+' + (PET_FEED_XP[it.r]||15) + ' XP)</option>';
+            }
+          });
+          h += '</select>';
+          h += '<button type="button" style="padding:6px 12px;font-size:13px;margin-top:6px;" ' + (hasFood ? '' : 'disabled') + ' onclick="var sel=document.getElementById(\'feed_' + p.uuid + '\'); if(sel && sel.value){ feedPetWithItem(\'' + p.uuid + '\', Number(sel.value)); }">Скормить вещь</button>';
+          h += '</div>';
+        }
+        h += '</div>';
+      });
+      h += '</div>';
+    } else {
+      h += '<p style="color:var(--muted)">У вас пока нет вылупившихся питомцев.</p>';
+    }
+
+    h += '</div>';
+    box.innerHTML = h;
+  }
+
+  function startIncubationV23(){
+    if(!game) return;
+    if(game.incubator && game.incubator.active && game.incubator.started) return;
+    var eggCount = 0;
+    game.inv.forEach(function(id){ if(id === 'mystery_egg') eggCount++; });
+    if(eggCount > 0){
+      game.incubator = {
+        active: true,
+        started: true,
+        eggId: 'mystery_egg',
+        startSpins: Number(game.spins) || 0,
+        requiredSpins: 1500,
+        hatchNotified: false
+      };
+      saveGame();
+      renderPetsV23();
+      toast('🔥 Инкубация началась! Яйцо теперь привязано к инкубатору. Крутите колесо 1500 раз, чтобы оно вылупилось.');
+    }
+  }
+
+  window.setActiveCompanionType = setActiveCompanionType;
+  window.hatchEggV23 = hatchEggV23;
+  window.startIncubationV23 = startIncubationV23;
+  window.feedPetWithItem = feedPetWithItem;
+
+/* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
   /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
   APP_V = 22;
@@ -4638,6 +4962,7 @@ svg.chr{overflow:visible}
     if(v20Data.exp && v20Data.exp.on && v20Data.exp.altarAtkBonus){
       st.atk = Math.round(st.atk * (1 + v20Data.exp.altarAtkBonus / 100));
     }
+    applyPetStatsBonusV23(st);
     return st;
   };
 
