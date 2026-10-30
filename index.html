@@ -2322,6 +2322,7 @@ svg.chr{overflow:visible}
     if(which==='board') loadBoard();
     if(which==='shop') renderShop();
     if(which==='dg') renderDg();
+    if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
   }
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
