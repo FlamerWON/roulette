@@ -4813,13 +4813,6 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
 
   
-    if(g.lucky5 !== undefined){ if(!v20Data.lucky5.length && Array.isArray(g.lucky5)) v20Data.lucky5 = g.lucky5; delete g.lucky5; }
-    if(g.prestige !== undefined){ if(!v20Data.prestige) v20Data.prestige = Number(g.prestige)||0; delete g.prestige; }
-    if(g.nearDeath !== undefined){ if(!v20Data.nearDeath) v20Data.nearDeath = Boolean(g.nearDeath); delete g.nearDeath; }
-    if(g.potions !== undefined){ if(!v20Data.potions) v20Data.potions = Number(g.potions)||0; delete g.potions; }
-    if(g.fight && g.fight.trapped !== undefined) delete g.fight.trapped;
-    if(g.dg) delete g.dg;
-  }
 
   // --- ОПТИМИЗАЦИЯ O(1) ПУЛА ЛУТА (ВМЕСТО ПЕРЕБОРА 510 ПРЕДМЕТОВ НА КАЖДЫЙ ДРОП) ---
   var LOOT_POOL_BY_RARITY = {};
@@ -6782,6 +6775,7 @@ function startFirestoreListenersV20(){
 
   // --- 11. ЧИСТОЕ СОХРАНЕНИЕ БЕЗ КОНФЛИКТА С ПРАВИЛАМИ RTDB И ШАХТЁРОМ ---
   // --- ОПРЕДЕЛЯЕМ НОВЫЙ SAVEGAME, КОТОРЫЙ НЕ ПОРТИТ ОРИГИНАЛЬНЫЙ ОБЪЕКТ GAME ---
+  var _origSaveGameV19 = saveGame;
   saveGame = function(){
     if(!game || !sess || !gameLoaded || merchantBusy) return Promise.resolve();
     if(saving){again=true; return Promise.resolve();}
