@@ -2200,7 +2200,8 @@ svg.chr{overflow:visible}
   // если бой не закончен, а час уже сменился, это считается поражением
   function checkAbandon(){
  var f=game&&game.fight;if(!f||!f.on||merchantBusy)return;
- var expired=f.kind==='ambush'?Date.now()>=f.deadline:f.s!==slotNow();
+ if(!f.startTime) f.startTime = Date.now();
+ var expired=f.kind==='ambush'?Date.now()>=f.deadline:(Date.now() >= f.startTime + 2 * 3600000);
  if(expired){loseFight('Бой не был закончен, монстр победил.');saveGame();renderFight();renderEvent();}
 }
   $('evBtn').addEventListener('click',function(){
