@@ -5006,7 +5006,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     pets: [],
     incubator: { active: false, started: false, eggId: '', startSpins: 0, requiredSpins: 1500 },
     activeCompanion: 'miner',
-    activePetUuid: ''
+    activePetUuid: '',
+    hwEvent: null
   };
 
   function resetV20Data(){
@@ -5020,6 +5021,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     v20Data.incubator = { active: false, started: false, eggId: '', startSpins: 0, requiredSpins: 1500 };
     v20Data.activeCompanion = 'miner';
     v20Data.activePetUuid = '';
+    v20Data.hwEvent = null;
   }
 
   function syncV20DataToGame() {
@@ -5033,6 +5035,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     game.incubator = v20Data.incubator;
     game.activeCompanion = v20Data.activeCompanion;
     game.activePetUuid = v20Data.activePetUuid;
+    if (v20Data.hwEvent) game.hwEvent = v20Data.hwEvent;
   }
 
   function sanitizeLuckyFiveV20(arr){
@@ -5090,6 +5093,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
           if(parsed.incubator) v20Data.incubator = parsed.incubator;
           if(parsed.activeCompanion) v20Data.activeCompanion = parsed.activeCompanion;
           if(typeof parsed.activePetUuid === 'string') v20Data.activePetUuid = parsed.activePetUuid;
+          if(parsed.hwEvent) v20Data.hwEvent = parsed.hwEvent;
         }
       }
     }catch(e){}
@@ -6600,6 +6604,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       incubator: v20Data.incubator || null,
       activeCompanion: v20Data.activeCompanion || 'miner',
       activePetUuid: v20Data.activePetUuid || '',
+      hwEvent: v20Data.hwEvent || null,
       lastSeen: Date.now()
     }, {merge: true}).catch(function(){});
   }
@@ -7082,6 +7087,7 @@ function startFirestoreListenersV20(){
     if(game.incubator !== undefined) v20Data.incubator = game.incubator;
     if(game.activeCompanion !== undefined) v20Data.activeCompanion = game.activeCompanion;
     if(game.activePetUuid !== undefined) v20Data.activePetUuid = game.activePetUuid;
+    if(game.hwEvent !== undefined) v20Data.hwEvent = game.hwEvent;
     
     saveV20Local();
     
@@ -7094,6 +7100,7 @@ function startFirestoreListenersV20(){
       if(clone.fight) delete clone.fight.trapped;
       delete clone.dg;
       delete clone.pets; delete clone.incubator; delete clone.activeCompanion; delete clone.activePetUuid;
+      delete clone.hwEvent; // <-- Важно! Удаляем данные ивента перед RTDB
       
       return fetch(gameUrl(t),{method:'PUT',body:JSON.stringify(clone)});
     }).then(function(r){ if(!r.ok) return r.text().then(function(tx){ throw new Error('ответ '+r.status+': '+String(tx).slice(0,90)); }); })
