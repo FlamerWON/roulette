@@ -3261,9 +3261,13 @@ svg.chr{overflow:visible}
      if(!raidActive || !raidInCombat || !sess || !sess.uid) return;
      try {
        var db = firebase.database();
-       // Decrement boss HP safely using transaction or fast update
-       db.ref('raid/status/hp').set(firebase.database.ServerValue.increment(-dmg));
-       // Increment my damage
+       // Транзакция для защиты от отрицательного здоровья босса
+       db.ref('raid/status/hp').transaction(function(currentHp) {
+         if (currentHp === null) return 0;
+         var newHp = currentHp - dmg;
+         return newHp < 0 ? 0 : newHp;
+       });
+       // Урон игрока обновляем обычным инкрементом
        db.ref('raid/players/' + sess.uid + '/dmg').set(firebase.database.ServerValue.increment(dmg));
        db.ref('raid/players/' + sess.uid + '/name').set(sess.name);
      } catch(e){}
@@ -5971,28 +5975,44 @@ svg.chr{overflow:visible}
     }).catch(function(){});
   }
 
+  
   function startFirestoreListenersV20(){
     var db = initFirestoreV20();
     if(!db || !sess || !sess.uid) return;
 
-    saveV20ToFirestore();
-
-    if(sellerGoldUnsubV20) sellerGoldUnsubV20();
     var myRef = db.collection('players').doc(String(sess.uid));
-    sellerGoldUnsubV20 = myRef.onSnapshot(function(doc){
-      if(!doc.exists || !game) return;
-      var d = doc.data() || {};
-      if(!v20Data.subcls && typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
-      if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
-      if(!v20Data.prestige && d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
-      if(typeof d.nearDeath === 'boolean' && d.nearDeath) v20Data.nearDeath = true;
-      if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = Math.min(10000, Math.floor(d.potions));
-      saveV20Local();
+    
+    // СНАЧАЛА ЧИТАЕМ ИЗ БАЗЫ, ЧТОБЫ НЕ ЗАТЕРЕТЬ ДАННЫЕ С НОВОГО УСТРОЙСТВА!
+    myRef.get().then(function(doc){
+      if(doc.exists){
+        var d = doc.data() || {};
+        if(typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
+        if(Array.isArray(d.lucky5) && d.lucky5.length) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
+        if(d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
+        if(typeof d.nearDeath === 'boolean') v20Data.nearDeath = d.nearDeath;
+        if(typeof d.potions === 'number') v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        saveV20Local();
+      } else {
+        // Если профиля в Firestore ещё нет, сохраняем текущий локальный (или пустой)
+        saveV20ToFirestore();
+      }
+      
+      // ПОСЛЕ ПЕРВОГО ЧТЕНИЯ ЗАПУСКАЕМ СЛУШАТЕЛЬ
+      if(sellerGoldUnsubV20) sellerGoldUnsubV20();
+      sellerGoldUnsubV20 = myRef.onSnapshot(function(docSnap){
+        if(!docSnap.exists || !game) return;
+        var d = docSnap.data() || {};
+        if(!v20Data.subcls && typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
+        if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
+        if(!v20Data.prestige && d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
+        if(typeof d.nearDeath === 'boolean' && d.nearDeath) v20Data.nearDeath = true;
+        if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        saveV20Local();
 
-      // Атомарная транзакция получения золота за проданный товар (защита от двойного начисления при гонке данных)
-      if(d.pendingMarketGold && d.pendingMarketGold > 0 && !claimingMarketGoldBusy){
-        claimingMarketGoldBusy = true;
-        db.runTransaction(async function(tx){
+        if(d.pendingMarketGold && d.pendingMarketGold > 0 && !claimingMarketGoldBusy){
+          claimingMarketGoldBusy = true;
+          db.runTransaction(async function(tx){
+
           var freshSnap = await tx.get(myRef);
           if(!freshSnap.exists) return 0;
           var freshData = freshSnap.data() || {};
