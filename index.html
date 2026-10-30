@@ -5976,7 +5976,7 @@ svg.chr{overflow:visible}
   }
 
   
-  function startFirestoreListenersV20(){
+function startFirestoreListenersV20(){
     var db = initFirestoreV20();
     if(!db || !sess || !sess.uid) return;
 
@@ -6012,26 +6012,27 @@ svg.chr{overflow:visible}
         if(d.pendingMarketGold && d.pendingMarketGold > 0 && !claimingMarketGoldBusy){
           claimingMarketGoldBusy = true;
           db.runTransaction(async function(tx){
-
-          var freshSnap = await tx.get(myRef);
-          if(!freshSnap.exists) return 0;
-          var freshData = freshSnap.data() || {};
-          var pending = Math.floor(Number(freshData.pendingMarketGold) || 0);
-          if(pending <= 0 || pending > 50000000) return 0;
-          tx.update(myRef, {pendingMarketGold: 0});
-          return pending;
-        }).then(function(claimedAmount){
-          if(claimedAmount > 0 && game){
-            game.coins = (Number(game.coins)||0) + claimedAmount;
-            saveGame();
-            renderCoins();
-            toast('💰 Ваш лот на Рынке купили! Зачислено +' + claimedAmount + ' монет (с учётом комиссии 5%).');
-          }
-        }).catch(function(){}).finally(function(){
-          claimingMarketGoldBusy = false;
-        });
-      }
-    }, function(){});
+            var pRef = db.collection('players').doc(String(sess.uid));
+            var pSnap = await tx.get(pRef);
+            if(!pSnap.exists) return;
+            var pending = pSnap.data().pendingMarketGold || 0;
+            if(pending <= 0) return;
+            tx.update(pRef, {pendingMarketGold: firebase.firestore.FieldValue.increment(-pending)});
+            return pending;
+          }).then(function(claimed){
+            if(claimed > 0){
+              game.coins += claimed;
+              saveGame();
+              renderCoins();
+              toast('💰 Скупщик продал твои лоты! Получено: ' + claimed + ' монет.');
+            }
+            claimingMarketGoldBusy = false;
+          }).catch(function(e){
+            claimingMarketGoldBusy = false;
+          });
+        }
+      });
+    }); // <-- ВОТ ЗДЕСЬ НЕ ХВАТАЛО ЗАКРЫВАЮЩИХ СКОБОК
   }
 
   setInterval(function(){
