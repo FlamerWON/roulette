@@ -4768,7 +4768,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     { title: '7. Благословение мертвецов', desc: 'Выбить сектор «Зеро» (0).', target: 1, rewardTxt: '800 монет', giveReward: function(){ game.coins += 800; } },
     { title: '8. Проклятие полнолуния', desc: 'Сделать 150 прокруток.', target: 150, rewardTxt: '200 ✨ пыли', giveReward: function(){ game.dust = Math.min(1000000, (Number(game.dust)||0)+200); } },
     { title: '9. Укрощение кошмаров', desc: 'Одержать победу над 1 элитным боссом.', target: 1, rewardTxt: 'Редкий предмет', giveReward: function(){ var it = rollLoot(2, false, true); if(it) game.inv.push(it); else game.coins += 500; } },
-    { title: '10. Лорд Самайн', desc: 'Завершить финальный ритуал Самайна.', target: 1, rewardTxt: 'Скин «Тыквенный кошмар» 🎃', giveReward: function(){ setWheelSkin('halloween'); toast('🎃 Эксклюзивный скин колеса «Тыквенный кошмар» разблокирован!'); } }
+    { title: '10. Лорд Самайн', desc: 'Все испытания позади! Нажми кнопку ниже, чтобы завершить финальный ритуал Самайна и получить эксклюзивный скин.', target: 1, rewardTxt: 'Скин «Тыквенный кошмар» 🎃', giveReward: function(){ setWheelSkin('halloween'); if(game) game.wheelSkin='halloween'; toast('🎃 Эксклюзивный скин колеса «Тыквенный кошмар» разблокирован!'); } }
   ];
 
   function checkHalloweenProgress(type, amount){
@@ -4801,11 +4801,15 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       if(hw.questIndex === 9) hw.progress += 1;
     }
 
-    if(hw.progress >= q.target){
+    if(hw.progress >= q.target && !hw.notifiedCurrent){
       hw.progress = q.target;
+      hw.notifiedCurrent = true;
       toast('🎉 Квест ивента выполнен: «' + q.title + '»! Заберите награду во вкладке «Ивенты».');
       var dot = $('dot'); if(dot) dot.hidden = false;
+    } else if(hw.progress >= q.target){
+      hw.progress = q.target;
     }
+    if(typeof v20Data !== 'undefined' && v20Data) { v20Data.hwEvent = hw; if(typeof saveV20Local === 'function') saveV20Local(); }
     renderHalloweenEventUI();
   }
 
@@ -4847,6 +4851,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     }
 
     var curQ = HALLOWEEN_QUESTS[hw.questIndex];
+    if(hw.questIndex === 9 && hw.progress < 1) { hw.progress = 1; }
     titleEl.textContent = curQ.title;
     descEl.textContent = curQ.desc + ' Награда: ' + curQ.rewardTxt;
     progEl.textContent = 'Прогресс: ' + hw.progress + ' / ' + curQ.target;
@@ -4859,6 +4864,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       curQ.giveReward();
       hw.questIndex++;
       hw.progress = 0;
+      hw.notifiedCurrent = false;
       saveGame();
       renderCoins();
       renderChar();
@@ -4871,36 +4877,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     if(curTab === 'events') renderHalloweenEventUI();
   }, 1000);
 
-  // Hook into game events
-  var _origOnSpinHw = onSpin;
-  onSpin = function(n){
-    _origOnSpinHw(n);
-    checkHalloweenProgress('spin', 1);
-    if(color(n) === 'red') checkHalloweenProgress('red_color', 1);
-    if(n > 0 && n % 2 === 0) checkHalloweenProgress('even_number', 1);
-    if(n === 0) checkHalloweenProgress('zero', 1);
-  };
-
-  var _origFightStrikeHw = fightStrike;
-  fightStrike = function(n){
-    var wasOn = game && game.fight && game.fight.on;
-    _origFightStrikeHw(n);
-    if(wasOn && game && game.fight && !game.fight.on && fightMsg.indexOf('Победа!') > -1){
-      checkHalloweenProgress('monster_kill', 1);
-      var mo = foeOfFight(game.fight || {});
-      if(mo && mo.elite) checkHalloweenProgress('elite_win', 1);
-    }
-  };
-
-  var _origDgStrikeHw = dgStrike;
-  dgStrike = function(n){
-    var wasOn = dgOn();
-    _origDgStrikeHw(n);
-    if(wasOn && !dgOn() && fightMsg.indexOf('ЭКСПЕДИЦИЯ ПРОЙДЕНА') > -1){
-      checkHalloweenProgress('expedition_win', 1);
-    }
-  };
-
+  var FILL_HALLOWEEN = {green:'#2f8f4e', red:'#ff7518', black:'#1e1024'};
+  // Hook into feedPetWithItem
   var _origFeedPetHw = feedPetWithItem;
   feedPetWithItem = function(u, idx){
     _origFeedPetHw(u, idx);
@@ -8961,6 +8939,90 @@ function startFirestoreListenersV20(){
             }
         };
     }
+  };
+
+  // =====================================================================
+  // ФИНАЛЬНЫЕ ХУКИ ХЭЛЛОУИНСКОГО ИВЕНТА (ПОСЛЕ V20/V21/V22 ПАТЧЕЙ)
+  // =====================================================================
+  var _finalOnSpinHw = onSpin;
+  onSpin = function(n){
+    if(typeof checkHalloweenProgress === 'function'){
+      checkHalloweenProgress('spin', 1);
+      if(color(n) === 'red') checkHalloweenProgress('red_color', 1);
+      if(n > 0 && n % 2 === 0) checkHalloweenProgress('even_number', 1);
+      if(n === 0) checkHalloweenProgress('zero', 1);
+    }
+    _finalOnSpinHw(n);
+  };
+
+  var _finalFightStrikeHw = fightStrike;
+  fightStrike = function(n){
+    var wasOn = !!(game && game.fight && game.fight.on);
+    var moBefore = wasOn ? foeOfFight(game.fight) : null;
+    _finalFightStrikeHw(n);
+    if(wasOn && game && game.fight && !game.fight.on && fightMsg && fightMsg.indexOf('Победа!') > -1){
+      if(typeof checkHalloweenProgress === 'function'){
+        checkHalloweenProgress('monster_kill', 1);
+        if(moBefore && (moBefore.elite || moBefore.boss)){
+          checkHalloweenProgress('elite_win', 1);
+        }
+        saveGame();
+      }
+    }
+  };
+
+  var _finalDgStrikeHw = dgStrike;
+  dgStrike = function(n){
+    var dBefore = v20Data && v20Data.exp;
+    var wasInCombat = !!(dBefore && dBefore.on && dBefore.inCombat);
+    var roomBefore = wasInCombat ? dBefore.roomType : '';
+    _finalDgStrikeHw(n);
+    var dAfter = v20Data && v20Data.exp;
+    // Если бой в комнате завершился победой (монстр повержен или вся экспедиция пройдена)
+    if(wasInCombat && (!dAfter || !dAfter.inCombat) && fightMsg && (fightMsg.indexOf('Враг повержен!') > -1 || fightMsg.indexOf('ЭКСПЕДИЦИЯ ПРОЙДЕНА') > -1)){
+      if(typeof checkHalloweenProgress === 'function'){
+        checkHalloweenProgress('monster_kill', 1);
+        if(roomBefore === 'elite' || roomBefore === 'boss'){
+          checkHalloweenProgress('elite_win', 1);
+        }
+        if(fightMsg.indexOf('ЭКСПЕДИЦИЯ ПРОЙДЕНА') > -1){
+          checkHalloweenProgress('expedition_win', 1);
+        }
+        saveGame();
+      }
+    }
+  };
+
+  // Поддержка скина «Тыквенный кошмар» на главном колесе
+  var _finalDrawHw = draw;
+  draw = function(){
+    if(typeof currentWheelSkin === 'function' && currentWheelSkin() === 'halloween'){
+      var size = canvas.clientWidth; if(!size) return;
+      var dpr = window.devicePixelRatio || 1;
+      if(canvas.width !== Math.round(size * dpr)){ canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr); }
+      var s = canvas.width, r = s / 2;
+      var pal = FILL_HALLOWEEN;
+      canvas.style.boxShadow = '0 0 0 10px #1e0b16, 0 0 0 13px #ff7518, 0 14px 36px rgba(255,117,24,.45)';
+      ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,s,s); ctx.translate(r,r);
+      for(var i = 0; i < N; i++){
+        var a = -Math.PI/2 + i*SEG + rot;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r, a-SEG/2, a+SEG/2); ctx.closePath();
+        ctx.fillStyle = pal[color(ORDER[i])]; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,117,24,.75)'; ctx.lineWidth = Math.max(1, s/340); ctx.stroke();
+        ctx.save(); ctx.rotate(a); ctx.translate(r*0.86, 0); ctx.rotate(Math.PI/2);
+        ctx.fillStyle = '#ffe8cc'; ctx.font = '700 ' + Math.round(s*0.046) + 'px Manrope,system-ui,sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(ORDER[i]), 0, 0); ctx.restore();
+      }
+      ctx.beginPath(); ctx.arc(0,0, r*0.62, 0, TAU); ctx.fillStyle = 'rgba(20,5,15,.45)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0,0, r*0.5, 0, TAU);
+      var grd = ctx.createRadialGradient(0,0, r*0.05, 0,0, r*0.5);
+      grd.addColorStop(0, '#4a1525'); grd.addColorStop(1, '#1a0912');
+      ctx.fillStyle = grd; ctx.fill();
+      ctx.lineWidth = Math.max(2, s/140); ctx.strokeStyle = '#ff7518'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0, r*0.12, 0, TAU); ctx.fillStyle = '#ff7518'; ctx.fill();
+      return;
+    }
+    _finalDrawHw();
   };
 })();
 </script>
