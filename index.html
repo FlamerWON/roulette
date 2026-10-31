@@ -1914,8 +1914,8 @@ svg.chr{overflow:visible}
     g.xp=Math.max(0,Math.floor(Number(g.xp)||0));
     while(g.level<LEVEL_CAP&&g.xp>=xpNeed(g.level)){g.xp-=xpNeed(g.level);g.level++;}
     if(g.level===LEVEL_CAP)g.xp=0;
-    g.rank=Math.max(1,Math.min(15,Math.floor(Number(g.rank)||1)));
-    g.unlockedRank=Math.max(1,Math.min(15,Math.floor(Number(g.unlockedRank)||1)));
+    g.rank=Math.max(1,Math.min(20,Math.floor(Number(g.rank)||1)));
+    g.unlockedRank=Math.max(1,Math.min(20,Math.floor(Number(g.unlockedRank)||1)));
   }
   $('rankSelect').addEventListener('change',function(){if(!game||!gameLoaded||merchantBusy||(game.fight&&game.fight.on)||dgOn())return;game.rank=Number(this.value);renderProgress();renderEvent();renderDg();saveGame();});
 
@@ -7597,7 +7597,7 @@ function startFirestoreListenersV20(){
       }[bestMatch.rarity] || {2:0, 3:0, 4:0};
 
       var rawPct = (bestMatch.type === 'relic') ? 0 : (baseBonus[bestMatch.count] || 0);
-      var resonanceMult = 1 + (bestMatch.minLv * 0.05);
+      var resonanceMult = bestMatch.minLv > 0 ? 1 + (bestMatch.minLv * 0.05) : 0; // Fix: 0 resonance gives 0 bonus
       
       return {
         count: bestMatch.count, type: bestMatch.type, key: bestMatch.key, rarity: bestMatch.rarity,
