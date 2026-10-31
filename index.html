@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="24">
-<title>Рулетка с чатом · Версия 24</title>
+<meta name="app-version" content="25">
+<title>Рулетка с чатом · Версия 25</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
 :root{
@@ -897,7 +897,7 @@ svg.chr{overflow:visible}
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 24</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 25</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -3169,7 +3169,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   /* ---------- принудительное обновление ---------- */
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
-  var APP_V=24;
+  var APP_V=25;
   var updating=false;
   function showUpdate(){
     if(updating) return; updating=true;
@@ -3706,7 +3706,16 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
 
   /* ================== МОДУЛЬ UPDATE 18 ================== */
-  RELEASE_ID = 24;
+  RELEASE_ID = 25;
+  RELEASE_NOTES.unshift({
+    title: 'Версия 25 · Бесконечный Престиж и Усиление Врагов',
+    lines: [
+      'Система Престижа теперь бесконечна: каждый сброс уровня увеличивает множитель престижа (уровень Престижа 1, 2, 3 и т.д.).',
+      'Замедлена прокачка при получении уровней: добавлена более плавная, но неумолимо растущая прогрессия.',
+      'Враги стали ещё сильнее на высоких уровнях Престижа: урон и здоровье монстров растут с каждым вашим перерождением, бросая вызов вашей экипировке.',
+      'Выбор Подкласса делается только один раз: при первом Престиже. При последующих перерождениях подкласс сохраняется и окно выбора больше не появляется.'
+    ]
+  });
   RELEASE_NOTES.unshift({
     title: 'Версия 24 · 20 Рангов от Уровня, Замедленная Прокачка и Ребаланс Лута',
     lines: [
@@ -5019,8 +5028,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
   /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
-  APP_V = 24;
-  RELEASE_ID = 24;
+  APP_V = 25;
+  RELEASE_ID = 25;
   RELEASE_NOTES.unshift({
     title: 'Версия 22 · Мировой Босс, Анти-Фарм и Сеты',
     lines: [
@@ -7248,8 +7257,8 @@ function startFirestoreListenersV20(){
 
 
 /* ================== МОДУЛЬ UPDATE 21 (ФИНАЛ: АЛХИМИЯ, АНТИ-АБУЗ, СЕТЫ, ФИКСЫ) ================== */
-  APP_V = 24;
-  RELEASE_ID = 24;
+  APP_V = 25;
+  RELEASE_ID = 25;
   
   if(!window.v21PatchApplied){
     window.v21PatchApplied = true;
@@ -7723,7 +7732,7 @@ function startFirestoreListenersV20(){
 
   /* ================== МЕГА-ПАТЧ V22 (ВСЕ 7 ПУНКТОВ + ФИКС ВЕЧНОГО ОБНОВЛЕНИЯ) ================== */
   APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 22;
-  RELEASE_ID = 24;
+  RELEASE_ID = 25;
 
   // --- ПУНКТ 3 (часть 1): Универсальный класс "all" для Реликтовой брони Боссов ---
   // В Кузнице/Инвентаре/Зачаровании добавляем 'all' только для отображения, но не в магазин покупки классов!
@@ -9099,8 +9108,8 @@ function startFirestoreListenersV20(){
   };
 
   /* ================== МОДУЛЬ UPDATE 24: 20 РАНГОВ ОТ УРОВНЯ, МЕДЛЕННАЯ ПРОКАЧКА И НОВЫЙ ЛУТ ================== */
-  APP_V = 24;
-  RELEASE_ID = 24;
+  APP_V = 25;
+  RELEASE_ID = 25;
 
   var RANK_NAMES_V24 = [
     'Поход', 'Разведка', 'Охота', 'Застава', 'Ветеран',
@@ -9138,18 +9147,22 @@ function startFirestoreListenersV20(){
   // Масштабирование HP и урона монстров на 20 рангов
   rankHP = function(rank){
     var r = Math.max(1, Math.min(20, Number(rank) || 1)) - 1;
-    return Number((1 + 0.38 * r + 0.065 * r * r).toFixed(3));
+    var prest = (typeof v20Data !== 'undefined' && Number(v20Data.prestige)) || 0;
+    var prestMult = 1 + prest * 0.40; // +40% enemy HP per prestige level
+    return Number(((1 + 0.38 * r + 0.065 * r * r) * prestMult).toFixed(3));
   };
 
   rankDMG = function(rank){
     var r = Math.max(1, Math.min(20, Number(rank) || 1)) - 1;
-    return Number((1 + 0.28 * r + 0.052 * r * r).toFixed(3));
+    var prest = (typeof v20Data !== 'undefined' && Number(v20Data.prestige)) || 0;
+    var prestMult = 1 + prest * 0.25; // +25% enemy DMG per prestige level
+    return Number(((1 + 0.28 * r + 0.052 * r * r) * prestMult).toFixed(3));
   };
 
   // Замедленная кривая опыта: 150 + 65*(L-1) + 12*(L-1)^2 + 0.15*(L-1)^3
   xpNeed = function(level){
     var l = Math.max(0, Math.min(LEVEL_CAP, Math.floor(Number(level) || 1)) - 1);
-    return Math.floor(150 + 65 * l + 12 * l * l + 0.15 * l * l * l);
+    return Math.floor(150 + 85 * l + 16 * l * l + 0.25 * l * l * l);
   };
 
   // Целевое число побед над часовым монстром на 1 уровень внутри ранга (от 6 на 1 ранге до 76.7 на 20 ранге)
