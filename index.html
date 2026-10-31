@@ -4743,18 +4743,52 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
 
   /* ================== ХЭЛЛОУИНСКИЙ ИВЕНТ (ВЕРСИЯ 23) ================== */
-  var HALLOWEEN_DURATION_MS = 24 * 3600 * 1000;
-  
+  // Единый глобальный дедлайн для всех игроков: 1 ноября 2026 в 23:59:59 МСК
+  var HALLOWEEN_DEADLINE_MS = new Date('2026-11-01T23:59:59+03:00').getTime();
+
+  // Двусторонняя синхронизация прогресса ивента через game.earned (хранится в основной Firebase RTDB без ошибок 401!)
+  function syncHalloweenWithRTDB(g){
+    if(!g) return;
+    if(!g.earned || typeof g.earned !== 'object') g.earned = {newbie: true};
+    var rtdbQ = -1, rtdbP = 0, skinUnlocked = false;
+    Object.keys(g.earned).forEach(function(k){
+      if(!g.earned[k]) return;
+      if(/^hw26_q\d+$/.test(k)){
+        var qv = parseInt(k.slice(6), 10);
+        if(qv > rtdbQ) rtdbQ = qv;
+      } else if(/^hw26_p\d+$/.test(k)){
+        var pv = parseInt(k.slice(6), 10);
+        if(pv > rtdbP) rtdbP = pv;
+      } else if(k === 'hw26_skin'){
+        skinUnlocked = true;
+      }
+    });
+    if(!g.hwEvent || typeof g.hwEvent !== 'object'){
+      g.hwEvent = { startTime: Date.now(), questIndex: 0, progress: 0, claimed: [] };
+    }
+    var localQ = Number(g.hwEvent.questIndex) || 0;
+    var localP = Number(g.hwEvent.progress) || 0;
+    if(rtdbQ > localQ || (rtdbQ === localQ && rtdbP > localP)){
+      g.hwEvent.questIndex = rtdbQ;
+      g.hwEvent.progress = rtdbP;
+    }
+    if(skinUnlocked && sess){
+      try { localStorage.setItem('roulette_hw_skin_unlocked_' + sess.uid, '1'); } catch(e){}
+    }
+    // Записываем актуальные маркеры в g.earned для сохранения в RTDB
+    Object.keys(g.earned).forEach(function(k){
+      if(/^hw26_[qp]\d+$/.test(k)) delete g.earned[k];
+    });
+    g.earned['hw26_q' + (Number(g.hwEvent.questIndex) || 0)] = true;
+    g.earned['hw26_p' + (Number(g.hwEvent.progress) || 0)] = true;
+    if((Number(g.hwEvent.questIndex) || 0) >= 10 || skinUnlocked){
+      g.earned['hw26_skin'] = true;
+    }
+  }
+
   function getHalloweenData(){
     if(!game) return null;
-    if(!game.hwEvent || typeof game.hwEvent !== 'object'){
-      game.hwEvent = {
-        startTime: Date.now(),
-        questIndex: 0,
-        progress: 0,
-        claimed: []
-      };
-    }
+    syncHalloweenWithRTDB(game);
     return game.hwEvent;
   }
 
@@ -4776,8 +4810,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     if(!hw || hw.questIndex >= HALLOWEEN_QUESTS.length) return;
     var q = HALLOWEEN_QUESTS[hw.questIndex];
     
-    // Проверка таймера 24 часа
-    if(Date.now() - hw.startTime > HALLOWEEN_DURATION_MS) return;
+    // Проверка единого глобального дедлайна (до 1 ноября включительно)
+    if(Date.now() >= HALLOWEEN_DEADLINE_MS) return;
 
     if(type === 'spin') {
       if(hw.questIndex === 0 || hw.questIndex === 7) {
@@ -4809,7 +4843,12 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     } else if(hw.progress >= q.target){
       hw.progress = q.target;
     }
-    if(typeof v20Data !== 'undefined' && v20Data) { v20Data.hwEvent = hw; if(typeof saveV20Local === 'function') saveV20Local(); }
+    syncHalloweenWithRTDB(game);
+    if(typeof v20Data !== 'undefined' && v20Data) {
+      v20Data.hwEvent = hw;
+      if(typeof saveV20Local === 'function') saveV20Local();
+      if(typeof saveV20ToFirestore === 'function') saveV20ToFirestore();
+    }
     renderHalloweenEventUI();
   }
 
@@ -4818,11 +4857,11 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     if(!timerEl || !game) return;
 
     var hw = getHalloweenData();
-    var timeLeft = HALLOWEEN_DURATION_MS - (Date.now() - hw.startTime);
+    var timeLeft = HALLOWEEN_DEADLINE_MS - Date.now();
     if(timeLeft <= 0){
-      timerEl.textContent = 'Ивент завершён (время истекло)';
+      timerEl.textContent = 'Ивент завершён (1 ноября)';
       titleEl.textContent = 'Ивент окончен';
-      descEl.textContent = 'К сожалению, 24 часа истекли. Награды больше недоступны.';
+      descEl.textContent = 'Срок проведения Хэллоуинского ивента истёк для всех игроков.';
       progEl.textContent = '';
       btnEl.disabled = true;
       ballsEl.innerHTML = '';
@@ -4865,6 +4904,12 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       hw.questIndex++;
       hw.progress = 0;
       hw.notifiedCurrent = false;
+      syncHalloweenWithRTDB(game);
+      if(typeof v20Data !== 'undefined' && v20Data){
+        v20Data.hwEvent = hw;
+        if(typeof saveV20Local === 'function') saveV20Local();
+        if(typeof saveV20ToFirestore === 'function') saveV20ToFirestore();
+      }
       saveGame();
       renderCoins();
       renderChar();
@@ -4896,6 +4941,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   function hasHalloweenSkin(){
     if(!sess) return false;
+    if(game && game.earned && game.earned.hw26_skin) return true;
+    if(game && game.hwEvent && Number(game.hwEvent.questIndex) >= 10) return true;
     try { if(localStorage.getItem('roulette_hw_skin_unlocked_'+sess.uid) === '1') return true; } catch(e){}
     return !!(game && game.wheelSkin === 'halloween');
   }
@@ -5028,6 +5075,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     game.activeCompanion = v20Data.activeCompanion;
     game.activePetUuid = v20Data.activePetUuid;
     if (v20Data.hwEvent) game.hwEvent = v20Data.hwEvent;
+    if (typeof syncHalloweenWithRTDB === 'function') syncHalloweenWithRTDB(game);
+    v20Data.hwEvent = game.hwEvent;
   }
 
   function sanitizeLuckyFiveV20(arr){
@@ -6651,6 +6700,20 @@ function startFirestoreListenersV20(){
         if(d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
         if(typeof d.nearDeath === 'boolean') v20Data.nearDeath = d.nearDeath;
         if(typeof d.potions === 'number') v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        if(Array.isArray(d.pets) && d.pets.length > (v20Data.pets ? v20Data.pets.length : 0)) v20Data.pets = d.pets;
+        if(d.incubator && typeof d.incubator === 'object' && (!v20Data.incubator || !v20Data.incubator.started)) v20Data.incubator = d.incubator;
+        if(d.activeCompanion === 'miner' || d.activeCompanion === 'pet') v20Data.activeCompanion = d.activeCompanion;
+        if(typeof d.activePetUuid === 'string' && d.activePetUuid) v20Data.activePetUuid = d.activePetUuid;
+        if(d.hwEvent && typeof d.hwEvent === 'object'){
+          var curQ = (v20Data.hwEvent && Number(v20Data.hwEvent.questIndex)) || 0;
+          var curP = (v20Data.hwEvent && Number(v20Data.hwEvent.progress)) || 0;
+          var remQ = Number(d.hwEvent.questIndex) || 0;
+          var remP = Number(d.hwEvent.progress) || 0;
+          if(!v20Data.hwEvent || remQ > curQ || (remQ === curQ && remP > curP)){
+            v20Data.hwEvent = d.hwEvent;
+          }
+        }
+        if(game){ syncV20DataToGame(); syncHalloweenWithRTDB(game); if(curTab === 'events') renderHalloweenEventUI(); }
         saveV20Local();
       } else {
         // Если профиля в Firestore ещё нет, сохраняем текущий локальный (или пустой)
@@ -7086,6 +7149,7 @@ function startFirestoreListenersV20(){
     return token().then(function(t){
       game.v=APP_V; if(mySid) game.sid=mySid; else delete game.sid;
       
+      if(typeof syncHalloweenWithRTDB === 'function') syncHalloweenWithRTDB(game);
       // СОЗДАЕМ КЛОН ДЛЯ FIREBASE И УДАЛЯЕМ НОВЫЕ ПОЛЯ, ЧТОБЫ ПРАВИЛА (RULES) НЕ ОТКЛОНИЛИ ЗАПРОС (401 Permission Denied)
       var clone = cleanGameForRTDB(game);
       
