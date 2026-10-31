@@ -5501,6 +5501,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     }
     v20Data.potions = Math.max(0, (v20Data.potions || 0) - 1);
     v20Data.nearDeath = false;
+    syncV20DataToGame();
     saveV20Local();
     saveV20ToFirestore();
     renderNearDeathBannerV20();
@@ -5525,6 +5526,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
         game.stones -= POTION_CRAFT_COST.stones;
         game.dust -= POTION_CRAFT_COST.dust;
         v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        syncV20DataToGame();
         saveV20Local();
         saveV20ToFirestore();
         saveGame();
@@ -6391,6 +6393,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
       v20Data.nearDeath = true;
       v20Data.exp = null;
+      syncV20DataToGame();
       saveV20Local();
       saveV20ToFirestore();
       updateLockedTabsV20();
@@ -6532,6 +6535,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
         v20Data.subcls = sub.id;
         v20Data.prestige = Math.min(50, (Number(v20Data.prestige)||0) + 1);
         v20Data.lucky5 = rollLuckyFiveV20();
+        syncV20DataToGame();
         saveV20Local();
         saveV20ToFirestore();
         saveGame();
@@ -7039,6 +7043,7 @@ function startFirestoreListenersV20(){
     }
     marketBusyV20 = true;
     v20Data.potions -= 1;
+    syncV20DataToGame();
     saveV20Local();
     saveV20ToFirestore();
     renderCoins(); renderMarketV20();
@@ -7094,6 +7099,7 @@ function startFirestoreListenersV20(){
 
       if(lot.isPotion){
         v20Data.potions = (Number(v20Data.potions)||0) + 1;
+        syncV20DataToGame();
         saveV20Local();
         saveV20ToFirestore();
       } else if(lot.item && lot.item.id && ITEMS[lot.item.id]){
