@@ -4945,11 +4945,12 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   var FILL_HALLOWEEN = {green:'#2f8f4e', red:'#ff7518', black:'#1e1024'};
   // Hook into feedPetWithItem
-  var _origFeedPetHw = feedPetWithItem;
+  var _origFeedPetHw = window.feedPetWithItem || feedPetWithItem;
   feedPetWithItem = function(u, idx){
     _origFeedPetHw(u, idx);
     checkHalloweenProgress('feed_pet', 1);
   };
+  window.feedPetWithItem = feedPetWithItem;
 
   // Halloween Wheel Skin support
   var _origCurrentWheelSkinHw = currentWheelSkin;
@@ -6927,6 +6928,14 @@ function startFirestoreListenersV20(){
       toast('Последний стартовый предмет класса продать нельзя.');
       return;
     }
+    if(itemId === 'mystery_egg' && game.incubator && game.incubator.active && game.incubator.started){
+      var eggCount = 0;
+      game.inv.forEach(function(k){ if(k === 'mystery_egg') eggCount++; });
+      if (eggCount <= 1) {
+        toast('Это яйцо сейчас находится в инкубаторе! Вы не можете выставить его на рынок.');
+        return;
+      }
+    }
 
     var enhLv = copyLevel(game, invIdx);
     var enchCode = (game.enchants && game.enchants[invIdx]) ? game.enchants[invIdx] : '';
@@ -7079,11 +7088,18 @@ function startFirestoreListenersV20(){
     var blocked = marketBusyV20 || isInActiveCombatV20() || isInExpeditionV20() || !canSell();
 
     var sellableIndices = [];
+    var incubatingEggBlocked = false;
     (game.inv || []).forEach(function(id, i){
       var it = ITEMS[id];
       if(!it) return;
       if(i === wornIndex(game, it.slot)) return;
       if(game.favorites && game.favorites[id]) return;
+      if(id === 'mystery_egg' && game.incubator && game.incubator.active && game.incubator.started) {
+          if(!incubatingEggBlocked) {
+              incubatingEggBlocked = true;
+              return;
+          }
+      }
       sellableIndices.push(i);
     });
     if(sellableIndices.indexOf(selectedMarketInvIdx) < 0){
