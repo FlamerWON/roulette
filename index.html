@@ -1906,7 +1906,7 @@ svg.chr{overflow:visible}
     {id:'cyclops',name:'Циклоп',hp:90,dmg:11,rule:'число от 1 до 15 или от 30 до 36',hit:function(n){return (n>=1&&n<=15)||n>=30;},
     {id:'vampire',name:'Вампир',hp:75,dmg:12,rule:'красное или зеро',hit:function(n){return n===0||color(n)==='red';}},
     {id:'treant',name:'Древень',hp:85,dmg:8,rule:'число от 20 до 30',hit:function(n){return n>=20&&n<=30;}},
-    {id:'djinn',name:'Джинн Ифрита',hp:90,dmg:11,rule:'нечётное красное',hit:function(n){return n>0&&n%2===1&&color(n)==='red';}}}
+    {id:'djinn',name:'Джинн Ифрита',hp:90,dmg:11,rule:'нечётное красное',hit:function(n){return n>0&&n%2===1&&color(n)==='red';}}
   ];
   function monsterFor(slot){return MONSTERS[hashStr('m'+slot)%MONSTERS.length];}
   // элитный монстр: шанс 10%, у каждого игрока свой; вдвое больше здоровья и урона
