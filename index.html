@@ -1815,7 +1815,7 @@ svg.chr{overflow:visible}
     return {id:base.id,name:(boss?'Хранитель: ':elite?'Элитный ':'')+base.name,hp:hp,dmg:dmg,rule:base.rule,hit:base.hit,elite:!!elite,boss:!!boss,rank:rank};
   }
   function rewardBase(mo){
-    var weight={goblin:1,kobold:.9,slime:1,skeleton:1.15,wolf:1.2,ogre:1.45,harpy:1.15,mimic:1.25,golem:1.5,basilisk:1.2,werewolf:1.3,cyclops:1.45,bat:1.05,spider:1.15,mummy:1.15,troll:1.2,knight:1.35,lich:1.15,gargoyle:1.2,necromancer:1.25,minotaur:1.35,reaper:1.3,frost:1.25,demon:1.5}[mo.id]||1;
+    var weight={goblin:1,kobold:.9,slime:1,skeleton:1.15,wolf:1.2,ogre:1.45,harpy:1.15,mimic:1.25,golem:1.5,basilisk:1.2,werewolf:1.3,cyclops:1.45,bat:1.05,spider:1.15,mummy:1.15,troll:1.2,knight:1.35,lich:1.15,gargoyle:1.2,necromancer:1.25,minotaur:1.35,reaper:1.3,frost:1.25,demon:1.5, vampire:1.4, treant:1.3, djinn:1.5}[mo.id]||1;
     var special=(mo.elite?1.6:1)*(mo.boss?1.35:1);
     return {xp:Math.round(45*Math.pow(mo.rank,1.65)*weight*special),coins:Math.round(180*Math.pow(mo.rank,.72)*weight*special)};
   }
@@ -1903,7 +1903,10 @@ svg.chr{overflow:visible}
     {id:'golem',name:'Каменный голем',hp:95,dmg:10,rule:'число делится на 2 или на 3',hit:function(n){return n>0&&(n%2===0||n%3===0);}},
     {id:'basilisk',name:'Василиск',hp:58,dmg:9,rule:'число от 10 до 28',hit:function(n){return n>=10&&n<=28;}},
     {id:'werewolf',name:'Оборотень',hp:72,dmg:10,rule:'красное или число от 25 до 36',hit:function(n){return (n>0&&color(n)==='red')||n>=25;}},
-    {id:'cyclops',name:'Циклоп',hp:90,dmg:11,rule:'число от 1 до 15 или от 30 до 36',hit:function(n){return (n>=1&&n<=15)||n>=30;}}
+    {id:'cyclops',name:'Циклоп',hp:90,dmg:11,rule:'число от 1 до 15 или от 30 до 36',hit:function(n){return (n>=1&&n<=15)||n>=30;},
+    {id:'vampire',name:'Вампир',hp:75,dmg:12,rule:'красное или зеро',hit:function(n){return n===0||color(n)==='red';}},
+    {id:'treant',name:'Древень',hp:85,dmg:8,rule:'число от 20 до 30',hit:function(n){return n>=20&&n<=30;}},
+    {id:'djinn',name:'Джинн Ифрита',hp:90,dmg:11,rule:'нечётное красное',hit:function(n){return n>0&&n%2===1&&color(n)==='red';}}}
   ];
   function monsterFor(slot){return MONSTERS[hashStr('m'+slot)%MONSTERS.length];}
   // элитный монстр: шанс 10%, у каждого игрока свой; вдвое больше здоровья и урона
@@ -5740,6 +5743,24 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
         + glowEye(39, 49, 5, '#ffbe0b') + glowEye(61, 49, 5, '#ffbe0b')
         + '<path d="M36 68 Q50 80 64 68" fill="#2b2d42" '+o+'/><path d="M40 69 L43 75 L46 69 M54 69 L57 75 L60 69" fill="#fff"/>';
     }
+        }else if(id==='vampire'){
+       s+=bg('#fecdd3','#881337')
+        + '<path d="M10 90 L50 40 L90 90 Z" fill="#000" '+o+'/>'
+        + '<ellipse cx="50" cy="50" rx="22" ry="26" fill="#e2e8f0" '+o+' '+ds+'/>'
+        + glowEye(40, 45, 4, '#e11d48') + glowEye(60, 45, 4, '#e11d48')
+        + '<path d="M45 65 L47 72 L49 65 M51 65 L53 72 L55 65" fill="#fff" '+o+'/>';
+    }else if(id==='treant'){
+       s+=bg('#dcfce7','#14532d')
+        + '<path d="M25 90 L35 30 L50 10 L65 30 L75 90 Z" fill="#166534" '+o+'/>'
+        + '<ellipse cx="50" cy="45" rx="25" ry="35" fill="#451a03" '+o+' '+ds+'/>'
+        + glowEye(40, 35, 4, '#86efac') + glowEye(60, 35, 4, '#86efac')
+        + '<path d="M40 60 Q50 70 60 60" fill="none" stroke="#fef08a" stroke-width="3"/>';
+    }else if(id==='djinn'){
+       s+=bg('#fed7aa','#9a3412')
+        + '<path d="M20 90 Q50 60 80 90 Z" fill="#ea580c" '+o+'/>'
+        + '<ellipse cx="50" cy="45" rx="28" ry="32" fill="#f97316" '+o+' '+ds+'/>'
+        + glowEye(38, 40, 5, '#fef08a') + glowEye(62, 40, 5, '#fef08a')
+        + '<path d="M35 60 Q50 70 65 60" fill="none" stroke="#450a0a" stroke-width="4"/>';
     // ------ БОССЫ ------
     else if(id==='boss_malganis'){
        s+=bg('#818cf8','#020617') 
