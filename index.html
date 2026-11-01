@@ -700,7 +700,14 @@ svg.chr{overflow:visible}
 
 
 
-/* === HALLOWEEN GOTHIC WHEEL SKIN (V25 GPU-OPTIMIZED) === */
+/* === HALLOWEEN GOTHIC WHEEL SKIN (V25 GPU-OPTIMIZED & FIXED) === */
+html, body {
+  overflow-x: clip;
+}
+.wheelCol {
+  overflow: visible;
+  max-width: 100%;
+}
 .stage.hw-skin-active {
   margin-top: 34px;
   margin-bottom: 56px;
@@ -723,15 +730,18 @@ svg.chr{overflow:visible}
   width: 148px;
   height: 76px;
   transform: translate3d(-50%, 0, 0);
-  z-index: 8;
+  z-index: 12;
   pointer-events: none;
-  will-change: transform;
 }
 .stage.hw-skin-active .hw-bat-pointer {
   display: block;
 }
+.stage.hw-skin-active .hw-bat-pointer svg {
+  animation: none !important;
+  transform: none;
+}
 .stage.hw-skin-active.hw-spinning .hw-bat-pointer svg {
-  animation: hwBatVibrate 0.11s linear infinite alternate;
+  animation: hwBatVibrate 0.11s linear infinite alternate !important;
   will-change: transform;
 }
 @keyframes hwBatVibrate {
@@ -745,20 +755,20 @@ svg.chr{overflow:visible}
   width: 58px;
   height: 58px;
   transform: translate3d(0, -50%, 0);
-  z-index: 6;
+  z-index: 15 !important; /* Всегда на самом переднем плане поверх колеса и эффектов */
   pointer-events: none;
-  will-change: transform;
+  animation: none !important;
 }
-.hw-side-pumpkin.left { left: -28px; }
-.hw-side-pumpkin.right { right: -28px; }
+.hw-side-pumpkin.left { left: -22px; }
+.hw-side-pumpkin.right { right: -22px; }
 .stage.hw-skin-active .hw-side-pumpkin {
   display: block;
 }
 .stage.hw-skin-active.hw-spinning .hw-side-pumpkin.left {
-  animation: hwPumpFloatL 0.45s ease-in-out infinite alternate;
+  animation: hwPumpFloatL 0.45s ease-in-out infinite alternate !important;
 }
 .stage.hw-skin-active.hw-spinning .hw-side-pumpkin.right {
-  animation: hwPumpFloatR 0.45s ease-in-out infinite alternate;
+  animation: hwPumpFloatR 0.45s ease-in-out infinite alternate !important;
 }
 @keyframes hwPumpFloatL {
   from { transform: translate3d(0, -52%, 0) scale(0.96) rotate(-4deg); }
@@ -773,8 +783,8 @@ svg.chr{overflow:visible}
   position: absolute;
   left: 50%;
   bottom: -66px;
-  width: 112%;
-  max-width: 460px;
+  width: 104%;
+  max-width: 440px;
   height: 110px;
   transform: translate3d(-50%, 0, 0);
   z-index: 1;
@@ -786,12 +796,12 @@ svg.chr{overflow:visible}
 .hw-fx-canvas {
   display: none;
   position: absolute;
-  left: -14%;
-  top: -14%;
-  width: 128%;
-  height: 128%;
+  left: -8%;
+  top: -8%;
+  width: 116%;
+  height: 116%;
   pointer-events: none;
-  z-index: 7;
+  z-index: 5; /* Ниже боковых тыкв (15) и стрелки-мыши (12), но выше самого колеса (2) */
   border-radius: 0 !important;
   box-shadow: none !important;
 }
@@ -801,19 +811,19 @@ svg.chr{overflow:visible}
 .hw-mist-ring {
   display: none;
   position: absolute;
-  inset: -28px;
+  inset: -16px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
   background: radial-gradient(circle, rgba(168,85,247,0.42) 42%, rgba(34,197,94,0.34) 58%, rgba(249,115,22,0.16) 68%, transparent 75%);
   opacity: 0.8;
-  will-change: transform, opacity;
+  animation: none !important;
 }
 .stage.hw-skin-active .hw-mist-ring {
   display: block;
 }
 .stage.hw-skin-active.hw-spinning .hw-mist-ring {
-  animation: hwMistRotate 2.2s linear infinite;
+  animation: hwMistRotate 2.2s linear infinite !important;
 }
 @keyframes hwMistRotate {
   0% { transform: rotate(0deg) scale(1.01); opacity: 0.82; }
@@ -828,7 +838,6 @@ svg.chr{overflow:visible}
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65);
   letter-spacing: 0.04em;
   position: relative;
-  will-change: transform;
 }
 #spin.hw-spin-btn.busy {
   animation: hwSpinBtnFire 0.4s ease-in-out infinite alternate;
@@ -838,6 +847,7 @@ svg.chr{overflow:visible}
   from { transform: scale(0.98); filter: brightness(1); }
   to { transform: scale(1.03); filter: brightness(1.18); }
 }
+
 </style>
 
 </head>
@@ -9994,7 +10004,7 @@ function startFirestoreListenersV20(){
     var fxCv = $('hwFxCanvas');
     if(!fxCv) return;
     // Используем CSS-размер (1x без умножения на DPR) — это снижает нагрузку на пиксельный шейдер в 4 раза!
-    var fxSize = Math.round(size * 1.28);
+    var fxSize = Math.round(size * 1.16);
     if(fxCv.width !== fxSize){ fxCv.width = fxSize; fxCv.height = fxSize; }
     if(!spinning && hwSparks.length === 0 && hwBats.length === 0){
       if(fxCv.dataset.dirty === '1'){
@@ -10551,6 +10561,34 @@ function startFirestoreListenersV20(){
     _prevDrawWheelOnCanvasV25(cv, skinName);
   };
 
+  // Надёжное сохранение и определение скина колеса (без сброса при ресайзе, загрузке и покупках)
+  currentWheelSkin = function(){
+    if(!sess) return 'default';
+    var saved = '';
+    try { saved = localStorage.getItem('roulette_wheel_skin_' + sess.uid) || ''; } catch(e){}
+    if(!saved && game && typeof game.wheelSkin === 'string') saved = game.wheelSkin;
+    if(saved === 'halloween'){
+      try { localStorage.setItem('roulette_hw_skin_unlocked_' + sess.uid, '1'); } catch(e){}
+      return 'halloween';
+    }
+    if(saved === 'pioneer' && hasPioneerSkin()) return 'pioneer';
+    if(game && game.wheelSkin === 'halloween') return 'halloween';
+    if(game && game.wheelSkin === 'pioneer' && hasPioneerSkin()) return 'pioneer';
+    return 'default';
+  };
+
+  // Применяем точную остановку анимаций сразу после окончания вращения
+  var _origShowAfterSpinHw = show;
+  show = function(n){
+    spinning = false;
+    var stg = document.querySelector('#gamePane .stage');
+    if(stg) stg.classList.remove('hw-spinning');
+    hwSparks.length = 0;
+    hwBats.length = 0;
+    draw(); // Перерисовываем колесо уже со spinning = false, чтобы мгновенно остановить стрелку и тыквы
+    _origShowAfterSpinHw(n);
+  };
+
   // Поддержка скина «Тыквенный кошмар» на главном колесе
   var _finalDrawHw = draw;
   draw = function(){
@@ -10570,7 +10608,6 @@ function startFirestoreListenersV20(){
 
     if(isHw){
       var size = canvas.clientWidth; if(!size) return;
-      // Ограничиваем внутренний DPR колеса максимум до 1.5, чтобы на экранах 2K/4K/Retina не рендерить 4 миллиона пикселей
       var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       var targetPx = Math.round(size * dpr);
       if(canvas.width !== targetPx){
@@ -10578,7 +10615,7 @@ function startFirestoreListenersV20(){
         canvas.height = targetPx;
       }
       var s = canvas.width, r = s / 2;
-      var speed = Math.min(0.45, Math.abs(rot - hwLastRot));
+      var speed = spinning ? Math.min(0.45, Math.abs(rot - hwLastRot)) : 0;
       ctx.setTransform(1,0,0,1,0,0);
       ctx.clearRect(0, 0, s, s);
       ctx.translate(r, r);
@@ -10588,6 +10625,15 @@ function startFirestoreListenersV20(){
     }
     _finalDrawHw();
   };
+
+  // Перепривязываем глобальные слушатели resize и fonts к новой функции draw,
+  // чтобы окно браузера никогда не вызывало старый классический draw()
+  window.removeEventListener('resize', _finalDrawHw);
+  window.addEventListener('resize', function(){ draw(); });
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){ draw(); });
+  }
+
   })();
 </script>
 </body>
