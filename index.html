@@ -699,6 +699,158 @@ svg.chr{overflow:visible}
 }
 
 
+
+/* === HALLOWEEN GOTHIC WHEEL SKIN (V25 REDESIGN) === */
+.stage.hw-skin-active {
+  margin-top: 34px;
+  margin-bottom: 56px;
+  position: relative;
+  z-index: 3;
+}
+.stage.hw-skin-active #wheel {
+  position: relative;
+  z-index: 2;
+  transition: box-shadow 0.35s ease, filter 0.35s ease;
+}
+.stage.hw-skin-active.hw-spinning #wheel {
+  animation: hwWheelAuraPulse 0.65s ease-in-out infinite alternate;
+}
+@keyframes hwWheelAuraPulse {
+  0% {
+    box-shadow: 0 0 0 8px #180c24, 0 0 0 12px #d97706, 0 0 32px 6px rgba(168, 85, 247, 0.85), 0 0 58px 14px rgba(34, 197, 94, 0.55) !important;
+  }
+  100% {
+    box-shadow: 0 0 0 8px #180c24, 0 0 0 12px #fbbf24, 0 0 46px 12px rgba(249, 115, 22, 0.9), 0 0 74px 22px rgba(168, 85, 247, 0.75) !important;
+  }
+}
+.stage.hw-skin-active > .pointer {
+  display: none !important;
+}
+.hw-bat-pointer {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: -36px;
+  width: 148px;
+  height: 76px;
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.75));
+}
+.stage.hw-skin-active .hw-bat-pointer {
+  display: block;
+}
+.stage.hw-skin-active.hw-spinning .hw-bat-pointer svg {
+  animation: hwBatVibrate 0.09s linear infinite alternate;
+}
+@keyframes hwBatVibrate {
+  0% { transform: rotate(-4deg) translateY(0px) scale(1.03); filter: drop-shadow(0 0 10px #fb923c); }
+  100% { transform: rotate(4deg) translateY(2px) scale(1.06); filter: drop-shadow(0 0 16px #fde047); }
+}
+.hw-side-pumpkin {
+  display: none;
+  position: absolute;
+  top: 50%;
+  width: 58px;
+  height: 58px;
+  transform: translateY(-50%);
+  z-index: 6;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7)) drop-shadow(0 0 12px rgba(249, 115, 22, 0.65));
+}
+.hw-side-pumpkin.left { left: -28px; }
+.hw-side-pumpkin.right { right: -28px; }
+.stage.hw-skin-active .hw-side-pumpkin {
+  display: block;
+}
+.stage.hw-skin-active.hw-spinning .hw-side-pumpkin.left {
+  animation: hwPumpFloatL 0.45s ease-in-out infinite alternate;
+}
+.stage.hw-skin-active.hw-spinning .hw-side-pumpkin.right {
+  animation: hwPumpFloatR 0.45s ease-in-out infinite alternate;
+}
+@keyframes hwPumpFloatL {
+  from { transform: translateY(-52%) scale(0.96) rotate(-5deg); }
+  to { transform: translateY(-48%) scale(1.08) rotate(5deg); filter: drop-shadow(0 0 18px #fb923c); }
+}
+@keyframes hwPumpFloatR {
+  from { transform: translateY(-48%) scale(0.96) rotate(5deg); }
+  to { transform: translateY(-52%) scale(1.08) rotate(-5deg); filter: drop-shadow(0 0 18px #fb923c); }
+}
+.hw-gothic-base {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: -66px;
+  width: 112%;
+  max-width: 460px;
+  height: 110px;
+  transform: translateX(-50%);
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.75));
+}
+.stage.hw-skin-active .hw-gothic-base {
+  display: block;
+}
+.hw-fx-canvas {
+  display: none;
+  position: absolute;
+  left: -18%;
+  top: -18%;
+  width: 136%;
+  height: 136%;
+  pointer-events: none;
+  z-index: 7;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.stage.hw-skin-active .hw-fx-canvas {
+  display: block;
+}
+.hw-mist-ring {
+  display: none;
+  position: absolute;
+  inset: -24px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(168,85,247,0.38) 45%, rgba(34,197,94,0.35) 62%, rgba(249,115,22,0.18) 72%, transparent 78%);
+  filter: blur(14px);
+  opacity: 0.75;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.stage.hw-skin-active .hw-mist-ring {
+  display: block;
+}
+.stage.hw-skin-active.hw-spinning .hw-mist-ring {
+  opacity: 1;
+  animation: hwMistRotate 2.4s linear infinite;
+}
+@keyframes hwMistRotate {
+  0% { transform: rotate(0deg) scale(1.02); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1.02); }
+}
+#spin.hw-spin-btn {
+  background: radial-gradient(circle at 50% 35%, #fef08a 0%, #f59e0b 45%, #b45309 85%, #451a03 100%) !important;
+  color: #1e0b16 !important;
+  border: 2px solid #fde047 !important;
+  box-shadow: 0 0 18px rgba(249, 115, 22, 0.75), inset 0 0 10px rgba(255, 255, 255, 0.55) !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.04em;
+  position: relative;
+}
+#spin.hw-spin-btn.busy {
+  animation: hwSpinBtnFire 0.4s ease-in-out infinite alternate;
+  opacity: 0.92 !important;
+}
+@keyframes hwSpinBtnFire {
+  from { box-shadow: 0 0 20px #f97316, 0 0 36px #a855f7 !important; transform: scale(0.98); }
+  to { box-shadow: 0 0 32px #fde047, 0 0 54px #ef4444 !important; transform: scale(1.03); }
+}
+
 </style>
 
 </head>
@@ -5597,7 +5749,19 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     boss_arachna: 'monsters/boss_arachna.webp',
     boss_colossus: 'monsters/boss_colossus.webp',
     boss_nosferatu: 'monsters/boss_nosferatu.webp',
-    boss_xalatah: 'monsters/boss_xalatah.webp'
+    boss_xalatah: 'monsters/boss_xalatah.webp',
+    bat: 'monsters/bat.webp',
+    spider: 'monsters/spider.webp',
+    mummy: 'monsters/mummy.webp',
+    troll: 'monsters/troll.webp',
+    knight: 'monsters/knight.webp',
+    lich: 'monsters/lich.webp',
+    gargoyle: 'monsters/gargoyle.webp',
+    necromancer: 'monsters/necromancer.webp',
+    minotaur: 'monsters/minotaur.webp',
+    reaper: 'monsters/reaper.webp',
+    frost: 'monsters/frost.webp',
+    demon: 'monsters/demon.webp'
   };
   window.MONSTER_IMAGES = MONSTER_IMAGES;
 
@@ -9687,33 +9851,659 @@ function startFirestoreListenersV20(){
     }
   };
 
+  // ============================================================================
+  // РЕДИЗАЙН СКИНА КОЛЕСА «ТЫКВЕННЫЙ КОШМАР» (ПОЛНАЯ ДЕТАЛИЗАЦИЯ + FX ПРИ ВРАЩЕНИИ)
+  // ============================================================================
+  var HW_SECTOR_PALETTE = {
+    green: ['#064e3b', '#10b981'],
+    red:   ['#9a3412', '#f97316'],
+    black: ['#2e1065', '#6b21a8'],
+    dark:  ['#0f071e', '#1e1b4b']
+  };
+  var HW_RUNES = ['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ'];
+  var hwLastRot = 0;
+  var hwAngularSpeed = 0;
+  var hwSparks = [];
+  var hwBats = [];
+  var hwDecorInjected = false;
+
+  function ensureHalloweenStageDecor(){
+    if(hwDecorInjected) return;
+    var stg = document.querySelector('#gamePane .stage');
+    if(!stg) return;
+    hwDecorInjected = true;
+
+    // 1. Мистическое кольцо тумана позади колеса
+    var mist = document.createElement('div');
+    mist.className = 'hw-mist-ring';
+    stg.insertBefore(mist, stg.firstChild);
+
+    // 2. Указатель — готическая летучая мышь с золотыми крыльями и кристаллом
+    var batPtr = document.createElement('div');
+    batPtr.className = 'hw-bat-pointer';
+    batPtr.innerHTML = '<svg viewBox="0 0 180 95" width="100%" height="100%" aria-hidden="true">'
+      + '<defs>'
+      + '<linearGradient id="hwBatWing" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#581c87"/><stop offset="60%" stop-color="#3b0764"/><stop offset="100%" stop-color="#1e0536"/></linearGradient>'
+      + '<linearGradient id="hwBatGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fef08a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#78350f"/></linearGradient>'
+      + '</defs>'
+      // Крылья летучей мыши
+      + '<path d="M90 42 C65 10, 28 6, 4 28 C18 32, 26 42, 30 52 C42 40, 54 44, 62 56 C70 46, 78 46, 84 54 Z" fill="url(#hwBatWing)" stroke="url(#hwBatGold)" stroke-width="2.5" stroke-linejoin="round"/>'
+      + '<path d="M90 42 C115 10, 152 6, 176 28 C162 32, 154 42, 150 52 C138 40, 126 44, 118 56 C110 46, 102 46, 96 54 Z" fill="url(#hwBatWing)" stroke="url(#hwBatGold)" stroke-width="2.5" stroke-linejoin="round"/>'
+      // Перепонки крыльев
+      + '<path d="M75 26 Q48 28 30 50 M78 34 Q62 38 62 54 M105 26 Q132 28 150 50 M102 34 Q118 38 118 54" fill="none" stroke="#eab308" stroke-width="1.3" opacity="0.8"/>'
+      // Золотой указатель-клюв вниз (указывает точно на сектор)
+      + '<polygon points="90,88 76,52 90,60 104,52" fill="url(#hwBatGold)" stroke="#1e0b16" stroke-width="2"/>'
+      + '<polygon points="90,84 82,56 90,62" fill="#fef08a" opacity="0.7"/>'
+      // Голова и уши мыши
+      + '<path d="M78 32 L72 12 L85 24 L90 22 L95 24 L108 12 L102 32 Q90 44 78 32 Z" fill="#311042" stroke="url(#hwBatGold)" stroke-width="2"/>'
+      // Горящие глаза
+      + '<ellipse cx="84" cy="30" rx="3.5" ry="2.2" transform="rotate(15 84 30)" fill="#fde047"/>'
+      + '<ellipse cx="96" cy="30" rx="3.5" ry="2.2" transform="rotate(-15 96 30)" fill="#fde047"/>'
+      + '<circle cx="90" cy="48" r="5" fill="#f97316" stroke="#fde047" stroke-width="1.5"/>'
+      + '</svg>';
+    stg.appendChild(batPtr);
+
+    // 3. Боковые светящиеся тыквы на ободе (слева и справа, как на референсе)
+    var pumpSvg = '<svg viewBox="0 0 80 80" width="100%" height="100%" aria-hidden="true">'
+      + '<defs>'
+      + '<radialGradient id="hwSidePumpG" cx="50%" cy="45%" r="50%"><stop offset="0%" stop-color="#fb923c"/><stop offset="70%" stop-color="#ea580c"/><stop offset="100%" stop-color="#7c2d12"/></radialGradient>'
+      + '</defs>'
+      + '<circle cx="40" cy="42" r="32" fill="#1e1b4b" stroke="#f59e0b" stroke-width="3"/>'
+      + '<path d="M36 14 Q40 4 46 10 L43 18 Z" fill="#15803d" stroke="#052e16" stroke-width="1.5"/>'
+      + '<ellipse cx="40" cy="44" rx="24" ry="20" fill="url(#hwSidePumpG)" stroke="#431407" stroke-width="2"/>'
+      + '<ellipse cx="40" cy="44" rx="15" ry="20" fill="none" stroke="#9a3412" stroke-width="1.5"/>'
+      + '<polygon points="28,38 36,34 35,43" fill="#fef08a"/>'
+      + '<polygon points="52,38 44,34 45,43" fill="#fef08a"/>'
+      + '<polygon points="40,42 37,47 43,47" fill="#fde047"/>'
+      + '<path d="M26 50 L31 55 L35 51 L40 56 L45 51 L49 55 L54 50 L50 59 L44 56 L40 60 L36 56 L30 59 Z" fill="#fef08a"/>'
+      + '</svg>';
+    var pumpL = document.createElement('div');
+    pumpL.className = 'hw-side-pumpkin left';
+    pumpL.innerHTML = pumpSvg;
+    var pumpR = document.createElement('div');
+    pumpR.className = 'hw-side-pumpkin right';
+    pumpR.innerHTML = pumpSvg;
+    stg.appendChild(pumpL);
+    stg.appendChild(pumpR);
+
+    // 4. Готический постамент у основания (корни, ограда, тыквы, черепа и свечи)
+    var base = document.createElement('div');
+    base.className = 'hw-gothic-base';
+    base.innerHTML = '<svg viewBox="0 0 460 120" width="100%" height="100%" aria-hidden="true">'
+      + '<defs>'
+      + '<linearGradient id="hwBaseStone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#334155"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>'
+      + '<radialGradient id="hwCandleGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(253,224,71,0.75)"/><stop offset="100%" stop-color="rgba(249,115,22,0)"/></radialGradient>'
+      + '</defs>'
+      // Корни и мшистый холм
+      + '<path d="M20 115 Q80 70 150 92 L155 35 L305 35 L310 92 Q380 70 440 115 Z" fill="url(#hwBaseStone)" stroke="#1e293b" stroke-width="2.5"/>'
+      + '<path d="M40 115 Q110 82 180 100 Q230 88 280 100 Q350 82 420 115 Z" fill="#14532d" opacity="0.75"/>'
+      // Готическая кованая решетка по центру
+      + '<path d="M180 95 V48 M205 95 V42 M230 95 V38 M255 95 V42 M280 95 V48 M172 62 H288 M172 80 H288" stroke="#090d16" stroke-width="3.5" stroke-linecap="round"/>'
+      + '<polygon points="180,42 176,50 184,50" fill="#64748b"/><polygon points="205,36 201,44 209,44" fill="#64748b"/><polygon points="230,30 225,40 235,40" fill="#94a3b8"/><polygon points="255,36 251,44 259,44" fill="#64748b"/><polygon points="280,42 276,50 284,50" fill="#64748b"/>'
+      // Паутина слева
+      + '<path d="M145 45 L110 85 M148 58 L120 92 M128 64 Q138 68 136 78 M118 75 Q130 80 126 90" stroke="rgba(226,232,240,0.35)" stroke-width="1.2" fill="none"/>'
+      // Левая светящаяся тыква
+      + '<ellipse cx="105" cy="92" rx="26" ry="20" fill="#ea580c" stroke="#431407" stroke-width="2"/>'
+      + '<polygon points="94,85 101,82 100,90" fill="#fef08a"/><polygon points="116,85 109,82 110,90" fill="#fef08a"/>'
+      + '<path d="M92 96 Q105 106 118 96 Q105 101 92 96 Z" fill="#fef08a"/>'
+      // Правая светящаяся тыква
+      + '<ellipse cx="360" cy="92" rx="24" ry="19" fill="#ea580c" stroke="#431407" stroke-width="2"/>'
+      + '<polygon points="350,85 356,82 355,90" fill="#fef08a"/><polygon points="370,85 364,82 365,90" fill="#fef08a"/>'
+      + '<path d="M348 96 Q360 105 372 96 Q360 100 348 96 Z" fill="#fef08a"/>'
+      // Черепа у подножия
+      + '<circle cx="145" cy="102" r="9" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5"/>'
+      + '<circle cx="142" cy="101" r="2.2" fill="#0f172a"/><circle cx="148" cy="101" r="2.2" fill="#0f172a"/>'
+      + '<circle cx="315" cy="100" r="11" fill="#e2e8f0" stroke="#1e293b" stroke-width="1.5"/>'
+      + '<circle cx="311" cy="99" r="2.6" fill="#0f172a"/><circle cx="319" cy="99" r="2.6" fill="#0f172a"/>'
+      // Горящие свечи и ореолы пламени
+      + '<circle cx="290" cy="72" r="18" fill="url(#hwCandleGlow)"/><circle cx="395" cy="70" r="18" fill="url(#hwCandleGlow)"/>'
+      + '<rect x="286" y="78" width="8" height="24" rx="2" fill="#fef3c7" stroke="#78350f" stroke-width="1"/>'
+      + '<path d="M290 66 Q295 73 290 78 Q285 73 290 66 Z" fill="#fde047"/>'
+      + '<rect x="391" y="74" width="7" height="26" rx="2" fill="#fef3c7" stroke="#78350f" stroke-width="1"/>'
+      + '<path d="M394.5 62 Q399 69 394.5 74 Q390 69 394.5 62 Z" fill="#fde047"/>'
+      + '</svg>';
+    stg.appendChild(base);
+
+    // 5. Над캔вас для частиц искр, огня и вылетающих мышей при вращении
+    var fxCv = document.createElement('canvas');
+    fxCv.id = 'hwFxCanvas';
+    fxCv.className = 'hw-fx-canvas';
+    stg.appendChild(fxCv);
+  }
+
+  function spawnHwSpinParticles(r, speed){
+    if(hwSparks.length < 75){
+      var count = Math.min(6, Math.ceil(speed * 65));
+      for(var i = 0; i < count; i++){
+        // Искры из-под когтей верхней мыши-указателя + с зубцов обода
+        var fromTop = (Math.random() < 0.55);
+        var ang = fromTop ? (-Math.PI/2 + (Math.random() - 0.5) * 0.35) : (Math.random() * TAU);
+        var rad = fromTop ? (r * 0.94) : (r * (0.90 + Math.random() * 0.08));
+        var tangent = ang + Math.PI / 2;
+        var spd = (2.2 + Math.random() * 4.5) * Math.min(2.2, 0.7 + speed * 14);
+        hwSparks.push({
+          x: Math.cos(ang) * rad,
+          y: Math.sin(ang) * rad,
+          vx: Math.cos(tangent) * spd + (Math.random() - 0.5) * 2.2,
+          vy: Math.sin(tangent) * spd + (fromTop ? (Math.random() * 2.0) : (Math.random() - 0.5) * 2.2),
+          life: 1.0,
+          decay: 0.03 + Math.random() * 0.04,
+          size: 2.0 + Math.random() * 3.5,
+          color: Math.random() < 0.3 ? '#4ade80' : (Math.random() < 0.7 ? '#fde047' : '#f97316')
+        });
+      }
+    }
+    if(hwBats.length < 7 && Math.random() < 0.18){
+      var bAng = Math.random() * TAU;
+      var bSpd = 1.6 + Math.random() * 2.4;
+      hwBats.push({
+        x: Math.cos(bAng) * (r * 0.78),
+        y: Math.sin(bAng) * (r * 0.78),
+        vx: Math.cos(bAng) * bSpd,
+        vy: Math.sin(bAng) * bSpd - 0.6,
+        rot: bAng + Math.PI/2,
+        scale: 0.55 + Math.random() * 0.55,
+        life: 1.0,
+        phase: Math.random() * TAU
+      });
+    }
+  }
+
+  function renderHwFxOverlay(size, dpr, speed){
+    var fxCv = $('hwFxCanvas');
+    if(!fxCv) return;
+    var fxSize = Math.round(size * 1.36 * dpr);
+    if(fxCv.width !== fxSize){ fxCv.width = fxSize; fxCv.height = fxSize; }
+    var fctx = fxCv.getContext('2d');
+    fctx.setTransform(1,0,0,1,0,0);
+    fctx.clearRect(0, 0, fxSize, fxSize);
+    if(!spinning && hwSparks.length === 0 && hwBats.length === 0) return;
+
+    var cx = fxSize / 2, cy = fxSize / 2;
+    var wheelR = (size * dpr) / 2;
+    fctx.translate(cx, cy);
+
+    if(spinning){
+      spawnHwSpinParticles(wheelR, speed);
+      // Огненно-изумрудные вихревые шлейфы вокруг колеса при вращении
+      fctx.save();
+      fctx.rotate(rot * 1.35);
+      for(var k = 0; k < 4; k++){
+        var a0 = k * (Math.PI / 2);
+        fctx.beginPath();
+        fctx.arc(0, 0, wheelR * 1.03, a0, a0 + 0.85);
+        fctx.strokeStyle = (k % 2 === 0) ? 'rgba(74, 222, 128, 0.42)' : 'rgba(192, 132, 252, 0.48)';
+        fctx.lineWidth = Math.max(4, wheelR * 0.045);
+        fctx.lineCap = 'round';
+        fctx.stroke();
+      }
+      fctx.restore();
+
+      // Яркая вспышка трения под верхней мышью-указателем
+      var sparkGrd = fctx.createRadialGradient(0, -wheelR * 0.95, 1, 0, -wheelR * 0.95, wheelR * 0.18);
+      sparkGrd.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
+      sparkGrd.addColorStop(0.45, 'rgba(249, 115, 22, 0.65)');
+      sparkGrd.addColorStop(1, 'rgba(249, 115, 22, 0)');
+      fctx.fillStyle = sparkGrd;
+      fctx.beginPath();
+      fctx.arc(0, -wheelR * 0.95, wheelR * 0.18, 0, TAU);
+      fctx.fill();
+    }
+
+    // Отрисовка искр
+    for(var i = hwSparks.length - 1; i >= 0; i--){
+      var p = hwSparks[i];
+      p.x += p.vx * dpr;
+      p.y += p.vy * dpr;
+      p.life -= p.decay;
+      if(p.life <= 0){ hwSparks.splice(i, 1); continue; }
+      fctx.save();
+      fctx.globalAlpha = Math.max(0, p.life);
+      fctx.strokeStyle = p.color;
+      fctx.fillStyle = p.color;
+      fctx.lineWidth = p.size * dpr * 0.7;
+      fctx.beginPath();
+      fctx.moveTo(p.x, p.y);
+      fctx.lineTo(p.x - p.vx * dpr * 1.8, p.y - p.vy * dpr * 1.8);
+      fctx.stroke();
+      fctx.beginPath();
+      fctx.arc(p.x, p.y, p.size * dpr * 0.45, 0, TAU);
+      fctx.fill();
+      fctx.restore();
+    }
+
+    // Отрисовка вылетающих силуэтов летучих мышей
+    for(var j = hwBats.length - 1; j >= 0; j--){
+      var b = hwBats[j];
+      b.x += b.vx * dpr;
+      b.y += b.vy * dpr;
+      b.phase += 0.35;
+      b.life -= 0.022;
+      if(b.life <= 0){ hwBats.splice(j, 1); continue; }
+      fctx.save();
+      fctx.translate(b.x, b.y);
+      fctx.rotate(b.rot);
+      var flap = Math.sin(b.phase) * 5 * dpr;
+      var sc = b.scale * (wheelR / 180);
+      fctx.scale(sc, sc);
+      fctx.globalAlpha = Math.max(0, b.life * 0.9);
+      fctx.fillStyle = '#1e0536';
+      fctx.strokeStyle = '#a855f7';
+      fctx.lineWidth = 1.5;
+      fctx.beginPath();
+      fctx.moveTo(0, 0);
+      fctx.quadraticCurveTo(-12, -10 + flap, -24, 2 + flap);
+      fctx.quadraticCurveTo(-12, 4, 0, 8);
+      fctx.quadraticCurveTo(12, 4, 24, 2 + flap);
+      fctx.quadraticCurveTo(12, -10 + flap, 0, 0);
+      fctx.closePath();
+      fctx.fill();
+      fctx.stroke();
+      fctx.restore();
+    }
+
+    if(!spinning && (hwSparks.length > 0 || hwBats.length > 0)){
+      requestAnimationFrame(function(){ if(curTab === 'game') draw(); });
+    }
+  }
+
+  // Миниатюрная векторная иконка приза/символа внутри каждого сектора
+  function drawHwSectorMotif(ctx, idx, rad, sz, isZero){
+    ctx.save();
+    ctx.rotate(Math.PI / 2);
+    if(isZero){
+      // Изумрудный кристалл/зелье на секторе Зеро
+      ctx.fillStyle = '#4ade80';
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = Math.max(1, sz * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(0, -sz*0.9);
+      ctx.lineTo(sz*0.65, 0);
+      ctx.lineTo(0, sz*0.9);
+      ctx.lineTo(-sz*0.65, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+    var kind = idx % 5;
+    if(kind === 0){
+      // Череп
+      ctx.fillStyle = '#f1f5f9';
+      ctx.beginPath();
+      ctx.arc(0, -sz*0.18, sz*0.58, 0, TAU);
+      ctx.fill();
+      ctx.fillRect(-sz*0.32, sz*0.15, sz*0.64, sz*0.42);
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(-sz*0.22, -sz*0.2, sz*0.16, 0, TAU);
+      ctx.arc(sz*0.22, -sz*0.2, sz*0.16, 0, TAU);
+      ctx.fill();
+    } else if(kind === 1){
+      // Золотой мешочек / монета
+      ctx.fillStyle = '#fbbf24';
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = Math.max(1, sz * 0.12);
+      ctx.beginPath();
+      ctx.arc(0, sz*0.1, sz*0.58, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#78350f';
+      ctx.font = '700 ' + Math.round(sz*0.75) + 'px Manrope,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$', 0, sz*0.12);
+    } else if(kind === 2){
+      // Шляпа ведьмы
+      ctx.fillStyle = '#581c87';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = Math.max(1, sz * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(-sz*0.8, sz*0.45);
+      ctx.lineTo(sz*0.8, sz*0.45);
+      ctx.lineTo(sz*0.15, -sz*0.75);
+      ctx.lineTo(-sz*0.35, sz*0.45);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if(kind === 3){
+      // Колба с зельем
+      ctx.fillStyle = '#a855f7';
+      ctx.strokeStyle = '#fde047';
+      ctx.lineWidth = Math.max(1, sz * 0.12);
+      ctx.beginPath();
+      ctx.arc(0, sz*0.18, sz*0.52, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#4ade80';
+      ctx.fillRect(-sz*0.18, -sz*0.55, sz*0.36, sz*0.35);
+    } else {
+      // Магический кристалл
+      ctx.fillStyle = '#38bdf8';
+      ctx.strokeStyle = '#e0f2fe';
+      ctx.lineWidth = Math.max(1, sz * 0.1);
+      ctx.beginPath();
+      ctx.moveTo(0, -sz*0.75);
+      ctx.lineTo(sz*0.5, 0);
+      ctx.lineTo(0, sz*0.75);
+      ctx.lineTo(-sz*0.5, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawHalloweenMasterpiece(ctx, s, r, isMini){
+    var speed = Math.min(0.45, Math.abs(rot - hwLastRot));
+    if(!isMini) hwLastRot = rot;
+    var blurSteps = (!isMini && spinning && speed > 0.015) ? 3 : 1;
+
+    // 1. Внешнее кованое готическое кольцо с шипами и золотыми накладками
+    var outerGrad = ctx.createRadialGradient(0, 0, r * 0.86, 0, 0, r);
+    outerGrad.addColorStop(0, '#1e1b4b');
+    outerGrad.addColorStop(0.55, '#334155');
+    outerGrad.addColorStop(0.88, '#0f172a');
+    outerGrad.addColorStop(1, '#fbbf24');
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, TAU);
+    ctx.fillStyle = outerGrad;
+    ctx.fill();
+
+    // 2. Сектора рулетки (с поддержкой motion-blur шлейфа при быстром вращении)
+    var innerWheelR = r * 0.90;
+    for(var b = blurSteps - 1; b >= 0; b--){
+      var rotOffset = rot - b * speed * 0.42;
+      ctx.save();
+      if(b > 0) ctx.globalAlpha = (b === 1) ? 0.32 : 0.16;
+
+      for(var i = 0; i < N; i++){
+        var a = -Math.PI/2 + i * SEG + rotOffset;
+        var num = ORDER[i];
+        var colKey = color(num);
+        var pair = (colKey === 'green') ? HW_SECTOR_PALETTE.green :
+                   (colKey === 'red')   ? HW_SECTOR_PALETTE.red :
+                   ((i % 2 === 0) ? HW_SECTOR_PALETTE.black : HW_SECTOR_PALETTE.dark);
+
+        var secGrd = ctx.createRadialGradient(0, 0, r * 0.36, 0, 0, innerWheelR);
+        secGrd.addColorStop(0, pair[0]);
+        secGrd.addColorStop(0.75, pair[1]);
+        secGrd.addColorStop(1, pair[0]);
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, innerWheelR, a - SEG/2, a + SEG/2);
+        ctx.closePath();
+        ctx.fillStyle = secGrd;
+        ctx.fill();
+
+        if(b === 0){
+          // Золотые разделители секторов
+          ctx.strokeStyle = 'rgba(251, 191, 36, 0.82)';
+          ctx.lineWidth = Math.max(1, s / 310);
+          ctx.stroke();
+
+          if(!isMini){
+            // Иконка трофея во внутреннем поясе сектора
+            ctx.save();
+            ctx.rotate(a);
+            ctx.translate(r * 0.59, 0);
+            drawHwSectorMotif(ctx, i, r * 0.59, r * 0.048, num === 0);
+            ctx.restore();
+
+            // Номер сектора с золотым свечением
+            ctx.save();
+            ctx.rotate(a);
+            ctx.translate(r * 0.78, 0);
+            ctx.rotate(Math.PI / 2);
+            ctx.fillStyle = (num === 0) ? '#86efac' : '#fef3c7';
+            ctx.strokeStyle = '#1e0b16';
+            ctx.lineWidth = Math.max(2, s / 220);
+            ctx.font = '800 ' + Math.round(s * 0.045) + 'px Manrope,system-ui,sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(String(num), 0, 0);
+            ctx.fillText(String(num), 0, 0);
+            ctx.restore();
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    // 3. Неоновое фиолетово-розовое кольцо вдоль границы секторов (как на референсе)
+    ctx.beginPath();
+    ctx.arc(0, 0, innerWheelR, 0, TAU);
+    ctx.strokeStyle = '#e879f9';
+    ctx.lineWidth = Math.max(2, s / 160);
+    ctx.stroke();
+
+    // 4. Декоративные золотые пластины, шипы и заклепки по внешнему кованому ободу
+    var numPlates = 12;
+    for(var p = 0; p < numPlates; p++){
+      var pa = rot * 0.25 + p * (TAU / numPlates);
+      ctx.save();
+      ctx.rotate(pa);
+      // Золотая дужка на ободе
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.95, -0.14, 0.14);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = Math.max(3, r * 0.065);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      // Заклепка
+      ctx.beginPath();
+      ctx.arc(r * 0.95, 0, Math.max(1.5, r * 0.018), 0, TAU);
+      ctx.fillStyle = '#fef08a';
+      ctx.fill();
+      // Острый готический шип между пластинами
+      var sa = (TAU / numPlates) / 2;
+      ctx.rotate(sa);
+      ctx.beginPath();
+      ctx.moveTo(r * 0.91, -r * 0.028);
+      ctx.lineTo(r * 0.995, 0);
+      ctx.lineTo(r * 0.91, r * 0.028);
+      ctx.closePath();
+      ctx.fillStyle = '#94a3b8';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 5. Изумрудное руническое кольцо вокруг центра
+    var runeOuterR = r * 0.45;
+    var runeInnerR = r * 0.33;
+    var runeGrd = ctx.createRadialGradient(0, 0, runeInnerR, 0, 0, runeOuterR);
+    runeGrd.addColorStop(0, '#022c22');
+    runeGrd.addColorStop(0.5, '#0f766e');
+    runeGrd.addColorStop(1, '#042f2e');
+    ctx.beginPath();
+    ctx.arc(0, 0, runeOuterR, 0, TAU);
+    ctx.fillStyle = runeGrd;
+    ctx.fill();
+    ctx.lineWidth = Math.max(2, s / 150);
+    ctx.strokeStyle = '#d97706';
+    ctx.stroke();
+
+    if(!isMini){
+      ctx.save();
+      ctx.rotate(-rot * 0.6); // Руны вращаются навстречу колесу для гипнотического эффекта!
+      for(var rn = 0; rn < HW_RUNES.length; rn++){
+        var ra = rn * (TAU / HW_RUNES.length);
+        ctx.save();
+        ctx.rotate(ra);
+        ctx.translate(0, -(runeInnerR + runeOuterR) / 2);
+        ctx.fillStyle = spinning ? '#fef08a' : '#5eead4';
+        ctx.font = '700 ' + Math.round(s * 0.034) + 'px system-ui,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(HW_RUNES[rn], 0, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // 6. Центральный медальон: Зловещая светящаяся Тыква Джек-о-Лантерн + огненное кольцо в режиме SPIN
+    ctx.beginPath();
+    ctx.arc(0, 0, runeInnerR, 0, TAU);
+    var hubGrd = ctx.createRadialGradient(0, 0, r * 0.02, 0, 0, runeInnerR);
+    hubGrd.addColorStop(0, '#431407');
+    hubGrd.addColorStop(0.75, '#1e0b16');
+    hubGrd.addColorStop(1, '#090408');
+    ctx.fillStyle = hubGrd;
+    ctx.fill();
+    ctx.lineWidth = Math.max(2.5, s / 120);
+    ctx.strokeStyle = spinning ? '#fde047' : '#f59e0b';
+    ctx.stroke();
+
+    // Если колесо крутится — огненный вихрь вокруг центрального медальона
+    if(spinning && !isMini){
+      ctx.save();
+      ctx.rotate(-rot * 2.2);
+      for(var fl = 0; fl < 8; fl++){
+        ctx.rotate(TAU / 8);
+        ctx.beginPath();
+        ctx.arc(0, 0, runeInnerR * 0.92, 0, 0.45);
+        ctx.strokeStyle = (fl % 2 === 0) ? '#fde047' : '#f97316';
+        ctx.lineWidth = Math.max(3, r * 0.032);
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Рисуем саму центральную тыкву Джека
+    var pr = runeInnerR * 0.76;
+    // Зеленый хвостик тыквы
+    ctx.fillStyle = '#15803d';
+    ctx.strokeStyle = '#052e16';
+    ctx.lineWidth = Math.max(1, s / 320);
+    ctx.beginPath();
+    ctx.moveTo(-pr * 0.16, -pr * 0.72);
+    ctx.quadraticCurveTo(0, -pr * 1.12, pr * 0.24, -pr * 0.88);
+    ctx.lineTo(pr * 0.14, -pr * 0.65);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Дольки тыквы с объемным градиентом
+    var pGrd = ctx.createRadialGradient(0, -pr * 0.15, pr * 0.1, 0, pr * 0.1, pr);
+    pGrd.addColorStop(0, '#fb923c');
+    pGrd.addColorStop(0.65, '#ea580c');
+    pGrd.addColorStop(1, '#7c2d12');
+    ctx.fillStyle = pGrd;
+    ctx.strokeStyle = '#431407';
+    ctx.lineWidth = Math.max(1.5, s / 240);
+
+    ctx.beginPath();
+    ctx.ellipse(0, pr * 0.08, pr * 0.92, pr * 0.76, 0, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(0, pr * 0.08, pr * 0.58, pr * 0.76, 0, 0, TAU);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(0, pr * 0.08, pr * 0.25, pr * 0.76, 0, 0, TAU);
+    ctx.stroke();
+
+    // Горящие глаза и зубастая ухмылка Джека
+    var glowCol = spinning ? '#ffffff' : '#fef08a';
+    ctx.fillStyle = glowCol;
+    ctx.strokeStyle = '#ea580c';
+    ctx.lineWidth = Math.max(1, s / 350);
+
+    // Левый глаз
+    ctx.beginPath();
+    ctx.moveTo(-pr * 0.55, -pr * 0.08);
+    ctx.lineTo(-pr * 0.20, -pr * 0.24);
+    ctx.lineTo(-pr * 0.24, pr * 0.10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Правый глаз
+    ctx.beginPath();
+    ctx.moveTo(pr * 0.55, -pr * 0.08);
+    ctx.lineTo(pr * 0.20, -pr * 0.24);
+    ctx.lineTo(pr * 0.24, pr * 0.10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Нос
+    ctx.beginPath();
+    ctx.moveTo(0, -pr * 0.02);
+    ctx.lineTo(-pr * 0.11, pr * 0.16);
+    ctx.lineTo(pr * 0.11, pr * 0.16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Зубастая пасть
+    ctx.beginPath();
+    ctx.moveTo(-pr * 0.62, pr * 0.24);
+    ctx.lineTo(-pr * 0.38, pr * 0.42);
+    ctx.lineTo(-pr * 0.22, pr * 0.28);
+    ctx.lineTo(0, pr * 0.46);
+    ctx.lineTo(pr * 0.22, pr * 0.28);
+    ctx.lineTo(pr * 0.38, pr * 0.42);
+    ctx.lineTo(pr * 0.62, pr * 0.24);
+    ctx.lineTo(pr * 0.46, pr * 0.58);
+    ctx.lineTo(pr * 0.22, pr * 0.46);
+    ctx.lineTo(0, pr * 0.64);
+    ctx.lineTo(-pr * 0.22, pr * 0.46);
+    ctx.lineTo(-pr * 0.46, pr * 0.58);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Переопределяем мини-превью колеса (для инвентаря скинов, фигурки у персонажа и мини-колеса)
+  var _prevDrawWheelOnCanvasV25 = drawWheelOnCanvas;
+  drawWheelOnCanvas = function(cv, skinName){
+    if(skinName === 'halloween'){
+      if(!cv) return;
+      var c = cv.getContext('2d'), s = cv.width, r = s / 2;
+      c.setTransform(1,0,0,1,0,0);
+      c.clearRect(0, 0, s, s);
+      c.translate(r, r);
+      drawHalloweenMasterpiece(c, s, r, true);
+      return;
+    }
+    _prevDrawWheelOnCanvasV25(cv, skinName);
+  };
+
   // Поддержка скина «Тыквенный кошмар» на главном колесе
   var _finalDrawHw = draw;
   draw = function(){
-    if(typeof currentWheelSkin === 'function' && currentWheelSkin() === 'halloween'){
+    ensureHalloweenStageDecor();
+    var stg = document.querySelector('#gamePane .stage');
+    var spinBtn = $('spin');
+    var isHw = (typeof currentWheelSkin === 'function' && currentWheelSkin() === 'halloween');
+
+    if(stg){
+      stg.classList.toggle('hw-skin-active', isHw);
+      stg.classList.toggle('hw-spinning', isHw && spinning);
+    }
+    if(spinBtn){
+      spinBtn.classList.toggle('hw-spin-btn', isHw);
+    }
+
+    if(isHw){
       var size = canvas.clientWidth; if(!size) return;
       var dpr = window.devicePixelRatio || 1;
-      if(canvas.width !== Math.round(size * dpr)){ canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr); }
-      var s = canvas.width, r = s / 2;
-      var pal = FILL_HALLOWEEN;
-      canvas.style.boxShadow = '0 0 0 10px #1e0b16, 0 0 0 13px #ff7518, 0 14px 36px rgba(255,117,24,.45)';
-      ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,s,s); ctx.translate(r,r);
-      for(var i = 0; i < N; i++){
-        var a = -Math.PI/2 + i*SEG + rot;
-        ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r, a-SEG/2, a+SEG/2); ctx.closePath();
-        ctx.fillStyle = pal[color(ORDER[i])]; ctx.fill();
-        ctx.strokeStyle = 'rgba(255,117,24,.75)'; ctx.lineWidth = Math.max(1, s/340); ctx.stroke();
-        ctx.save(); ctx.rotate(a); ctx.translate(r*0.86, 0); ctx.rotate(Math.PI/2);
-        ctx.fillStyle = '#ffe8cc'; ctx.font = '700 ' + Math.round(s*0.046) + 'px Manrope,system-ui,sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(ORDER[i]), 0, 0); ctx.restore();
+      if(canvas.width !== Math.round(size * dpr)){
+        canvas.width = Math.round(size * dpr);
+        canvas.height = Math.round(size * dpr);
       }
-      ctx.beginPath(); ctx.arc(0,0, r*0.62, 0, TAU); ctx.fillStyle = 'rgba(20,5,15,.45)'; ctx.fill();
-      ctx.beginPath(); ctx.arc(0,0, r*0.5, 0, TAU);
-      var grd = ctx.createRadialGradient(0,0, r*0.05, 0,0, r*0.5);
-      grd.addColorStop(0, '#4a1525'); grd.addColorStop(1, '#1a0912');
-      ctx.fillStyle = grd; ctx.fill();
-      ctx.lineWidth = Math.max(2, s/140); ctx.strokeStyle = '#ff7518'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(0,0, r*0.12, 0, TAU); ctx.fillStyle = '#ff7518'; ctx.fill();
+      var s = canvas.width, r = s / 2;
+      var speed = Math.min(0.45, Math.abs(rot - hwLastRot));
+      canvas.style.boxShadow = '0 0 0 8px #180c24, 0 0 0 11px #d97706, 0 0 28px rgba(168,85,247,.65), 0 14px 36px rgba(0,0,0,.65)';
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0, 0, s, s);
+      ctx.translate(r, r);
+      drawHalloweenMasterpiece(ctx, s, r, false);
+      renderHwFxOverlay(size, dpr, speed);
       return;
     }
     _finalDrawHw();
