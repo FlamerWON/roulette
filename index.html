@@ -700,7 +700,7 @@ svg.chr{overflow:visible}
 
 
 
-/* === HALLOWEEN GOTHIC WHEEL SKIN (V25 GPU-OPTIMIZED & FIXED) === */
+/* === HALLOWEEN GOTHIC WHEEL SKIN (V25 GPU-OPTIMIZED & FIXED) + SORTING UI === */
 html, body {
   overflow-x: clip;
 }
@@ -755,7 +755,7 @@ html, body {
   width: 58px;
   height: 58px;
   transform: translate3d(0, -50%, 0);
-  z-index: 15 !important; /* Всегда на самом переднем плане поверх колеса и эффектов */
+  z-index: 15 !important;
   pointer-events: none;
   animation: none !important;
 }
@@ -801,7 +801,7 @@ html, body {
   width: 116%;
   height: 116%;
   pointer-events: none;
-  z-index: 5; /* Ниже боковых тыкв (15) и стрелки-мыши (12), но выше самого колеса (2) */
+  z-index: 5;
   border-radius: 0 !important;
   box-shadow: none !important;
 }
@@ -847,7 +847,37 @@ html, body {
   from { transform: scale(0.98); filter: brightness(1); }
   to { transform: scale(1.03); filter: brightness(1.18); }
 }
-
+/* Панели сортировки и фильтрации Инвентаря и Рынка */
+.sortFilterBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+.sortFilterBar label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sortFilterBar select {
+  padding: 5px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
 </style>
 
 </head>
@@ -10585,7 +10615,7 @@ function startFirestoreListenersV20(){
     if(stg) stg.classList.remove('hw-spinning');
     hwSparks.length = 0;
     hwBats.length = 0;
-    draw(); // Перерисовываем колесо уже со spinning = false, чтобы мгновенно остановить стрелку и тыквы
+    draw();
     _origShowAfterSpinHw(n);
   };
 
@@ -10626,14 +10656,306 @@ function startFirestoreListenersV20(){
     _finalDrawHw();
   };
 
-  // Перепривязываем глобальные слушатели resize и fonts к новой функции draw,
-  // чтобы окно браузера никогда не вызывало старый классический draw()
   window.removeEventListener('resize', _finalDrawHw);
   window.addEventListener('resize', function(){ draw(); });
   if(document.fonts && document.fonts.ready){
     document.fonts.ready.then(function(){ draw(); });
   }
 
+  // ============================================================================
+  // СОРТИРОВКА И ФИЛЬТРАЦИЯ ИНВЕНТАРЯ И ОНЛАЙН-РЫНКА
+  // ============================================================================
+  var RARITY_WEIGHT_SORT = {common:1, uncommon:2, rare:3, epic:4, legendary:5, mythic:6, divine:7, relic:8};
+  var SLOT_WEIGHT_SORT = {head:1, body:2, arms:3, legs:4, ring:5, amulet:6, none:7};
+  var invSortMode = 'default';
+  var invSlotFilter = 'all';
+  var marketSortMode = 'newest';
+  var marketFilterMode = 'all';
+
+  function loadSortPrefs(){
+    try {
+      invSortMode = localStorage.getItem('roulette_inv_sort') || 'default';
+      invSlotFilter = localStorage.getItem('roulette_inv_slot') || 'all';
+      marketSortMode = localStorage.getItem('roulette_mkt_sort') || 'newest';
+      marketFilterMode = localStorage.getItem('roulette_mkt_filter') || 'all';
+    } catch(e){}
+  }
+  loadSortPrefs();
+
+  function ensureInvSortBar(){
+    var bar = $('invSortBar');
+    if(bar) return bar;
+    var invEl = $('inv');
+    if(!invEl || !invEl.parentNode) return null;
+    bar = document.createElement('div');
+    bar.id = 'invSortBar';
+    bar.className = 'sortFilterBar';
+    bar.innerHTML = '<label>Сортировка: <select id="invSortSelect">'
+      + '<option value="default">По получению</option>'
+      + '<option value="rarity_desc">По редкости (сначала редкие)</option>'
+      + '<option value="rarity_asc">По редкости (сначала обычные)</option>'
+      + '<option value="enhance_desc">По заточке (+10 → +0)</option>'
+      + '<option value="atk_desc">По урону (убыв.)</option>'
+      + '<option value="hp_desc">По здоровью (убыв.)</option>'
+      + '<option value="slot">По слоту экипировки</option>'
+      + '<option value="class_first">Сначала мой класс</option>'
+      + '<option value="fav_first">Сначала избранные ★</option>'
+      + '</select></label>'
+      + '<label>Слот: <select id="invSlotFilterSelect">'
+      + '<option value="all">Все предметы</option>'
+      + '<option value="my_class">Только мой класс</option>'
+      + '<option value="head">Голова</option>'
+      + '<option value="body">Тело</option>'
+      + '<option value="arms">Оружие / Руки</option>'
+      + '<option value="legs">Ноги</option>'
+      + '<option value="ring">Кольца</option>'
+      + '<option value="amulet">Амулеты</option>'
+      + '</select></label>';
+    invEl.parentNode.insertBefore(bar, invEl);
+
+    var sSel = $('invSortSelect'), fSel = $('invSlotFilterSelect');
+    if(sSel){
+      sSel.value = invSortMode;
+      sSel.onchange = function(){
+        invSortMode = this.value;
+        try { localStorage.setItem('roulette_inv_sort', invSortMode); } catch(e){}
+        renderInv();
+      };
+    }
+    if(fSel){
+      fSel.value = invSlotFilter;
+      fSel.onchange = function(){
+        invSlotFilter = this.value;
+        try { localStorage.setItem('roulette_inv_slot', invSlotFilter); } catch(e){}
+        renderInv();
+      };
+    }
+    return bar;
+  }
+
+  var _origSwitchInvSubTabSort = switchInvSubTab;
+  switchInvSubTab = function(mode){
+    _origSwitchInvSubTabSort(mode);
+    var bar = $('invSortBar');
+    if(bar) bar.hidden = (mode !== 'gear');
+  };
+
+  var _origRenderInvBeforeSort = renderInv;
+  renderInv = function(){
+    _origRenderInvBeforeSort();
+    var bar = ensureInvSortBar();
+    if(bar) bar.hidden = (curInvSub !== 'gear');
+    var box = $('inv');
+    if(!box || !game || !Array.isArray(game.inv) || !game.inv.length) return;
+
+    var cells = Array.prototype.slice.call(box.querySelectorAll('.icell'));
+    if(cells.length !== game.inv.length) return;
+
+    var eq = equipped();
+    var meta = cells.map(function(cell, idx){
+      var id = game.inv[idx];
+      var it = ITEMS[id] || {};
+      var lv = copyLevel(game, idx);
+      var st = enhancedStats(it, lv);
+      var isWorn = Boolean(it.slot && eq[it.slot] === id && wornIndex(game, it.slot) === idx);
+      var isFav = Boolean(game.favorites && game.favorites[id]);
+      var isMyCls = Boolean(!it.cls || it.cls === 'all' || it.cls === game.cls);
+      return {
+        cell: cell,
+        idx: idx,
+        id: id,
+        it: it,
+        lv: lv,
+        hp: st.hp || 0,
+        atk: st.atk || 0,
+        rarW: RARITY_WEIGHT_SORT[it.r] || 0,
+        slotW: SLOT_WEIGHT_SORT[it.slot || 'none'] || 9,
+        isWorn: isWorn ? 1 : 0,
+        isFav: isFav ? 1 : 0,
+        isMyCls: isMyCls ? 1 : 0,
+        name: String(it.name || '')
+      };
+    });
+
+    // Фильтрация по слоту / классу без поломки индексов снаряжения
+    meta.forEach(function(m){
+      var show = true;
+      if(invSlotFilter === 'my_class') show = Boolean(m.isMyCls);
+      else if(invSlotFilter !== 'all') show = (m.it.slot === invSlotFilter);
+      m.cell.hidden = !show;
+    });
+
+    if(invSortMode !== 'default'){
+      meta.sort(function(a, b){
+        // Надетые вещи всегда удобно держать в начале списка
+        if(a.isWorn !== b.isWorn) return b.isWorn - a.isWorn;
+        if(invSortMode === 'rarity_desc'){
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+          if(b.lv !== a.lv) return b.lv - a.lv;
+        } else if(invSortMode === 'rarity_asc'){
+          if(a.rarW !== b.rarW) return a.rarW - b.rarW;
+          if(b.lv !== a.lv) return b.lv - a.lv;
+        } else if(invSortMode === 'enhance_desc'){
+          if(b.lv !== a.lv) return b.lv - a.lv;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        } else if(invSortMode === 'atk_desc'){
+          if(b.atk !== a.atk) return b.atk - a.atk;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        } else if(invSortMode === 'hp_desc'){
+          if(b.hp !== a.hp) return b.hp - a.hp;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        } else if(invSortMode === 'slot'){
+          if(a.slotW !== b.slotW) return a.slotW - b.slotW;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        } else if(invSortMode === 'class_first'){
+          if(b.isMyCls !== a.isMyCls) return b.isMyCls - a.isMyCls;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        } else if(invSortMode === 'fav_first'){
+          if(b.isFav !== a.isFav) return b.isFav - a.isFav;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        }
+        return a.idx - b.idx;
+      });
+      meta.forEach(function(m){ box.appendChild(m.cell); });
+    }
+  };
+
+  // Сортировка и фильтрация для Онлайн-рынка (как выпадающего списка продажи, так и активных лотов)
+  var _origRenderMarketBeforeSort = renderMarketV20;
+  renderMarketV20 = function(){
+    var rawLots = Array.isArray(marketListingsV20) ? marketListingsV20.slice() : [];
+
+    // Фильтруем и сортируем копию массива лотов на время рендера
+    var filteredLots = rawLots.filter(function(lot){
+      if(marketFilterMode === 'all') return true;
+      var isMine = sess && String(lot.sellerId) === String(sess.uid);
+      if(marketFilterMode === 'mine') return isMine;
+      if(marketFilterMode === 'potions') return Boolean(lot.isPotion);
+      var itObj = lot.item || {};
+      var baseIt = (!lot.isPotion && itObj.id && ITEMS[itObj.id]) ? ITEMS[itObj.id] : null;
+      if(!baseIt) return false;
+      if(marketFilterMode === 'my_class'){
+        return (!baseIt.cls || baseIt.cls === 'all' || (game && baseIt.cls === game.cls));
+      }
+      return baseIt.slot === marketFilterMode;
+    });
+
+    filteredLots.sort(function(a, b){
+      var pa = Math.max(1, Number(a.price) || 1);
+      var pb = Math.max(1, Number(b.price) || 1);
+      var ia = (!a.isPotion && a.item && ITEMS[a.item.id]) ? ITEMS[a.item.id] : null;
+      var ib = (!b.isPotion && b.item && ITEMS[b.item.id]) ? ITEMS[b.item.id] : null;
+      var ra = a.isPotion ? 4 : (ia ? (RARITY_WEIGHT_SORT[ia.r] || 0) : 0);
+      var rb = b.isPotion ? 4 : (ib ? (RARITY_WEIGHT_SORT[ib.r] || 0) : 0);
+      var lva = (a.item && Number(a.item.enhanceLv)) || 0;
+      var lvb = (b.item && Number(b.item.enhanceLv)) || 0;
+
+      if(marketSortMode === 'price_asc') return pa - pb;
+      if(marketSortMode === 'price_desc') return pb - pa;
+      if(marketSortMode === 'rarity_desc'){
+        if(rb !== ra) return rb - ra;
+        if(lvb !== lva) return lvb - lva;
+        return pa - pb;
+      }
+      if(marketSortMode === 'enhance_desc'){
+        if(lvb !== lva) return lvb - lva;
+        if(rb !== ra) return rb - ra;
+        return pa - pb;
+      }
+      if(marketSortMode === 'atk_desc'){
+        var atka = ia ? enhancedStats(ia, lva).atk : 0;
+        var atkb = ib ? enhancedStats(ib, lvb).atk : 0;
+        if(atkb !== atka) return atkb - atka;
+        return pa - pb;
+      }
+      if(marketSortMode === 'hp_desc'){
+        var hpa = ia ? enhancedStats(ia, lva).hp : 0;
+        var hpb = ib ? enhancedStats(ib, lvb).hp : 0;
+        if(hpb !== hpa) return hpb - hpa;
+        return pa - pb;
+      }
+      return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
+    });
+
+    marketListingsV20 = filteredLots;
+    try {
+      _origRenderMarketBeforeSort();
+    } finally {
+      marketListingsV20 = rawLots;
+    }
+
+    var box = $('marketBody');
+    if(!box || !game) return;
+
+    // Также сортируем по редкости и заточке выпадающий список выбора предмета для выставления на рынок
+    var selItem = $('marketItemSelect');
+    if(selItem && selItem.options.length > 1){
+      var opts = Array.prototype.slice.call(selItem.options);
+      opts.sort(function(o1, o2){
+        var i1 = Number(o1.value), i2 = Number(o2.value);
+        var it1 = ITEMS[game.inv[i1]] || {}, it2 = ITEMS[game.inv[i2]] || {};
+        var r1 = RARITY_WEIGHT_SORT[it1.r] || 0, r2 = RARITY_WEIGHT_SORT[it2.r] || 0;
+        if(r2 !== r1) return r2 - r1;
+        var l1 = copyLevel(game, i1), l2 = copyLevel(game, i2);
+        if(l2 !== l1) return l2 - l1;
+        return i1 - i2;
+      });
+      opts.forEach(function(o){ selItem.appendChild(o); });
+      selItem.value = String(selectedMarketInvIdx);
+    }
+
+    // Вставляем панель сортировки и фильтрации в карточку «Активные лоты»
+    var cards = box.querySelectorAll('.card');
+    var lotsCard = cards.length > 1 ? cards[1] : null;
+    if(lotsCard){
+      var h3 = lotsCard.querySelector('h3');
+      if(h3){
+        h3.textContent = '📦 Активные лоты (' + filteredLots.length + ' из ' + rawLots.length + ')';
+        var mBar = document.createElement('div');
+        mBar.className = 'sortFilterBar';
+        mBar.innerHTML = '<label>Сортировка: <select id="mktSortSelect">'
+          + '<option value="newest">Сначала новые</option>'
+          + '<option value="price_asc">Цена: по возрастанию</option>'
+          + '<option value="price_desc">Цена: по убыванию</option>'
+          + '<option value="rarity_desc">По редкости (убыв.)</option>'
+          + '<option value="enhance_desc">По заточке (+10 → +0)</option>'
+          + '<option value="atk_desc">По урону (убыв.)</option>'
+          + '<option value="hp_desc">По здоровью (убыв.)</option>'
+          + '</select></label>'
+          + '<label>Фильтр: <select id="mktFilterSelect">'
+          + '<option value="all">Все лоты (' + rawLots.length + ')</option>'
+          + '<option value="my_class">На мой класс</option>'
+          + '<option value="potions">Только зелья 🧪</option>'
+          + '<option value="head">Голова</option>'
+          + '<option value="body">Тело</option>'
+          + '<option value="arms">Оружие / Руки</option>'
+          + '<option value="legs">Ноги</option>'
+          + '<option value="ring">Кольца</option>'
+          + '<option value="amulet">Амулеты</option>'
+          + '<option value="mine">Мои лоты</option>'
+          + '</select></label>';
+        lotsCard.insertBefore(mBar, h3.nextSibling);
+
+        var ms = $('mktSortSelect'), mf = $('mktFilterSelect');
+        if(ms){
+          ms.value = marketSortMode;
+          ms.onchange = function(){
+            marketSortMode = this.value;
+            try { localStorage.setItem('roulette_mkt_sort', marketSortMode); } catch(e){}
+            renderMarketV20();
+          };
+        }
+        if(mf){
+          mf.value = marketFilterMode;
+          mf.onchange = function(){
+            marketFilterMode = this.value;
+            try { localStorage.setItem('roulette_mkt_filter', marketFilterMode); } catch(e){}
+            renderMarketV20();
+          };
+        }
+      }
+    }
+  };
   })();
 </script>
 </body>
