@@ -10956,6 +10956,422 @@ function startFirestoreListenersV20(){
       }
     }
   };
+
+
+  // ============================================================================
+  // ФИКС ПИТОМЦЕВ (АКТИВАЦИЯ + ПРОГРЕССИЯ УРОВНЕЙ 1..20) И СОРТИРОВКА У СКУПЩИКА
+  // ============================================================================
+  function getPetBaseAndScaledStats(def, level){
+    if(!def || typeof def.buff !== 'function') return {baseHp:0, baseAtk:0, curHp:0, curAtk:0, nextHp:0, nextAtk:0};
+    var probe = {hp:0, atk:0};
+    def.buff(probe);
+    var lvl = Math.max(1, Math.min(20, Number(level) || 1));
+    // На 1 уровне питомец даёт 100% базового стата, а за каждый уровень сверху получает +10% (на 20 ур. — x2.9!)
+    var multCur = 1 + (lvl - 1) * 0.10;
+    var multNext = 1 + lvl * 0.10;
+    return {
+      baseHp: probe.hp,
+      baseAtk: probe.atk,
+      curHp: probe.hp ? Math.max(1, Math.round(probe.hp * multCur)) : 0,
+      curAtk: probe.atk ? Math.max(1, Math.round(probe.atk * multCur)) : 0,
+      nextHp: probe.hp ? Math.max(1, Math.round(probe.hp * multNext)) : 0,
+      nextAtk: probe.atk ? Math.max(1, Math.round(probe.atk * multNext)) : 0
+    };
+  }
+
+  function formatPetBonusLine(calc){
+    var parts = [];
+    if(calc.curHp > 0) parts.push('+' + calc.curHp + ' HP');
+    if(calc.curAtk > 0) parts.push('+' + calc.curAtk + ' Атаки');
+    return parts.join(', ') || 'нет';
+  }
+
+  function formatPetNextLevelDiff(calc){
+    var parts = [];
+    var dHp = calc.nextHp - calc.curHp;
+    var dAtk = calc.nextAtk - calc.curAtk;
+    if(dHp > 0) parts.push('+' + dHp + ' HP (будет +' + calc.nextHp + ')');
+    if(dAtk > 0) parts.push('+' + dAtk + ' Атаки (будет +' + calc.nextAtk + ')');
+    return parts.join(', ');
+  }
+
+  // Переопределяем расчёт бонуса питомца: теперь каждый уровень реально усиливает героя сверх базы!
+  applyPetStatsBonusV23 = function(st){
+    if(!game || game.activeCompanion !== 'pet' || !game.activePetUuid) return;
+    var pet = (game.pets || []).find(function(p){ return p.uuid === game.activePetUuid; });
+    if(!pet) return;
+    var def = null;
+    for(var rar in PET_DATABASE){
+      var found = PET_DATABASE[rar].find(function(item){ return item.id === pet.baseId; });
+      if(found){ def = found; break; }
+    }
+    if(def){
+      var calc = getPetBaseAndScaledStats(def, pet.level);
+      st.hp += calc.curHp;
+      st.atk += calc.curAtk;
+    }
+  };
+
+  function activatePetByUuidV25(uuid){
+    if(!game || merchantBusy) return;
+    var pet = (game.pets || []).find(function(p){ return p.uuid === uuid; });
+    if(!pet) return;
+    game.activePetUuid = uuid;
+    game.activeCompanion = 'pet'; // Автоматически включаем режим Питомца при выборе!
+    v20Data.activePetUuid = uuid;
+    v20Data.activeCompanion = 'pet';
+    saveV20Local();
+    if(typeof saveV20ToFirestore === 'function') saveV20ToFirestore();
+    saveGame();
+    renderPetsV23();
+    renderMiner();
+    renderChar();
+    toast('🐾 Питомец «' + pet.name + '» (Ур. ' + pet.level + ') теперь активен и усиливает ваши характеристики!');
+  }
+  window.activatePetByUuidV25 = activatePetByUuidV25;
+
+  setActiveCompanionType = function(type){
+    if(!game || merchantBusy) return;
+    game.activeCompanion = type;
+    if(type === 'pet' && !game.activePetUuid && game.pets && game.pets.length > 0){
+      game.activePetUuid = game.pets[0].uuid;
+    }
+    v20Data.activeCompanion = game.activeCompanion;
+    v20Data.activePetUuid = game.activePetUuid || '';
+    saveV20Local();
+    if(typeof saveV20ToFirestore === 'function') saveV20ToFirestore();
+    saveGame();
+    renderPetsV23();
+    renderMiner();
+    renderChar();
+    toast(type === 'miner' ? '⛏️ Активный компаньон: Шахтёр' : '🐾 Активный компаньон: Питомец');
+  };
+  window.setActiveCompanionType = setActiveCompanionType;
+
+  var petSortMode = 'rarity_desc';
+  try { petSortMode = localStorage.getItem('roulette_pet_sort') || 'rarity_desc'; } catch(e){}
+
+  renderPetsV23 = function(){
+    var box = document.getElementById('petsBody');
+    if(!box || !game) return;
+    initPetsGameData(game);
+
+    var h = '<div class="card"><h3>🐾 Спутники (Инкубатор и Питомцы)</h3>';
+    h += '<p>Переключайтесь между <b>Шахтёром</b> (пассивная добыча золота/камней) и <b>Питомцем</b> (боевой бафф здоровья и урона). <b>Каждый новый уровень питомца увеличивает его бонус на +10% от базового (до ×2.9 на 20 уровне)!</b></p>';
+
+    h += '<div style="display:flex;gap:8px;margin-bottom:12px;">';
+    h += '<button type="button" id="btnCompMiner" ' + (game.activeCompanion === 'miner' ? 'class="tab on"' : 'class="tab"') + '>⛏️ Шахтёр</button>';
+    h += '<button type="button" id="btnCompPet" ' + (game.activeCompanion === 'pet' ? 'class="tab on"' : 'class="tab"') + '>🐾 Питомец</button>';
+    h += '</div>';
+
+    h += '<div class="card" style="border-color:var(--gold)"><h4>🥚 Инкубатор</h4>';
+    var inc = game.incubator;
+    if(inc.active && inc.started){
+      var current = Number(game.spins) || 0;
+      var prog = Math.min(inc.requiredSpins, Math.max(0, current - inc.startSpins));
+      var pct = Math.floor(prog / inc.requiredSpins * 100);
+      var cracks = pct < 30 ? '' : (pct < 70 ? '⚡ (появляются трещины)' : '💥 (яйцо трясётся!)');
+      h += '<p>Яйцо созревает в Инкубаторе... Прогресс: <b>' + prog + ' / ' + inc.requiredSpins + '</b> прокрутов ' + cracks + '</p>';
+      h += '<div class="bar" style="height:16px; margin: 10px 0;"><i style="width:' + pct + '%; background:var(--gold);"></i></div>';
+      if(prog >= inc.requiredSpins){
+        h += '<button type="button" id="btnHatchNow" style="width:100%; background:var(--gold); color:#111;">🐣 РАСКОЛОТЬ ЯЙЦО!</button>';
+      } else {
+        h += '<button type="button" disabled style="width:100%">Нужно крутить колесо</button>';
+      }
+    } else {
+      var eggCount = 0;
+      game.inv.forEach(function(id){ if(id === 'mystery_egg') eggCount++; });
+      if(eggCount > 0){
+        h += '<p>В инвентаре есть <b>Загадочное яйцо (' + eggCount + ' шт.)</b>. Положить одно в инкубатор?</p>';
+        h += '<button type="button" id="btnStartIncub">Заложить яйцо и Начать</button>';
+      } else {
+        h += '<p style="color:var(--muted)">У вас нет Загадочных яиц. Они выпадают с шансом ~9% при победе над монстрами из засады во время прокруток.</p>';
+      }
+    }
+    h += '</div>';
+
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;">';
+    h += '<h4 style="margin:0">Ваши Питомцы (' + (game.pets ? game.pets.length : 0) + ')</h4>';
+    if(game.pets && game.pets.length > 1){
+      h += '<div class="sortFilterBar" style="width:auto;padding:4px 8px;"><label>Сортировка: <select id="petSortSelect">'
+        + '<option value="rarity_desc">По редкости (убыв.)</option>'
+        + '<option value="level_desc">По уровню (убыв.)</option>'
+        + '<option value="atk_desc">По бонусу атаки</option>'
+        + '<option value="hp_desc">По бонусу HP</option>'
+        + '</select></label></div>';
+    }
+    h += '</div>';
+
+    if(game.pets && game.pets.length > 0){
+      // Собираем список корма из инвентаря один раз, отсортированный от обычных вещей к редким
+      var foodIndices = [];
+      var eq = equipped();
+      var wornMap = {};
+      ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+        var wi = wornIndex(game, sl);
+        if(wi >= 0 && eq[sl] === game.inv[wi]) wornMap[wi] = true;
+      });
+      var countsById = saleCounts(game);
+      game.inv.forEach(function(itemId, idx){
+        if(itemId === 'mystery_egg' || wornMap[idx] || (game.favorites && game.favorites[itemId])) return;
+        if(isStarterItem(itemId) && (countsById[itemId] || 0) <= 1) return;
+        if(ITEMS[itemId]) foodIndices.push(idx);
+      });
+      foodIndices.sort(function(a, b){
+        var ia = ITEMS[game.inv[a]] || {}, ib = ITEMS[game.inv[b]] || {};
+        var ra = RARITY_WEIGHT_SORT[ia.r] || 0, rb = RARITY_WEIGHT_SORT[ib.r] || 0;
+        if(ra !== rb) return ra - rb; // Сначала обычные дешёвые вещи для скармливания
+        return copyLevel(game, a) - copyLevel(game, b);
+      });
+
+      var petsSorted = game.pets.slice().sort(function(a, b){
+        var actA = (game.activePetUuid === a.uuid) ? 1 : 0;
+        var actB = (game.activePetUuid === b.uuid) ? 1 : 0;
+        if(actA !== actB) return actB - actA;
+        var ra = RARITY_WEIGHT_SORT[a.rarity] || 0;
+        var rb = RARITY_WEIGHT_SORT[b.rarity] || 0;
+        if(petSortMode === 'level_desc'){
+          if((b.level||1) !== (a.level||1)) return (b.level||1) - (a.level||1);
+          return rb - ra;
+        }
+        var defA = (PET_DATABASE[a.rarity]||[]).find(function(x){ return x.id === a.baseId; });
+        var defB = (PET_DATABASE[b.rarity]||[]).find(function(x){ return x.id === b.baseId; });
+        var cA = getPetBaseAndScaledStats(defA, a.level);
+        var cB = getPetBaseAndScaledStats(defB, b.level);
+        if(petSortMode === 'atk_desc'){
+          if(cB.curAtk !== cA.curAtk) return cB.curAtk - cA.curAtk;
+        } else if(petSortMode === 'hp_desc'){
+          if(cB.curHp !== cA.curHp) return cB.curHp - cA.curHp;
+        }
+        if(rb !== ra) return rb - ra;
+        return (b.level||1) - (a.level||1);
+      });
+
+      h += '<div style="display:flex;flex-direction:column;gap:12px;">';
+      petsSorted.forEach(function(p){
+        var prar = PET_RARITIES[p.rarity] || PET_RARITIES.common;
+        var isSelected = (game.activePetUuid === p.uuid);
+        var isFullyActive = isSelected && (game.activeCompanion === 'pet');
+        var def = (PET_DATABASE[p.rarity] || []).find(function(x){ return x.id === p.baseId; });
+        var calc = getPetBaseAndScaledStats(def, p.level);
+        var xpReq = petXpNeeded(p.level);
+        var maxLvl = Math.min(20, game.level || 100);
+        var isMax = p.level >= maxLvl;
+        var xpPct = isMax ? 100 : Math.min(100, Math.floor(((Number(p.xp)||0) / xpReq) * 100));
+
+        h += '<div class="card" style="border-color:' + prar.color + (isFullyActive ? ';box-shadow:0 0 0 2px var(--gold)' : '') + '">';
+        h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">';
+        h += '<div style="flex:1;min-width:200px;">';
+        h += '<div class="rn">' + escapeHtmlV20(p.name) + ' <span class="rar" style="background:' + prar.color + '">' + prar.name + '</span>'
+          + (isFullyActive ? ' <span class="rar" style="background:var(--green)">В бою ✓</span>' : (isSelected ? ' <span class="rar" style="background:#6b7280">В запасе (активен Шахтёр)</span>' : '')) + '</div>';
+        h += '<div class="rd" style="margin-top:4px;">Уровень: <b>' + p.level + ' / 20</b> (кап ур. героя: ' + maxLvl + ')'
+          + (isMax ? ' · <b style="color:var(--gold)">МАКСИМУМ</b>' : ' · Опыт: <b>' + (p.xp||0) + ' / ' + xpReq + ' XP</b>') + '</div>';
+        h += '<div class="bar" style="height:8px;margin:6px 0;"><i style="width:' + xpPct + '%;background:' + prar.color + '"></i></div>';
+        h += '<div class="rd">⚔️ <b>Текущий бонус (Ур. ' + p.level + '):</b> <span style="color:var(--gold);font-weight:700">' + formatPetBonusLine(calc) + '</span>'
+          + ' <span style="opacity:0.75">(база 1 ур.: +' + (calc.baseHp ? calc.baseHp + ' HP ' : '') + (calc.baseAtk ? '+' + calc.baseAtk + ' Атаки' : '') + ')</span></div>';
+        if(p.level < 20){
+          h += '<div class="rd" style="color:#84e3a5">📈 <b>На ' + (p.level + 1) + ' уровне:</b> ' + formatPetNextLevelDiff(calc) + '</div>';
+        }
+        h += '</div>';
+
+        if(isFullyActive){
+          h += '<button type="button" disabled style="background:var(--green);color:#fff;opacity:1;padding:8px 16px;font-size:14px;">✓ Активен</button>';
+        } else {
+          h += '<button type="button" data-activate-pet="' + escapeHtmlV20(p.uuid) + '" style="padding:8px 16px;font-size:14px;">'
+            + (isSelected ? 'Включить режим Питомца' : 'Сделать активным') + '</button>';
+        }
+        h += '</div>';
+
+        if(!isMax){
+          h += '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
+          h += '<select id="feed_' + escapeHtmlV20(p.uuid) + '" style="flex:1;min-width:180px;padding:8px;font-size:13px;">';
+          foodIndices.forEach(function(idx){
+            var it = ITEMS[game.inv[idx]];
+            if(it){
+              h += '<option value="' + idx + '">' + escapeHtmlV20(copyName(game, idx)) + ' (' + RARITY[it.r].name + ' · +' + (PET_FEED_XP[it.r]||15) + ' XP)</option>';
+            }
+          });
+          if(!foodIndices.length){
+            h += '<option value="">Нет свободных предметов для корма</option>';
+          }
+          h += '</select>';
+          h += '<button type="button" data-feed-pet="' + escapeHtmlV20(p.uuid) + '" style="padding:8px 16px;font-size:13px;"' + (foodIndices.length ? '' : ' disabled') + '>🍖 Скормить вещь</button>';
+          h += '</div>';
+        }
+        h += '</div>';
+      });
+      h += '</div>';
+    } else {
+      h += '<p style="color:var(--muted)">У вас пока нет вылупившихся питомцев.</p>';
+    }
+
+    h += '</div>';
+    box.innerHTML = h;
+
+    var btnM = document.getElementById('btnCompMiner');
+    if(btnM) btnM.onclick = function(){ setActiveCompanionType('miner'); };
+    var btnP = document.getElementById('btnCompPet');
+    if(btnP) btnP.onclick = function(){ setActiveCompanionType('pet'); };
+    var btnH = document.getElementById('btnHatchNow');
+    if(btnH) btnH.onclick = function(){ hatchEggV23(); };
+    var btnI = document.getElementById('btnStartIncub');
+    if(btnI) btnI.onclick = function(){ startIncubationV23(); };
+
+    var pSort = document.getElementById('petSortSelect');
+    if(pSort){
+      pSort.value = petSortMode;
+      pSort.onchange = function(){
+        petSortMode = this.value;
+        try { localStorage.setItem('roulette_pet_sort', petSortMode); } catch(e){}
+        renderPetsV23();
+      };
+    }
+
+    box.querySelectorAll('[data-activate-pet]').forEach(function(b){
+      b.onclick = function(){
+        activatePetByUuidV25(this.getAttribute('data-activate-pet'));
+      };
+    });
+    box.querySelectorAll('[data-feed-pet]').forEach(function(b){
+      b.onclick = function(){
+        var u = this.getAttribute('data-feed-pet');
+        var sel = document.getElementById('feed_' + u);
+        if(sel && sel.value !== ''){
+          feedPetWithItem(u, Number(sel.value));
+        }
+      };
+    });
+  };
+
+  // ============================================================================
+  // СОРТИРОВКА И ФИЛЬТРАЦИЯ У СКУПЩИКА (МАГАЗИН -> СКУПЩИК)
+  // ============================================================================
+  var merchantSortMode = 'default';
+  var merchantFilterMode = 'all';
+  try {
+    merchantSortMode = localStorage.getItem('roulette_merch_sort') || 'default';
+    merchantFilterMode = localStorage.getItem('roulette_merch_filter') || 'all';
+  } catch(e){}
+
+  var _origRenderMerchantBeforeSort = renderMerchant;
+  renderMerchant = function(){
+    _origRenderMerchantBeforeSort();
+    var box = $('merchantBody');
+    if(!box || !game) return;
+    var list = box.querySelector('.merchantList');
+    if(!list) return;
+
+    var oldBar = $('merchantSortBar');
+    if(oldBar) oldBar.remove();
+
+    var bar = document.createElement('div');
+    bar.id = 'merchantSortBar';
+    bar.className = 'sortFilterBar';
+    bar.innerHTML = '<label>Сортировка: <select id="merchSortSelect">'
+      + '<option value="default">По получению</option>'
+      + '<option value="price_desc">По цене продажи (убыв.)</option>'
+      + '<option value="price_asc">По цене продажи (возр.)</option>'
+      + '<option value="rarity_desc">По редкости (сначала редкие)</option>'
+      + '<option value="rarity_asc">По редкости (сначала обычные)</option>'
+      + '<option value="count_desc">По количеству дубликатов</option>'
+      + '<option value="avail_first">Сначала доступные к продаже</option>'
+      + '</select></label>'
+      + '<label>Фильтр: <select id="merchFilterSelect">'
+      + '<option value="all">Все предметы</option>'
+      + '<option value="sellable">Доступные к продаже</option>'
+      + '<option value="my_class">Только мой класс</option>'
+      + '<option value="other_class">Чужой класс</option>'
+      + '<option value="head">Голова</option>'
+      + '<option value="body">Тело</option>'
+      + '<option value="arms">Оружие / Руки</option>'
+      + '<option value="legs">Ноги</option>'
+      + '<option value="ring">Кольца</option>'
+      + '<option value="amulet">Амулеты</option>'
+      + '<option value="fav">Избранные ★</option>'
+      + '</select></label>';
+    list.parentNode.insertBefore(bar, list);
+
+    var sSel = $('merchSortSelect'), fSel = $('merchFilterSelect');
+    if(sSel){
+      sSel.value = merchantSortMode;
+      sSel.onchange = function(){
+        merchantSortMode = this.value;
+        try { localStorage.setItem('roulette_merch_sort', merchantSortMode); } catch(e){}
+        renderMerchant();
+      };
+    }
+    if(fSel){
+      fSel.value = merchantFilterMode;
+      fSel.onchange = function(){
+        merchantFilterMode = this.value;
+        try { localStorage.setItem('roulette_merch_filter', merchantFilterMode); } catch(e){}
+        renderMerchant();
+      };
+    }
+
+    var counts = saleCounts(game);
+    var rows = Array.prototype.slice.call(list.querySelectorAll('.merchantItem'));
+    var meta = rows.map(function(row, idx){
+      var sellBtn = row.querySelector('[data-sell]');
+      var id = sellBtn ? sellBtn.getAttribute('data-sell') : '';
+      var it = ITEMS[id] || {};
+      var avail = id ? saleAvailable(game, id) : 0;
+      var p1 = id ? salePlan(game, id, false) : {total:0};
+      var unitPrice = p1.total || SELL_PRICES[it.r] || 0;
+      var isFav = Boolean(game.favorites && game.favorites[id]);
+      var isMyCls = Boolean(!it.cls || it.cls === 'all' || it.cls === game.cls);
+      return {
+        row: row,
+        idx: idx,
+        id: id,
+        it: it,
+        avail: avail,
+        count: counts[id] || 0,
+        price: unitPrice,
+        rarW: RARITY_WEIGHT_SORT[it.r] || 0,
+        isFav: isFav,
+        isMyCls: isMyCls
+      };
+    });
+
+    meta.forEach(function(m){
+      var show = true;
+      if(merchantFilterMode === 'sellable') show = (m.avail > 0);
+      else if(merchantFilterMode === 'my_class') show = m.isMyCls;
+      else if(merchantFilterMode === 'other_class') show = !m.isMyCls;
+      else if(merchantFilterMode === 'fav') show = m.isFav;
+      else if(merchantFilterMode !== 'all') show = (m.it.slot === merchantFilterMode);
+      m.row.style.display = show ? '' : 'none';
+    });
+
+    if(merchantSortMode !== 'default'){
+      meta.sort(function(a, b){
+        if(merchantSortMode === 'avail_first'){
+          var avA = a.avail > 0 ? 1 : 0, avB = b.avail > 0 ? 1 : 0;
+          if(avB !== avA) return avB - avA;
+          if(b.price !== a.price) return b.price - a.price;
+        } else if(merchantSortMode === 'price_desc'){
+          if(b.price !== a.price) return b.price - a.price;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        } else if(merchantSortMode === 'price_asc'){
+          if(a.price !== b.price) return a.price - b.price;
+          if(a.rarW !== b.rarW) return a.rarW - b.rarW;
+        } else if(merchantSortMode === 'rarity_desc'){
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+          if(b.price !== a.price) return b.price - a.price;
+        } else if(merchantSortMode === 'rarity_asc'){
+          if(a.rarW !== b.rarW) return a.rarW - b.rarW;
+          if(a.price !== b.price) return a.price - b.price;
+        } else if(merchantSortMode === 'count_desc'){
+          if(b.count !== a.count) return b.count - a.count;
+          if(b.rarW !== a.rarW) return b.rarW - a.rarW;
+        }
+        return a.idx - b.idx;
+      });
+      meta.forEach(function(m){ list.appendChild(m.row); });
+    }
+  };
+
   })();
 </script>
 </body>
