@@ -1057,7 +1057,14 @@ html, body {
     <section class="shopPane" id="raidPane" hidden>
       <div class="card" style="border-color:var(--gold)">
         <h3>🌍 Мировой Босс (Рейд)</h3>
-        <p>Глобальное событие! Все игроки сервера бьют одного мощного босса. Крути колесо (вкладка Рулетка, когда активен рейд), чтобы наносить урон. Урон суммируется от всех участников.</p>
+        <p>Ежедневное событие сервера с <b>18:00 до 18:30</b>. Крути колесо во время рейда, чтобы наносить урон вместе со всем сервером!</p>
+        <div style="background:rgba(239,68,68,.12);border:1px solid #ef4444;border-radius:12px;padding:10px;font-size:13px;margin-bottom:12px;">
+          <b>🔥 Правила и Механики:</b><br>
+          • <b>Фазы:</b> Уязвимые сектора меняются на 60% и 20% HP босса.<br>
+          • <b>Опасность:</b> Попадание в красный «Смертельный сектор» отнимет 30% Максимального HP!<br>
+          • <b>Оглушение:</b> Каждое попадание копит шкалу стана (300 ударов сервера). В стане урон удваивается!<br>
+          • <b>Штраф:</b> При гибели (HP упадёт до 0) вход блокируется на 3 минуты.
+        </div>
         <div id="raidStatus">Синхронизация с сервером...</div>
         <div id="raidBarWrap" style="margin-top:10px; display:none;">
           <div class="hpl"><span id="raidName">Мировой Дракон</span><span id="raidHpText">1000000 / 1000000</span></div>
@@ -3476,40 +3483,66 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   
   // Автоматический спавн босса клиентами
-  
-  // Автоматический спавн босса клиентами
   function autoSpawnRaidBoss() {
       if(!sess || !sess.uid) return;
       var d = new Date();
       var h = d.getHours();
       var m = d.getMinutes();
       
-      // Время рейда: с 18:00 до 18:30 (для теста можно убрать условие)
-      var dateStr = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
-      try {
-          var db = firebase.database();
-          db.ref('raid/status').transaction(function(status) {
-              // Если босса на сегодня ещё нет, создаём его
-              if (!status || status.date !== dateStr) {
-                  return {
-                      date: dateStr,
-                      hp: 1500000,
-                      maxHp: 1500000,
-                      type: Math.floor(Math.random() * 3), // Случайный босс из 3
-                      stagger: 0,
-                      staggerImmuneUntil: 0,
-                      staggerUntil: 0
-                  };
-              }
-              // Если уже создан, отменяем транзакцию
-              return undefined;
-          });
-      } catch(e){}
+      // Время рейда: строго с 18:00 до 18:30
+      if (h === 18 && m >= 0 && m <= 30) {
+          var dateStr = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+          try {
+              var db = firebase.database();
+              db.ref('raid/status').transaction(function(status) {
+                  // Если босса на сегодня ещё нет, создаём его
+                  if (!status || status.date !== dateStr) {
+                      return {
+                          date: dateStr,
+                          hp: 1500000,
+                          maxHp: 1500000,
+                          type: Math.floor(Math.random() * 3), // Случайный босс из 3
+                          stagger: 0,
+                          staggerImmuneUntil: 0,
+                          staggerUntil: 0
+                      };
+                  }
+                  // Если уже создан, отменяем транзакцию
+                  return undefined;
+              });
+          } catch(e){}
+      }
   }
-
 
   setInterval(autoSpawnRaidBoss, 60000); // Проверяем каждую минуту
   setTimeout(autoSpawnRaidBoss, 3000);   // Проверяем при входе в игру
+  
+  // Таймер до рейда
+  setInterval(function() {
+      if(!raidActive && $('raidStatus')) {
+          var d = new Date();
+          var h = d.getHours();
+          var m = d.getMinutes();
+          var target = new Date();
+          target.setHours(18, 0, 0, 0);
+          
+          if (h > 18 || (h === 18 && m > 30)) {
+              target.setDate(target.getDate() + 1);
+          }
+          var diff = target.getTime() - d.getTime();
+          
+          // Если мы находимся в окне 18:00-18:30, но босс убит
+          if (h === 18 && m <= 30 && raidHp <= 0 && game && game.earned && game.earned['raid_reward_' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate()]) {
+              $('raidStatus').innerHTML = '<div style="color:var(--gold);font-weight:bold;">🏆 МИРОВОЙ БОСС СЕГОДНЯ ПОВЕРЖЕН! Заберите награду ниже.</div>';
+          } else if (diff > 0) {
+              var hh = Math.floor(diff / 3600000);
+              var mm = Math.floor((diff % 3600000) / 60000);
+              var ss = Math.floor((diff % 60000) / 1000);
+              $('raidStatus').innerHTML = '<div style="color:var(--muted)">⏳ Мировой Босс появляется ежедневно в <b>18:00</b> ровно на <b>30 минут</b>.<br>До начала следующего рейда: <b>' + (hh < 10 ? "0"+hh : hh) + ':' + (mm < 10 ? "0"+mm : mm) + ':' + (ss < 10 ? "0"+ss : ss) + '</b></div>';
+              $('raidStatus').style.display = 'block';
+          }
+      }
+  }, 1000);
 
   function initRaidSync() {
     if(!chatReady) return;
