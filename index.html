@@ -3474,6 +3474,42 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
 
   var raidDeadUntil = 0;
 
+  
+  // Автоматический спавн босса клиентами
+  function autoSpawnRaidBoss() {
+      if(!sess || !sess.uid) return;
+      var d = new Date();
+      var h = d.getHours();
+      var m = d.getMinutes();
+      
+      // Время рейда: с 18:00 до 18:30 (можно изменить под ваши нужды)
+      if (h === 18 && m >= 0 && m <= 30) {
+          var dateStr = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+          try {
+              var db = firebase.database();
+              db.ref('raid/status').transaction(function(status) {
+                  // Если босса на сегодня ещё нет, создаём его
+                  if (!status || status.date !== dateStr) {
+                      return {
+                          date: dateStr,
+                          hp: 1500000,
+                          maxHp: 1500000,
+                          type: Math.floor(Math.random() * 3), // Случайный босс из 3
+                          stagger: 0,
+                          staggerImmuneUntil: 0,
+                          staggerUntil: 0
+                      };
+                  }
+                  // Если уже создан, отменяем транзакцию
+                  return undefined;
+              });
+          } catch(e){}
+      }
+  }
+
+  setInterval(autoSpawnRaidBoss, 60000); // Проверяем каждую минуту
+  setTimeout(autoSpawnRaidBoss, 3000);   // Проверяем при входе в игру
+
   function initRaidSync() {
     if(!chatReady) return;
     try {
