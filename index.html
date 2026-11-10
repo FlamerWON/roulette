@@ -1203,7 +1203,8 @@ html, body {
     {id:'bum',name:'Бомж',desc:'Чёрное выпало 5 раз подряд',check:function(n,p,g){return g.blackRun>=5;}},
     {id:'hen',name:'Мама курица',desc:'Выкрути одно и то же число два раза подряд',check:function(n,p){return n===p;}},
     {id:'cycle',name:'Цикл',desc:'Выбей красное 5 раз подряд',check:function(n,p,g){return /rrrrr$/.test(g.cols);}},
-    {id:'street',name:'Стрит',desc:'Выбей 3 числа по порядку подряд (например 7, 8, 9)',check:function(n,p,g,a){return a.length>=3&&a[a.length-2]===a[a.length-3]+1&&a[a.length-1]===a[a.length-2]+1;}},
+    {id:'street',name:'Стрит',desc:'Выбей 3 числа по порядку подряд (например 7, 8, 9)',check:function(n,p,g,a){return a.length>=3&&a[a.length-2,
+    {id:'boss_killer',name:'Убийца Боссов',desc:'Нанёс добивающий (последний) удар Мировому Боссу',check:function(){return false;}}]===a[a.length-3]+1&&a[a.length-1]===a[a.length-2]+1;}},
     {id:'grind',name:'Задротище',desc:'Выбей каждое число от 0 до 36 хотя бы по разу',check:function(n,p,g){return String(g.seen).indexOf('0')===-1;},
       prog:function(g){var c=0,sn=String(g.seen||'');for(var i=0;i<sn.length;i++){if(sn.charAt(i)==='1')c++;}return 'выпало '+c+' из 37';}},
     {id:'elbe',name:'Встреча на Эльбе',desc:'Выбей два соседних числа подряд (например 20 и 21)',check:function(n,p,g,a){return a.length>=2&&Math.abs(a[a.length-1]-a[a.length-2])===1;}},
@@ -3452,13 +3453,27 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
 
   
-  // --- WORLD BOSS (RAID) ---
+  
+  // --- WORLD BOSS (RAID) V25 ---
   var raidActive = false;
   var raidHp = 0, raidMaxHp = 1000000;
   var raidMyDmg = 0;
   var raidNameStr = "Мировой Пожиратель Душ";
   var raidInCombat = false;
+  var raidBossType = 0; // Тип босса (0, 1, 2)
+  var raidStagger = 0;
+  var raidStaggerMax = 300;
+  var raidStaggerImmuneUntil = 0;
+  var raidStaggerUntil = 0;
   
+  var RAID_BOSSES = [
+    { name: "Пожиратель Магии", desc: "Лечится от Зеро! Не используйте зеро. Нет вампиризма." },
+    { name: "Стальной Колосс", desc: "Уязвимые числа меняются раз в час. Иммунитет к Шипам." },
+    { name: "Король Мимиков", desc: "Урон проходит только от Критических ударов." }
+  ];
+
+  var raidDeadUntil = 0;
+
   function initRaidSync() {
     if(!chatReady) return;
     try {
@@ -3469,10 +3484,18 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
           raidActive = true;
           raidHp = data.hp;
           raidMaxHp = data.maxHp || 1000000;
-          raidNameStr = data.name || "Мировой Пожиратель Душ";
+          raidBossType = data.type || 0;
+          raidStagger = data.stagger || 0;
+          raidStaggerImmuneUntil = data.staggerImmuneUntil || 0;
+          raidStaggerUntil = data.staggerUntil || 0;
+          
+          var bDef = RAID_BOSSES[raidBossType] || RAID_BOSSES[0];
+          raidNameStr = bDef.name;
+          
           if($('raidStatus')) $('raidStatus').style.display = 'none';
           if($('raidBarWrap')) $('raidBarWrap').style.display = 'block';
           if($('raidName')) $('raidName').textContent = raidNameStr;
+          
           updateRaidUI();
         } else {
           raidActive = false;
@@ -3483,7 +3506,6 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
           if($('raidBarWrap')) $('raidBarWrap').style.display = 'none';
         }
       });
-      // Try to load my damage
       if(sess && sess.uid) {
          db.ref('raid/players/' + sess.uid).on('value', function(snap){
             var val = snap.val();
@@ -3494,106 +3516,378 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     } catch(e){}
   }
   
-  
-  window.getRaidBossNumbersV22 = function(dateKey){
-    var r = rng(hashStr('worldboss_nums_v22:' + dateKey));
+  window.getRaidBossNumbersV22 = function(dateKey, hour){
+    var seedStr = 'worldboss_nums_v25:' + dateKey + (raidBossType === 1 ? ':' + hour : '');
+    var r = rng(hashStr(seedStr));
     var pool = [];
     for(var i = 2; i <= 36; i++) pool.push(i);
-    var out = [];
-    while(out.length < 10 && pool.length){
+    var weakNums = [];
+    while(weakNums.length < 10 && pool.length){
       var idx = Math.floor(r() * pool.length);
-      out.push(pool.splice(idx, 1)[0]);
+      weakNums.push(pool.splice(idx, 1)[0]);
     }
-    out.sort(function(a, b){ return a - b; });
-    return out;
+    
+    // Генерируем 3 опасных числа (не пересекающихся с уязвимыми)
+    var dangerNums = [];
+    while(dangerNums.length < 3 && pool.length){
+      var idx = Math.floor(r() * pool.length);
+      dangerNums.push(pool.splice(idx, 1)[0]);
+    }
+    
+    return { weak: weakNums, danger: dangerNums };
   };
   
-  window.handleRaidSpinV22 = function(n){
+  
+  window.claimRaidRewards = function() {
+    if(!game || merchantBusy) return;
+    var d = new Date();
+    var raidId = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+    var claimKey = 'raid_reward_' + raidId;
+    if(game.earned[claimKey]) {
+        toast('Вы уже забрали награду за этого босса!');
+        return;
+    }
+    
+    toast('Проверка рейтинга урона...');
+    var db = firebase.database();
+    db.ref('raid/players').once('value').then(function(snap) {
+        var players = snap.val() || {};
+        var list = [];
+        for(var k in players) {
+            list.push({uid: k, dmg: Number(players[k].dmg)||0});
+        }
+        list.sort(function(a,b){ return b.dmg - a.dmg; });
+        
+        var myRank = -1;
+        var myDmg = 0;
+        for(var i=0; i<list.length; i++){
+            if(list[i].uid === sess.uid) {
+                myRank = i + 1;
+                myDmg = list[i].dmg;
+                break;
+            }
+        }
+        
+        if(myRank === -1 || myDmg < 1000) {
+            toast('Твой вклад слишком мал (меньше 1000 урона) или ты не участвовал в рейде.');
+            return;
+        }
+        
+        var c = 0, dust = 0, st = 0, itemType = null;
+        if(myRank <= 3) {
+            c = 5000; dust = 1000; itemType = rollLoot(20, false, true);
+            toast('🏆 ТОП-' + myRank + ' по урону! Невероятная награда!');
+        } else if(myRank <= 15) {
+            c = 3000; st = 50; itemType = rollLoot(12, false, true);
+            toast('🏅 ТОП-' + myRank + '! Отличная награда!');
+        } else {
+            c = 1000; st = 20; itemType = rollLoot(5, false, false);
+            toast('Утешительный приз за участие в рейде!');
+        }
+        
+        game.coins += c;
+        if(dust) game.dust = Math.min(1000000, (Number(game.dust)||0) + dust);
+        if(st) game.stones = Math.min(1000000, (Number(game.stones)||0) + st);
+        if(itemType) {
+            game.inv.push(itemType);
+            toast('🎁 Выпал предмет из рейдового сундука: ' + ITEMS[itemType].name);
+        }
+        game.earned[claimKey] = true;
+        saveGame();
+        renderCoins();
+        renderChar();
+        var btnC = $('btnClaimRaidReward');
+        if(btnC) btnC.style.display = 'none';
+    }).catch(function(){
+        toast('Ошибка при получении наград. Попробуй позже.');
+    });
+  };
+window.handleRaidSpinV22 = function(n){
     if(!raidActive || raidHp <= 0){
       raidInCombat = false; updateRaidUI(); return;
     }
+    
+    var now = Date.now();
+    if(now < raidDeadUntil){
+        var left = Math.ceil((raidDeadUntil - now) / 1000);
+        fightLog = '☠️ Вы в нокауте! Восстановление через ' + left + ' сек.';
+        renderFight();
+        return;
+    }
+
     var st = stats();
     var rRace = (game && game.race) || 'human';
     var bossFactor = (rRace === 'celestial') ? 1.25 : 1.0;
     var effAtk = Math.max(1, Math.round(st.atk * bossFactor));
     var eqEnch = getEquippedEnchants(game);
     var dmg = 0;
+    var healBoss = 0;
     
     var d = new Date();
     var dateKey = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
-    var bossNums = window.getRaidBossNumbersV22(dateKey); // 10 уязвимых чисел на сегодня
+    var nums = window.getRaidBossNumbersV22(dateKey, d.getHours());
+    
+    var isStaggered = (now < raidStaggerUntil);
+    var hpPct = raidMaxHp > 0 ? (raidHp / raidMaxHp) : 1;
+    var phase = hpPct > 0.6 ? 1 : (hpPct > 0.2 ? 2 : 3);
+    
+    var weakArray = nums.weak;
+    if(phase === 2) weakArray = nums.weak.slice(0, 6);
+    
+    if(!game.fight || !game.fight.on || game.fight.kind !== 'raid') {
+        game.fight = {s:slotNow(), kind:'raid', m:raidHp, p:st.hp, ph:st.hp, pa:st.atk, buddy:minerActive(game), on:true, skip:false, dealt:0, taken:0};
+    }
     
     if(n === 0){
-      dmg = effAtk * 2;
-      fightLog = 'Зеро! Критический удар в слабое место Босса: ' + dmg + ' урона!';
-    } else if(n === 1){
-      fightLog = 'Единица — критический промах! Босс неуязвим к этой атаке.';
-    } else {
-      // ПРОВЕРКА: Если выпавшее число ЕСТЬ в массиве 10 чисел босса — это УДАР
-      if(bossNums.indexOf(n) !== -1){
-        var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
-        dmg = isCrit ? Math.round(effAtk * 1.75) : effAtk;
-        fightLog = 'Выпало ' + n + '. Точное попадание в уязвимость Босса: ' + dmg + ' урона!' + (isCrit ? ' 💥 КРИТ!' : '');
+      if(raidBossType === 0) { // Пожиратель Магии
+          healBoss = Math.max(1, Math.round(effAtk * 0.3)); // 30% of atk instead of 300%
+          fightLog = 'Зеро! ОШИБКА: Пожиратель Магии поглотил магию и вылечился на ' + healBoss + ' HP!';
       } else {
-        // Если числа нет в списке — ПРОМАХ
-        fightLog = 'Выпало ' + n + '. Промах! Броня Босса отразила удар. Ищи уязвимые числа!';
+          dmg = effAtk * (isStaggered ? 5 : 2);
+          fightLog = 'Зеро! ' + (isStaggered ? '💥 СОКРУШИТЕЛЬНЫЙ УДАР (СТАН): ' : 'Критический удар: ') + dmg + ' урона!';
+      }
+    } else if(n === 1){
+      fightLog = 'Единица — критический промах! Босс неуязвим.';
+    } else {
+      if(nums.danger.indexOf(n) !== -1 && !isStaggered){
+          // Опасное число!
+          var dmgToPlayer = Math.max(1, Math.round(st.hp * 0.30));
+          if(rRace === 'warrior' && Math.random() < 0.2) {
+             fightLog = 'Выпало ' + n + '. ⚠️ ОПАСНОСТЬ! Но Воин заблокировал смертельную атаку босса!';
+          } else {
+             game.fight.p -= dmgToPlayer;
+             fightLog = 'Выпало ' + n + '. ⚠️ ОПАСНОСТЬ! Босс наносит ' + dmgToPlayer + ' урона (30% от Макс HP)!';
+          }
+      } else {
+          var isHit = false;
+          var phaseLog = '';
+          
+          if(phase === 3 && !isStaggered) {
+              // Phase 3: Only Red Evens
+              if(n > 0 && n % 2 === 0 && color(n) === 'red') {
+                  isHit = true;
+                  phaseLog = '🔥 ФАЗА 3 (Агония): Удар по Красному Чётному (x2)! ';
+                  effAtk *= 2;
+              }
+          } else if (isStaggered || weakArray.indexOf(n) !== -1) {
+              isHit = true;
+              if(phase === 2 && !isStaggered) {
+                  phaseLog = '💢 ФАЗА 2 (Ярость): Усиленный урон (x1.5)! ';
+                  effAtk = Math.round(effAtk * 1.5);
+              }
+          }
+          
+          if(isHit) {
+              var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
+              
+              if(raidBossType === 2 && !isCrit && !isStaggered) { // Король Мимиков
+                  fightLog = 'Выпало ' + n + '. Промах! Король Мимиков получает урон ТОЛЬКО от критических ударов!';
+              } else {
+                  dmg = isCrit ? Math.round(effAtk * 1.75) : effAtk;
+                  if (isStaggered) dmg *= 2;
+                  fightLog = 'Выпало ' + n + '. ' + phaseLog + (isStaggered ? 'УДАР ПО ОГЛУШЁННОМУ (x2): ' : 'Точное попадание: ') + dmg + ' урона!' + (isCrit ? ' 💥 КРИТ!' : '');
+                  
+                  if(!isStaggered && now >= raidStaggerImmuneUntil) {
+                      incrementStaggerV25();
+                  }
+              }
+          } else {
+              fightLog = 'Выпало ' + n + '. Промах! Броня Босса отразила удар.';
+          }
       }
     }
     
     if(dmg > 0){
-      dealRaidDamage(dmg);
-      var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100))) : 0;
-      if(vp && !v20Data.nearDeath) {
-         if(!game.fight) game.fight = {};
-         game.fight.p = Math.min(game.fight.ph || st.hp, (game.fight.p||st.hp) + vp);
-         fightLog += ' Вампиризм +' + vp + ' HP.';
+      game.fight.dealt += dmg;
+      dealRaidDamage(dmg, 0);
+      
+      // Вампиризм (не работает на Пожирателе Магии)
+      if(raidBossType !== 0) {
+          var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100))) : 0;
+          if(vp && !v20Data.nearDeath) {
+             game.fight.p = Math.min(game.fight.ph || st.hp, (game.fight.p||st.hp) + vp);
+             fightLog += ' Вампиризм +' + vp + ' HP.';
+          }
       }
+    } else if (healBoss > 0) {
+      dealRaidDamage(0, healBoss);
     }
+    
+    // Смерть в рейде
+    if(game.fight.p <= 0) {
+        raidDeadUntil = now + (3 * 60 * 1000); // 3 минуты штрафа
+        game.fight.on = false;
+        raidInCombat = false;
+        fightLog += ' 💀 ВЫ ПОГИБЛИ! Возрождение через 3 минуты. Статуса "При смерти" в рейде нет.';
+        toast('💀 Вы погибли в Рейде! Доступ закрыт на 3 минуты.');
+    }
+    
     renderFight();
+    updateRaidUI();
   };
 
-  function updateRaidUI() {
+  function incrementStaggerV25() {
+      if(!sess || !sess.uid) return;
+      try {
+          var db = firebase.database();
+          db.ref('raid/status').transaction(function(status) {
+              if(!status) return status;
+              var now = Date.now();
+              if(now < status.staggerImmuneUntil || now < status.staggerUntil) return status;
+              
+              var newStagger = (status.stagger || 0) + 1;
+              if(newStagger >= raidStaggerMax) {
+                  status.stagger = 0;
+                  status.staggerUntil = now + (2 * 60 * 1000); // 2 минуты стана
+                  status.staggerImmuneUntil = status.staggerUntil + (5 * 60 * 1000); // 5 минут иммунитета после стана
+              } else {
+                  status.stagger = newStagger;
+              }
+              return status;
+          });
+      } catch(e){}
+  }
 
+  function updateRaidUI() {
     if($('raidHpText')) $('raidHpText').textContent = Math.floor(raidHp) + ' / ' + raidMaxHp;
     if($('raidHpFill')) $('raidHpFill').style.width = Math.max(0, Math.min(100, (raidHp/raidMaxHp)*100)) + '%';
     if($('raidMyDmg')) $('raidMyDmg').textContent = raidMyDmg;
+    
     var btn = $('raidJoinBtn');
     if(btn) {
-      if(raidInCombat) {
+      var now = Date.now();
+      if(raidHp <= 0) {
+          btn.style.display = 'none';
+      } else if(now < raidDeadUntil) {
+         var leftSec = Math.ceil((raidDeadUntil - now)/1000);
+         btn.style.display = 'inline-block';
+         btn.textContent = 'Мёртв. Возрождение через ' + leftSec + ' сек';
+         btn.disabled = true;
+      } else if(raidInCombat) {
+         btn.style.display = 'inline-block';
          btn.textContent = 'Ты уже в Рейде (Крути колесо!)';
          btn.disabled = true;
       } else {
+         btn.style.display = 'inline-block';
          btn.textContent = 'Вступить в Рейд';
          btn.disabled = false;
          btn.onclick = function(){
             if(!canUseTownServicesV20()) return;
             if(!game || !gameLoaded) return;
             raidInCombat = true;
+            
+            var st = stats();
+            game.fight = {s:slotNow(), kind:'raid', m:raidHp, p:st.hp, ph:st.hp, pa:st.atk, buddy:minerActive(game), on:true, skip:false, dealt:0, taken:0};
+            fightLog = 'Вы вступили в бой с Мировым Боссом! Крутите рулетку!';
+            
             toast('⚔️ Ты вступил в Рейд! Переходи на вкладку "Рулетка" и наноси урон Мировому Боссу!');
             updateRaidUI();
             showTab('game');
          };
       }
     }
+
+    var raidInfo = $('raidInfoBox');
+    if(!raidInfo) {
+        var wrap = $('raidBarWrap');
+        if(wrap) {
+            raidInfo = document.createElement('div');
+            raidInfo.id = 'raidInfoBox';
+            raidInfo.style.marginTop = '12px';
+            raidInfo.style.padding = '10px';
+            raidInfo.style.background = 'var(--bg)';
+            raidInfo.style.borderRadius = '12px';
+            raidInfo.style.border = '1px solid var(--line)';
+            raidInfo.style.fontSize = '12px';
+            wrap.appendChild(raidInfo);
+        }
+    }
+    
+    if(raidInfo) {
+        if(raidHp <= 0) {
+            var d = new Date();
+            var claimKey = 'raid_reward_' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+            var isClaimed = (game && game.earned[claimKey]);
+            
+            raidInfo.innerHTML = '<div style="color:var(--gold);font-weight:bold;text-align:center;font-size:16px;">🏆 МИРОВОЙ БОСС ПОВЕРЖЕН! 🏆</div>' + 
+            (isClaimed ? '<div style="text-align:center;color:var(--muted);margin-top:8px;">Награда за этот рейд уже получена.</div>' : '<div style="text-align:center;margin-top:10px;"><button id="btnClaimRaidReward" onclick="window.claimRaidRewards()" style="font-size:14px;padding:8px 16px;">Забрать награду за рейд</button></div>');
+            return;
+        }
+
+        var bDef = RAID_BOSSES[raidBossType] || RAID_BOSSES[0];
+        var dx = new Date();
+        var dateKey = dx.getFullYear() + '-' + (dx.getMonth()+1) + '-' + dx.getDate();
+        var nums = window.getRaidBossNumbersV22(dateKey, dx.getHours());
+        
+        var nw = Date.now();
+        var hpPct = raidMaxHp > 0 ? (raidHp / raidMaxHp) : 1;
+        var phase = hpPct > 0.6 ? 1 : (hpPct > 0.2 ? 2 : 3);
+        
+        var phaseText = '';
+        var weakText = '';
+        if(phase === 1) {
+            phaseText = '<span style="color:var(--green)">Фаза 1 (100%-60%): 10 уязвимых чисел</span>';
+            weakText = nums.weak.join(', ');
+        } else if(phase === 2) {
+            phaseText = '<span style="color:var(--gold)">Фаза 2 «Ярость» (60%-20%): 6 чисел, урон х1.5</span>';
+            weakText = nums.weak.slice(0,6).join(', ');
+        } else {
+            phaseText = '<span style="color:var(--red);font-weight:bold">Фаза 3 «Агония» (<20%): Уязвимо только КРАСНОЕ ЧЁТНОЕ (урон х2)</span>';
+            weakText = 'Все КРАСНЫЕ ЧЁТНЫЕ числа';
+        }
+
+        var staggerText = '';
+        if(nw < raidStaggerUntil) {
+            staggerText = '<div style="color:var(--green);font-weight:bold;margin-top:6px;">🌟 БОСС ОГЛУШЁН! (Осталось ' + Math.ceil((raidStaggerUntil - nw)/1000) + ' сек). Все числа уязвимы (x2 урон), Зеро наносит x5!</div>';
+        } else if(nw < raidStaggerImmuneUntil) {
+            staggerText = '<div style="color:var(--red);margin-top:6px;">🛡️ Иммунитет к оглушению (Осталось ' + Math.ceil((raidStaggerImmuneUntil - nw)/1000) + ' сек).</div>';
+        } else {
+            var pct = Math.min(100, Math.floor(raidStagger / raidStaggerMax * 100));
+            staggerText = '<div style="margin-top:6px;">Оглушение: ' + raidStagger + ' / ' + raidStaggerMax + ' попаданий сервера</div>'
+              + '<div class="bar" style="height:6px;margin-top:2px"><i style="width:'+pct+'%;background:#3b82f6"></i></div>';
+        }
+        
+        raidInfo.innerHTML = '<div><b>Особенность:</b> ' + bDef.desc + '</div>'
+          + '<div style="margin-top:4px">' + phaseText + '</div>'
+          + '<div style="margin-top:6px">Уязвимые сектора (бьёшь ты): <b>' + weakText + '</b></div>'
+          + '<div style="margin-top:2px;color:var(--red)">Смертельные сектора (наносят 30% урона по тебе): <b>' + nums.danger.join(', ') + '</b></div>'
+          + staggerText;
+    }
   }
   
-  function dealRaidDamage(dmg) {
-     if(!raidActive || !raidInCombat || !sess || !sess.uid) return;
+  function dealRaidDamage(dmg, heal) {
+     if(!raidActive || (!raidInCombat && heal === 0) || !sess || !sess.uid) return;
      try {
        var db = firebase.database();
-       // Транзакция для защиты от отрицательного здоровья босса
+       var wasAlive = false;
        db.ref('raid/status/hp').transaction(function(currentHp) {
          if (currentHp === null) return 0;
-         var newHp = currentHp - dmg;
-         return newHp < 0 ? 0 : newHp;
+         wasAlive = (currentHp > 0);
+         var newHp = currentHp - dmg + heal;
+         return newHp < 0 ? 0 : (newHp > raidMaxHp ? raidMaxHp : newHp);
+       }, function(error, committed, snapshot) {
+           if(error || !committed) return;
+           var finalHp = snapshot.val();
+           if(wasAlive && finalHp <= 0 && dmg > 0) {
+               // Добивающий удар
+               if(game && !game.earned['boss_killer']) {
+                   game.earned['boss_killer'] = true;
+                   game.title = 'boss_killer';
+                   saveGame();
+                   toast('🗡️ ВЫ НАНЕСЛИ ДОБИВАЮЩИЙ УДАР! Получен титул «Убийца Боссов»!');
+                   post({kind:'msg', text:'Я нанёс последний удар Мировому Боссу и получил титул «Убийца Боссов»!'});
+                   renderChar();
+               }
+           }
        });
-       // Урон игрока обновляем обычным инкрементом
-       db.ref('raid/players/' + sess.uid + '/dmg').set(firebase.database.ServerValue.increment(dmg));
-       db.ref('raid/players/' + sess.uid + '/name').set(sess.name);
+       
+       if(dmg > 0) {
+           db.ref('raid/players/' + sess.uid + '/dmg').set(firebase.database.ServerValue.increment(dmg));
+           db.ref('raid/players/' + sess.uid + '/name').set(sess.name);
+       }
      } catch(e){}
   }
-
-  function load(){
+function load(){
     if(!chatReady||!sess||!sess.name||document.hidden||chatBusy||kickedOut) return;
     chatBusy=true;
     token().then(function(t){
