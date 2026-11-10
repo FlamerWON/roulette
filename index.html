@@ -878,6 +878,36 @@ html, body {
   font: inherit;
   cursor: pointer;
 }
+
+  /* Главные хабы (всегда по центру, не скроллятся) */
+  .main-hubs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+    width: 100%;
+  }
+
+  /* Свайп-лента для подкатегорий */
+  .swipe-menu {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto; /* Включает горизонтальный скролл */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
+    white-space: nowrap; /* Запрещает перенос кнопок на новую строку */
+    padding: 4px 4px 12px 4px;
+    scrollbar-width: none; /* Прячет ползунок в Firefox */
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  .swipe-menu::-webkit-scrollbar { display: none; } /* Прячет ползунок в Chrome/Safari */
+  
+  .swipe-menu button {
+      flex: none; /* Запрещаем сжатие кнопок */
+  }
 </style>
 
 </head>
@@ -918,16 +948,14 @@ html, body {
     </section>
 
     <div class="rightCol">
-    <div class="tabs">
-      <button id="tabGame" class="tab on">Рулетка</button>
-      <button id="tabChar" class="tab">Персонаж<span id="dot" class="dot" hidden></span></button>
-      <button id="tabBoard" class="tab">Лидеры</button>
-      <button id="tabShop" class="tab">Магазин</button>
-      <button id="tabDg" class="tab">Экспедиция</button>
-      <button id="tabMarket" class="tab">Рынок</button>
-      <button id="tabPets" class="tab">Спутники</button>
-      <button id="tabRaid" class="tab">Рейд 🌍</button>
-      <button id="tabEvents" class="tab">Ивенты 🎃</button>
+    <div class="tabs main-hubs" id="mainHubs">
+      <button type="button" data-hub="game" class="tab on">🎲 Рулетка</button>
+      <button type="button" data-hub="char" class="tab">👤 Герой<span id="dot" class="dot" hidden></span></button>
+      <button type="button" data-hub="city" class="tab">🏰 Город</button>
+      <button type="button" data-hub="adv" class="tab">⚔️ Приключения</button>
+    </div>
+    <div class="swipe-menu" id="swipeMenu">
+      <!-- Сюда JS будет подставлять кнопки второго уровня -->
     </div>
     
     <div id="toast" role="status" aria-live="polite"></div>
@@ -1020,7 +1048,7 @@ html, body {
     </section>
 
     <section class="shopPane" id="shopPane" hidden>
-      <div class="shopSubTabs" id="shopSubTabs">
+      <div class="shopSubTabs" id="shopSubTabs" hidden>
         <button type="button" data-shoptab="races" class="tab on">Расы и Классы</button>
         <button type="button" data-shoptab="forge" class="tab">Кузница</button>
         <button type="button" data-shoptab="enchant" class="tab">Зачарование ✨</button>
@@ -2594,32 +2622,109 @@ html, body {
     }).catch(function(){});
   }
   setInterval(function(){ if(curTab==='board'&&!document.hidden) loadBoard(); },15000);
+  var curHub='game';
+  
+  var HUB_TABS = {
+      'game': [{id:'game', label:'Рулетка'}, {id:'tavern', label:'Таверна 🍺'}],
+      'char': [{id:'char', label:'Персонаж'}, {id:'inv', label:'Инвентарь'}, {id:'board', label:'Лидеры'}],
+      'city': [{id:'shop', label:'Магазин'}, {id:'market', label:'Рынок'}, {id:'forge', label:'Кузница'}, {id:'enchant', label:'Зачарование ✨'}, {id:'merchant', label:'Скупщик'}, {id:'pets', label:'Спутники 🐾'}],
+      'adv': [{id:'dg', label:'Экспедиция'}, {id:'raid', label:'Рейд 🌍'}, {id:'events', label:'Ивенты 🎃'}]
+  };
+  
+  function renderSwipeMenu(hub) {
+      var menu = $('swipeMenu');
+      if (!menu) return;
+      menu.innerHTML = '';
+      
+      var btns = HUB_TABS[hub] || [];
+      if (btns.length <= 1) {
+          menu.style.display = 'none';
+      } else {
+          menu.style.display = 'flex';
+          btns.forEach(function(b) {
+              var btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'tab' + (curTab === b.id || (curTab==='shop' && curShopSub===b.id) ? ' on' : '');
+              
+              if (b.id === 'char' && !$('dot').hidden) {
+                   btn.innerHTML = b.label + '<span class="dot"></span>';
+              } else {
+                   btn.textContent = b.label;
+              }
+              
+              btn.onclick = function() {
+                  // Особая логика для вкладок внутри магазина и инвентаря
+                  if (['shop', 'forge', 'enchant', 'merchant'].includes(b.id)) {
+                      showTab('shop');
+                      if(typeof switchShopSubTab === 'function') {
+                          switchShopSubTab(b.id === 'shop' ? 'races' : b.id);
+                      }
+                  } else if (b.id === 'inv') {
+                      showTab('char');
+                      // Скроллим до инвентаря
+                      var invT = document.querySelector('.invTitle');
+                      if(invT) invT.scrollIntoView({behavior: 'smooth'});
+                  } else if (b.id === 'tavern') {
+                      showTab('game');
+                      var tav = $('tavernBox');
+                      if(tav) tav.scrollIntoView({behavior: 'smooth'});
+                  } else {
+                      showTab(b.id);
+                  }
+                  
+                  // Обновляем активную кнопку в меню
+                  Array.from(menu.children).forEach(function(c) { c.className = 'tab'; });
+                  btn.className = 'tab on';
+              };
+              menu.appendChild(btn);
+          });
+      }
+  }
+
   function showTab(which){
     curTab=which;
-    $('gamePane').hidden=(which!=='game'); 
-    $('charPane').hidden=(which!=='char'); 
-    $('boardPane').hidden=(which!=='board'); 
-    $('shopPane').hidden=(which!=='shop'); 
-    $('dgPane').hidden=(which!=='dg');
-    if($('marketPane')) $('marketPane').hidden=(which!=='market');
-    if($('petsPane')) $('petsPane').hidden=(which!=='pets');
-    if($('raidPane')) $('raidPane').hidden=(which!=='raid');
-    if($('eventsPane')) $('eventsPane').hidden=(which!=='events');
+    
+    // Определяем, какому хабу принадлежит вкладка, чтобы подсветить нужную кнопку сверху
+    if (['game', 'tavern'].includes(which)) curHub = 'game';
+    else if (['char', 'inv', 'board'].includes(which)) curHub = 'char';
+    else if (['shop', 'market', 'pets', 'forge', 'enchant', 'merchant'].includes(which)) curHub = 'city';
+    else if (['dg', 'raid', 'events'].includes(which)) curHub = 'adv';
+    
+    // Прячем всё
+    $('gamePane').hidden=true;
+    $('charPane').hidden=true;
+    $('boardPane').hidden=true;
+    $('shopPane').hidden=true;
+    $('dgPane').hidden=true;
+    if($('marketPane')) $('marketPane').hidden=true;
+    if($('petsPane')) $('petsPane').hidden=true;
+    if($('raidPane')) $('raidPane').hidden=true;
+    if($('eventsPane')) $('eventsPane').hidden=true;
 
-    $('tabGame').className='tab'+(which==='game'?' on':'');
-    $('tabChar').className='tab'+(which==='char'?' on':'');
-    $('tabBoard').className='tab'+(which==='board'?' on':'');
-    $('tabShop').className='tab'+(which==='shop'?' on':''); 
-    $('tabDg').className='tab'+(which==='dg'?' on':'');
-    if($('tabMarket')) $('tabMarket').className='tab'+(which==='market'?' on':'');
-    if($('tabPets')) $('tabPets').className='tab'+(which==='pets'?' on':'');
-    if($('tabRaid')) $('tabRaid').className='tab'+(which==='raid'?' on':'');
-    if($('tabEvents')) $('tabEvents').className='tab'+(which==='events'?' on':'');
+    // Показываем нужную
+    if (which === 'game') $('gamePane').hidden = false;
+    else if (which === 'char') $('charPane').hidden = false;
+    else if (which === 'board') $('boardPane').hidden = false;
+    else if (['shop', 'forge', 'enchant', 'merchant'].includes(which)) $('shopPane').hidden = false;
+    else if (which === 'dg') $('dgPane').hidden = false;
+    else if (which === 'market' && $('marketPane')) $('marketPane').hidden = false;
+    else if (which === 'pets' && $('petsPane')) $('petsPane').hidden = false;
+    else if (which === 'raid' && $('raidPane')) $('raidPane').hidden = false;
+    else if (which === 'events' && $('eventsPane')) $('eventsPane').hidden = false;
+
+    // Обновляем главные кнопки хабов
+    if($('mainHubs')) {
+        $('mainHubs').querySelectorAll('button').forEach(function(b) {
+            b.className = 'tab' + (b.getAttribute('data-hub') === curHub ? ' on' : '');
+        });
+    }
+    
+    renderSwipeMenu(curHub);
 
     if(which==='game') draw();
     if(which==='char'){$('dot').hidden=true; renderChar();}
     if(which==='board') loadBoard();
-    if(which==='shop') renderShop();
+    if(which==='shop' || ['forge', 'enchant', 'merchant'].includes(which)) renderShop();
     if(which==='dg') renderDg();
     if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
     if(which==='events' && typeof renderHalloweenEventUI === 'function') renderHalloweenEventUI();
@@ -2627,6 +2732,20 @@ html, body {
     updateFloatWheelState();
     drawMiniWheels();
   }
+  
+  // Привязка кликов к главным кнопкам хабов
+  setTimeout(function() {
+      if($('mainHubs')) {
+          $('mainHubs').querySelectorAll('button').forEach(function(b) {
+              b.addEventListener('click', function() {
+                  var h = this.getAttribute('data-hub');
+                  // При клике на хаб открываем первую вкладку в нём
+                  showTab(HUB_TABS[h][0].id);
+              });
+          });
+      }
+  }, 100);
+  
   $('tabGame').addEventListener('click',function(){showTab('game');});
   $('tabChar').addEventListener('click',function(){showTab('char');});
   $('tabBoard').addEventListener('click',function(){showTab('board');});
