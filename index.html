@@ -889,24 +889,62 @@ html, body {
     width: 100%;
   }
 
+  /* Обертка свайп-меню со стрелочками */
+  .swipe-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+    position: relative;
+  }
   /* Свайп-лента для подкатегорий */
   .swipe-menu {
     display: flex;
     gap: 8px;
-    overflow-x: auto; /* Включает горизонтальный скролл */
+    overflow-x: auto;
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
-    white-space: nowrap; /* Запрещает перенос кнопок на новую строку */
-    padding: 4px 4px 12px 4px;
-    scrollbar-width: none; /* Прячет ползунок в Firefox */
-    width: 100%;
-    max-width: 100vw;
-    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    padding: 4px;
+    scrollbar-width: none;
+    max-width: 100%;
   }
-  .swipe-menu::-webkit-scrollbar { display: none; } /* Прячет ползунок в Chrome/Safari */
+  .swipe-menu::-webkit-scrollbar { display: none; }
+  .swipe-menu button { flex: none; transition: 0.2s ease-in-out; }
   
-  .swipe-menu button {
-      flex: none; /* Запрещаем сжатие кнопок */
+  /* Хитрый трюк для центрирования кнопок, когда их мало, и нормального скролла, когда их много */
+  .swipe-menu::before, .swipe-menu::after {
+    content: '';
+    margin: auto;
+  }
+
+  /* Стрелки навигации для ПК */
+  .scroll-btn {
+    background: transparent;
+    border: none;
+    color: var(--gold);
+    font-size: 20px;
+    padding: 4px 12px;
+    cursor: pointer;
+    flex: none;
+    display: none; /* Скрыты по умолчанию (на мобильных устройствах с тачскрином) */
+  }
+  .scroll-btn:hover { filter: brightness(1.2); text-shadow: 0 0 5px var(--gold); }
+  
+  @media (pointer: fine) { /* Показываем только если есть точный курсор (мышь на ПК) */
+    .scroll-btn { display: block; }
+    .swipe-menu { max-width: calc(100% - 90px); }
+  }
+
+  /* Новый цвет для активных подвкладок (Глубокий изумрудный цвет --felt) */
+  #swipeMenu .tab.on {
+    background: var(--felt);
+    color: #fff;
+    border-color: var(--felt);
+    box-shadow: 0 4px 12px rgba(31, 90, 63, 0.4);
   }
 </style>
 
@@ -954,8 +992,10 @@ html, body {
       <button type="button" data-hub="city" class="tab">🏰 Город</button>
       <button type="button" data-hub="adv" class="tab">⚔️ Приключения</button>
     </div>
-    <div class="swipe-menu" id="swipeMenu">
-      <!-- Сюда JS будет подставлять кнопки второго уровня -->
+    <div class="swipe-wrap" id="swipeWrap" style="display:none;">
+      <button class="scroll-btn" id="scrollLeft" type="button" aria-label="Прокрутить влево">❮</button>
+      <div class="swipe-menu" id="swipeMenu"></div>
+      <button class="scroll-btn" id="scrollRight" type="button" aria-label="Прокрутить вправо">❯</button>
     </div>
     
     <div id="toast" role="status" aria-live="polite"></div>
@@ -2633,14 +2673,15 @@ html, body {
   
   function renderSwipeMenu(hub) {
       var menu = $('swipeMenu');
-      if (!menu) return;
+      var wrap = $('swipeWrap');
+      if (!menu || !wrap) return;
       menu.innerHTML = '';
       
       var btns = HUB_TABS[hub] || [];
       if (btns.length <= 1) {
-          menu.style.display = 'none';
+          wrap.style.display = 'none';
       } else {
-          menu.style.display = 'flex';
+          wrap.style.display = 'flex';
           btns.forEach(function(b) {
               var btn = document.createElement('button');
               btn.type = 'button';
@@ -2747,6 +2788,10 @@ html, body {
   }, 100);
   
   
+  
+  if($('scrollLeft')) $('scrollLeft').addEventListener('click', function(){ $('swipeMenu').scrollBy({left: -200, behavior: 'smooth'}); });
+  if($('scrollRight')) $('scrollRight').addEventListener('click', function(){ $('swipeMenu').scrollBy({left: 200, behavior: 'smooth'}); });
+
   $('boardRefresh').addEventListener('click',loadBoard);
 
   /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
