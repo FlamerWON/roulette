@@ -1980,7 +1980,13 @@ html, body {
     }
     h+='</div>';
     box.innerHTML=h;
-    renderMerchant();
+    
+    // Вызовы для обновления всех под-вкладок без зацикливания
+    if(typeof renderEnchantPanel === 'function') renderEnchantPanel();
+    if(typeof renderMerchant === 'function') renderMerchant();
+    if(typeof switchShopSubTab === 'function' && typeof curShopSub !== 'undefined') switchShopSubTab(curShopSub);
+    if(typeof applySpoilers === 'function') applySpoilers($('shopPane'));
+    
     var ob=$('openChest'); if(ob) ob.addEventListener('click',openChest);
     var btns=box.querySelectorAll('button[data-class]');
     for(var j=0;j<btns.length;j++){
@@ -3090,6 +3096,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   function applyChibiItems(){
     var defMap={};DEFS.forEach(function(d){defMap[d[0]]=d;});
     Object.keys(ITEMS).forEach(function(id){
+      if (id === 'mystery_egg') return; // <--- ДОБАВИТЬ ЭТУ СТРОКУ (защита иконки яйца)
       var it=ITEMS[id],def=defMap[id],match=/^s([mwa])(\d\d)([hbal])$/.exec(id),detail=hashStr(id)%40;
       var palette={mage:'#7960ad',warrior:'#879da1',archer:'#5b8754'},c=palette[it.cls]||'#98734f',trim='#dbc18a',kind;
       if(def){c=def[8];trim=def[9]||trim;kind=def[7];}
@@ -3512,23 +3519,27 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     var eqEnch = getEquippedEnchants(game);
     var dmg = 0;
     
+    var d = new Date();
+    var dateKey = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+    var bossNums = window.getRaidBossNumbersV22(dateKey); // 10 уязвимых чисел на сегодня
+    
     if(n === 0){
       dmg = effAtk * 2;
-      fightLog = 'Зеро! Критический удар по Мировому Боссу: ' + dmg + ' урона!';
+      fightLog = 'Зеро! Критический удар в слабое место Босса: ' + dmg + ' урона!';
     } else if(n === 1){
-      fightLog = 'Единица — промах по Мировому Боссу.';
+      fightLog = 'Единица — критический промах! Босс неуязвим к этой атаке.';
     } else {
-      var d = new Date();
-      var dateKey = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
-      var bossNums = window.getRaidBossNumbersV22(dateKey);
+      // ПРОВЕРКА: Если выпавшее число ЕСТЬ в массиве 10 чисел босса — это УДАР
       if(bossNums.indexOf(n) !== -1){
-        fightLog = 'Выпало ' + n + '. Босс заблокировал атаку! (Опасное число)';
-      } else {
         var isCrit = eqEnch.crit > 0 && (Math.random() * 100 < eqEnch.crit);
         dmg = isCrit ? Math.round(effAtk * 1.75) : effAtk;
-        fightLog = 'Выпало ' + n + '. Удар по Боссу: ' + dmg + ' урона!' + (isCrit ? ' 💥 КРИТ!' : '');
+        fightLog = 'Выпало ' + n + '. Точное попадание в уязвимость Босса: ' + dmg + ' урона!' + (isCrit ? ' 💥 КРИТ!' : '');
+      } else {
+        // Если числа нет в списке — ПРОМАХ
+        fightLog = 'Выпало ' + n + '. Промах! Броня Босса отразила удар. Ищи уязвимые числа!';
       }
     }
+    
     if(dmg > 0){
       dealRaidDamage(dmg);
       var vp = eqEnch.vamp > 0 ? Math.max(1, Math.round(dmg * (eqEnch.vamp / 100))) : 0;
@@ -4340,14 +4351,6 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
       $('dustVal').textContent=String(Number(game.dust)||0);
     }
     renderTavernUI();
-  };
-
-  var origRenderShop = renderShop;
-  renderShop = function(){
-    origRenderShop();
-    renderEnchantPanel();
-    switchShopSubTab(curShopSub);
-    applySpoilers($('shopPane'));
   };
 
   var origRenderMerchant = renderMerchant;
@@ -5395,6 +5398,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     LOOT_POOL_BY_RARITY = {};
     LOOT_POOL_BY_RARITY_AND_CLASS = {};
     Object.keys(ITEMS).forEach(function(id){
+      if (id === 'mystery_egg') return; // <--- ДОБАВИТЬ ЭТУ СТРОКУ (защита иконки яйца)
       var it = ITEMS[id];
       if(!it || !it.drop) return;
       if(!LOOT_POOL_BY_RARITY[it.r]) LOOT_POOL_BY_RARITY[it.r] = [];
@@ -7685,6 +7689,7 @@ function startFirestoreListenersV20(){
     function buildLootPoolsCacheV21(){
       LOOT_POOL_BY_RARITY = {}; LOOT_POOL_BY_RARITY_AND_CLASS = {};
       Object.keys(ITEMS).forEach(function(id){
+      if (id === 'mystery_egg') return; // <--- ДОБАВИТЬ ЭТУ СТРОКУ (защита иконки яйца)
         var it = ITEMS[id];
         if(!it) return;
         if(it.r === 'relic'){
@@ -8061,6 +8066,7 @@ function startFirestoreListenersV20(){
     var savedAll = [];
     if(game && game.cls){
       Object.keys(ITEMS).forEach(function(id){
+      if (id === 'mystery_egg') return; // <--- ДОБАВИТЬ ЭТУ СТРОКУ (защита иконки яйца)
         if(ITEMS[id].cls === 'all'){ savedAll.push(id); ITEMS[id].cls = game.cls; }
       });
     }
@@ -8122,6 +8128,7 @@ function startFirestoreListenersV20(){
     var savedAll = [];
     if(game && game.cls){
       Object.keys(ITEMS).forEach(function(id){
+      if (id === 'mystery_egg') return; // <--- ДОБАВИТЬ ЭТУ СТРОКУ (защита иконки яйца)
         if(ITEMS[id].cls === 'all'){ savedAll.push(id); ITEMS[id].cls = game.cls; }
       });
     }
@@ -8213,6 +8220,7 @@ function startFirestoreListenersV20(){
     var savedAll = [];
     if(game && game.cls){
       Object.keys(ITEMS).forEach(function(id){
+      if (id === 'mystery_egg') return; // <--- ДОБАВИТЬ ЭТУ СТРОКУ (защита иконки яйца)
         if(ITEMS[id].cls === 'all'){ savedAll.push(id); ITEMS[id].cls = game.cls; }
       });
     }
