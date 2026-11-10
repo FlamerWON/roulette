@@ -886,7 +886,6 @@ html, body {
     width: 100%;
   }
 
-
   /* Обертка свайп-меню со стрелочками */
   .swipe-wrap {
     display: flex;
@@ -895,54 +894,44 @@ html, body {
     width: 100%;
     max-width: 100vw;
     box-sizing: border-box;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     position: relative;
-    overflow: visible;
   }
-  /* Свайп-лента для подкатегорий - исправляем вертикальное обрезание */
+  /* Свайп-лента для подкатегорий */
   .swipe-menu {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    overflow-y: visible;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
-    padding: 8px 4px;
+    padding: 4px;
     scrollbar-width: none;
     max-width: 100%;
-    align-items: center;
-    justify-content: center;
   }
   .swipe-menu::-webkit-scrollbar { display: none; }
   .swipe-menu button { flex: none; transition: background-color 0.2s ease, color 0.2s ease; }
+  
+  .swipe-menu::before, .swipe-menu::after { content: ''; margin: auto; }
 
-  /* Стрелки навигации для ПК - возвращаем и делаем красивыми */
+  /* Стрелки навигации для ПК */
   .scroll-btn {
-    background: var(--card);
-    border: 1px solid var(--line);
+    background: transparent;
+    border: none;
     color: var(--gold);
-    font-size: 16px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    font-size: 20px;
+    padding: 4px 12px;
     cursor: pointer;
     flex: none;
     display: none;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    z-index: 5;
-    margin: 0 4px;
   }
-  .scroll-btn:hover { filter: brightness(1.15); background: var(--gold); color: #1b1405; }
-  
+  .scroll-btn:hover { filter: brightness(1.2); text-shadow: 0 0 5px var(--gold); }
   @media (pointer: fine) {
-    .scroll-btn { display: inline-flex; }
-    .swipe-menu { max-width: calc(100% - 90px); justify-content: flex-start; }
+    .scroll-btn { display: block; }
+    .swipe-menu { max-width: calc(100% - 90px); }
   }
 
-  /* Новый цвет для активных подвкладок */
+  /* Новый цвет для активных подвкладок - Изумрудный, но с нормальным текстом */
   #swipeMenu .tab.on {
     background: var(--felt);
     color: #fff !important;
@@ -950,24 +939,24 @@ html, body {
     box-shadow: 0 4px 12px rgba(31, 90, 63, 0.4);
   }
 
-  /* ВЫДВИЖНОЙ ЧАТ СЛЕВА */
+  /* Выдвижной Чат справа */
   .chat-drawer {
     position: fixed;
     top: 0;
-    left: -360px;
+    right: -360px;
     width: 340px;
     max-width: 85vw;
     height: 100vh;
     height: 100dvh;
     background: var(--card);
-    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.3);
     z-index: 1000;
-    transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     flex-direction: column;
   }
   .chat-drawer.open {
-    left: 0;
+    right: 0;
   }
   .chat-overlay {
     position: fixed;
@@ -985,37 +974,27 @@ html, body {
   .chat-toggle {
     position: fixed;
     top: 50%;
-    left: 0;
+    right: 0;
     transform: translateY(-50%);
     background: var(--gold);
     color: #1b1405;
     border: none;
-    border-radius: 0 12px 12px 0;
+    border-radius: 12px 0 0 12px;
     padding: 16px 8px;
     z-index: 998;
     cursor: pointer;
     font-weight: bold;
     font-size: 15px;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+    box-shadow: -2px 0 8px rgba(0,0,0,0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     writing-mode: vertical-rl;
     text-orientation: mixed;
-    transition: left 0.3s ease;
+    transition: right 0.3s ease;
   }
   .chat-toggle:hover { filter: brightness(1.1); }
   
-  .layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    gap: 16px;
-  }
-  .rightCol { width: 100%; }
   /* Убираем старую сетку layout */
   .layout {
     display: flex;
@@ -2876,8 +2855,7 @@ html, body {
   
   $('boardRefresh').addEventListener('click',loadBoard);
 
-  
-  // Скрипты чата-панели (слева)
+  // Скрипты чата-панели
   var chatDrawer = $('chatDrawer');
   var chatOverlay = $('chatOverlay');
   var chatOpenBtn = $('chatOpenBtn');
@@ -2886,18 +2864,59 @@ html, body {
   function openChat() {
     chatDrawer.classList.add('open');
     chatOverlay.classList.add('open');
-    chatOpenBtn.style.left = '-50px';
+    chatOpenBtn.style.right = '-50px'; // Прячем кнопку открытия
   }
   function closeChat() {
     chatDrawer.classList.remove('open');
     chatOverlay.classList.remove('open');
-    chatOpenBtn.style.left = '0';
+    chatOpenBtn.style.right = '0'; // Возвращаем кнопку
   }
 
   if(chatOpenBtn) chatOpenBtn.addEventListener('click', openChat);
   if(chatCloseBtn) chatCloseBtn.addEventListener('click', closeChat);
   if(chatOverlay) chatOverlay.addEventListener('click', closeChat);
-// ---- предметы по классам. Поля: id, название, слот, класс, редкость, здоровье, урон, вид, цвет, акцент ----
+
+
+  /* ---------- внешний вид персонажа (рисуется кодом по id аккаунта) ---------- */
+  var SKIN=['#f6d3b3','#e9b98f','#c98e63','#8d5a3b','#f2c9a0'];
+  var HAIR=['#2b1d12','#6b3f1d','#c9822b','#e5c15c','#3a3a46','#b5472f'];
+  var SHIRT=['#e4572e','#2e86ab','#6bab55','#9b5de5','#f3a712','#e56399'];
+  var BGS=['#ffe8a3','#bde0fe','#c7f0d0','#ffcfd8','#e2d4ff','#ffd9b0'];
+  var PANTS=['#2b3a67','#3d405b','#5c8001','#7b2d26','#1d3557','#6d597a'];
+  var SHOES=['#ffffff','#f4f1de','#2a2a2a','#e63946'];
+  var BEARD=['#b5651d','#8c5a2f','#c9c9c9','#d98b3a'];
+  var INK='#2a1f14';
+  var OUT='stroke="'+INK+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
+
+  // Предметы. hp и atk прибавляются к базовым 100 здоровья и 5 урона.
+  // Головные уборы нарисованы в координатах головы, оружие в координатах руки (hand: R правая, L левая).
+  var ITEMS={
+    mage_hat:{name:'Колпак мага',slot:'head',r:'common',hp:10,atk:0,vb:'16 2 68 38',
+      draw:'<ellipse cx="50" cy="31" rx="29" ry="6" fill="#4f3aa6" '+OUT+'/>'
+        +'<path d="M33 31 Q44 20 49 6 Q56 22 67 31Z" fill="#6a4fc4" '+OUT+'/>'
+        +'<path d="M36 27.5 Q50 33 64 27.5" fill="none" stroke="#f6c343" stroke-width="3" stroke-linecap="round"/>'
+        +'<path d="M50 13 l1.6 4 l4 1.6 l-4 1.6 l-1.6 4 l-1.6 -4 l-4 -1.6 l4 -1.6Z" fill="#ffe066"/>'},
+    wand:{name:'Волшебная палочка',slot:'arms',hand:'R',r:'common',hp:0,atk:4,vb:'66 76 34 36',
+      draw:'<path d="M77 106 L87 91" fill="none" stroke="'+INK+'" stroke-width="5" stroke-linecap="round"/>'
+        +'<path d="M77 106 L87 91" fill="none" stroke="#a0703a" stroke-width="2.6" stroke-linecap="round"/>'
+        +'<path d="M88 83 l1.8 4.2 l4.2 1.8 l-4.2 1.8 l-1.8 4.2 l-1.8 -4.2 l-4.2 -1.8 l4.2 -1.8Z" fill="#ffe066" stroke="'+INK+'" stroke-width="1.3" stroke-linejoin="round"/>'},
+    war_helm:{name:'Каска',slot:'head',r:'common',hp:25,atk:0,vb:'14 8 72 42',
+      draw:'<path d="M23 42 C21 12 79 12 77 42Z" fill="#aab3bd" '+OUT+'/>'
+        +'<rect x="20" y="38" width="60" height="7" rx="3.5" fill="#8a939d" '+OUT+'/>'
+        +'<path d="M33 24 Q41 17 52 17" fill="none" stroke="#fff" stroke-width="3" opacity="0.6" stroke-linecap="round"/>'
+        +'<circle cx="50" cy="14" r="3" fill="#e63946" stroke="'+INK+'" stroke-width="1.6"/>'},
+    wood_sword:{name:'Деревянный меч',slot:'arms',hand:'R',r:'common',hp:0,atk:3,vb:'62 68 30 44',
+      draw:'<path d="M74.5 106 L74.5 83 L77 74 L79.5 83 L79.5 106Z" fill="#dcb982" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"/>'
+        +'<rect x="71" y="103" width="12" height="3.6" rx="1.5" fill="#8c5a2f" stroke="'+INK+'" stroke-width="1.6"/>'},
+    robin_hat:{name:'Шапка Робин Гуда',slot:'head',r:'common',hp:5,atk:0,vb:'14 2 82 46',
+      draw:'<path d="M24 38 C26 20 48 14 66 20 L86 12 L76 30 C77 34 77 38 76 40 Q50 30 24 42Z" fill="#3f8f3a" '+OUT+'/>'
+        +'<path d="M72 21 Q84 12 90 6" fill="none" stroke="#e63946" stroke-width="3.5" stroke-linecap="round"/>'},
+    toy_bow:{name:'Игрушечный лук',slot:'arms',hand:'L',r:'common',hp:0,atk:5,vb:'0 78 40 62',
+      draw:'<path d="M30 84 Q8 108 30 132" fill="none" stroke="'+INK+'" stroke-width="6" stroke-linecap="round"/>'
+        +'<path d="M30 84 Q8 108 30 132" fill="none" stroke="#b9854a" stroke-width="3" stroke-linecap="round"/>'
+        +'<path d="M30 84 L30 132" stroke="#f5f0e0" stroke-width="1.3"/>'}
+  };
+  // ---- предметы по классам. Поля: id, название, слот, класс, редкость, здоровье, урон, вид, цвет, акцент ----
   var K={
     body:function(c,a){return '<path d="M10 8 L16 6 Q20 10 24 6 L30 8 L33 18 L28 20 L28 34 L12 34 L12 20 L7 18Z" fill="'+c+'" '+OUT+'/>'+(a?'<path d="M14 16 H26 M14 22 H26 M14 28 H26" stroke="'+a+'" stroke-width="1.6"/>':'');},
     boots:function(c){return '<path d="M10 8 H20 V24 H31 V32 H10Z" fill="'+c+'" '+OUT+'/>';},
