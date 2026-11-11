@@ -2781,7 +2781,7 @@ html, body {
               btn.className = 'tab' + (isActive ? ' on' : '');
 
               btn.onclick = function() {
-                  if (['shop', 'forge', 'enchant', 'merchant', 'miner', 'market'].includes(b.id)) {
+                  if (['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(b.id)) {
                       showTab('shop');
                       if(typeof switchShopSubTab === 'function') switchShopSubTab(b.id === 'shop' ? 'races' : b.id);
                   } else if (b.id === 'inv') {
@@ -2828,7 +2828,7 @@ html, body {
     if (which === 'game') $('gamePane').hidden = false;
     else if (which === 'char') $('charPane').hidden = false;
     else if (which === 'board') $('boardPane').hidden = false;
-    else if (['shop', 'forge', 'enchant', 'merchant', 'miner', 'market'].includes(which)) $('shopPane').hidden = false;
+    else if (['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(which)) $('shopPane').hidden = false;
     else if (which === 'dg') $('dgPane').hidden = false;
     else if (which === 'market' && $('marketPane')) $('marketPane').hidden = false;
     else if (which === 'pets' && $('petsPane')) $('petsPane').hidden = false;
