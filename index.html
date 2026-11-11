@@ -896,50 +896,58 @@ html, body {
     box-sizing: border-box;
     margin-bottom: 12px;
     position: relative;
-    overflow: visible; /* ИСПРАВЛЕНИЕ: чтобы тень и кнопки не обрезались */
+    overflow: visible;
   }
   /* Свайп-лента для подкатегорий */
   .swipe-menu {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
-    overflow-y: visible; /* ИСПРАВЛЕНИЕ: убираем вертикальное обрезание */
+    overflow-y: visible;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
-    padding: 8px 4px; /* Увеличен padding для теней и фокусов */
+    padding: 6px 4px;
     scrollbar-width: none;
     max-width: 100%;
     align-items: center;
     justify-content: center;
   }
   .swipe-menu::-webkit-scrollbar { display: none; }
-  .swipe-menu button { flex: none; transition: background-color 0.2s ease, color 0.2s ease; margin: 0; }
+  .swipe-menu button { 
+    flex: none; 
+    transition: all 0.2s ease; 
+    margin: 0;
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 16px;
+    min-height: 32px;
+  }
 
-  /* Стрелки навигации для ПК - возвращаем и делаем красивыми */
+  /* Стрелки навигации для ПК */
   .scroll-btn {
     background: var(--card);
     border: 1px solid var(--line);
     color: var(--gold);
-    font-size: 16px;
-    width: 32px;
-    height: 32px;
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     cursor: pointer;
     flex: none;
     display: none;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     z-index: 5;
     margin: 0 4px;
+    transition: 0.2s;
   }
-  .scroll-btn:hover { filter: brightness(1.15); background: var(--gold); color: #1b1405; }
+  .scroll-btn:hover { filter: brightness(1.15); background: var(--gold); color: #1b1405; transform: scale(1.1); }
   
   @media (pointer: fine) {
     .scroll-btn { display: inline-flex; }
-    .swipe-menu { max-width: calc(100% - 90px); justify-content: flex-start; }
-    /* Трюк с before/after ломал центрирование при justify-content flex-start */
+    .swipe-menu { max-width: calc(100% - 80px); justify-content: flex-start; }
   }
 
   /* Новый цвет для активных подвкладок */
@@ -947,7 +955,8 @@ html, body {
     background: var(--felt);
     color: #fff !important;
     border-color: var(--felt);
-    box-shadow: 0 4px 12px rgba(31, 90, 63, 0.4);
+    box-shadow: 0 3px 8px rgba(31, 90, 63, 0.4);
+    transform: translateY(-1px);
   }
 
   /* ВЫДВИЖНОЙ ЧАТ СЛЕВА */
@@ -2750,21 +2759,26 @@ html, body {
       'adv': [{id:'dg', label:'Экспедиция'}, {id:'raid', label:'Рейд 🌍'}, {id:'events', label:'Ивенты 🎃'}]
   };
   
+  var _lastHub = '';
   function renderSwipeMenu(hub) {
       var menu = $('swipeMenu');
       var wrap = $('swipeWrap');
       if (!menu || !wrap) return;
-      menu.innerHTML = '';
       
       var btns = HUB_TABS[hub] || [];
       if (btns.length <= 1) {
           wrap.style.display = 'none';
-      } else {
-          wrap.style.display = 'flex';
+          _lastHub = hub;
+          return;
+      }
+      wrap.style.display = 'flex';
+
+      if (_lastHub !== hub) {
+          menu.innerHTML = '';
           btns.forEach(function(b) {
               var btn = document.createElement('button');
               btn.type = 'button';
-              btn.className = 'tab' + (curTab === b.id || (curTab==='shop' && curShopSub===b.id) ? ' on' : '');
+              btn.id = 'swipe_btn_' + b.id;
               
               if (b.id === 'char' && !$('dot').hidden) {
                    btn.innerHTML = b.label + '<span class="dot"></span>';
@@ -2772,72 +2786,75 @@ html, body {
                    btn.textContent = b.label;
               }
               
-              // Определяем, активна ли кнопка прямо сейчас при рендере
+              btn.onclick = function() { showTab(b.id); };
+              menu.appendChild(btn);
+          });
+          _lastHub = hub;
+      }
+
+      // Обновляем классы без перерисовки DOM (чтобы не было мигания)
+      btns.forEach(function(b) {
+          var btn = $('swipe_btn_' + b.id);
+          if (btn) {
               var isActive = false;
               if (curTab === b.id) isActive = true;
               else if (curTab === 'shop' && curShopSub === b.id) isActive = true;
               else if (curTab === 'shop' && curShopSub === 'races' && b.id === 'shop') isActive = true;
               
               btn.className = 'tab' + (isActive ? ' on' : '');
-
-              btn.onclick = function() {
-                  if (['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(b.id)) {
-                      curShopSub = (b.id === 'shop' ? 'races' : b.id);
-                      if(typeof switchShopSubTab === 'function') switchShopSubTab(curShopSub);
-                      showTab('shop');
-                  } else if (b.id === 'inv') {
-                      showTab('char');
-                      setTimeout(function(){
-                          var invT = document.querySelector('.invTitle');
-                          if(invT) invT.scrollIntoView({behavior: 'smooth'});
-                      }, 50);
-                  } else if (b.id === 'tavern') {
-                      showTab('game');
-                      setTimeout(function(){
-                          var tav = $('tavernBox');
-                          if(tav) tav.scrollIntoView({behavior: 'smooth'});
-                      }, 50);
-                  } else {
-                      showTab(b.id);
-                  }
-              };
-              menu.appendChild(btn);
-          });
-      }
+          }
+      });
   }
 
   function showTab(which){
-    curTab=which;
-    
-    // Определяем, какому хабу принадлежит вкладка, чтобы подсветить нужную кнопку сверху
-    if (['game', 'tavern'].includes(which)) curHub = 'game';
-    else if (['char', 'inv', 'board'].includes(which)) curHub = 'char';
-    else if (['shop', 'market', 'pets', 'forge', 'enchant', 'merchant', 'miner'].includes(which)) curHub = 'city';
-    else if (['dg', 'raid', 'events'].includes(which)) curHub = 'adv';
-    
-    // Прячем всё
-    $('gamePane').hidden=true;
-    $('charPane').hidden=true;
-    $('boardPane').hidden=true;
-    $('shopPane').hidden=true;
-    $('dgPane').hidden=true;
-    if($('marketPane')) $('marketPane').hidden=true;
-    if($('petsPane')) $('petsPane').hidden=true;
-    if($('raidPane')) $('raidPane').hidden=true;
-    if($('eventsPane')) $('eventsPane').hidden=true;
+    curTab = which;
+    var hubMap = {
+        'game': 'game', 'tavern': 'game',
+        'char': 'char', 'inv': 'char', 'board': 'char',
+        'shop': 'city', 'market': 'city', 'merchant': 'city', 'forge': 'city', 'enchant': 'city', 'miner': 'city', 'pets': 'city',
+        'dg': 'adv', 'raid': 'adv', 'events': 'adv'
+    };
+    curHub = hubMap[which] || 'game';
 
-    // Показываем нужную
-    if (which === 'game') $('gamePane').hidden = false;
-    else if (which === 'char') $('charPane').hidden = false;
-    else if (which === 'board') $('boardPane').hidden = false;
-    else if (['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(which)) $('shopPane').hidden = false;
-    else if (which === 'dg') $('dgPane').hidden = false;
+    $('gamePane').hidden = true;
+    $('charPane').hidden = true;
+    $('boardPane').hidden = true;
+    $('shopPane').hidden = true;
+    $('dgPane').hidden = true;
+    if($('marketPane')) $('marketPane').hidden = true;
+    if($('petsPane')) $('petsPane').hidden = true;
+    if($('raidPane')) $('raidPane').hidden = true;
+    if($('eventsPane')) $('eventsPane').hidden = true;
+
+    if (which === 'game' || which === 'tavern') {
+        $('gamePane').hidden = false;
+        if (which === 'tavern' && $('tavernBox')) setTimeout(function(){ $('tavernBox').scrollIntoView({behavior: 'smooth'}); }, 50);
+    }
+    else if (which === 'char' || which === 'inv') {
+        $('charPane').hidden = false;
+        if (which === 'inv' && document.querySelector('.invTitle')) setTimeout(function(){ document.querySelector('.invTitle').scrollIntoView({behavior: 'smooth'}); }, 50);
+    }
+    else if (which === 'board') {
+        $('boardPane').hidden = false;
+    }
+    else if (['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(which)) {
+        $('shopPane').hidden = false;
+        var smap = {shop:'shopBody', forge:'forgeBody', enchant:'enchantBody', merchant:'merchantBody', miner:'minerBody'};
+        Object.keys(smap).forEach(function(k){
+            var el = $(smap[k]);
+            if(el) {
+                el.hidden = (k !== which);
+                el.style.display = (k === which) ? (k === 'shop' ? 'flex' : 'block') : 'none';
+            }
+        });
+        curShopSub = (which === 'shop' ? 'races' : which);
+    }
     else if (which === 'market' && $('marketPane')) $('marketPane').hidden = false;
     else if (which === 'pets' && $('petsPane')) $('petsPane').hidden = false;
+    else if (which === 'dg') $('dgPane').hidden = false;
     else if (which === 'raid' && $('raidPane')) $('raidPane').hidden = false;
     else if (which === 'events' && $('eventsPane')) $('eventsPane').hidden = false;
 
-    // Обновляем главные кнопки хабов
     if($('mainHubs')) {
         $('mainHubs').querySelectorAll('button').forEach(function(b) {
             b.className = 'tab' + (b.getAttribute('data-hub') === curHub ? ' on' : '');
@@ -2846,17 +2863,17 @@ html, body {
     
     renderSwipeMenu(curHub);
 
-    if(which==='game') draw();
-    if(which==='char'){$('dot').hidden=true; renderChar();}
-    if(which==='board') loadBoard();
+    if(which === 'game' || which === 'tavern') draw();
+    if(which === 'char' || which === 'inv') { $('dot').hidden = true; renderChar(); }
+    if(which === 'board') loadBoard();
     if(['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(which)) renderShop();
-    if(which==='dg') renderDg();
-    if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
-    if(which==='events' && typeof renderHalloweenEventUI === 'function') renderHalloweenEventUI();
+    if(which === 'dg') renderDg();
+    if(which === 'pets' && typeof renderPetsV23 === 'function') renderPetsV23();
+    if(which === 'events' && typeof renderHalloweenEventUI === 'function') renderHalloweenEventUI();
     
     updateFloatWheelState();
     drawMiniWheels();
-  }
+}
   
   // Привязка кликов к главным кнопкам хабов
   setTimeout(function() {
@@ -4717,26 +4734,7 @@ function load(){
   // Под-вкладки Магазина (Скупщик, Кузница, Зачарование, Расы и Классы, Шахтёр)
   var curShopSub='races';
   function switchShopSubTab(sub){
-    curShopSub=sub;
-    var map={races:'shopBody',forge:'forgeBody',enchant:'enchantBody',merchant:'merchantBody',miner:'minerBody'};
-    Object.keys(map).forEach(function(k){
-      var el=$(map[k]);
-      if(el){
-        el.hidden=(k!==sub);
-        el.style.display=(k===sub)?(k==='races'?'flex':'block'):'none';
-      }
-    });
-    var tabs=$('shopSubTabs');
-    if(tabs){
-      tabs.querySelectorAll('button[data-shoptab]').forEach(function(b){
-        b.className='tab'+(b.getAttribute('data-shoptab')===sub?' on':'');
-      });
-    }
-    if(sub==='enchant')renderEnchantPanel();
-    if(sub==='merchant')renderMerchant();
-    if(sub==='forge')renderForge();
-    if(sub==='miner')renderMinerPanel();
-    applySpoilers($('shopPane'));
+    showTab(sub === 'races' ? 'shop' : sub);
   }
   if($('shopSubTabs')){
     $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b){
