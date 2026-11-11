@@ -892,7 +892,7 @@ html, body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    max-width: 100vw;
+    max-width: 520px; /* Symmetry with main layout */
     box-sizing: border-box;
     margin-bottom: 12px;
     position: relative;
@@ -901,62 +901,74 @@ html, body {
   /* Свайп-лента для подкатегорий */
   .swipe-menu {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     overflow-x: auto;
     overflow-y: visible;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
-    padding: 6px 4px;
+    padding: 6px 0;
     scrollbar-width: none;
-    max-width: 100%;
+    max-width: calc(100% - 64px);
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .swipe-menu::-webkit-scrollbar { display: none; }
   .swipe-menu button { 
     flex: none; 
     transition: all 0.2s ease; 
     margin: 0;
-    padding: 6px 14px;
+    padding: 5px 14px;
     font-size: 13px;
-    border-radius: 16px;
-    min-height: 32px;
+    font-weight: 600;
+    border-radius: 999px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    min-height: 30px;
+  }
+  .swipe-menu button:hover {
+    color: var(--ink);
+    border-color: var(--muted);
   }
 
   /* Стрелки навигации для ПК */
   .scroll-btn {
-    background: var(--card);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg);
     border: 1px solid var(--line);
-    color: var(--gold);
-    font-size: 14px;
-    width: 28px;
-    height: 28px;
+    color: var(--muted);
+    font-size: 12px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     cursor: pointer;
-    flex: none;
     display: none;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     z-index: 5;
-    margin: 0 4px;
     transition: 0.2s;
   }
-  .scroll-btn:hover { filter: brightness(1.15); background: var(--gold); color: #1b1405; transform: scale(1.1); }
+  .scroll-btn:hover { 
+    color: var(--ink);
+    border-color: var(--muted);
+    background: var(--card);
+  }
+  #scrollLeft { left: 0; }
+  #scrollRight { right: 0; }
   
   @media (pointer: fine) {
     .scroll-btn { display: inline-flex; }
-    .swipe-menu { max-width: calc(100% - 80px); justify-content: flex-start; }
   }
 
   /* Новый цвет для активных подвкладок */
-  #swipeMenu .tab.on {
+  #swipeMenu button.on {
     background: var(--felt);
     color: #fff !important;
     border-color: var(--felt);
-    box-shadow: 0 3px 8px rgba(31, 90, 63, 0.4);
-    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(31, 90, 63, 0.35);
   }
 
   /* ВЫДВИЖНОЙ ЧАТ СЛЕВА */
@@ -4734,7 +4746,15 @@ function load(){
   // Под-вкладки Магазина (Скупщик, Кузница, Зачарование, Расы и Классы, Шахтёр)
   var curShopSub='races';
   function switchShopSubTab(sub){
-    showTab(sub === 'races' ? 'shop' : sub);
+    curShopSub = sub;
+    var map = {races:'shopBody', forge:'forgeBody', enchant:'enchantBody', merchant:'merchantBody', miner:'minerBody'};
+    Object.keys(map).forEach(function(k){
+      var el = document.getElementById(map[k]);
+      if(el){
+        el.hidden = (k !== sub);
+        el.style.display = (k === sub) ? (k === 'races' ? 'flex' : 'block') : 'none';
+      }
+    });
   }
   if($('shopSubTabs')){
     $('shopSubTabs').querySelectorAll('button[data-shoptab]').forEach(function(b){
