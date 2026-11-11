@@ -3724,11 +3724,22 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
   var APP_V=26;
   var updating=false;
-  function showUpdate(){
-    if(updating) return; updating=true;
+  /* Обычный location.reload() на GitHub Pages может вернуть СТАРУЮ страницу из кэша (до ~10 минут),
+     хотя проверка версии (с ?v=...) уже видит новую. Тогда окно «вышла новая версия» появлялось снова и снова.
+     Поэтому обновляемся через адрес с уникальным параметром, а от зацикливания страхуемся. */
+  function goFresh(){ location.replace(location.pathname+'?u='+Date.now()); }
+  try{ if(/[?&]u=\d+/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
+  function showUpdate(newV){
+    if(updating) return;
+    var key='roulette_upd_try', now=Date.now(), o=null;
+    try{ o=JSON.parse(sessionStorage.getItem(key)||'null'); }catch(e){}
+    // уже обновлялись ради этой версии меньше 2 минут назад, а страница всё ещё старая — не зацикливаемся
+    if(o&&o.v===newV&&now-o.t<120000) return;
+    try{ sessionStorage.setItem(key,JSON.stringify({t:now,v:newV})); }catch(e){}
+    updating=true;
     btn.classList.add('busy'); guard.blockedUntil=Infinity;
     $('umodal').hidden=false;
-    setTimeout(function(){location.reload();},6000);
+    setTimeout(goFresh,6000);
   }
   function checkUpdate(){
     if(updating||document.hidden) return;
@@ -3738,7 +3749,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
     fetch(location.pathname+'?v='+Date.now(),{cache:'no-store',signal:ctrl&&ctrl.signal})
       .then(function(r){
         var re=/<meta name="app-version" content="(\d+)"/;
-        function verdict(h){var m=re.exec(h);if(m&&Number(m[1])>APP_V) showUpdate();}
+        function verdict(h){var m=re.exec(h);if(m&&Number(m[1])>APP_V) showUpdate(Number(m[1]));}
         if(!r.body||!r.body.getReader||!ctrl) return r.text().then(verdict);
         var rd=r.body.getReader(),dec=new TextDecoder(),buf='';
         function pump(){
@@ -3751,7 +3762,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
         return pump();
       }).catch(function(){});
   }
-  $('reloadNow').addEventListener('click',function(){location.reload();});
+  $('reloadNow').addEventListener('click',goFresh);
   setInterval(checkUpdate,60000);
   document.addEventListener('visibilitychange',checkUpdate);
   setTimeout(checkUpdate,3000);
