@@ -2782,22 +2782,24 @@ html, body {
 
               btn.onclick = function() {
                   if (['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(b.id)) {
+                      curShopSub = (b.id === 'shop' ? 'races' : b.id);
+                      if(typeof switchShopSubTab === 'function') switchShopSubTab(curShopSub);
                       showTab('shop');
-                      if(typeof switchShopSubTab === 'function') switchShopSubTab(b.id === 'shop' ? 'races' : b.id);
                   } else if (b.id === 'inv') {
                       showTab('char');
-                      var invT = document.querySelector('.invTitle');
-                      if(invT) invT.scrollIntoView({behavior: 'smooth'});
+                      setTimeout(function(){
+                          var invT = document.querySelector('.invTitle');
+                          if(invT) invT.scrollIntoView({behavior: 'smooth'});
+                      }, 50);
                   } else if (b.id === 'tavern') {
                       showTab('game');
-                      var tav = $('tavernBox');
-                      if(tav) tav.scrollIntoView({behavior: 'smooth'});
+                      setTimeout(function(){
+                          var tav = $('tavernBox');
+                          if(tav) tav.scrollIntoView({behavior: 'smooth'});
+                      }, 50);
                   } else {
                       showTab(b.id);
                   }
-                  
-                  Array.from(menu.children).forEach(function(c) { c.className = 'tab'; });
-                  btn.className = 'tab on';
               };
               menu.appendChild(btn);
           });
@@ -2847,7 +2849,7 @@ html, body {
     if(which==='game') draw();
     if(which==='char'){$('dot').hidden=true; renderChar();}
     if(which==='board') loadBoard();
-    if(which==='shop' || ['forge', 'enchant', 'merchant'].includes(which)) renderShop();
+    if(['shop', 'forge', 'enchant', 'merchant', 'miner'].includes(which)) renderShop();
     if(which==='dg') renderDg();
     if(which==='pets' && typeof renderPetsV23 === 'function') renderPetsV23();
     if(which==='events' && typeof renderHalloweenEventUI === 'function') renderHalloweenEventUI();
