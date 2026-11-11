@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="25">
-<title>Рулетка с чатом · Версия 25</title>
+<meta name="app-version" content="26">
+<title>Рулетка с чатом · Версия 26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
 <style>
 :root{
@@ -29,7 +31,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{
-  margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+  margin:0; min-height:100vh; min-height:100dvh; background:var(--bg); color:var(--ink);
   font-family:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
   padding:24px 16px 40px;
 }
@@ -1258,6 +1260,8 @@ html, body {
 <div class="modal" id="umodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Вышла новая версия игры. Страница сейчас обновится.</p><button id="reloadNow">Обновить сейчас</button></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script>
@@ -1326,6 +1330,36 @@ html, body {
       });
     });
   }
+  /* ---------- вход в Firebase SDK ----------
+     Чат и сохранения идут через REST, а рынок (Firestore) и рейд (Realtime Database SDK) работают через SDK.
+     Правилам Firestore нужен request.auth, поэтому SDK тоже должен быть авторизован тем же аккаунтом. */
+  function sdkApp(){
+    if(firebase.apps && firebase.apps.length) return;
+    var m=/https:\/\/([a-z0-9-]+?)(?:-default-rtdb)?\.firebaseio\.com/i.exec(DB_URL||'');
+    firebase.initializeApp({apiKey:API_KEY,databaseURL:DB_URL,projectId:(CFG&&CFG.PROJECT_ID)||(m&&m[1])||'flamer-b1592'});
+  }
+  function sdkSignIn(email,pass){
+    try{
+      if(typeof firebase==='undefined'||!firebase.auth) return Promise.resolve();
+      sdkApp();
+      return firebase.auth().signInWithEmailAndPassword(email,pass).catch(function(){});
+    }catch(e){ return Promise.resolve(); }
+  }
+  // true, если SDK уже вошёл под тем же аккаунтом (или SDK недоступен и блокировать вход незачем)
+  function sdkReady(){
+    return new Promise(function(resolve){
+      try{
+        if(typeof firebase==='undefined'||!firebase.auth){ resolve(true); return; }
+        sdkApp();
+        var done=false, off=null;
+        var timer=setTimeout(function(){ if(!done){ done=true; resolve(true); } },5000);
+        off=firebase.auth().onAuthStateChanged(function(u){
+          if(done) return; done=true; clearTimeout(timer); if(off) off();
+          resolve(!!u && u.uid===sess.uid);
+        });
+      }catch(e){ resolve(true); }
+    });
+  }
   function submit(mode){
     setErr('');
     if(!configured()){setErr('В файле config.js не заполнен API_KEY');return;}
@@ -1337,7 +1371,7 @@ html, body {
       .then(function(d){
         if(d.error) throw (d.error.message||'ERROR');
         sess={uid:d.localId,idToken:d.idToken,refreshToken:d.refreshToken,exp:Date.now()+(Number(d.expiresIn)||3600)*1000};
-        persist(); return ensureProfile(name);
+        persist(); return ensureProfile(name).then(function(n){ return sdkSignIn(emailFor(name),pass).then(function(){ return n; }); });
       })
       .then(function(n){ sess.name=n; start(); })
       .catch(function(e){ sess=null; setErr(msgFor(String(e))); })
@@ -1352,6 +1386,7 @@ html, body {
     if(merchantBusy){toast("Дождись завершения сохранения.");return;}minerResetClock();
     sess=null; game=null; gameLoaded=false; mySid=''; clearTimeout(loadRetry); docs=[]; lastSig=''; chatMap={}; chatLast=''; $('coinBox').hidden=true; $('newsOpen').hidden=true;
     try{localStorage.removeItem('roulette_sess');}catch(e){}
+    try{ if(typeof firebase!=='undefined'&&firebase.auth&&firebase.apps&&firebase.apps.length) firebase.auth().signOut(); }catch(e){}
     $('app').hidden=true; $('login').hidden=false; setErr('');
   }
   function restore(){
@@ -1359,8 +1394,8 @@ html, body {
     if(!s||!s.refreshToken||!configured()) return;
     sess={refreshToken:s.refreshToken,exp:0}; setBusy(true);
     refresh().then(function(){return ensureProfile(null);})
-      .then(function(n){ sess.name=n; start(); })
-      .catch(function(){ sess=null; })
+      .then(function(n){ sess.name=n; return sdkReady().then(function(ok){ if(!ok) throw 'RELOGIN'; start(); }); })
+      .catch(function(e){ sess=null; if(e==='RELOGIN') setErr('Обновление: войди заново один раз, иначе не заработают рынок и рейд.'); })
       .then(function(){ setBusy(false); });
   }
   $('enter').addEventListener('click',function(){submit('signIn');});
@@ -2483,7 +2518,9 @@ html, body {
   }
 
   function renderEvent(){
-    minerClock();renderMiner();
+    minerClock();
+    if(document.hidden) return;
+    renderMiner();
  var bar=$('eventBar');if(!bar||$('app').hidden)return;
  if(!game){$('evT').textContent='Загружаем персонажа…';$('evS').textContent='Подожди, загружаем сохранение.';$('evBtn').hidden=true;return;}
  var now=Date.now(),slot=slotNow(),el=now-slot*HOUR,f=game.fight;
@@ -3685,7 +3722,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   /* ---------- принудительное обновление ---------- */
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
-  var APP_V=25;
+  var APP_V=26;
   var updating=false;
   function showUpdate(){
     if(updating) return; updating=true;
@@ -3695,11 +3732,23 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   function checkUpdate(){
     if(updating||document.hidden) return;
-    fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'})
-      .then(function(r){return r.text();})
-      .then(function(h){
-        var m=/<meta name="app-version" content="(\d+)"/.exec(h);
-        if(m&&Number(m[1])>APP_V) showUpdate();
+    // Тег app-version лежит в самом начале файла, поэтому читаем только первые ~4 КБ
+    // и обрываем загрузку, а не качаем всю страницу (около 668 КБ) каждую минуту.
+    var ctrl=window.AbortController?new AbortController():null;
+    fetch(location.pathname+'?v='+Date.now(),{cache:'no-store',signal:ctrl&&ctrl.signal})
+      .then(function(r){
+        var re=/<meta name="app-version" content="(\d+)"/;
+        function verdict(h){var m=re.exec(h);if(m&&Number(m[1])>APP_V) showUpdate();}
+        if(!r.body||!r.body.getReader||!ctrl) return r.text().then(verdict);
+        var rd=r.body.getReader(),dec=new TextDecoder(),buf='';
+        function pump(){
+          return rd.read().then(function(x){
+            if(x.value) buf+=dec.decode(x.value,{stream:true});
+            if(re.test(buf)||x.done||buf.length>4096){ ctrl.abort(); verdict(buf); return; }
+            return pump();
+          });
+        }
+        return pump();
       }).catch(function(){});
   }
   $('reloadNow').addEventListener('click',function(){location.reload();});
@@ -3707,7 +3756,11 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   document.addEventListener('visibilitychange',checkUpdate);
   setTimeout(checkUpdate,3000);
   btn.addEventListener('click',onSpinClick);
-  window.addEventListener('resize',draw);
+  var resizeQueued=false;
+  window.addEventListener('resize',function(){
+    if(resizeQueued) return; resizeQueued=true;
+    requestAnimationFrame(function(){ resizeQueued=false; draw(); });
+  });
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
 
   /* ---------- чат (Firebase Realtime Database через обычные запросы) ---------- */
@@ -3810,7 +3863,8 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   
   // Таймер до рейда
   setInterval(function() {
-      if(!raidActive && $('raidStatus')) {
+      if(document.hidden) return;
+      if(!raidActive && $('raidStatus') && $('raidStatus').offsetParent !== null) {
           var d = new Date();
           var h = d.getHours();
           var m = d.getMinutes();
@@ -4576,7 +4630,7 @@ function load(){
     }
   });
 
-  setInterval(function(){minerClock();renderMiner();var now=performance.now();if(now-minerLastFlush>=15000){minerLastFlush=now;if(minerEligible()&&canSell()&&$('modal').hidden)minerPerform('collect');}},1000);
+  setInterval(function(){minerClock();if(!document.hidden)renderMiner();var now=performance.now();if(now-minerLastFlush>=15000){minerLastFlush=now;if(minerEligible()&&canSell()&&$('modal').hidden)minerPerform('collect');}},1000);
   document.addEventListener('visibilitychange',function(){minerTickAt=performance.now();minerWasEligible=false;renderMiner();if(document.hidden&&canSell()&&minerPendingMs)minerPerform('collect');});
 
 
@@ -5803,7 +5857,7 @@ function load(){
   }
 
   setInterval(function(){
-    if(curTab === 'events') renderHalloweenEventUI();
+    if(curTab === 'events' && !document.hidden) renderHalloweenEventUI();
   }, 1000);
 
   var FILL_HALLOWEEN = {green:'#2f8f4e', red:'#ff7518', black:'#1e1024'};
@@ -10836,7 +10890,7 @@ function startFirestoreListenersV20(){
   };
 
   window.removeEventListener('resize', _finalDrawHw);
-  window.addEventListener('resize', function(){ draw(); });
+  /* resize уже обрабатывается выше (через requestAnimationFrame) */
   if(document.fonts && document.fonts.ready){
     document.fonts.ready.then(function(){ draw(); });
   }
