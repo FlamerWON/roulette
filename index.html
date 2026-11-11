@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="26">
-<title>Рулетка с чатом · Версия 26</title>
+<meta name="app-version" content="27">
+<title>Рулетка с чатом · Версия 27</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
@@ -1470,7 +1470,6 @@ html, body {
     m.gold=Math.min(m.gold,MINER_GOLD_CAP);m.stones=Math.min(m.stones,MINER_STONE_CAP);m.coinMs%=60000;m.stoneMs%=180000;
     g.miner=m;return m;
   }
-  function minerActive(g){return g&&g.miner&&g.miner.owned&&g.miner.owned[g.miner.active]?g.miner.active:'';}
   function minerRole(roll){if(!Number.isFinite(roll)||roll<0||roll>=1)throw Error('Нет случайного результата');return roll<.4?'resident':roll<.7?'defender':'gladiator';}
   function minerVictory(){if(!game)return;var m=initMiner(game);m.wins=Math.min(3,m.wins+1);renderMinerPanel();renderMiner();}
   function minerPlan(g,action,role,elapsed,today,draw,id){
@@ -1725,26 +1724,6 @@ html, body {
   function copySellPrice(g,i){
     var id=g.inv&&g.inv[i],it=ITEMS[id];if(!it)return 0;
     return (SELL_PRICES[it.r]||8)+(ENHANCE_SELL_BONUS[copyLevel(g,i)]||0);
-  }
-  function saleCopyIndices(g,id,duplicates,exactIndex){
-    var groups={},remove={};
-    if(Number.isInteger(exactIndex)&&exactIndex>=0&&g.inv&&ITEMS[g.inv[exactIndex]]){
-      var eKey=g.inv[exactIndex],eIt=ITEMS[eKey],eWorn=wornIndex(g,eIt.slot);
-      if(saleProtected(g,eKey)||exactIndex===eWorn)return remove;
-      var totalSame=0;g.inv.forEach(function(k){if(k===eKey)totalSame++;});
-      if(isStarterItem(eKey)&&totalSame<=1)return remove;
-      remove[exactIndex]=true;return remove;
-    }
-    (g.inv||[]).forEach(function(key,i){(groups[key]||(groups[key]=[])).push(i);});
-    Object.keys(groups).forEach(function(key){
-      if(id&&key!==id||saleProtected(g,key))return;
-      var indices=groups[key],it=ITEMS[key],worn=wornIndex(g,it.slot),protectedCount=0;
-      var available=indices.filter(function(i){var protect=(duplicates&&copyLevel(g,i)>0)||i===worn;if(protect)protectedCount++;return !protect;});
-      available.sort(function(a,b){return copyLevel(g,a)-copyLevel(g,b)||(a-b);});
-      var leave=(duplicates||isStarterItem(key))&&protectedCount===0?1:0;
-      var n=duplicates?Math.max(0,available.length-leave):Math.min(1,Math.max(0,available.length-leave));
-      available.slice(available.length-n).forEach(function(i){remove[i]=true;});
-    });return remove;
   }
   function forgePlan(g,type,i,count,random){
     var next=JSON.parse(JSON.stringify(g));initEnhancement(next);
@@ -3723,7 +3702,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   /* ---------- принудительное обновление ---------- */
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
-  var APP_V=Number((document.querySelector('meta[name="app-version"]')||{}).content)||26;
+  var APP_V=Number((document.querySelector('meta[name="app-version"]')||{}).content)||27;
   var updating=false;
   /* Обычный location.reload() на GitHub Pages может вернуть СТАРУЮ страницу из кэша (до ~10 минут),
      хотя проверка версии (с ?v=...) уже видит новую. Тогда окно «вышла новая версия» появлялось снова и снова.
@@ -8753,7 +8732,7 @@ function startFirestoreListenersV20(){
   restore();
 
   /* ================== МЕГА-ПАТЧ V22 (ВСЕ 7 ПУНКТОВ + ФИКС ВЕЧНОГО ОБНОВЛЕНИЯ) ================== */
-  APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 22;
+  APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 27;
   RELEASE_ID = 25;
 
   // --- ПУНКТ 3 (часть 1): Универсальный класс "all" для Реликтовой брони Боссов ---
