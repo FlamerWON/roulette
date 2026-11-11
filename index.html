@@ -893,6 +893,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     width: 100%;
     max-width: 520px; /* Symmetry with main layout */
     box-sizing: border-box;
@@ -911,7 +912,8 @@ html, body {
     white-space: nowrap;
     padding: 6px 0;
     scrollbar-width: none;
-    max-width: calc(100% - 64px);
+    flex: 0 1 auto;   /* лента занимает место между стрелками и не заезжает под них */
+    min-width: 0;
     align-items: center;
     justify-content: flex-start;
   }
@@ -936,30 +938,29 @@ html, body {
 
   /* Стрелки навигации для ПК */
   .scroll-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--bg);
-    border: 1px solid var(--line);
-    color: var(--muted);
-    font-size: 12px;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
+    flex: none;
+    box-sizing: border-box;
+    padding: 0;               /* общий стиль button даёт padding 12px 30px и раздувал стрелку поверх вкладок */
+    background: var(--card);
+    border: 2px solid var(--line);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;       /* квадратная обводка; поставь 0, если нужны совсем острые углы */
     cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 5;
     transition: 0.2s;
   }
   .scroll-btn:hover { 
     color: var(--ink);
-    border-color: var(--muted);
+    border-color: var(--gold);
     background: var(--card);
+    filter: none;
   }
-  #scrollLeft { left: 0; }
-  #scrollRight { right: 0; }
   
   @media (pointer: fine) {
     .scroll-btn { display: inline-flex; }
@@ -3722,7 +3723,7 @@ ITEMS.mage_hat.draw=armorHead('mage_hat','#6a4fc4','#ffe066','hat');ITEMS.mage_h
   }
   /* ---------- принудительное обновление ---------- */
   // Номер версии лежит в <meta name="app-version"> вверху файла. Выпустил обновление — увеличь число там.
-  var APP_V=26;
+  var APP_V=Number((document.querySelector('meta[name="app-version"]')||{}).content)||26;
   var updating=false;
   /* Обычный location.reload() на GitHub Pages может вернуть СТАРУЮ страницу из кэша (до ~10 минут),
      хотя проверка версии (с ?v=...) уже видит новую. Тогда окно «вышла новая версия» появлялось снова и снова.
@@ -5960,7 +5961,7 @@ function load(){
 /* ================== КОНЕЦ МОДУЛЯ UPDATE 19 ================== */
 
   /* ================== МОДУЛЬ UPDATE 20 (ПОЛНЫЙ + АУДИТ И ОПТИМИЗАЦИЯ) ================== */
-  APP_V = 25;
+  /* версия берётся из <meta name="app-version"> (единственный источник) */
   RELEASE_ID = 25;
   RELEASE_NOTES.unshift({
     title: 'Версия 22 · Мировой Босс, Анти-Фарм и Сеты',
@@ -8227,9 +8228,11 @@ function startFirestoreListenersV20(){
       mp.hidden = (which !== 'market');
       mp.style.display = (which === 'market') ? 'flex' : 'none';
     }
+    // shopPane общая для Магазина, Кузницы, Алтаря, Скупщика и Шахтёра (тело нужной вкладки выбирает базовый showTab)
+    var inShopPane = ['shop','forge','enchant','merchant','miner'].indexOf(which) !== -1;
     if($('shopPane')){
-      $('shopPane').hidden = (which !== 'shop');
-      $('shopPane').style.display = (which === 'shop') ? 'flex' : 'none';
+      $('shopPane').hidden = !inShopPane;
+      $('shopPane').style.display = inShopPane ? 'flex' : 'none';
     }
     if($('tabMarket')) $('tabMarket').className = 'tab' + (which === 'market' ? ' on' : '');
     updateLockedTabsV20();
@@ -8275,7 +8278,7 @@ function startFirestoreListenersV20(){
 
 
 /* ================== МОДУЛЬ UPDATE 21 (ФИНАЛ: АЛХИМИЯ, АНТИ-АБУЗ, СЕТЫ, ФИКСЫ) ================== */
-  APP_V = 25;
+  /* версия берётся из <meta name="app-version"> (единственный источник) */
   RELEASE_ID = 25;
   
   if(!window.v21PatchApplied){
@@ -9573,7 +9576,7 @@ function startFirestoreListenersV20(){
   };
 
   /* ================== МОДУЛЬ UPDATE 24: 20 РАНГОВ ОТ УРОВНЯ, МЕДЛЕННАЯ ПРОКАЧКА И НОВЫЙ ЛУТ ================== */
-  APP_V = 25;
+  /* версия берётся из <meta name="app-version"> (единственный источник) */
   RELEASE_ID = 25;
 
   var RANK_NAMES_V24 = [
