@@ -12619,7 +12619,9 @@ function startFirestoreListenersV20(){
       v20Data.arena.fightsToday = 0;
     }
 
-    if(game && game.earned && typeof game.earned === 'object'){
+    // Загружаем маркеры из RTDB только один раз при старте сессии, чтобы потраченные медали не восстанавливались обратно!
+    if(game && game.earned && typeof game.earned === 'object' && !v20Data._v29Hydrated){
+      v20Data._v29Hydrated = true;
       var rtdbMmr = -1, rtdbTwMax = -1, rtdbMedals = -1;
       Object.keys(game.earned).forEach(function(k){
         if(!game.earned[k]) return;
@@ -12631,7 +12633,7 @@ function startFirestoreListenersV20(){
         v20Data.arena.mmr = rtdbMmr;
       }
       if(rtdbTwMax > (v20Data.tower.maxFloor || 0)) v20Data.tower.maxFloor = rtdbTwMax;
-      if(rtdbMedals > (v20Data.arena.medals || 0)) v20Data.arena.medals = rtdbMedals;
+      if(rtdbMedals >= 0 && !v20Data.arena.medals) v20Data.arena.medals = rtdbMedals;
     }
   }
 
@@ -13269,7 +13271,7 @@ function startFirestoreListenersV20(){
     }
     ensureV29State();
     var ar = v20Data.arena;
-    varopp = arenaOpponentsPoolV29[oppIdx];
+    var varopp = arenaOpponentsPoolV29[oppIdx];
     if(!varopp) return;
 
     if(ar.fightsToday >= ARENA_DAILY_FREE_LIMIT){
@@ -13494,14 +13496,22 @@ function startFirestoreListenersV20(){
     var refBtn = $('btnRefreshArenaOpps'); if(refBtn) refBtn.onclick = function(){ loadArenaOpponentsV29(); toast('🔄 Список соперников обновлён!'); };
     var trBtn = $('btnTradeArenaMedals');
     if(trBtn) trBtn.onclick = function(){
-      if((v20Data.arena.medals || 0) < 3) return;
-      v20Data.arena.medals -= 3;
+      if(this.disabled || merchantBusy || !gameLoaded) return;
+      var curMedals = Math.max(0, Math.floor(Number(v20Data.arena.medals) || 0));
+      if(curMedals < 3){
+        this.disabled = true;
+        renderArenaV29();
+        return;
+      }
+      this.disabled = true;
+      v20Data.arena.medals = curMedals - 3;
+      v20Data._v29Hydrated = true;
+      syncV29MarkersToRTDB();
       game.stones = Math.min(1000000, (Number(game.stones) || 0) + 2);
       game.dust = Math.min(1000000, (Number(game.dust) || 0) + 250);
-      syncV29MarkersToRTDB();
       saveV20Local(); saveV20ToFirestore(); saveGame();
       renderCoins(); renderArenaV29();
-      toast('🏅 Медали обменяны! Получено +2 🪨 Камня и +250 ✨ Магической пыли!');
+      toast('🏅 Медали обменяны! Осталось медалей: ' + v20Data.arena.medals + ' 🏅. Получено +2 🪨 Камня и +250 ✨ пыли!');
     };
     box.querySelectorAll('[data-arena-fight]').forEach(function(b){
       b.onclick = function(){ startArenaMatchV29(Number(this.getAttribute('data-arena-fight'))); };
