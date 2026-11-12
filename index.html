@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="27">
-<title>Рулетка с чатом · Версия 27</title>
+<meta name="app-version" content="28">
+<title>Рулетка с чатом · Версия 28</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
@@ -1041,6 +1041,38 @@ html, body {
   }
   .rightCol { width: 100%; }
 
+
+/* === UPDATE 28: НОВЫЕ КОМНАТЫ ЭКСПЕДИЦИИ И ТРОФЕЙНЫЙ МЕШОК === */
+.expPathCard.mirror { border-color: #06b6d4; background: rgba(6, 182, 212, 0.06); }
+.expPathCard.ferry  { border-color: #eab308; background: rgba(234, 179, 8, 0.06); }
+.expPathCard.anvil  { border-color: #f97316; background: rgba(249, 115, 22, 0.06); }
+.expPathCard.chrono { border-color: #3b82f6; background: rgba(59, 130, 246, 0.06); }
+.expPathCard.lab    { border-color: #10b981; background: rgba(16, 185, 129, 0.06); }
+
+.expBagBanner {
+  background: rgba(184, 137, 47, 0.12);
+  border: 1px dashed var(--gold);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.expBagBanner b { color: var(--gold); }
+.expBuffPills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.expBuffPill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
 </style>
 
 </head>
@@ -1254,7 +1286,7 @@ html, body {
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 25</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 28</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -11598,6 +11630,871 @@ function startFirestoreListenersV20(){
     }
   };
 
+
+  /* ================== МОДУЛЬ UPDATE 28: 5 НОВЫХ КОМНАТ ЭКСПЕДИЦИИ + АНТИ-АБУЗ ================== */
+  RELEASE_ID = 28;
+  RELEASE_NOTES.unshift({
+    title: 'Версия 28 · Новые комнаты Экспедиции и Трофейный Мешок',
+    lines: [
+      'Трофейный мешок похода: ценная добыча из особых комнат (камни 🪨, пыль ✨, бонусное золото и вещи) складываются в мешок и выдаются только после победы над Боссом 5-го этажа! При досрочном побеге мешок теряется.',
+      '🪞 Зеркальный Зал (Редкая): бой с Тенью, где правила попадания инвертированы, Единица бьёт критом x2, а Зеро наносит двойной урон по герою.',
+      '⚖️ Ставка Паромщика (Эпическая): заключи Обет Крови (победа за ≤5 ходов ради камней 🪨 и золота в мешок) или оплати Золотую Пошлину ради щита.',
+      '⚒️ Эфирная Кузница (Эпическая): временная гравировка на текущий поход (+18% к атаке оружия, -12% входящего урона или +2 счастливых числа на рулетке).',
+      '⏳ Песочные Часы Рока (Редкая): бой на скорость! Одолей Хроно-стража за 6 прокрутов, чтобы вернуть потерянное в комнате HP и забрать сокровища.',
+      '🧪 Лаборатория Чумы (Необычная): свари Отвар Каменной Кожи (лечение + щит поверх макс. HP) или Кислотную Смазку (враг теряет 4% HP при твоём промахе).'
+    ]
+  });
+
+  // Расширяем каталог комнат Экспедиции
+  EXP_ROOM_CATALOG.mirror = {
+    type: 'mirror', r: 'rare', weight: 10,
+    title: '🪞 Зеркальный Зал',
+    desc: 'Инверсия рулетки: ты бьёшь монстра на секторах промаха! Единица (1) наносит крит x2 врагу, а Зеро (0) бьёт тебя двойным уроном. Награда в мешок: ✨ пыль и 50% шанс на 1–2 🪨 камня!'
+  };
+  EXP_ROOM_CATALOG.ferry = {
+    type: 'ferry', r: 'epic', weight: 8,
+    title: '⚖️ Ставка Паромщика',
+    desc: 'Сделка перед следующим боем: «Обет Крови» (-25% HP за 2 🪨 камня и золото в мешок при победе за ≤5 ходов) или «Золотая Пошлина» (временный щит +20% макс. HP за монеты).'
+  };
+  EXP_ROOM_CATALOG.anvil = {
+    type: 'anvil', r: 'epic', weight: 8,
+    title: '⚒️ Эфирная Кузница',
+    desc: 'Временная закалка строго до конца похода (без изменения предметов в инвентаре): Эфирное Лезвие (+18% к урону), Эфирный Доспех (-12% урона врагов) или +2 счастливых числа!'
+  };
+  EXP_ROOM_CATALOG.chrono = {
+    type: 'chrono', r: 'rare', weight: 10,
+    title: '⏳ Песочные Часы Рока',
+    desc: 'Хроно-страж (-20% HP) и таймер на 6 прокрутов! Успеешь убить — вернёшь всё потерянное в комнате HP и получишь в мешок куш ✨ пыли и 55% шанс на вещь. Не успеешь — взрыв на 25% HP!'
+  };
+  EXP_ROOM_CATALOG.lab = {
+    type: 'lab', r: 'uncommon', weight: 12,
+    title: '🧪 Лаборатория Чумы',
+    desc: 'Походная алхимия: «Отвар Каменной Кожи» (+20% лечения, а излишек сверх макс. HP уходит в прочный Щит до 30% HP) или «Кислотная Смазка» (в следующем бою враг теряет 4% HP при твоём промахе).'
+  };
+
+  function ensureExpStateV28(d){
+    if(!d) return null;
+    if(!d.usedRooms || typeof d.usedRooms !== 'object') d.usedRooms = {};
+    if(!d.bag || typeof d.bag !== 'object') d.bag = {coins: 0, dust: 0, stones: 0, items: []};
+    if(!Array.isArray(d.bag.items)) d.bag.items = [];
+    if(!Array.isArray(d.anvilLucky2)) d.anvilLucky2 = [];
+    d.tempShield = Math.max(0, Math.floor(Number(d.tempShield) || 0));
+    return d;
+  }
+
+  function hasPendingRoomModalV28(d){
+    return !!(d && (d.inAltar || d.inFerry || d.inAnvil || d.inLab));
+  }
+
+  function formatExpBagLineV28(d){
+    ensureExpStateV28(d);
+    var b = d.bag, parts = [];
+    if(b.coins > 0) parts.push('+' + b.coins + ' мон.');
+    if(b.dust > 0) parts.push('+' + b.dust + ' ✨');
+    if(b.stones > 0) parts.push('+' + b.stones + ' 🪨');
+    if(b.items.length > 0){
+      var names = b.items.map(function(id){ return ITEMS[id] ? ITEMS[id].name : 'Предмет'; });
+      parts.push('лут: ' + names.join(', '));
+    }
+    return parts.length ? parts.join(' · ') : 'пока пусто';
+  }
+
+  function rollAnvilLuckyNumbersV28(d){
+    var r = rng(hashStr('anvil_lucky_v28:' + d.seed + ':' + d.st));
+    var existing = Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [];
+    var pool = [];
+    for(var n = 2; n <= 36; n++){
+      if(existing.indexOf(n) === -1) pool.push(n);
+    }
+    var out = [];
+    while(out.length < 2 && pool.length){
+      var idx = Math.floor(r() * pool.length);
+      out.push(pool.splice(idx, 1)[0]);
+    }
+    out.sort(function(a, b){ return a - b; });
+    return out;
+  }
+
+  generateExpChoicesV20 = function(floorIdx, seed, cacheUsed){
+    var d = v20Data.exp;
+    ensureExpStateV28(d);
+    var r = rng(hashStr('exp_v28:' + seed + ':' + floorIdx));
+
+    if(floorIdx >= 4){
+      var bIdx = Math.floor(r() * EXP_BOSSES_V20.length);
+      var bossBase = EXP_BOSSES_V20[bIdx];
+      return [{
+        type: 'boss',
+        r: 'divine',
+        bossId: bossBase.id,
+        title: '👑 Финальный Босс: ' + bossBase.name,
+        desc: 'Условие удара: ' + bossBase.rule + '. Победа откроет Сундук Босса и выдаст всё содержимое Трофейного мешка!'
+      }];
+    }
+
+    var countRoll = r();
+    var numPaths = countRoll < 0.20 ? 1 : (countRoll < 0.70 ? 2 : 3);
+    var rank = (d && d.r) ? d.r : selectedRank();
+    var penalty = getFarmPenaltyV22(rank);
+    var used = (d && d.usedRooms) ? d.usedRooms : {};
+
+    var poolKeys = ['combat', 'elite'];
+    if(!penalty){
+      if(!used.altar) poolKeys.push('altar');
+      if(floorIdx >= 1){
+        if(!used.camp) poolKeys.push('camp');
+        if(!cacheUsed && !used.cache) poolKeys.push('cache');
+        if(!used.mirror) poolKeys.push('mirror');
+        if(!used.chrono) poolKeys.push('chrono');
+        if(!used.lab) poolKeys.push('lab');
+        if(!used.anvil) poolKeys.push('anvil');
+        if(!used.ferry && (!d || !d.ferryActive)) poolKeys.push('ferry');
+      }
+    } else if(floorIdx >= 1 && !used.camp){
+      poolKeys.push('camp');
+    }
+
+    var chosen = [];
+    var available = poolKeys.slice();
+    while(chosen.length < numPaths && available.length > 0){
+      var totalW = 0;
+      available.forEach(function(k){ totalW += (EXP_ROOM_CATALOG[k] ? EXP_ROOM_CATALOG[k].weight : 10); });
+      var pickRoll = r() * totalW, acc = 0, pickedKey = available[0];
+      for(var i = 0; i < available.length; i++){
+        acc += (EXP_ROOM_CATALOG[available[i]] ? EXP_ROOM_CATALOG[available[i]].weight : 10);
+        if(pickRoll <= acc){ pickedKey = available[i]; break; }
+      }
+      var info = EXP_ROOM_CATALOG[pickedKey];
+      chosen.push({type: info.type, r: info.r, title: info.title, desc: info.desc});
+      available.splice(available.indexOf(pickedKey), 1);
+    }
+    return chosen;
+  };
+
+  var _origDgFoeV28 = dgFoe;
+  dgFoe = function(){
+    var d = v20Data.exp;
+    if(!d || d.st >= 4 || d.roomType === 'boss') return _origDgFoeV28();
+    if(d.roomType === 'mirror'){
+      var mIdx = Math.abs(hashStr('dgfoe_mirror:' + d.seed + ':' + d.st)) % DG_MONSTERS.length;
+      var base = DG_MONSTERS[mIdx];
+      var m = makeMonster(base, d.r || 1, true, false, true);
+      m.name = '🪞 Зеркальная Тень: ' + base.name;
+      m.rule = 'СЕКТОРА ПРОМАХА (НЕ ' + base.rule + '). Единица (1) = твой крит x2, Зеро (0) = двойной урон по тебе';
+      return m;
+    }
+    if(d.roomType === 'chrono'){
+      var cIdx = Math.abs(hashStr('dgfoe_chrono:' + d.seed + ':' + d.st)) % DG_MONSTERS.length;
+      var cBase = DG_MONSTERS[cIdx];
+      var cm = makeMonster(cBase, d.r || 1, true, false, true);
+      cm.hp = Math.max(10, Math.round(cm.hp * 0.80));
+      cm.name = '⏳ Хроно-страж: ' + cBase.name;
+      return cm;
+    }
+    return _origDgFoeV28();
+  };
+
+  var _origStatsV28 = stats;
+  stats = function(source){
+    var st = _origStatsV28(source);
+    var g = source || game;
+    if(g === game && v20Data && v20Data.exp && v20Data.exp.on && v20Data.exp.anvilBuff === 'blade'){
+      st.atk = Math.max(1, Math.round(st.atk * 1.18));
+    }
+    return st;
+  };
+
+  var _origRenderCharCampSyncV28 = renderChar;
+  renderChar = function(){
+    if(game && v20Data && v20Data.exp && v20Data.exp.on && v20Data.exp.inCamp && !v20Data.nearDeath){
+      var d = v20Data.exp;
+      var oldRatio = d.ph > 0 ? Math.min(1, Math.max(0.01, d.p / d.ph)) : 1;
+      var newSt = stats(game);
+      d.ph = newSt.hp;
+      d.pa = newSt.atk;
+      d.p  = Math.max(1, Math.min(d.ph, Math.round(d.ph * oldRatio)));
+      saveV20Local();
+    }
+    _origRenderCharCampSyncV28();
+  };
+
+  var _origShowTabV28 = showTab;
+  showTab = function(which){
+    var townTabs = ['shop', 'market', 'forge', 'enchant', 'merchant', 'miner', 'pets'];
+    if(townTabs.indexOf(which) !== -1 && !canUseTownServicesV20()){
+      return;
+    }
+    _origShowTabV28(which);
+  };
+
+  var _origSaveV20ToFirestoreV28 = saveV20ToFirestore;
+  saveV20ToFirestore = function(){
+    _origSaveV20ToFirestoreV28();
+    var db = initFirestoreV20();
+    if(!db || !sess || !sess.uid || !game) return;
+    db.collection('players').doc(String(sess.uid)).set({
+      exp: (v20Data.exp && v20Data.exp.on) ? v20Data.exp : null
+    }, {merge: true}).catch(function(){});
+  };
+
+  var _origDgEnterV28 = dgEnter;
+  dgEnter = function(){
+    _origDgEnterV28();
+    if(v20Data && v20Data.exp && v20Data.exp.on){
+      ensureExpStateV28(v20Data.exp);
+      v20Data.exp.choices = generateExpChoicesV20(0, v20Data.exp.seed, false);
+      saveV20Local();
+      saveV20ToFirestore();
+      renderDg();
+    }
+  };
+
+  applyAltarChoiceV20 = function(mode){
+    if(!dgOn() || !v20Data.exp.inAltar) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    if(mode === 'sacrifice'){
+      if(v20Data.nearDeath || d.p <= Math.ceil(d.ph * 0.25)){
+        toast('🩸 Недостаточно здоровья для Кровавой Жертвы (требуется запас выше 25% HP и отсутствие статуса «При смерти»)!');
+        return;
+      }
+      var loss = Math.max(1, Math.round(d.p * 0.20));
+      d.p = Math.max(1, d.p - loss);
+      d.altarAtkBonus = (Number(d.altarAtkBonus)||0) + 25;
+      d.altarCritBonus = (Number(d.altarCritBonus)||0) + 10;
+      toast('🩸 Кровавая Жертва принята! Потеряно ' + loss + ' HP, получено +25% к урону и +10% к криту до конца Экспедиции!');
+    } else {
+      d.altarAtkBonus = (Number(d.altarAtkBonus)||0) + 15;
+      toast('⛩️ Благословение Мощи получено! +15% к урону до конца Экспедиции!');
+    }
+    d.inAltar = false;
+    d.pa = stats().atk;
+    d.st++;
+    d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    saveV20Local(); saveV20ToFirestore();
+    renderChar(); renderDg();
+  };
+
+  function applyFerryChoiceV28(mode){
+    if(!dgOn() || !v20Data.exp.inFerry) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    var tollCost = Math.max(15, Math.round((d.fee || 150) * 0.15));
+
+    if(mode === 'blood'){
+      if(v20Data.nearDeath || d.p <= Math.ceil(d.ph * 0.30)){
+        toast('🩸 Паромщик отвергает сделку: слишком мало здоровья для Обета Крови!');
+        return;
+      }
+      var hpCost = Math.max(1, Math.round(d.ph * 0.25));
+      d.p = Math.max(1, d.p - hpCost);
+      d.ferryActive = 'blood';
+      toast('⚖️ Обет Крови заключён (-' + hpCost + ' HP)! Победи следующего врага за ≤5 прокрутов, чтобы получить 2 🪨 камня и золото в мешок!');
+    } else if(mode === 'gold'){
+      if((game.coins || 0) < tollCost){
+        toast('🪙 Не хватает монет для Золотой Пошлины (' + tollCost + ' мон.)!');
+        return;
+      }
+      game.coins -= tollCost;
+      var shGain = v20Data.nearDeath ? 0 : Math.max(5, Math.round(d.ph * 0.20));
+      d.tempShield = Math.min(Math.round(d.ph * 0.50), (d.tempShield || 0) + shGain);
+      toast('🛡️ Золотая Пошлина оплачена (-' + tollCost + ' мон.)! Получен походный щит +' + shGain + ' ед.');
+    } else {
+      toast('🚶 Вы прошли мимо Паромщика без сделки.');
+    }
+    d.inFerry = false;
+    d.st++;
+    d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    saveV20Local(); saveV20ToFirestore(); saveGame();
+    renderCoins(); renderChar(); renderDg();
+  }
+
+  function applyAnvilChoiceV28(mode){
+    if(!dgOn() || !v20Data.exp.inAnvil) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    if(mode === 'blade'){
+      d.anvilBuff = 'blade';
+      toast('⚔️ Эфирное Лезвие выковано: +18% к итоговому урону до конца Экспедиции!');
+    } else if(mode === 'armor'){
+      d.anvilBuff = 'armor';
+      toast('🛡️ Эфирный Доспех выкован: входящий урон от врагов снижен на 12% до конца Экспедиции!');
+    } else {
+      d.anvilBuff = 'lucky';
+      d.anvilLucky2 = rollAnvilLuckyNumbersV28(d);
+      toast('🎯 Эфирный Резонанс: числа ' + d.anvilLucky2.join(' и ') + ' стали счастливыми до конца похода!');
+    }
+    d.inAnvil = false;
+    d.pa = stats().atk;
+    d.st++;
+    d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    saveV20Local(); saveV20ToFirestore();
+    renderChar(); renderDg();
+  }
+
+  function applyLabChoiceV28(mode){
+    if(!dgOn() || !v20Data.exp.inLab) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    if(mode === 'stoneskin'){
+      if(v20Data.nearDeath){
+        toast('🩸 При статусе «При смерти» Отвар Каменной Кожи недоступен — выберите Кислотную Смазку!');
+        return;
+      }
+      var healTotal = Math.max(1, Math.round(d.ph * 0.25));
+      var missingHp = Math.max(0, d.ph - d.p);
+      var healed = Math.min(missingHp, healTotal);
+      var overflow = Math.max(0, healTotal - healed);
+      var shieldCap = Math.max(1, Math.round(d.ph * 0.30));
+      var shieldAdded = Math.min(shieldCap - (d.tempShield || 0), overflow + Math.round(d.ph * 0.10));
+      d.p = Math.min(d.ph, d.p + healed);
+      d.tempShield = Math.min(shieldCap, (d.tempShield || 0) + Math.max(0, shieldAdded));
+      toast('🪨 Отвар Каменной Кожи выпит: +' + healed + ' HP и +' + Math.max(0, shieldAdded) + ' ед. прочного щита!');
+    } else {
+      d.labAcidNext = true;
+      toast('🧪 Кислотная Смазка нанесена! В следующем бою монстр будет терять 4% макс. HP при каждом твоём промахе.');
+    }
+    d.inLab = false;
+    d.st++;
+    d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    saveV20Local(); saveV20ToFirestore();
+    renderChar(); renderDg();
+  }
+
+  selectExpeditionPathV20 = function(choiceIdx){
+    if(!dgOn() || merchantBusy) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    if(d.inCombat || hasPendingRoomModalV28(d)) return;
+    var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+    var picked = choices[choiceIdx];
+    if(!picked) return;
+
+    d.roomType = picked.type;
+    if(picked.bossId) d.bossId = picked.bossId;
+    d.inCamp = false;
+    d.inAltar = false;
+    d.inFerry = false;
+    d.inAnvil = false;
+    d.inLab = false;
+    if(picked.type !== 'combat' && picked.type !== 'elite' && picked.type !== 'boss'){
+      d.usedRooms[picked.type] = true;
+    }
+
+    if(['combat', 'elite', 'boss', 'mirror', 'chrono'].indexOf(picked.type) !== -1){
+      currentFightTrapped = false;
+      var stNow = stats(game);
+      d.pa = stNow.atk;
+      d.ph = v20Data.nearDeath ? 1 : stNow.hp;
+      d.p  = v20Data.nearDeath ? 1 : Math.min(d.ph, Math.max(1, d.p));
+      var mo = dgFoe();
+      d.m = mo.hp;
+      d.inCombat = true;
+      d.dealt = 0;
+      d.taken = 0;
+      d.roomSpins = 0;
+      d.startRoomHp = d.p;
+      d.chronoTurns = (picked.type === 'chrono') ? 6 : 0;
+
+      var mageSh = (!v20Data.nearDeath) ? window.calcMageShieldV22(game, stNow.hp) : 0;
+      var totalSh = mageSh + (v20Data.nearDeath ? 0 : (d.tempShield || 0));
+      window.mageMaxBattleShield = totalSh;
+      window.mageCurrentBattleShield = totalSh;
+
+      fightLog = 'Этаж ' + (d.st + 1) + '/5 · ' + picked.title + ': ' + mo.name + '!'
+        + (picked.type === 'mirror' ? ' 🪞 ЗЕРКАЛЬНЫЙ БОЙ: бьёшь на секторах промаха, 1 = крит x2, 0 = двойной урон по тебе!' : '')
+        + (picked.type === 'chrono' ? ' ⏳ ОСТАЛОСЬ 6 ХОДОВ до взрыва Песочных Часов!' : '')
+        + (totalSh > 0 ? ' 🛡️ Активен щит: ' + totalSh + ' ед.' : '');
+      fightMsg = '';
+      fightChest = false;
+      saveV20Local(); saveV20ToFirestore();
+      updateLockedTabsV20();
+      renderFight(); renderDg(); showTab('game');
+      toast('⚔️ Бой начался: ' + mo.name + '!');
+      return;
+    }
+
+    if(picked.type === 'cache'){
+      d.cacheUsed = true;
+      var rank = d.r || 1;
+      var penalty = getFarmPenaltyV22(rank);
+      var rDet = rng(hashStr('cache_v28:' + d.seed + ':' + d.st));
+      var goldGain = penalty ? 0 : Math.max(5, Math.round(dungeonPrice(rank) * 0.14 * (0.85 + rDet() * 0.3)));
+      var dustGain = penalty ? 0 : (6 + Math.floor(rDet() * 8) + Math.floor(rank * 0.7));
+      var gap = Math.max(0, maxRank(game) - rank);
+      var cacheChance = 0.25 * (gap === 0 ? 1 : (gap === 1 ? 0.75 : 0.35));
+      var dropId = (!penalty && rDet() < cacheChance) ? rollLoot(rank, true, false) : null;
+
+      d.bag.coins += goldGain;
+      d.bag.dust += dustGain;
+      if(dropId) d.bag.items.push(dropId);
+
+      d.st++;
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      renderCoins(); renderChar(); renderDg();
+      toast('📦 Тайник открыт! Сложено в Трофейный мешок (выдаётся после Босса): +' + goldGain + ' мон., +' + dustGain + ' ✨' + (dropId ? ' и «' + ITEMS[dropId].name + '»!' : '!'));
+      return;
+    }
+
+    if(picked.type === 'camp'){
+      var stCamp = stats(game);
+      d.ph = v20Data.nearDeath ? 1 : stCamp.hp;
+      var healAmt = v20Data.nearDeath ? 0 : Math.round(d.ph * 0.45);
+      d.p = v20Data.nearDeath ? 1 : Math.min(d.ph, d.p + healAmt);
+      d.inCamp = true;
+      d.st++;
+      d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      saveV20Local(); saveV20ToFirestore();
+      renderChar(); renderDg();
+      toast('🏕️ Привал в Лагере! Восстановлено +' + healAmt + ' HP. Пока вы не выбрали следующую комнату, смена брони разблокирована!');
+      return;
+    }
+
+    if(picked.type === 'altar'){
+      d.inAltar = true;
+      saveV20Local(); saveV20ToFirestore(); renderDg();
+      toast('⛩️ Вы подошли к Алтарю Древних! Выберите дар.');
+      return;
+    }
+    if(picked.type === 'ferry'){
+      d.inFerry = true;
+      saveV20Local(); saveV20ToFirestore(); renderDg();
+      toast('⚖️ Паромщик преградил путь! Выберите условия сделки.');
+      return;
+    }
+    if(picked.type === 'anvil'){
+      d.inAnvil = true;
+      saveV20Local(); saveV20ToFirestore(); renderDg();
+      toast('⚒️ Вы вошли в Эфирную Кузницу! Выберите временную гравировку.');
+      return;
+    }
+    if(picked.type === 'lab'){
+      d.inLab = true;
+      saveV20Local(); saveV20ToFirestore(); renderDg();
+      toast('🧪 Вы нашли Лабораторию Чумы! Выберите отвар.');
+      return;
+    }
+  };
+
+  var _origStrikeCoreBaseV28 = strikeCoreBase;
+  strikeCoreBase = function(f, mo, st, n){
+    var isExpCombat = !!(dgOn() && v20Data.exp && f === v20Data.exp);
+    var d = isExpCombat ? ensureExpStateV28(v20Data.exp) : null;
+
+    var origHit = mo.hit;
+    var origMoDmg = mo.dmg;
+    var origLucky5 = v20Data.lucky5 ? v20Data.lucky5.slice() : [];
+    var nForCore = n;
+    var mirrorSwapped = false;
+
+    try {
+      if(isExpCombat && d){
+        if(d.anvilBuff === 'armor'){
+          mo.dmg = Math.max(1, Math.round(mo.dmg * 0.88));
+        }
+        if(d.anvilBuff === 'lucky' && Array.isArray(d.anvilLucky2) && d.anvilLucky2.length){
+          if(v20Data.subcls){
+            v20Data.lucky5 = origLucky5.concat(d.anvilLucky2);
+          }
+        }
+        if(d.roomType === 'mirror'){
+          if(n === 0){ nForCore = 1; mirrorSwapped = true; }
+          else if(n === 1){ nForCore = 0; mirrorSwapped = true; }
+          mo.hit = function(x){ return x > 1 && !origHit(x); };
+        }
+      }
+
+      var beforeP = f.p;
+      var beforeM = f.m;
+      var text = _origStrikeCoreBaseV28(f, mo, st, nForCore);
+
+      if(mirrorSwapped){
+        if(n === 0) text = text.replace(/^Единица[^!]*!/, '🪞 Зеркальное Зеро (0) — проклятие отражения!');
+        else if(n === 1) text = text.replace(/^Зеро!/, '🪞 Зеркальная Единица (1) — критический удар отражения!');
+      }
+
+      if(isExpCombat && d){
+        if(d.anvilBuff === 'lucky' && !v20Data.subcls && d.anvilLucky2.indexOf(n) !== -1 && f.m < beforeM){
+          var bonusResDmg = beforeM - f.m;
+          f.m -= bonusResDmg;
+          f.dealt += bonusResDmg;
+          text += ' 🎯 Эфирный Резонанс (' + n + ') удвоил удар (+' + bonusResDmg + ' урона)!';
+        }
+
+        var playerMissed = (f.p < beforeP) && (f.m === beforeM);
+        var isCritFail = (d.roomType === 'mirror') ? (n === 0) : (n === 1);
+        if(d.labAcidActive && playerMissed && !isCritFail && f.m > 0){
+          lastPlayerDirectAttack = false;
+          var acidDmg = Math.max(1, Math.round(mo.hp * 0.04));
+          f.m = Math.max(0, f.m - acidDmg);
+          f.dealt += acidDmg;
+          text += ' 🧪 Кислотная смазка разъела броню врага (-' + acidDmg + ' HP)!';
+        }
+
+        var dmgTaken = beforeP - f.p;
+        if(dmgTaken > 0 && game.cls !== 'mage' && window.mageCurrentBattleShield > 0){
+          var abs = Math.min(dmgTaken, window.mageCurrentBattleShield);
+          window.mageCurrentBattleShield -= abs;
+          f.p = Math.min(f.ph || st.hp, f.p + abs);
+          text += ' 🛡️ Походный щит поглотил ' + abs + ' урона (осталось: ' + window.mageCurrentBattleShield + ').';
+        }
+        d.tempShield = Math.min(d.tempShield || 0, window.mageCurrentBattleShield || 0);
+      }
+
+      return text;
+    } finally {
+      mo.hit = origHit;
+      mo.dmg = origMoDmg;
+      v20Data.lucky5 = origLucky5;
+    }
+  };
+
+  dgStrike = function(n){
+    var d = v20Data.exp;
+    if(!d || !d.on || !d.inCombat) return;
+    ensureExpStateV28(d);
+
+    if(d.labAcidNext){
+      d.labAcidActive = true;
+      d.labAcidNext = false;
+    }
+
+    d.roomSpins = (Number(d.roomSpins) || 0) + 1;
+    var mo = dgFoe(), st = battleStats(d);
+    fightLog = strikeCore(d, mo, st, n);
+
+    if(d.roomType === 'chrono' && d.m > 0 && d.p > 0){
+      d.chronoTurns = Math.max(0, (Number(d.chronoTurns) || 6) - 1);
+      if(d.chronoTurns > 0){
+        fightLog += ' ⏳ Осталось ходов: ' + d.chronoTurns + '.';
+      } else {
+        var blast = v20Data.nearDeath ? 1 : Math.max(1, Math.round(d.ph * 0.25));
+        d.p -= blast;
+        d.inCombat = false;
+        d.labAcidActive = false;
+        if(d.ferryActive === 'blood'){
+          d.ferryActive = '';
+          fightLog += ' ⚖️ Обет Крови провален.';
+        }
+        if(d.p <= 0){
+          battleTitles(0, d, false);
+          var rkL = d.r || 1;
+          var lostG = rkL <= 2 ? 0 : Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rkL));
+          game.coins = Math.max(0, (Number(game.coins)||0) - lostG);
+          v20Data.nearDeath = true;
+          v20Data.exp = null;
+          saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20(); renderNearDeathBannerV20(); saveGame();
+          fightMsg = fightLog + ' 💥 Песочные Часы взорвались (-' + blast + ' HP)! Ты погиб, Трофейный мешок утерян.';
+          fightChest = false;
+          renderCoins(); renderProgress(); renderDg();
+          return;
+        }
+        d.st++;
+        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        saveV20Local(); saveV20ToFirestore(); saveGame();
+        fightMsg = fightLog + ' 💥 Время вышло! Часы взорвались на ' + blast + ' HP, а Хроно-страж растворился во времени без наград. Выбери путь на Этаже ' + (d.st + 1) + '!';
+        renderCoins(); renderProgress(); renderDg();
+        return;
+      }
+    }
+
+    if(d.m <= 0){
+      d.m = 0;
+      d.inCombat = false;
+      d.labAcidActive = false;
+      var penalty = getFarmPenaltyV22(d.r);
+      var isNearDeath = !!(v20Data && v20Data.nearDeath);
+      var base = rewardBase(mo);
+      var sub = findSubclassV20(v20Data.subcls);
+      var xpMult = (sub && sub.xpBonus) ? (1 + sub.xpBonus / 100) : 1;
+      var isSpecialCombat = (d.roomType === 'elite' || d.roomType === 'mirror' || d.roomType === 'chrono');
+      var roomXpScale = (d.roomType === 'boss' || d.st + 1 >= EXP_FLOORS) ? 0.90 : (isSpecialCombat ? 0.55 : 0.30);
+      var xp = game.level >= LEVEL_CAP ? 0 : rollReward(base.xp * roomXpScale * xpFactor(d.r) * xpMult);
+      var coins = rollReward(dungeonPrice(d.r) * (isSpecialCombat ? 0.32 : 0.16) * goldFactorV24(d.r));
+
+      if(penalty){
+        xp = isNearDeath ? 0 : Math.floor(xp * 0.1);
+        if(!isNearDeath) coins = Math.floor(coins * 0.1);
+      }
+      game.coins += coins;
+      var up = gainXP(xp);
+      var wonState = {dealt: d.dealt, taken: d.taken};
+      var extraLootMsg = '';
+      var rDet = rng(hashStr('combat_reward_v28:' + d.seed + ':' + d.st + ':' + d.roomType));
+      var gapE = Math.max(0, maxRank(game) - (d.r || 1));
+      var gapMult = (gapE === 0 ? 1 : (gapE === 1 ? 0.75 : 0.35));
+
+      if(d.roomType === 'elite' && d.st < 4 && !penalty){
+        var eliteDust = Math.max(2, Math.round((4 + Math.floor(rDet() * 6) + Math.floor(d.r * 0.7)) * gapMult));
+        d.bag.dust += eliteDust;
+        extraLootMsg += ' В мешок: +' + eliteDust + ' ✨ пыли.';
+        if(rDet() < 0.35 * gapMult){
+          var eItem = rollLoot(d.r, true, true);
+          if(eItem){ d.bag.items.push(eItem); extraLootMsg += ' В мешок: «' + ITEMS[eItem].name + '»!'; }
+        }
+      }
+
+      if(d.roomType === 'mirror' && d.st < 4 && !penalty){
+        var mirDust = Math.max(4, Math.round((8 + d.r * 2) * gapMult));
+        d.bag.dust += mirDust;
+        extraLootMsg += ' 🪞 В мешок: +' + mirDust + ' ✨ пыли';
+        if(rDet() < 0.50 * gapMult){
+          var mirStones = (rDet() < 0.35) ? 2 : 1;
+          d.bag.stones += mirStones;
+          extraLootMsg += ' и +' + mirStones + ' 🪨 камня!';
+        } else {
+          extraLootMsg += '.';
+        }
+      }
+
+      if(d.roomType === 'chrono' && d.st < 4 && !penalty){
+        if(!v20Data.nearDeath && d.startRoomHp && d.p < d.startRoomHp){
+          var restored = d.startRoomHp - d.p;
+          d.p = d.startRoomHp;
+          extraLootMsg += ' ⏳ Время вернуло +' + restored + ' HP!';
+        }
+        var chrDust = Math.max(6, Math.round((15 + d.r * 3) * gapMult));
+        d.bag.dust += chrDust;
+        extraLootMsg += ' В мешок: +' + chrDust + ' ✨ пыли';
+        if(rDet() < 0.55 * gapMult){
+          var cItem = rollLoot(d.r, true, true);
+          if(cItem){ d.bag.items.push(cItem); extraLootMsg += ' и «' + ITEMS[cItem].name + '»!'; }
+        } else {
+          extraLootMsg += '.';
+        }
+      }
+
+      if(d.ferryActive === 'blood'){
+        if(d.roomSpins <= 5 && !penalty){
+          var fGold = Math.round(coins * 1.2);
+          d.bag.stones += 2;
+          d.bag.coins += fGold;
+          extraLootMsg += ' ⚖️ Обет Паромщика выполнен за ' + d.roomSpins + ' ход(ов): в мешок +2 🪨 камня и +' + fGold + ' монет!';
+        } else {
+          extraLootMsg += ' ⚖️ Обет Паромщика не выполнен (ходов затрачено: ' + d.roomSpins + ' из 5).';
+        }
+        d.ferryActive = '';
+      }
+
+      var earned = ' +' + xp + ' XP · +' + coins + ' монет.' + up + extraLootMsg;
+
+      if(d.st + 1 >= EXP_FLOORS || d.roomType === 'boss'){
+        var bossItem = penalty ? null : rollBossChestLootV20(d.r);
+        var bossDust = penalty ? 0 : (12 + d.r * 3 + Math.floor(Math.random() * 10));
+        var gotPotion = penalty ? false : (Math.random() < 0.08);
+        var bonusXp = (game.level >= LEVEL_CAP || (penalty && isNearDeath)) ? 0 : rollReward(base.xp * 0.50 * xpFactor(d.r) * xpMult);
+        if(penalty && !isNearDeath) bonusXp = Math.floor(bonusXp * 0.1);
+
+        var bagSummary = formatExpBagLineV28(d);
+        game.coins += (d.bag.coins || 0);
+        game.dust = Math.min(1000000, (Number(game.dust)||0) + bossDust + (d.bag.dust || 0));
+        game.stones = Math.min(1000000, (Number(game.stones)||0) + (d.bag.stones || 0));
+        if(bossItem) game.inv.push(bossItem);
+        (d.bag.items || []).forEach(function(id){ if(ITEMS[id]) game.inv.push(id); });
+        if(gotPotion) v20Data.potions = (Number(v20Data.potions)||0) + 1;
+
+        var moreUp = gainXP(bonusXp);
+        v20Data.exp = null;
+        window.mageMaxBattleShield = 0;
+        window.mageCurrentBattleShield = 0;
+        saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20();
+
+        fightMsg = fightLog + ' 🏆 ЭКСПЕДИЦИЯ ПРОЙДЕНА!' + earned + ' Сундук Босса: +' + bonusXp + ' XP' + moreUp
+          + (penalty ? '' : (', +' + bossDust + ' ✨ пыли' + (bossItem ? ', предмет «' + ITEMS[bossItem].name + '» (' + RARITY[ITEMS[bossItem].r].name + ')' : '') + (gotPotion ? ' и 🧪 СЛЁЗЫ ФЕНИКСА!' : '!')))
+          + (bagSummary !== 'пока пусто' ? ' 🎒 Трофейный мешок доставлен в город: ' + bagSummary + '!' : '');
+        fightChest = !penalty;
+        if(typeof checkHalloweenProgress === 'function'){
+          checkHalloweenProgress('monster_kill', 1);
+          checkHalloweenProgress('elite_win', 1);
+          checkHalloweenProgress('expedition_win', 1);
+        }
+        saveGame();
+      } else {
+        d.st++;
+        d.p = v20Data.nearDeath ? 1 : healBetween(d.p, d.ph);
+        d.skip = false; d.dealt = 0; d.taken = 0;
+        d.choices = generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+        if(typeof checkHalloweenProgress === 'function'){
+          checkHalloweenProgress('monster_kill', 1);
+          if(isSpecialCombat) checkHalloweenProgress('elite_win', 1);
+        }
+        saveV20Local(); saveV20ToFirestore(); saveGame();
+        fightMsg = fightLog + ' Враг повержен!' + earned + ' Восстановлено 25% HP. Выбери путь на Этаже ' + (d.st + 1) + '!';
+      }
+      battleTitles(coins, wonState, true);
+      renderCoins(); renderProgress(); renderDg();
+    } else if(d.p <= 0){
+      battleTitles(0, d, false);
+      var rkLost = d.r || 1;
+      var lostGold = rkLost <= 2 ? 0 : Math.min(Math.floor((Number(game.coins)||0) * 0.10), lossCap(rkLost));
+      game.coins = Math.max(0, (Number(game.coins)||0) - lostGold);
+      v20Data.nearDeath = true;
+      v20Data.exp = null;
+      window.mageMaxBattleShield = 0;
+      window.mageCurrentBattleShield = 0;
+      saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20(); renderNearDeathBannerV20(); saveGame();
+      fightMsg = fightLog + ' 💀 Ты погиб в Экспедиции! ' + (rkLost <= 2 ? 'Штрафа монет нет (1–2 ранг)' : 'Потеряно ' + lostGold + ' монет') + ', Трофейный мешок утерян, наложен статус «При смерти» (1 HP).';
+      fightChest = false;
+      renderCoins(); renderProgress(); renderDg();
+    } else {
+      saveV20Local();
+    }
+  };
+
+  dgLeave = function(){
+    if(!dgOn()) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    if(d.inCombat){
+      toast('⚔️ Нельзя покинуть Экспедицию прямо посреди боя с монстром!');
+      return;
+    }
+    var fee = d.fee;
+    var lostBag = formatExpBagLineV28(d);
+    v20Data.exp = null;
+    window.mageMaxBattleShield = 0;
+    window.mageCurrentBattleShield = 0;
+    saveV20Local(); saveV20ToFirestore(); updateLockedTabsV20();
+    fightMsg = '🏳️ Ты отступил из Экспедиции в город. Взнос (' + fee + ' монет) и Трофейный мешок (' + lostBag + ') остались в подземелье, но золото и опыт за обычные бои сохранены!';
+    fightChest = false;
+    saveGame(); renderProgress(); renderFight(); renderEvent(); renderDg();
+    toast('🏳️ Вы отступили в город (Трофейный мешок оставлен в подземелье).');
+  };
+
+  var _origRenderDgFightV28 = renderDgFight;
+  renderDgFight = function(box){
+    _origRenderDgFightV28(box);
+    var targetBox = box || $('fight');
+    if(!targetBox || targetBox.hidden || !dgOn() || !v20Data.exp.inCombat) return;
+    if(window.mageMaxBattleShield > 0 && !targetBox.querySelector('#mageShieldBarWrap')){
+      var curSh = window.mageCurrentBattleShield, maxSh = window.mageMaxBattleShield;
+      var pctSh = Math.max(0, Math.min(100, Math.round(curSh / maxSh * 100)));
+      var barsContainer = targetBox.querySelector('.bar.p');
+      if(barsContainer && barsContainer.parentNode){
+        var wrap = document.createElement('div');
+        wrap.id = 'mageShieldBarWrap';
+        wrap.innerHTML = '<div class="hpl"><span style="color:#60a5fa;font-weight:700">🛡️ Походный Щит</span><span style="color:#60a5fa;font-weight:700">' + curSh + ' / ' + maxSh + '</span></div>'
+          + '<div class="bar" style="border-color:#3b82f6"><i style="display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#60a5fa);width:' + pctSh + '%"></i></div>';
+        barsContainer.parentNode.parentNode.insertBefore(wrap, barsContainer.parentNode.nextSibling);
+      }
+    }
+  };
+
+  var _origRenderDgBeforeV28 = renderDg;
+  renderDg = function(){
+    if(!dgOn()){
+      _origRenderDgBeforeV28();
+      return;
+    }
+    var box = $('dgBody');
+    if(!box || !game) return;
+    var d = ensureExpStateV28(v20Data.exp);
+    var rank = d.r || selectedRank();
+    var price = d.fee || dungeonPrice(rank);
+
+    var h = '<div class="card"><h3>🗺️ Экспедиция · ' + rankName(rank) + '</h3>';
+    h += '<div class="expFloorBar">';
+    for(var s = 0; s < EXP_FLOORS; s++){
+      var clsStep = s < d.st ? 'expStep done' : (s === d.st ? 'expStep cur' : 'expStep');
+      h += '<div class="' + clsStep + '">' + (s === 4 ? '👑 Босс' : 'Этаж ' + (s + 1)) + '</div>';
+    }
+    h += '</div>';
+
+    h += '<p>Здоровье: <b>' + d.p + ' / ' + d.ph + ' HP</b>'
+      + (d.tempShield > 0 ? ' · <span style="color:#60a5fa;font-weight:700">🛡️ Походный щит: ' + d.tempShield + ' ед.</span>' : '')
+      + (d.inCamp ? ' · <span style="color:var(--green);font-weight:700">🏕️ Лагерь (смена брони открыта)</span>' : ' · 🔒 Экипировка зафиксирована')
+      + '</p>';
+
+    var pills = [];
+    if(d.altarAtkBonus) pills.push('⛩️ Алтарь: +' + d.altarAtkBonus + '% урон' + (d.altarCritBonus ? ', +' + d.altarCritBonus + '% крит' : ''));
+    if(d.anvilBuff === 'blade') pills.push('⚔️ Эфирное Лезвие (+18% урон)');
+    if(d.anvilBuff === 'armor') pills.push('🛡️ Эфирный Доспех (-12% урон врагов)');
+    if(d.anvilBuff === 'lucky' && d.anvilLucky2.length) pills.push('🎯 Резонанс: ' + d.anvilLucky2.join(', '));
+    if(d.ferryActive === 'blood') pills.push('⚖️ Обет Крови (победа ≤5 ходов)');
+    if(d.labAcidNext || d.labAcidActive) pills.push('🧪 Кислотная смазка (4% HP/промах)');
+    if(pills.length){
+      h += '<div class="expBuffPills">' + pills.map(function(p){ return '<span class="expBuffPill">' + p + '</span>'; }).join('') + '</div>';
+    }
+
+    var bagStr = formatExpBagLineV28(d);
+    h += '<div class="expBagBanner">🎒 <b>Трофейный мешок похода</b> (выдаётся после победы над Финальным Боссом 5-го этажа):<br>' + escapeHtmlV20(bagStr) + '</div>';
+
+    if(d.inCombat){
+      h += '<p>⚔️ Сейчас идёт бой на Этаже ' + (d.st + 1) + '! Перейдите на вкладку «Рулетка», чтобы крутить колесо.</p>'
+        + '<button type="button" id="dgGo">Перейти к бою</button>';
+    } else if(d.inAltar){
+      var canSacrifice = !v20Data.nearDeath && d.p > Math.ceil(d.ph * 0.25);
+      h += '<div class="card" style="border-color:#7e3fc4;background:var(--bg)">'
+        + '<h3>⛩️ Алтарь Древних · Выбери дар</h3>'
+        + '<div class="expPathsGrid">'
+        + '<div class="expPathCard altar"><div><div class="rn">✨ Благословение Мощи</div><div class="rd">Безопасно дарует <b>+15% к урону</b> до конца Экспедиции.</div></div><button type="button" id="btnAltarSafe">Принять</button></div>'
+        + '<div class="expPathCard boss"><div><div class="rn">🩸 Кровавая Жертва</div><div class="rd">Отнимает <b>20% текущего HP</b> ради <b>+25% к урону и +10% к криту</b> до конца похода!' + (!canSacrifice ? ' <br><b style="color:var(--red)">Недоступно при низком HP или статусе «При смерти».</b>' : '') + '</div></div><button type="button" id="btnAltarSacrifice"' + (canSacrifice ? '' : ' disabled') + '>Пожертвовать</button></div>'
+        + '</div></div>';
+    } else if(d.inFerry){
+      var canBlood = !v20Data.nearDeath && d.p > Math.ceil(d.ph * 0.30);
+      var tollCost = Math.max(15, Math.round(price * 0.15));
+      var canToll = (game.coins || 0) >= tollCost && !v20Data.nearDeath;
+      h += '<div class="card" style="border-color:#eab308;background:var(--bg)">'
+        + '<h3>⚖️ Ставка Паромщика</h3>'
+        + '<p>Мрачный лодочник предлагает сделку перед следующим залом:</p>'
+        + '<div class="expPathsGrid">'
+        + '<div class="expPathCard ferry"><div><div class="rn">🩸 Обет Крови (-25% макс. HP)</div><div class="rd">Если победишь в следующем бою за <b>5 или меньше прокрутов</b>, получишь в мешок <b>2 🪨 камня улучшения</b> и +120% золота!' + (!canBlood ? '<br><b style="color:var(--red)">Требуется запас >30% HP и отсутствие статуса «При смерти».</b>' : '') + '</div></div><button type="button" id="btnFerryBlood"' + (canBlood ? '' : ' disabled') + '>Заключить</button></div>'
+        + '<div class="expPathCard camp"><div><div class="rn">🪙 Золотая Пошлина (' + tollCost + ' мон.)</div><div class="rd">Безопасный дар: накладывает прочный <b>Походный Щит (+20% макс. HP)</b> на следующие бои.</div></div><button type="button" id="btnFerryGold"' + (canToll ? '' : ' disabled') + '>Оплатить</button></div>'
+        + '<div class="expPathCard"><div><div class="rn">🚶 Пройти мимо</div><div class="rd">Отказаться от сделок и перейти на следующий этаж без риска.</div></div><button type="button" id="btnFerrySkip" class="ghost">Уйти</button></div>'
+        + '</div></div>';
+    } else if(d.inAnvil){
+      var previewNums = rollAnvilLuckyNumbersV28(d);
+      h += '<div class="card" style="border-color:#f97316;background:var(--bg)">'
+        + '<h3>⚒️ Эфирная Кузница · Выбери гравировку на поход</h3>'
+        + '<p>Древняя наковальня временно усиливает снаряжение до выхода из Экспедиции:</p>'
+        + '<div class="expPathsGrid">'
+        + '<div class="expPathCard anvil"><div><div class="rn">⚔️ Эфирное Лезвие</div><div class="rd">Повышает твой итоговый урон на <b>+18%</b> до конца текущей Экспедиции.</div></div><button type="button" id="btnAnvilBlade">Выбрать</button></div>'
+        + '<div class="expPathCard elite"><div><div class="rn">🛡️ Эфирный Доспех</div><div class="rd">Снижает урон всех монстров и Босса по тебе на <b>12%</b> до конца Экспедиции.</div></div><button type="button" id="btnAnvilArmor">Выбрать</button></div>'
+        + '<div class="expPathCard altar"><div><div class="rn">🎯 Эфирный Резонанс (Числа: ' + previewNums.join(' и ') + ')</div><div class="rd">Добавляет числа <b>' + previewNums.join(' и ') + '</b> к твоим счастливым числам рулетки (ультимативный удар при выпадении)!</div></div><button type="button" id="btnAnvilLucky">Выбрать</button></div>'
+        + '</div></div>';
+    } else if(d.inLab){
+      var canStoneSkin = !v20Data.nearDeath;
+      h += '<div class="card" style="border-color:#10b981;background:var(--bg)">'
+        + '<h3>🧪 Лаборатория Чумы · Выбери отвар</h3>'
+        + '<p>На алхимическом столе кипят две колбы. Что используешь перед следующим этажом?</p>'
+        + '<div class="expPathsGrid">'
+        + '<div class="expPathCard lab"><div><div class="rn">🪨 Отвар Каменной Кожи</div><div class="rd">Восстанавливает <b>25% HP</b>, а всё избыточное лечение превращает в <b>Походный Щит</b> (до 30% макс. HP)!' + (!canStoneSkin ? '<br><b style="color:var(--red)">Недоступно в статусе «При смерти».</b>' : '') + '</div></div><button type="button" id="btnLabStone"' + (canStoneSkin ? '' : ' disabled') + '>Выпить</button></div>'
+        + '<div class="expPathCard boss"><div><div class="rn">🧪 Кислотная Смазка</div><div class="rd">В следующем бою (включая Босса!) враг теряет <b>4% от своего макс. HP при каждом твоём промахе</b> (кроме Единицы).</div></div><button type="button" id="btnLabAcid">Нанести</button></div>'
+        + '</div></div>';
+    } else {
+      var choices = d.choices || generateExpChoicesV20(d.st, d.seed, d.cacheUsed);
+      h += '<p style="font-size:13px;color:var(--muted)">Развилка Этажа ' + (d.st + 1) + ' (доступно путей: <b>' + choices.length + '</b>):</p>';
+      h += '<div class="expPathsGrid">';
+      choices.forEach(function(ch, idx){
+        var cCls = 'expPathCard ' + (ch.type || '');
+        var rarBadge = ch.r ? rarPill(ch.r) : '';
+        h += '<div class="' + cCls + '">'
+          + '<div><div class="rn">' + ch.title + ' ' + rarBadge + '</div><div class="rd" style="margin-top:4px">' + ch.desc + '</div></div>'
+          + '<button type="button" data-exp-path="' + idx + '">Выбрать</button>'
+          + '</div>';
+      });
+      h += '</div>';
+      h += '<button type="button" id="btnExpAbandon" class="ghost" style="margin-top:8px">🏳️ Покинуть экспедицию (мешок сгорит)</button>';
+    }
+    h += '</div>';
+
+    box.innerHTML = h;
+    var go = $('dgGo'); if(go) go.onclick = function(){ showTab('game'); };
+    var ab = $('btnExpAbandon');
+    if(ab) ab.onclick = function(){
+      confirmBox('Покинуть Экспедицию досрочно? Взнос (' + price + ' монет) и весь Трофейный мешок (' + bagStr + ') будут потеряны! Сохранится только опыт и монеты за обычные бои.', 'Отступить', dgLeave);
+    };
+    var bSafe = $('btnAltarSafe'); if(bSafe) bSafe.onclick = function(){ applyAltarChoiceV20('safe'); };
+    var bSac = $('btnAltarSacrifice'); if(bSac) bSac.onclick = function(){ applyAltarChoiceV20('sacrifice'); };
+    var fBlood = $('btnFerryBlood'); if(fBlood) fBlood.onclick = function(){ applyFerryChoiceV28('blood'); };
+    var fGold = $('btnFerryGold'); if(fGold) fGold.onclick = function(){ applyFerryChoiceV28('gold'); };
+    var fSkip = $('btnFerrySkip'); if(fSkip) fSkip.onclick = function(){ applyFerryChoiceV28('skip'); };
+    var aBlade = $('btnAnvilBlade'); if(aBlade) aBlade.onclick = function(){ applyAnvilChoiceV28('blade'); };
+    var aArmor = $('btnAnvilArmor'); if(aArmor) aArmor.onclick = function(){ applyAnvilChoiceV28('armor'); };
+    var aLucky = $('btnAnvilLucky'); if(aLucky) aLucky.onclick = function(){ applyAnvilChoiceV28('lucky'); };
+    var lStone = $('btnLabStone'); if(lStone) lStone.onclick = function(){ applyLabChoiceV28('stoneskin'); };
+    var lAcid = $('btnLabAcid'); if(lAcid) lAcid.onclick = function(){ applyLabChoiceV28('acid'); };
+
+    box.querySelectorAll('[data-exp-path]').forEach(function(b){
+      b.onclick = function(){ selectExpeditionPathV20(Number(this.getAttribute('data-exp-path'))); };
+    });
+  };
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 28 ================== */
   })();
 </script>
 </body>
