@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="29">
-<title>Рулетка с чатом · Версия 29</title>
+<meta name="app-version" content="30">
+<title>Рулетка с чатом · Версия 30</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
@@ -1363,7 +1363,7 @@ html, body {
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 29</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 30</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -12573,15 +12573,14 @@ function startFirestoreListenersV20(){
   };
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 28 ================== */
 
-  /* ================== МОДУЛЬ UPDATE 29: ТИГЕЛЬ, БАШНЯ ИСПЫТАНИЙ, АРЕНА И ИДЕАЛЬНОЕ ПАРИРОВАНИЕ ================== */
-  RELEASE_ID = 29;
+  /* ================== МОДУЛЬ UPDATE 29–30: ТИГЕЛЬ, БАШНЯ ЗА БИЛЕТЫ РЕЙДА И ПОЛНАЯ КОПИЯ ИГРОКОВ НА АРЕНЕ ================== */
+  RELEASE_ID = 30;
   RELEASE_NOTES.unshift({
-    title: 'Версия 29 · Магический Тигель, Башня Испытаний, Арена и Парирование',
+    title: 'Версия 30 · Полные копии игроков на Арене и Билеты Башни из Рейда',
     lines: [
-      '🔮 Магический Тигель (в Кузнице): куй случайные предметы строго своего класса и текущего максимального ранга только за Магическую пыль ✨ (Ранг × 150 ✨, без золота и без Реликвий).',
-      '🌊 Башня Испытаний (Затопленный Бастион Рыболюдей): бесконечный режим без авто-лечения между этажами! Награждает Магической пылью ✨ за каждый этаж (Этаж × 2 ✨, а на каждом 10-м этаже Босс даёт Этаж × 10 ✨). 1-й вход в день бесплатный, следующие — за Камни 🪨.',
-      '⚔️ Арена (Колизей PvP) и Лидерборд Гладиаторов: сражайся с героями других игроков! На Красных секторах бьёшь ты (работают твои чары и твоя Счастливая пятёрка), на Чёрных — бьёт соперник (работают его чары и его Счастливая пятёрка). Зеро — твой супер-крит ×2, Единица — супер-крит врага ×2.',
-      '⚡ Идеальное Парирование в PvE: если на рулетке выпадает число, которое одновременно является коронным ударом Босса и твоим Счастливым числом, атака босса полностью отменяется, а ты наносишь ответный сокрушительный контрудар!'
+      '⚔️ Точные копии игроков на Арене: при вызове соперника переносятся ВСЕ его реальные характеристики — надетая броня и оружие с уровнем заточки (+1…+10), зачарования (крит, вампиризм, шипы), бонусы сетов (блок Воина, уклонение Лучника, щит Мага), раса, подкласс, Престиж и питомец!',
+      '🎯 Честная Счастливая пятёрка в PvP: если у соперника есть Престиж и открыты Счастливые числа — они срабатывают на Чёрных секторах с эффектом его подкласса. Если у игрока ещё нет Счастливых чисел — в бою на Арене их у него тоже нет.',
+      '🎫 Билеты Башни Испытаний: 1-й вход в сутки в Башню бесплатный, а повторные входы требуют 🎫 Билет Башни (по 1 билету за вход). Билеты выпадают в награду за участие в победе над Мировым Боссом (Рейдом), а также продаются в Трофейной лавке Колизея за медали Арены!'
     ]
   });
 
@@ -12592,15 +12591,19 @@ function startFirestoreListenersV20(){
     }
   }
 
-  // Надёжная синхронизация данных V29 в game.earned (в RTDB) и в v20Data (в localStorage/Firestore)
+  // Надёжная синхронизация данных V30 в game.earned (в RTDB) и в v20Data (в localStorage/Firestore)
   function ensureV29State(){
     if(!v20Data.tower || typeof v20Data.tower !== 'object'){
       v20Data.tower = {
         on: false, floor: 1, maxFloor: 0, day: minerDay(), entriesToday: 0,
-        p: 100, ph: 100, pa: 10, m: 50, mh: 50, foeIdx: 0, dealt: 0, taken: 0,
-        dustBag: 0, curses: []
+        tickets: 0, p: 100, ph: 100, pa: 10, m: 50, mh: 50, foeIdx: 0,
+        dealt: 0, taken: 0, dustBag: 0, curses: []
       };
     }
+    if(typeof v20Data.tower.tickets !== 'number' || !Number.isFinite(v20Data.tower.tickets)){
+      v20Data.tower.tickets = 0;
+    }
+    v20Data.tower.tickets = Math.max(0, Math.floor(v20Data.tower.tickets));
     if(!Array.isArray(v20Data.tower.curses)) v20Data.tower.curses = [];
     if(v20Data.tower.day !== minerDay()){
       v20Data.tower.day = minerDay();
@@ -12619,36 +12622,58 @@ function startFirestoreListenersV20(){
       v20Data.arena.fightsToday = 0;
     }
 
-    // Загружаем маркеры из RTDB только один раз при старте сессии, чтобы потраченные медали не восстанавливались обратно!
+    // Загружаем маркеры из RTDB строго один раз за сессию
     if(game && game.earned && typeof game.earned === 'object' && !v20Data._v29Hydrated){
       v20Data._v29Hydrated = true;
-      var rtdbMmr = -1, rtdbTwMax = -1, rtdbMedals = -1;
+      var rtdbMmr = -1, rtdbTwMax = -1, rtdbMedals = -1, rtdbTickets = -1;
       Object.keys(game.earned).forEach(function(k){
         if(!game.earned[k]) return;
         if(/^ar_mmr_\d+$/.test(k)) rtdbMmr = Math.max(rtdbMmr, parseInt(k.slice(7), 10));
         else if(/^tw_max_\d+$/.test(k)) rtdbTwMax = Math.max(rtdbTwMax, parseInt(k.slice(7), 10));
         else if(/^ar_med_\d+$/.test(k)) rtdbMedals = Math.max(rtdbMedals, parseInt(k.slice(7), 10));
+        else if(/^tw_tkt_\d+$/.test(k)) rtdbTickets = Math.max(rtdbTickets, parseInt(k.slice(7), 10));
       });
       if(rtdbMmr > 0 && v20Data.arena.mmr === 1000 && v20Data.arena.wins === 0 && v20Data.arena.losses === 0){
         v20Data.arena.mmr = rtdbMmr;
       }
       if(rtdbTwMax > (v20Data.tower.maxFloor || 0)) v20Data.tower.maxFloor = rtdbTwMax;
       if(rtdbMedals >= 0 && !v20Data.arena.medals) v20Data.arena.medals = rtdbMedals;
+      if(rtdbTickets >= 0 && !v20Data.tower.tickets) v20Data.tower.tickets = rtdbTickets;
     }
   }
 
+  // Записываем в game.earned как боевые маркеры (MMR, этаж, медали, билеты), так и полный снимок Престижа/Подкласса/Счастливых чисел для Арены!
   function syncV29MarkersToRTDB(){
     if(!game) return;
     ensureV29State();
     if(!game.earned || typeof game.earned !== 'object') game.earned = {newbie: true};
     Object.keys(game.earned).forEach(function(k){
-      if(/^ar_mmr_\d+$/.test(k) || /^tw_max_\d+$/.test(k) || /^ar_med_\d+$/.test(k)){
+      if(
+        /^ar_mmr_\d+$/.test(k) ||
+        /^tw_max_\d+$/.test(k) ||
+        /^ar_med_\d+$/.test(k) ||
+        /^tw_tkt_\d+$/.test(k) ||
+        /^v30_pr_\d+$/.test(k) ||
+        /^v30_sc_[a-z_]+$/.test(k) ||
+        /^v30_l5_[0-9_]+$/.test(k)
+      ){
         delete game.earned[k];
       }
     });
     game.earned['ar_mmr_' + Math.max(100, Math.floor(Number(v20Data.arena.mmr) || 1000))] = true;
     game.earned['tw_max_' + Math.max(0, Math.floor(Number(v20Data.tower.maxFloor) || 0))] = true;
     game.earned['ar_med_' + Math.max(0, Math.floor(Number(v20Data.arena.medals) || 0))] = true;
+    game.earned['tw_tkt_' + Math.max(0, Math.floor(Number(v20Data.tower.tickets) || 0))] = true;
+
+    var prest = Math.max(0, Math.floor(Number(v20Data.prestige) || 0));
+    if(prest > 0) game.earned['v30_pr_' + prest] = true;
+    if(v20Data.subcls && findSubclassV20(v20Data.subcls)){
+      game.earned['v30_sc_' + v20Data.subcls] = true;
+    }
+    var cleanL5 = sanitizeLuckyFiveV20(v20Data.lucky5);
+    if(v20Data.subcls && cleanL5.length === 5){
+      game.earned['v30_l5_' + cleanL5.join('_')] = true;
+    }
   }
 
   function towerOnV29(){
@@ -12658,14 +12683,12 @@ function startFirestoreListenersV20(){
     return !!(v20Data && v20Data.arena && v20Data.arena.on);
   }
 
-  // Расширяем проверки активного боя, чтобы в Башне и на Арене нельзя было переодеваться или торговать
   var _origIsInActiveCombatV29 = isInActiveCombatV20;
   isInActiveCombatV20 = function(){
     if(towerOnV29() || arenaOnV29()) return true;
     return _origIsInActiveCombatV29();
   };
 
-  // Сохранение и загрузка V29 в localStorage и Firestore
   var _origLoadV20LocalV29 = loadV20Local;
   loadV20Local = function(){
     _origLoadV20LocalV29();
@@ -12682,6 +12705,154 @@ function startFirestoreListenersV20(){
     ensureV29State();
   };
 
+  // Полный расчёт профиля ЛЮБОГО игрока (себя или соперника из базы) со всей его бронёй, заточкой, чарами, сетами и Счастливыми числами
+  function buildFullPlayerCombatSnapshotV30(uidKey, nameStr, gObj, firestoreSnap){
+    var g = gObj || {};
+    var earned = (g.earned && typeof g.earned === 'object') ? g.earned : {};
+
+    // 1. Извлекаем Престиж, Подкласс, Счастливую пятёрку и MMR из Firestore-снимка или маркеров RTDB
+    var prest = 0, subId = '', lucky5 = [], mmr = 1000;
+    Object.keys(earned).forEach(function(k){
+      if(!earned[k]) return;
+      if(/^ar_mmr_\d+$/.test(k)) mmr = parseInt(k.slice(7), 10);
+      else if(/^v30_pr_\d+$/.test(k)) prest = parseInt(k.slice(7), 10);
+      else if(/^v30_sc_([a-z_]+)$/.test(k)) subId = k.slice(7);
+      else if(/^v30_l5_([0-9_]+)$/.test(k)){
+        lucky5 = sanitizeLuckyFiveV20(k.slice(7).split('_').map(Number));
+      }
+    });
+
+    if(firestoreSnap && typeof firestoreSnap === 'object'){
+      if(typeof firestoreSnap.prestige === 'number') prest = Math.max(prest, firestoreSnap.prestige);
+      if(firestoreSnap.subcls && findSubclassV20(firestoreSnap.subcls)) subId = firestoreSnap.subcls;
+      if(Array.isArray(firestoreSnap.lucky5)){
+        var fsL5 = sanitizeLuckyFiveV20(firestoreSnap.lucky5);
+        if(fsL5.length === 5) lucky5 = fsL5;
+      }
+      if(typeof firestoreSnap.mmr === 'number' && firestoreSnap.mmr > 0) mmr = firestoreSnap.mmr;
+    }
+
+    var subObj = findSubclassV20(subId);
+    // Главное правило: если у игрока нет подкласса/престижа или нет Счастливых чисел — массив lucky5 строго пустой!
+    if(!subObj || lucky5.length !== 5){
+      lucky5 = [];
+    }
+
+    // 2. Базовые статы + раса + класс + надетая экипировка С УЧЁТОМ ЗАТОЧКИ (+1..+10) каждой вещи
+    var baseSt = _origStatsBeforeV20(g);
+    var hp = baseSt.hp, atk = baseSt.atk;
+
+    // 3. Бонус Престижа и Подкласса
+    if(prest > 0){
+      hp  += prest * 80;
+      atk += prest * 18;
+    }
+    if(subObj){
+      if(subObj.hpPct)  hp  = Math.round(hp  * (1 + subObj.hpPct / 100));
+      if(subObj.atkPct) atk = Math.round(atk * (1 + subObj.atkPct / 100));
+    }
+
+    // 4. Бонусы комплекта (Сета брони / Реликвий) на HP, урон, Блок Воина, Уклонение Лучника и Щит Мага
+    var setBonus = (typeof window.getActiveSetBonus === 'function') ? window.getActiveSetBonus(g) : null;
+    var blockPct = 0, dodgePct = 0, mageShield = 0;
+    if(setBonus){
+      if(setBonus.type !== 'relic' && setBonus.pctBonus > 0){
+        hp  = Math.round(hp  * (1 + setBonus.pctBonus / 100));
+        atk = Math.round(atk * (1 + setBonus.pctBonus / 100));
+      } else if(setBonus.type === 'relic' && setBonus.count >= 2 && setBonus.key === 'set_nosferatu'){
+        hp  = Math.round(hp * 1.20);
+      }
+      if(setBonus.count >= 2 && setBonus.type !== 'relic' && typeof window.getClassSetDefPctV22 === 'function'){
+        var defVal = window.getClassSetDefPctV22(setBonus, g.cls);
+        if(g.cls === 'warrior') blockPct = defVal;
+        else if(g.cls === 'archer') dodgePct = defVal;
+        else if(g.cls === 'mage') mageShield = Math.max(0, Math.floor(hp * defVal / 100));
+      }
+      if(setBonus.type === 'relic' && setBonus.count >= 2){
+        if(setBonus.key === 'set_colossus') blockPct = Math.min(60, blockPct + 15);
+        if(setBonus.key === 'set_malganis') blockPct = Math.min(60, blockPct + 10);
+        if(setBonus.key === 'set_xalatah')  atk = Math.round(atk * 1.25);
+        if(setBonus.key === 'set_pyro')     atk = Math.round(atk * 1.20);
+        if(setBonus.key === 'set_arachna')  atk = Math.round(atk * 1.15);
+      }
+    }
+
+    // 5. Зачарования на всех надетых предметах + расовые и подклассовые бонусы к чарам
+    var ench = {crit:0, vamp:0, gold:0, thorns:0, haste:0};
+    if(g.eq){
+      ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+        var idx = wornIndex(g, sl);
+        if(idx >= 0 && g.enchants && g.enchants[idx]){
+          var e = parseEnchant(g.enchants[idx]);
+          if(e && ench[e.id] !== undefined) ench[e.id] += e.val;
+        }
+      });
+    }
+    if(subObj && subObj.enchMult){
+      ench.crit   = Math.round(ench.crit   * subObj.enchMult);
+      ench.vamp   = Math.round(ench.vamp   * subObj.enchMult);
+      ench.thorns = Math.round(ench.thorns * subObj.enchMult);
+    }
+    ench.crit   = Math.min(25, ench.crit);
+    ench.vamp   = Math.min(30, ench.vamp);
+    ench.thorns = Math.min(50, ench.thorns);
+
+    var r = g.race || 'human';
+    if(r === 'elf'){
+      ench.crit   = Math.min(35, Math.round(ench.crit   * 1.2));
+      ench.vamp   = Math.min(36, Math.round(ench.vamp   * 1.2));
+      ench.thorns = Math.min(60, Math.round(ench.thorns * 1.2));
+    }
+    if(r === 'beast')  ench.crit   = Math.min(40, ench.crit + 7);
+    if(r === 'undead') ench.vamp   = Math.min(38, ench.vamp + 6);
+    if(r === 'drake')  ench.thorns = Math.min(65, ench.thorns + 15);
+    if(subObj){
+      if(subObj.critBonus)   ench.crit   = Math.min(45, ench.crit   + subObj.critBonus);
+      if(subObj.vampBonus)   ench.vamp   = Math.min(45, ench.vamp   + subObj.vampBonus);
+      if(subObj.thornsBonus) ench.thorns = Math.min(65, ench.thorns + subObj.thornsBonus);
+    }
+
+    // 6. Детальный список надетых вещей с их реальной заточкой (+1..+10) и чарами для отображения на Арене
+    var gearMap = gearFromGame(g);
+    var gearDetails = [];
+    ['head','body','arms','legs','ring','amulet'].forEach(function(sl){
+      var itemId = gearMap[sl];
+      if(!itemId || !ITEMS[itemId]) return;
+      var wIdx = wornIndex(g, sl);
+      var enhLv = wIdx >= 0 ? copyLevel(g, wIdx) : 0;
+      var enchCode = (wIdx >= 0 && g.enchants && g.enchants[wIdx]) ? g.enchants[wIdx] : '';
+      var parsedE = parseEnchant(enchCode);
+      var label = ITEMS[itemId].name + (enhLv > 0 ? ' +' + enhLv : '') + (parsedE ? ' [' + parsedE.name + ' +' + parsedE.val + parsedE.unit + ']' : '');
+      gearDetails.push(label);
+    });
+
+    return {
+      uid: String(uidKey || 'opp'),
+      name: String(nameStr || 'Гладиатор').slice(0, 18),
+      level: Math.max(1, Number(g.level) || 1),
+      rank: maxRank(g),
+      prestige: prest,
+      race: r,
+      cls: g.cls || 'warrior',
+      subcls: subObj ? subObj.id : '',
+      subName: subObj ? subObj.name : '',
+      subSkill: subObj ? subObj.skill : '',
+      title: g.title || 'newbie',
+      hp: Math.max(100, hp),
+      atk: Math.max(6, atk),
+      crit: ench.crit || 0,
+      vamp: ench.vamp || 0,
+      thorns: ench.thorns || 0,
+      blockPct: blockPct,
+      dodgePct: dodgePct,
+      mageShield: mageShield,
+      lucky5: lucky5,
+      gear: gearMap,
+      gearSummary: gearDetails.length ? gearDetails.join(' · ') : 'Стартовое снаряжение',
+      mmr: mmr
+    };
+  }
+
   var _origSaveV20ToFirestoreV29 = saveV20ToFirestore;
   saveV20ToFirestore = function(){
     ensureV29State();
@@ -12689,8 +12860,16 @@ function startFirestoreListenersV20(){
     _origSaveV20ToFirestoreV29();
     var db = initFirestoreV20();
     if(!db || !sess || !sess.uid || !game) return;
+    var snap = buildFullPlayerCombatSnapshotV30(sess.uid, nick || sess.name, game, {
+      prestige: Number(v20Data.prestige) || 0,
+      subcls: v20Data.subcls || '',
+      lucky5: Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [],
+      mmr: Number(v20Data.arena.mmr) || 1000
+    });
+    // Учитываем активного питомца в личном снимке
     var stNow = stats(game);
-    var eqEnch = getEquippedEnchants(game);
+    snap.hp = stNow.hp;
+    snap.atk = stNow.atk;
     db.collection('players').doc(String(sess.uid)).set({
       tower: v20Data.tower,
       arena: {
@@ -12701,25 +12880,79 @@ function startFirestoreListenersV20(){
         day: v20Data.arena.day || minerDay(),
         fightsToday: v20Data.arena.fightsToday || 0
       },
-      arenaSnapshot: {
-        uid: String(sess.uid),
-        name: String(nick || sess.name || 'Игрок').slice(0, 18),
-        level: Number(game.level) || 1,
-        rank: maxRank(game),
-        race: game.race || 'human',
-        cls: game.cls || 'warrior',
-        subcls: v20Data.subcls || '',
-        title: game.title || 'newbie',
-        hp: stNow.hp,
-        atk: stNow.atk,
-        crit: eqEnch.crit || 0,
-        vamp: eqEnch.vamp || 0,
-        thorns: eqEnch.thorns || 0,
-        lucky5: Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [],
-        gear: equipped(),
-        mmr: Number(v20Data.arena.mmr) || 1000
-      }
+      arenaSnapshot: snap
     }, {merge: true}).catch(function(){});
+  };
+
+  // Интеграция выпадения 🎫 Билетов Башни в награды Мирового Босса (Рейда)!
+  window.claimRaidRewards = function(){
+    if(!game || merchantBusy) return;
+    ensureV29State();
+    var d = new Date();
+    var raidId = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    var claimKey = 'raid_reward_' + raidId;
+    if(game.earned[claimKey]){
+      toast('Вы уже забрали награду за этого босса!');
+      return;
+    }
+
+    toast('Проверка рейтинга урона...');
+    var db = firebase.database();
+    db.ref('raid/players').once('value').then(function(snap){
+      var players = snap.val() || {};
+      var list = [];
+      for(var k in players){
+        list.push({uid: k, dmg: Number(players[k].dmg) || 0});
+      }
+      list.sort(function(a, b){ return b.dmg - a.dmg; });
+
+      var myRank = -1, myDmg = 0;
+      for(var i = 0; i < list.length; i++){
+        if(list[i].uid === sess.uid){
+          myRank = i + 1;
+          myDmg = list[i].dmg;
+          break;
+        }
+      }
+
+      if(myRank === -1 || myDmg < 1000){
+        toast('Твой вклад слишком мал (меньше 1000 урона) или ты не участвовал в рейде.');
+        return;
+      }
+
+      var c = 0, dust = 0, st = 0, ticketsGain = 1, itemType = null;
+      if(myRank <= 3){
+        c = 5000; dust = 1000; ticketsGain = 3; itemType = rollLoot(20, false, true);
+        toast('🏆 ТОП-' + myRank + ' по урону! Получено +3 🎫 Билета Башни и трофеи!');
+      } else if(myRank <= 15){
+        c = 3000; st = 50; ticketsGain = 2; itemType = rollLoot(12, false, true);
+        toast('🏅 ТОП-' + myRank + '! Получено +2 🎫 Билета Башни и награда!');
+      } else {
+        c = 1000; st = 20; ticketsGain = 1; itemType = rollLoot(5, false, false);
+        toast('⚔️ Награда за рейд получена (+1 🎫 Билет Башни)!');
+      }
+
+      game.coins += c;
+      if(dust) game.dust = Math.min(1000000, (Number(game.dust) || 0) + dust);
+      if(st) game.stones = Math.min(1000000, (Number(game.stones) || 0) + st);
+      if(itemType){
+        game.inv.push(itemType);
+        toast('🎁 Выпал предмет из рейдового сундука: ' + ITEMS[itemType].name + ' и +' + ticketsGain + ' 🎫 Билет(а) Башни!');
+      }
+      v20Data.tower.tickets = (Number(v20Data.tower.tickets) || 0) + ticketsGain;
+      v20Data._v29Hydrated = true;
+      game.earned[claimKey] = true;
+      syncV29MarkersToRTDB();
+      saveV20Local();
+      saveV20ToFirestore();
+      saveGame();
+      renderCoins();
+      renderChar();
+      var btnC = $('btnClaimRaidReward');
+      if(btnC) btnC.style.display = 'none';
+    }).catch(function(){
+      toast('Ошибка при получении наград. Попробуй позже.');
+    });
   };
 
   // =========================================================================
@@ -12730,7 +12963,6 @@ function startFirestoreListenersV20(){
 
   function rollCrucibleItemForClassV29(rank, cls){
     var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
-    // Используем веса с бонусом как у Элиты, но БЕЗ Реликвий (только до Divine)
     var weights = lootWeights(r, true, true).filter(function(pair){ return pair[0] !== 'relic'; });
     var totalW = 0;
     weights.forEach(function(pair){ totalW += pair[1]; });
@@ -12774,7 +13006,6 @@ function startFirestoreListenersV20(){
       toast('Не удалось выковать предмет.');
       return;
     }
-    // Анти-абуз F5: сразу списываем пыль, кладём предмет и сохраняем
     game.dust = Math.max(0, (Number(game.dust) || 0) - costDust);
     game.inv.push(itemId);
     var it = ITEMS[itemId];
@@ -12841,11 +13072,9 @@ function startFirestoreListenersV20(){
     var isBossSkillNum = Boolean(bossData && Array.isArray(bossData.skillNums) && bossData.skillNums.indexOf(n) !== -1);
     var isPlayerLuckyNum = Boolean(activeLucky.indexOf(n) !== -1 && (sub || (dgOn() && v20Data.exp && v20Data.exp.anvilBuff === 'lucky')));
 
-    // Если число одновременно активирует ульту Босса И Счастливое число игрока — срабатывает ИДЕАЛЬНОЕ ПАРИРОВАНИЕ!
     if(isBossSkillNum && isPlayerLuckyNum && n > 1){
       var savedSkills = bossData.skillNums;
       try {
-        // Временно отключаем ульту босса, чтобы выполнилась Счастливая пятёрка игрока
         bossData.skillNums = [];
         var baseText = _origStrikeCoreBaseBeforeParryV29(f, mo, st, n);
         var counterDmg = Math.max(1, Math.round(mo.dmg * 1.5));
@@ -12861,7 +13090,7 @@ function startFirestoreListenersV20(){
   };
 
   // =========================================================================
-  // 3. БАШНЯ ИСПЫТАНИЙ: БИОМ «ЗАТОПЛЕННЫЙ БАСТИОН РЫБОЛЮДЕЙ» + ФАРМ ПЫЛИ
+  // 3. БАШНЯ ИСПЫТАНИЙ: БИОМ «ЗАТОПЛЕННЫЙ БАСТИОН РЫБОЛЮДЕЙ» + ВХОД ЗА БИЛЕТЫ РЕЙДА 🎫
   // =========================================================================
   var TOWER_FISHMEN_MOBS = [
     {id:'fish_scout',  name:'Мурлок-Волнорез',       hp:46, dmg:7,  rule:'красное или чётное число',        hit:function(n){return n>0&&(color(n)==='red'||n%2===0);}},
@@ -12883,7 +13112,6 @@ function startFirestoreListenersV20(){
     {id:'curse_armor', name:'Мокрая Чешуя',     desc:'Монстры Башни получают на 10% меньше урона'}
   ];
 
-  // SVG-арты для рыболюдей
   var _origMonsterSvgV29 = monsterSvg;
   monsterSvg = function(id){
     if(String(id).indexOf('fish_') === 0){
@@ -12908,7 +13136,6 @@ function startFirestoreListenersV20(){
     return _origMonsterSvgV29(id);
   };
 
-  // Формула усиления монстров Башни: Эффективный ранг + экспоненциальный Мутаген Башни
   function getTowerMultiplierV29(floor){
     var f = Math.max(1, Number(floor) || 1);
     return Number((1 + f * 0.045 + f * f * 0.0018).toFixed(3));
@@ -12933,13 +13160,14 @@ function startFirestoreListenersV20(){
 
   function getTowerDustRewardV29(floor){
     var f = Math.max(1, Math.floor(Number(floor) || 1));
-    if(f % 10 === 0) return f * 12; // Босс каждые 10 этажей даёт куш пыли
+    if(f % 10 === 0) return f * 12;
     return f * 2 + Math.floor(f / 5) * 3;
   }
 
-  function getTowerEntryStoneCostV29(){
+  // Стоимость входа в Башню: 1-й раз в сутки бесплатно (0 билетов), повторные входы — 1 🎫 Билет Башни
+  function getTowerEntryTicketCostV30(){
     ensureV29State();
-    return Math.max(0, Number(v20Data.tower.entriesToday) || 0); // 0 камней за 1-й вход, 1 за 2-й, 2 за 3-й...
+    return (Number(v20Data.tower.entriesToday) || 0) === 0 ? 0 : 1;
   }
 
   function startTowerRunV29(){
@@ -12950,12 +13178,16 @@ function startFirestoreListenersV20(){
       return;
     }
     ensureV29State();
-    var stoneCost = getTowerEntryStoneCostV29();
-    if((Number(game.stones) || 0) < stoneCost){
-      toast('🪨 Не хватает Камней улучшения для входа! Нужно: ' + stoneCost + ' 🪨.');
+    var ticketCost = getTowerEntryTicketCostV30();
+    var myTickets = Math.max(0, Math.floor(Number(v20Data.tower.tickets) || 0));
+    if(myTickets < ticketCost){
+      toast('🎫 Нужен Билет Башни для повторного входа сегодня! Выбей его из Мирового Босса (Рейда) или обменяй за медали Арены.');
       return;
     }
-    if(stoneCost > 0) game.stones -= stoneCost;
+    if(ticketCost > 0){
+      v20Data.tower.tickets = myTickets - ticketCost;
+      v20Data._v29Hydrated = true;
+    }
 
     var st = stats(game);
     var startHp = v20Data.nearDeath ? 1 : st.hp;
@@ -12982,6 +13214,7 @@ function startFirestoreListenersV20(){
 
     fightLog = '🗼 Ты вошёл в Башню Испытаний (Биом: Затопленный Бастион Рыболюдей). Этаж 1: ' + firstFoe.name + '! Авто-лечения между этажами нет.';
     fightMsg = ''; fightChest = false;
+    syncV29MarkersToRTDB();
     saveV20Local(); saveV20ToFirestore(); saveGame();
     updateLockedTabsV20();
     renderCoins(); renderFight(); renderTowerV29();
@@ -13017,7 +13250,6 @@ function startFirestoreListenersV20(){
     var foe = makeTowerFoeV29(tw.floor, tw.foeIdx);
     var st = {hp: tw.ph, atk: tw.pa};
 
-    // Применяем проклятия Башни (каждые 10 этажей добавляется проклятие)
     var hasCrush = tw.curses.indexOf('curse_ crush') !== -1;
     var hasArmor = tw.curses.indexOf('curse_armor') !== -1;
     var hasVampCurse = tw.curses.indexOf('curse_vamp') !== -1;
@@ -13028,7 +13260,6 @@ function startFirestoreListenersV20(){
     tw.buddy = minerActive(game);
     fightLog = strikeCore(tw, foe, st, n);
 
-    // Если активно проклятие Солёной Крови — урезаем полученный вампиризм на 35%
     if(hasVampCurse && tw.p > beforeP){
       var healDiff = tw.p - beforeP;
       var penaltyHeal = Math.floor(healDiff * 0.35);
@@ -13046,7 +13277,6 @@ function startFirestoreListenersV20(){
       var up = gainXP(xpGain);
       if(clearedFloor > (tw.maxFloor || 0)) tw.maxFloor = clearedFloor;
 
-      // Каждые 10 этажей накладывается новое Проклятие Башни
       var curseMsg = '';
       if(clearedFloor % 10 === 0 && tw.curses.length < TOWER_CURSES_POOL.length){
         var nextCurse = TOWER_CURSES_POOL[tw.curses.length];
@@ -13067,7 +13297,6 @@ function startFirestoreListenersV20(){
       saveV20Local(); saveV20ToFirestore(); saveGame();
       renderCoins(); renderProgress(); renderTowerV29();
     } else if(tw.p <= 0){
-      // При гибели в Башне статус «При смерти» НЕ накладывается, а игрок сохраняет 50% нафармленной пыли!
       var keptDust = Math.floor((Number(tw.dustBag) || 0) * 0.50);
       if(keptDust > 0){
         game.dust = Math.min(1000000, (Number(game.dust) || 0) + keptDust);
@@ -13112,13 +13341,13 @@ function startFirestoreListenersV20(){
     if(!box || !game) return;
     ensureV29State();
     var tw = v20Data.tower;
-    var stoneCost = getTowerEntryStoneCostV29();
-    var myStones = Number(game.stones) || 0;
+    var ticketCost = getTowerEntryTicketCostV30();
+    var myTickets = Math.max(0, Math.floor(Number(tw.tickets) || 0));
     var busy = !!(game.fight && game.fight.on) || dgOn() || arenaOnV29();
 
     var h = '<div class="card towerCard"><h3>🗼 Башня Испытаний · Затопленный Бастион</h3>';
     h += '<div class="towerBiomeBanner">'
-      + '<div><b>🌊 Регион: Рыболюди Абиссали</b><br><span style="color:var(--muted)">Твой рекорд: <b>' + (tw.maxFloor || 0) + ' этаж</b> · Попыток сегодня: <b>' + (tw.entriesToday || 0) + '</b></span></div>'
+      + '<div><b>🌊 Регион: Рыболюди Абиссали</b><br><span style="color:var(--muted)">Твой рекорд: <b>' + (tw.maxFloor || 0) + ' этаж</b> · Входов сегодня: <b>' + (tw.entriesToday || 0) + '</b> · Билетов Башни: <b style="color:var(--gold)">' + myTickets + ' 🎫</b></span></div>'
       + '<span class="rar" style="background:#0284c7">Фарм Пыли ✨</span>'
       + '</div>';
 
@@ -13126,10 +13355,10 @@ function startFirestoreListenersV20(){
       h += '<p>• <b>Бесконечный подъём:</b> с каждым этажом монстры усиливаются по формуле <code>1 + 0.045·Этаж + 0.0018·Этаж²</code>.<br>'
         + '• <b>Никакого авто-лечения:</b> здоровье между этажами не восстанавливается (работают только вампиризм, пассивки и боевые зелья).<br>'
         + '• <b>Горы Магической пыли ✨:</b> каждый этаж даёт растущую награду пыли, а каждый 10-й этаж — Босс Рыболюдей с <b>×12 пыли</b>! Ты можешь остановиться и забрать 100% чаши в любой момент (при гибели сохраняется 50% чаши, статус «При смерти» не накладывается).<br>'
-        + '• <b>Плата за вход:</b> 1-й вход в сутки — <b>Бесплатно</b>, последующие входы требуют Камни улучшения (сейчас: <b>' + (stoneCost === 0 ? 'Бесплатно' : stoneCost + ' 🪨') + '</b>).</p>';
+        + '• <b>Плата за вход:</b> 1-й вход в сутки — <b>Бесплатно</b>! Повторные входы требуют <b>1 🎫 Билет Башни</b> (выпадает за победу над 🌍 Мировым Боссом в Рейде или покупается за медали на Арене).</p>';
 
-      var canStart = gameLoaded && Boolean(game.cls) && !busy && (myStones >= stoneCost);
-      var btnTxt = !game.cls ? 'Сначала выбери класс' : (busy ? 'Заверши текущий бой/поход' : (myStones < stoneCost ? 'Нужно ' + stoneCost + ' 🪨 камней' : (stoneCost === 0 ? 'Войти в Башню (Бесплатно)' : 'Войти в Башню за ' + stoneCost + ' 🪨')));
+      var canStart = gameLoaded && Boolean(game.cls) && !busy && (myTickets >= ticketCost);
+      var btnTxt = !game.cls ? 'Сначала выбери класс' : (busy ? 'Заверши текущий бой/поход' : (myTickets < ticketCost ? 'Нужен 1 🎫 Билет Башни (выбей в Рейде)' : (ticketCost === 0 ? 'Войти в Башню (1-й вход Бесплатно)' : 'Войти в Башню за 1 🎫 Билет')));
       h += '<button type="button" id="btnStartTowerV29"' + (canStart ? '' : ' disabled') + '>' + btnTxt + '</button>';
     } else {
       var curFoe = makeTowerFoeV29(tw.floor, tw.foeIdx);
@@ -13159,7 +13388,7 @@ function startFirestoreListenersV20(){
   }
 
   // =========================================================================
-  // 4. АРЕНА (АСИНХРОННОЕ PVP ПО ЦВЕТАМ РУЛЕТКИ + ТАБЛИЦА ЛИДЕРОВ MMR)
+  // 4. АРЕНА (ПОЛНАЯ КОПИЯ БРОНИ, ЗАТОЧКИ, ЧАР, СЕТОВ И СЧАСТЛИВЫХ ЧИСЕЛ ИГРОКА)
   // =========================================================================
   var arenaOpponentsPoolV29 = [];
   var arenaLoadingOpps = false;
@@ -13172,24 +13401,32 @@ function startFirestoreListenersV20(){
     var races = ['human', 'orc', 'demon', 'elf', 'drake', 'undead'];
     var scale = 0.88 + index * 0.12;
     var c = classes[index % classes.length];
+    var hasSub = (myRank >= 15 && index === 2);
     var subList = SUBCLASSES_V20[c] || [];
-    var pickedSub = (myRank >= 10 && subList.length) ? subList[index % subList.length].id : '';
+    var subObj = (hasSub && subList.length) ? subList[index % subList.length] : null;
     return {
       uid: 'bot_' + index,
       name: names[(index + myRank) % names.length],
       level: Math.max(1, (game ? game.level : 1) + (index - 1) * 2),
       rank: myRank,
+      prestige: subObj ? 1 : 0,
       race: races[(index + myRank) % races.length],
       cls: c,
-      subcls: pickedSub,
+      subcls: subObj ? subObj.id : '',
+      subName: subObj ? subObj.name : '',
+      subSkill: subObj ? subObj.skill : '',
       title: 'veteran',
       hp: Math.max(80, Math.round(mySt.hp * scale)),
       atk: Math.max(6, Math.round(mySt.atk * scale)),
       crit: 6 + index * 4,
       vamp: 4 + index * 3,
       thorns: index === 2 ? 12 : 0,
-      lucky5: rollLuckyFiveV20(),
+      blockPct: c === 'warrior' ? 10 : 0,
+      dodgePct: c === 'archer' ? 8 : 0,
+      mageShield: c === 'mage' ? Math.round(mySt.hp * scale * 0.12) : 0,
+      lucky5: subObj ? rollLuckyFiveV20() : [], // Только если у бота есть подкласс!
       gear: gearOf(c),
+      gearSummary: 'Экипировка Колизея · Ранг ' + myRank,
       mmr: Math.max(800, (v20Data.arena.mmr || 1000) + (index - 1) * 45)
     };
   }
@@ -13200,49 +13437,38 @@ function startFirestoreListenersV20(){
     ensureV29State();
     var myRank = game ? maxRank(game) : 1;
 
-    token().then(function(t){
-      return fetch(DB_URL + '/users.json?orderBy=%22game%2Fspins%22&limitToLast=35&auth=' + encodeURIComponent(t));
-    }).then(function(r){ return r.json(); }).then(function(obj){
+    // Запрашиваем реальные профили из RTDB и при наличии дополняем данными из Firestore
+    var fsMapPromise = Promise.resolve({});
+    var fsDb = initFirestoreV20();
+    if(fsDb){
+      fsMapPromise = fsDb.collection('players').limit(50).get().then(function(qSnap){
+        var m = {};
+        qSnap.forEach(function(doc){
+          m[doc.id] = doc.data() || {};
+        });
+        return m;
+      }).catch(function(){ return {}; });
+    }
+
+    Promise.all([
+      token().then(function(t){
+        return fetch(DB_URL + '/users.json?orderBy=%22game%2Fspins%22&limitToLast=35&auth=' + encodeURIComponent(t));
+      }).then(function(r){ return r.json(); }),
+      fsMapPromise
+    ]).then(function(results){
+      var obj = results[0];
+      var fsMap = results[1] || {};
       var candidates = [];
       if(obj && !obj.error){
         Object.keys(obj).forEach(function(uidKey){
           if(sess && uidKey === sess.uid) return;
           var u = obj[uidKey] || {}, g = u.game || {};
           if(!g || !g.cls) return;
-          var oppRank = maxRank(g);
-          var st = _origStatsBeforeV20(g);
-          var eqEnch = _origGetEquippedEnchantsV19(g);
-          var oppMmr = 1000;
-          if(g.earned && typeof g.earned === 'object'){
-            Object.keys(g.earned).forEach(function(ek){
-              if(g.earned[ek] && /^ar_mmr_\d+$/.test(ek)) oppMmr = parseInt(ek.slice(7), 10);
-            });
-          }
-          var rSeed = rng(hashStr('arena_l5:' + uidKey));
-          var l5 = [];
-          while(l5.length < 5){
-            var rn = 2 + Math.floor(rSeed() * 35);
-            if(l5.indexOf(rn) === -1) l5.push(rn);
-          }
-          candidates.push({
-            uid: uidKey,
-            name: u.name || 'Гладиатор',
-            level: Number(g.level) || 1,
-            rank: oppRank,
-            race: g.race || 'human',
-            cls: g.cls || 'warrior',
-            subcls: '',
-            title: g.title || 'newbie',
-            hp: Math.max(100, st.hp),
-            atk: Math.max(6, st.atk),
-            crit: Math.min(35, eqEnch.crit || 5),
-            vamp: Math.min(30, eqEnch.vamp || 0),
-            thorns: Math.min(40, eqEnch.thorns || 0),
-            lucky5: l5,
-            gear: gearFromGame(g),
-            mmr: oppMmr,
-            rankDiff: Math.abs(oppRank - myRank)
-          });
+          var fsDoc = fsMap[uidKey] || {};
+          var fsSnap = fsDoc.arenaSnapshot || fsDoc;
+          var fullSnap = buildFullPlayerCombatSnapshotV30(uidKey, u.name || 'Гладиатор', g, fsSnap);
+          fullSnap.rankDiff = Math.abs(fullSnap.rank - myRank);
+          candidates.push(fullSnap);
         });
       }
       candidates.sort(function(a, b){ return a.rankDiff - b.rankDiff || (Math.random() - 0.5); });
@@ -13285,19 +13511,24 @@ function startFirestoreListenersV20(){
     var mySt = stats(game);
     ar.on = true;
     ar.fightsToday = (Number(ar.fightsToday) || 0) + 1;
-    // На Арене всегда полное виртуальное здоровье (статус «При смерти» не мешает и не накладывается)
     ar.p = mySt.hp;
     ar.ph = mySt.hp;
     ar.pa = mySt.atk;
     ar.opp = JSON.parse(JSON.stringify(varopp));
-    ar.m = ar.opp.hp;
-    ar.mh = ar.opp.hp;
+    // Если у соперника Маг с сетом — добавляем его магический щит к его стартовому здоровью
+    var oppStartShield = Number(ar.opp.mageShield) || 0;
+    ar.m = ar.opp.hp + oppStartShield;
+    ar.mh = ar.opp.hp + oppStartShield;
+    ar.oppTrapped = false;
+    ar.myTrapped = false;
 
     window.mageMaxBattleShield = window.calcMageShieldV22(game, mySt.hp);
     window.mageCurrentBattleShield = window.mageMaxBattleShield;
 
-    fightLog = '⚔️ ДУЭЛЬ НА АРЕНЕ: Ты против гладиатора «' + ar.opp.name + '» (' + ar.opp.mmr + ' MMR)! Красное/Зеро — твой удар, Чёрное/Единица — удар соперника!';
+    var oppL5Txt = (ar.opp.lucky5 && ar.opp.lucky5.length === 5) ? ('Счастливые числа врага: ' + ar.opp.lucky5.join(', ')) : 'Счастливых чисел у соперника нет';
+    fightLog = '⚔️ ДУЭЛЬ НА АРЕНЕ: Ты против «' + ar.opp.name + '» (' + ar.opp.mmr + ' MMR · ' + oppL5Txt + ')! Красное/Зеро — твой удар, Чёрное/Единица — удар соперника!';
     fightMsg = ''; fightChest = false;
+    syncV29MarkersToRTDB();
     saveV20Local(); saveV20ToFirestore(); saveGame();
     updateLockedTabsV20();
     renderCoins(); renderFight(); renderArenaV29();
@@ -13313,74 +13544,128 @@ function startFirestoreListenersV20(){
 
     var myEnch = getEquippedEnchants(game);
     var mySub = findSubclassV20(v20Data.subcls);
-    var myLucky = Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [];
-    var oppLucky = Array.isArray(opp.lucky5) ? opp.lucky5 : [];
+    var myLucky = (mySub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.length === 5) ? v20Data.lucky5 : [];
+    var oppSub = findSubclassV20(opp.subcls);
+    var oppLucky = (oppSub && Array.isArray(opp.lucky5) && opp.lucky5.length === 5) ? opp.lucky5 : [];
     var c = color(n);
+
+    var mySetBonus = (typeof getActiveSetBonus === 'function') ? getActiveSetBonus(game) : null;
+    var myBlockPct = 0, myDodgePct = 0;
+    if(mySetBonus && mySetBonus.count >= 2 && mySetBonus.type !== 'relic' && typeof window.getClassSetDefPctV22 === 'function'){
+      var dVal = window.getClassSetDefPctV22(mySetBonus, game.cls);
+      if(game.cls === 'warrior') myBlockPct = dVal;
+      else if(game.cls === 'archer') myDodgePct = dVal;
+    }
+
+    var effMyAtk = ar.myTrapped ? Math.max(1, Math.round(ar.pa * 0.80)) : ar.pa;
+    var effOppAtk = ar.oppTrapped ? Math.max(1, Math.round(opp.atk * 0.80)) : opp.atk;
 
     // 1. ЗЕРО (0) -> ТВОЙ СУПЕР-КРИТ x2
     if(n === 0){
-      var d0 = ar.pa * 2;
+      var isTriple = (game.race === 'demon' && Math.random() < 0.05);
+      var d0 = effMyAtk * (isTriple ? 3 : 2);
       ar.m = Math.max(0, ar.m - d0);
       var v0 = myEnch.vamp > 0 ? Math.max(1, Math.round(d0 * myEnch.vamp / 100)) : 0;
       if(v0) ar.p = Math.min(ar.ph, ar.p + v0);
-      fightLog = '🟢 ЗЕРО (0)! Твой сокрушительный супер-крит (×2): ' + opp.name + ' теряет ' + d0 + ' HP!' + (v0 ? ' Вампиризм +' + v0 + ' HP.' : '');
+      fightLog = '🟢 ЗЕРО (0)! Твой сокрушительный супер-крит (×' + (isTriple ? 3 : 2) + '): ' + opp.name + ' теряет ' + d0 + ' HP!' + (v0 ? ' Вампиризм +' + v0 + ' HP.' : '');
     }
     // 2. ЕДИНИЦА (1) -> СУПЕР-КРИТ ПРОТИВНИКА x2
     else if(n === 1){
-      var od1 = opp.atk * 2;
+      var autoSaved = (game.race === 'automaton');
+      var od1 = effOppAtk * (autoSaved ? 1 : 2);
       if(window.mageCurrentBattleShield > 0){
         var abs1 = Math.min(od1, window.mageCurrentBattleShield);
         window.mageCurrentBattleShield -= abs1;
         od1 -= abs1;
       }
       ar.p = Math.max(0, ar.p - od1);
-      fightLog = '💀 ЕДИНИЦА (1)! Супер-крит соперника (×2): ' + opp.name + ' наносит тебе ' + od1 + ' урона!';
+      fightLog = '💀 ЕДИНИЦА (1)! ' + (autoSaved ? '⚙️ Автоматон погасил крит соперника: ' : 'Супер-крит соперника (×2): ') + opp.name + ' наносит тебе ' + od1 + ' урона!';
     }
-    // 3. КРАСНЫЙ СЕКТОР -> АТАКУЕШЬ ТЫ (проверяется ТОЛЬКО твоя Счастливая пятёрка)
+    // 3. КРАСНЫЙ СЕКТОР -> АТАКУЕШЬ ТЫ (проверяется ТОЛЬКО твоя Счастливая пятёрка, если она у тебя есть)
     else if(c === 'red'){
-      var isMyUlt = (myLucky.indexOf(n) !== -1);
-      var isMyCrit = !isMyUlt && (myEnch.crit > 0 && Math.random() * 100 < myEnch.crit);
-      var mult = isMyUlt ? 2.4 : (isMyCrit ? 1.75 : 1.0);
-      var dmg = Math.max(1, Math.round(ar.pa * mult));
-      ar.m = Math.max(0, ar.m - dmg);
+      if((opp.dodgePct || 0) > 0 && Math.random() * 100 < opp.dodgePct){
+        fightLog = '🔴 Выпало ' + n + ' (Красное — Твой ход): 💨 Соперник «' + opp.name + '» уклонился от твоего удара за счёт сета Лучника!';
+      } else {
+        var isMyUlt = (myLucky.indexOf(n) !== -1);
+        var isMyCrit = !isMyUlt && (myEnch.crit > 0 && Math.random() * 100 < myEnch.crit);
+        var mult = 1.0, ultNote = '';
+        if(isMyUlt && mySub){
+          mult = 2.4;
+          ultNote = '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + ' [' + mySub.name + ' · ' + mySub.skill + ']! ';
+          if(mySub.id === 'witcher'){ var bDmg = Math.max(1, Math.round(ar.mh * 0.05)); ar.m = Math.max(0, ar.m - bDmg); ultNote += '🔥 Игни −' + bDmg + ' HP! '; }
+          else if(mySub.id === 'berserk'){ var bh = Math.max(1, Math.round(ar.ph * 0.15)); ar.p = Math.min(ar.ph, ar.p + bh); ultNote += '🩸 Ярость +' + bh + ' HP! '; }
+          else if(mySub.id === 'paladin'){ var ph = Math.max(1, Math.round(ar.ph * 0.20)); ar.p = Math.min(ar.ph, ar.p + ph); ultNote += '🛡️ Свет +' + ph + ' HP! '; }
+          else if(mySub.id === 'sniper'){ mult = 2.8; }
+          else if(mySub.id === 'trapper'){ ar.oppTrapped = true; ultNote += '🪤 Капкан (−20% урона врага)! '; }
+          else if(mySub.id === 'chronomage'){ var ch = Math.max(1, Math.round(ar.ph * 0.20)); ar.p = Math.min(ar.ph, ar.p + ch); ultNote += '⏳ Разлом +' + ch + ' HP! '; }
+        } else if(isMyCrit){
+          mult = (mySub && mySub.id === 'sniper') ? 2.1 : 1.75;
+        }
+        var dmg = Math.max(1, Math.round(effMyAtk * mult));
+        if((opp.blockPct || 0) > 0){
+          dmg = Math.max(1, Math.round(dmg * (1 - opp.blockPct / 100)));
+        }
+        ar.m = Math.max(0, ar.m - dmg);
 
-      var vp = myEnch.vamp > 0 ? Math.max(1, Math.round(dmg * myEnch.vamp / 100)) : 0;
-      if(vp) ar.p = Math.min(ar.ph, ar.p + vp);
+        var myVampPct = myEnch.vamp + (isMyUlt && mySub && mySub.id === 'necromancer' ? 35 : 0);
+        var vp = myVampPct > 0 ? Math.max(1, Math.round(dmg * myVampPct / 100)) : 0;
+        if(vp) ar.p = Math.min(ar.ph, ar.p + vp);
 
-      var oppTh = opp.thorns > 0 ? Math.min(ar.p - 1, Math.max(1, Math.round(dmg * opp.thorns / 100))) : 0;
-      if(oppTh > 0) ar.p -= oppTh;
+        var oppTh = (opp.thorns || 0) > 0 ? Math.min(Math.max(0, ar.p - 1), Math.max(1, Math.round(dmg * opp.thorns / 100))) : 0;
+        if(oppTh > 0) ar.p -= oppTh;
 
-      fightLog = '🔴 Выпало ' + n + ' (Красное — Твой ход): '
-        + (isMyUlt ? '🌟 ТВОЯ УЛЬТА СЧАСТЛИВОГО ЧИСЛА (×2.4)! ' : (isMyCrit ? '💥 КРИТ! ' : ''))
-        + opp.name + ' теряет ' + dmg + ' HP.'
-        + (vp ? ' Вампиризм +' + vp + ' HP.' : '')
-        + (oppTh > 0 ? ' Шипы врага вернули ' + oppTh + ' урона.' : '');
-    }
-    // 4. ЧЁРНЫЙ СЕКТОР -> АТАКУЕТ ПРОТИВНИК (проверяется ТОЛЬКО Счастливая пятёрка противника)
-    else {
-      var isOppUlt = (oppLucky.indexOf(n) !== -1);
-      var isOppCrit = !isOppUlt && ((opp.crit || 0) > 0 && Math.random() * 100 < opp.crit);
-      var oMult = isOppUlt ? 2.2 : (isOppCrit ? 1.65 : 1.0);
-      var oDmg = Math.max(1, Math.round(opp.atk * oMult));
-
-      if(window.mageCurrentBattleShield > 0){
-        var abs = Math.min(oDmg, window.mageCurrentBattleShield);
-        window.mageCurrentBattleShield -= abs;
-        oDmg -= abs;
+        fightLog = '🔴 Выпало ' + n + ' (Красное — Твой ход): '
+          + (isMyUlt ? ultNote : (isMyCrit ? '💥 КРИТ! ' : ''))
+          + opp.name + ' теряет ' + dmg + ' HP' + (opp.blockPct ? ' (Блок врага ' + opp.blockPct + '%)' : '') + '.'
+          + (vp ? ' Вампиризм +' + vp + ' HP.' : '')
+          + (oppTh > 0 ? ' Шипы врага вернули ' + oppTh + ' урона.' : '');
       }
-      ar.p = Math.max(0, ar.p - oDmg);
+    }
+    // 4. ЧЁРНЫЙ СЕКТОР -> АТАКУЕТ ПРОТИВНИК (проверяется ТОЛЬКО Счастливая пятёрка противника, если она у него есть!)
+    else {
+      if(myDodgePct > 0 && Math.random() * 100 < myDodgePct){
+        fightLog = '⚫ Выпало ' + n + ' (Чёрное — Ход соперника): 💨 Ты уклонился от удара «' + opp.name + '» благодаря сету Лучника!';
+      } else {
+        var isOppUlt = (oppLucky.indexOf(n) !== -1);
+        var isOppCrit = !isOppUlt && ((opp.crit || 0) > 0 && Math.random() * 100 < opp.crit);
+        var oMult = 1.0, oppUltNote = '';
+        if(isOppUlt && oppSub){
+          oMult = 2.2;
+          oppUltNote = '⚠️ СЧАСТЛИВОЕ ЧИСЛО ВРАГА ' + n + ' [' + oppSub.name + ' · ' + oppSub.skill + ']! ';
+          if(oppSub.id === 'witcher'){ var obDmg = Math.max(1, Math.round(ar.ph * 0.05)); ar.p = Math.max(0, ar.p - obDmg); oppUltNote += '🔥 Игни −' + obDmg + ' HP! '; }
+          else if(oppSub.id === 'berserk'){ var obh = Math.max(1, Math.round(ar.mh * 0.15)); ar.m = Math.min(ar.mh, ar.m + obh); oppUltNote += '🩸 Ярость врага +' + obh + ' HP! '; }
+          else if(oppSub.id === 'paladin'){ var oph = Math.max(1, Math.round(ar.mh * 0.20)); ar.m = Math.min(ar.mh, ar.m + oph); oppUltNote += '🛡️ Свет врага +' + oph + ' HP! '; }
+          else if(oppSub.id === 'sniper'){ oMult = 2.6; }
+          else if(oppSub.id === 'trapper'){ ar.myTrapped = true; oppUltNote += '🪤 Ты попал в капкан (−20% атаки)! '; }
+          else if(oppSub.id === 'chronomage'){ var och = Math.max(1, Math.round(ar.mh * 0.20)); ar.m = Math.min(ar.mh, ar.m + och); oppUltNote += '⏳ Разлом врага +' + och + ' HP! '; }
+        } else if(isOppCrit){
+          oMult = (oppSub && oppSub.id === 'sniper') ? 2.0 : 1.65;
+        }
+        var oDmg = Math.max(1, Math.round(effOppAtk * oMult));
+        if(myBlockPct > 0){
+          oDmg = Math.max(1, Math.round(oDmg * (1 - myBlockPct / 100)));
+        }
 
-      var oVp = (opp.vamp || 0) > 0 ? Math.max(1, Math.round(oDmg * opp.vamp / 100)) : 0;
-      if(oVp && ar.m > 0) ar.m = Math.min(ar.mh, ar.m + oVp);
+        if(window.mageCurrentBattleShield > 0){
+          var abs = Math.min(oDmg, window.mageCurrentBattleShield);
+          window.mageCurrentBattleShield -= abs;
+          oDmg -= abs;
+        }
+        ar.p = Math.max(0, ar.p - oDmg);
 
-      var myTh = myEnch.thorns > 0 ? Math.min(ar.m, Math.max(1, Math.round(oDmg * myEnch.thorns / 100))) : 0;
-      if(myTh > 0) ar.m -= myTh;
+        var oppVampPct = (opp.vamp || 0) + (isOppUlt && oppSub && oppSub.id === 'necromancer' ? 35 : 0);
+        var oVp = oppVampPct > 0 ? Math.max(1, Math.round(oDmg * oppVampPct / 100)) : 0;
+        if(oVp && ar.m > 0) ar.m = Math.min(ar.mh, ar.m + oVp);
 
-      fightLog = '⚫ Выпало ' + n + ' (Чёрное — Ход соперника): '
-        + (isOppUlt ? '⚠️ УЛЬТА СОПЕРНИКА НА ЧИСЛЕ ' + n + ' (×2.2)! ' : (isOppCrit ? '💥 Крит врага! ' : ''))
-        + opp.name + ' наносит тебе ' + oDmg + ' урона.'
-        + (oVp ? ' Враг исцелил +' + oVp + ' HP.' : '')
-        + (myTh > 0 ? ' Твои Шипы вернули ' + myTh + ' урона!' : '');
+        var myTh = myEnch.thorns > 0 ? Math.min(ar.m, Math.max(1, Math.round(oDmg * myEnch.thorns / 100))) : 0;
+        if(myTh > 0) ar.m -= myTh;
+
+        fightLog = '⚫ Выпало ' + n + ' (Чёрное — Ход соперника): '
+          + (isOppUlt ? oppUltNote : (isOppCrit ? '💥 Крит врага! ' : ''))
+          + opp.name + ' наносит тебе ' + oDmg + ' урона' + (myBlockPct ? ' (Твой блок ' + myBlockPct + '%)' : '') + '.'
+          + (oVp ? ' Враг исцелил +' + oVp + ' HP.' : '')
+          + (myTh > 0 ? ' Твои Шипы вернули ' + myTh + ' урона!' : '');
+      }
     }
 
     // Проверка победы или поражения на Арене
@@ -13393,6 +13678,7 @@ function startFirestoreListenersV20(){
       ar.mmr = (Number(ar.mmr) || 1000) + mmrGain;
       ar.wins = (Number(ar.wins) || 0) + 1;
       ar.medals = (Number(ar.medals) || 0) + 1;
+      v20Data._v29Hydrated = true;
       game.dust = Math.min(1000000, (Number(game.dust) || 0) + dustReward);
       game.coins += coinReward;
 
@@ -13410,6 +13696,7 @@ function startFirestoreListenersV20(){
       var mmrLoss = 15;
       ar.mmr = Math.max(100, (Number(ar.mmr) || 1000) - mmrLoss);
       ar.losses = (Number(ar.losses) || 0) + 1;
+      v20Data._v29Hydrated = true;
 
       syncV29MarkersToRTDB();
       saveV20Local(); saveV20ToFirestore(); saveGame();
@@ -13428,9 +13715,14 @@ function startFirestoreListenersV20(){
     if(!opp){ box.hidden = true; return; }
     var pm = Math.max(0, Math.min(100, Math.round(ar.m / ar.mh * 100)));
     var pp = Math.max(0, Math.min(100, Math.round(ar.p / ar.ph * 100)));
+    var oppHasL5 = (opp.subcls && Array.isArray(opp.lucky5) && opp.lucky5.length === 5);
     box.hidden = false;
     box.className = 'fight elite';
-    box.innerHTML = '<div class="fhead"><div class="mon">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</div><div style="flex:1;min-width:0"><div class="rn">⚔️ Арена: ' + escapeHtmlV20(opp.name) + ' (' + opp.mmr + ' MMR)</div><div class="rd">🔴 Красное / 🟢 0 = бьёшь ТЫ · ⚫ Чёрное / 💀 1 = бьёт ВРАГ.<br>Счастливые числа врага (только на чёрном): <b>' + (opp.lucky5 || []).join(', ') + '</b></div></div></div>'
+    box.innerHTML = '<div class="fhead"><div class="mon">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</div><div style="flex:1;min-width:0"><div class="rn">⚔️ Арена: ' + escapeHtmlV20(opp.name) + ' (' + opp.mmr + ' MMR' + (opp.subName ? ' · ' + escapeHtmlV20(opp.subName) : '') + ')</div>'
+      + '<div class="rd">🔴 Красное / 🟢 0 = бьёшь ТЫ · ⚫ Чёрное / 💀 1 = бьёт ВРАГ.<br>'
+      + 'Броня врага: <span>' + escapeHtmlV20(opp.gearSummary || 'Стартовая') + '</span><br>'
+      + (oppHasL5 ? ('Счастливые числа врага (только на чёрном): <b>' + opp.lucky5.join(', ') + '</b>') : 'Счастливые числа врага: <b>нет (без Престижа)</b>')
+      + '</div></div></div>'
       + '<div><div class="hpl"><span>' + escapeHtmlV20(opp.name) + '</span><span>' + ar.m + ' / ' + ar.mh + '</span></div><div class="bar m"><i style="width:' + pm + '%"></i></div></div>'
       + '<div><div class="hpl"><span>Ты</span><span>' + ar.p + ' / ' + ar.ph + '</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
       + '<div class="flog">' + fightLog + '</div>';
@@ -13449,12 +13741,12 @@ function startFirestoreListenersV20(){
     var h = '<div class="card arenaCard"><h3>⚔️ Колизей Гладиаторов (PvP Арена)</h3>';
     h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;background:var(--bg);border-radius:12px;border:1px solid var(--line)">'
       + '<div>🏆 Твой рейтинг: <b style="color:var(--gold);font-size:17px">' + (ar.mmr || 1000) + ' MMR</b></div>'
-      + '<div style="font-size:13px;color:var(--muted)">Побед: <b>' + (ar.wins || 0) + '</b> · Поражений: <b>' + (ar.losses || 0) + '</b> · Медалей: <b>' + (ar.medals || 0) + ' 🏅</b></div>'
+      + '<div style="font-size:13px;color:var(--muted)">Побед: <b>' + (ar.wins || 0) + '</b> · Поражений: <b>' + (ar.losses || 0) + '</b> · Медалей: <b>' + (ar.medals || 0) + ' 🏅</b> · Билетов Башни: <b>' + (v20Data.tower.tickets || 0) + ' 🎫</b></div>'
       + '</div>';
 
     h += '<div class="arenaRuleBox">'
-      + '<div class="arenaRuleCell"><b style="color:#ef4444">🔴 Красные сектора + 🟢 Зеро:</b><br>Твоя очередь атаки! Срабатывают твои чары и твоя Счастливая пятёрка (Зеро бьёт ×2).</div>'
-      + '<div class="arenaRuleCell"><b style="color:#a855f7">⚫ Чёрные сектора + 💀 Единица:</b><br>Очередь соперника! Срабатывают его чары и его Счастливая пятёрка (Единица бьёт ×2).</div>'
+      + '<div class="arenaRuleCell"><b style="color:#ef4444">🔴 Красные сектора + 🟢 Зеро:</b><br>Твоя очередь атаки! Работают твои заточки, чары, сеты и твоя Счастливая пятёрка (если открыта).</div>'
+      + '<div class="arenaRuleCell"><b style="color:#a855f7">⚫ Чёрные сектора + 💀 Единица:</b><br>Очередь соперника! Работают все его реальные вещи с заточкой и чарами + его Счастливая пятёрка (если открыта).</div>'
       + '</div>';
 
     if(ar.on && ar.opp){
@@ -13470,24 +13762,33 @@ function startFirestoreListenersV20(){
       h += '<div class="arenaOppGrid">';
       arenaOpponentsPoolV29.forEach(function(opp, idx){
         var cName = (opp.cls && CLASSES[opp.cls]) ? CLASSES[opp.cls].name : 'Воин';
+        var subBadge = opp.subName ? (' · <b>' + escapeHtmlV20(opp.subName) + '</b>') : '';
+        var l5Info = (opp.subcls && opp.lucky5 && opp.lucky5.length === 5) ? ('🎯 Числа: ' + opp.lucky5.join(', ')) : 'Без счастливых чисел';
         h += '<div class="arenaOppCard">'
           + '<div class="arenaOppLeft">'
           + '<span class="av">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</span>'
           + '<div>'
           + '<div class="rn">' + escapeHtmlV20(opp.name) + ' <span class="tt">' + opp.mmr + ' MMR</span></div>'
-          + '<div class="rd">' + cName + ' · Ранг ' + opp.rank + ' · ❤️ ' + opp.hp + ' HP · ⚔️ ' + opp.atk + ' урон · 💥 ' + (opp.crit || 0) + '% крит</div>'
+          + '<div class="rd">' + cName + subBadge + ' · Ранг ' + opp.rank + ' · ❤️ ' + opp.hp + ' HP' + (opp.mageShield ? ' (+' + opp.mageShield + ' щит)' : '') + ' · ⚔️ ' + opp.atk + ' урон · 💥 ' + (opp.crit || 0) + '% крит · 🩸 ' + (opp.vamp || 0) + '% вамп · 🌵 ' + (opp.thorns || 0) + '% шипы</div>'
+          + '<div class="rd" style="font-size:11px;margin-top:2px">🛡️ ' + escapeHtmlV20(opp.gearSummary || 'Стартовое снаряжение') + ' · ' + l5Info + '</div>'
           + '</div></div>'
           + '<button type="button" data-arena-fight="' + idx + '" style="padding:8px 16px;font-size:14px"' + (!gameLoaded || !game.cls || busy ? ' disabled' : '') + '>Вызвать ⚔️</button>'
           + '</div>';
       });
       h += '</div>';
 
-      // Наградная лавка за Медали Гладиатора
+      // Трофейная лавка за Медали Гладиатора (Камни + Пыль или Билет Башни)
       var canTradeMedal = !busy && (ar.medals || 0) >= 3;
-      h += '<div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
-        + '<span style="font-size:13px">🏅 Трофейная лавка Колизея: обменяй <b>3 🏅 Медали</b> на <b>2 🪨 Камня заточки + 250 ✨ пыли</b></span>'
+      var canBuyTicket = !busy && (ar.medals || 0) >= 2;
+      h += '<div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px;display:flex;flex-direction:column;gap:8px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+        + '<span style="font-size:13px">🏅 Сундук Колизея: <b>3 🏅 Медали</b> → <b>2 🪨 Камня заточки + 250 ✨ пыли</b></span>'
         + '<button type="button" id="btnTradeArenaMedals" class="ghost" style="padding:6px 14px;font-size:13px"' + (canTradeMedal ? '' : ' disabled') + '>Обменять (3 🏅)</button>'
-        + '</div>';
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+        + '<span style="font-size:13px">🎫 Пропуск Башни: <b>2 🏅 Медали</b> → <b>1 🎫 Билет Башни Испытаний</b></span>'
+        + '<button type="button" id="btnBuyTowerTicketArena" class="ghost" style="padding:6px 14px;font-size:13px"' + (canBuyTicket ? '' : ' disabled') + '>Купить билет (2 🏅)</button>'
+        + '</div></div>';
     }
     h += '</div>';
     box.innerHTML = h;
@@ -13513,6 +13814,24 @@ function startFirestoreListenersV20(){
       renderCoins(); renderArenaV29();
       toast('🏅 Медали обменяны! Осталось медалей: ' + v20Data.arena.medals + ' 🏅. Получено +2 🪨 Камня и +250 ✨ пыли!');
     };
+    var tktBtn = $('btnBuyTowerTicketArena');
+    if(tktBtn) tktBtn.onclick = function(){
+      if(this.disabled || merchantBusy || !gameLoaded) return;
+      var curMedals = Math.max(0, Math.floor(Number(v20Data.arena.medals) || 0));
+      if(curMedals < 2){
+        this.disabled = true;
+        renderArenaV29();
+        return;
+      }
+      this.disabled = true;
+      v20Data.arena.medals = curMedals - 2;
+      v20Data.tower.tickets = Math.max(0, Math.floor(Number(v20Data.tower.tickets) || 0)) + 1;
+      v20Data._v29Hydrated = true;
+      syncV29MarkersToRTDB();
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      renderArenaV29();
+      toast('🎫 Получен +1 Билет Башни Испытаний! (Всего билетов: ' + v20Data.tower.tickets + ' 🎫)');
+    };
     box.querySelectorAll('[data-arena-fight]').forEach(function(b){
       b.onclick = function(){ startArenaMatchV29(Number(this.getAttribute('data-arena-fight'))); };
     });
@@ -13524,7 +13843,6 @@ function startFirestoreListenersV20(){
     var wasTower = towerOnV29();
     var wasArena = arenaOnV29();
     if(wasTower || wasArena){
-      // Чтобы во время Башни или Арены не сработала случайная засада в _origOnSpinV29, временно поднимаем флаг
       var oldAmbush = AMBUSH_CHANCE;
       AMBUSH_CHANCE = 0;
       try {
@@ -13686,7 +14004,7 @@ function startFirestoreListenersV20(){
       if($('bmArena')) $('bmArena').className = 'tab';
     });
   }
-  /* ================== КОНЕЦ МОДУЛЯ UPDATE 29 ================== */
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 29–30 ================== */
   })();
 </script>
 </body>
