@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="28">
-<title>Рулетка с чатом · Версия 28</title>
+<meta name="app-version" content="29">
+<title>Рулетка с чатом · Версия 29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
@@ -1073,6 +1073,81 @@ html, body {
   background: var(--bg);
   border: 1px solid var(--line);
 }
+
+/* === UPDATE 29: ТИГЕЛЬ, БАШНЯ ИСПЫТАНИЙ И АРЕНА === */
+.crucibleCard {
+  border-color: #a855f7 !important;
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.08), transparent);
+}
+.towerCard {
+  border-color: #0ea5e9 !important;
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.09), transparent);
+}
+.towerBiomeBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(14, 165, 233, 0.14);
+  border: 1px solid #38bdf8;
+  font-size: 13px;
+}
+.towerCurseBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid #ef4444;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.arenaCard {
+  border-color: #f59e0b !important;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), transparent);
+}
+.arenaOppGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.arenaOppCard {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+.arenaOppCard:hover {
+  border-color: var(--gold);
+}
+.arenaOppLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.arenaRuleBox {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  font-size: 12px;
+}
+.arenaRuleCell {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
 </style>
 
 </head>
@@ -1217,7 +1292,7 @@ html, body {
 
     <section class="boardPane" id="boardPane" hidden>
       <h2 class="bt" id="boardTitle">Рейтинг по прокрутам</h2>
-      <div class="tabs"><button class="tab on" id="bmSpins">По прокрутам</button><button class="tab" id="bmCoins">По монетам</button></div>
+      <div class="tabs"><button class="tab on" id="bmSpins">По прокрутам</button><button class="tab" id="bmCoins">По монетам</button><button class="tab" id="bmArena">Гладиаторы ⚔️</button></div>
       <div class="board" id="board"></div>
       <button id="boardRefresh" class="ghost">Обновить</button>
     </section>
@@ -1237,6 +1312,8 @@ html, body {
       <div id="minerBody" hidden></div>
     </section>
     <section class="shopPane" id="dgPane" hidden><div id="dgBody"></div></section>
+    <section class="shopPane" id="towerPane" hidden><div id="towerBody"></div></section>
+    <section class="shopPane" id="arenaPane" hidden><div id="arenaBody"></div></section>
     <section class="shopPane" id="marketPane" hidden><div id="marketBody"></div></section>
     <section class="shopPane" id="petsPane" hidden><div id="petsBody"></div></section>
     <section class="shopPane" id="eventsPane" hidden>
@@ -1286,7 +1363,7 @@ html, body {
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 28</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 29</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -12495,6 +12572,1111 @@ function startFirestoreListenersV20(){
     });
   };
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 28 ================== */
+
+  /* ================== МОДУЛЬ UPDATE 29: ТИГЕЛЬ, БАШНЯ ИСПЫТАНИЙ, АРЕНА И ИДЕАЛЬНОЕ ПАРИРОВАНИЕ ================== */
+  RELEASE_ID = 29;
+  RELEASE_NOTES.unshift({
+    title: 'Версия 29 · Магический Тигель, Башня Испытаний, Арена и Парирование',
+    lines: [
+      '🔮 Магический Тигель (в Кузнице): куй случайные предметы строго своего класса и текущего максимального ранга только за Магическую пыль ✨ (Ранг × 150 ✨, без золота и без Реликвий).',
+      '🌊 Башня Испытаний (Затопленный Бастион Рыболюдей): бесконечный режим без авто-лечения между этажами! Награждает Магической пылью ✨ за каждый этаж (Этаж × 2 ✨, а на каждом 10-м этаже Босс даёт Этаж × 10 ✨). 1-й вход в день бесплатный, следующие — за Камни 🪨.',
+      '⚔️ Арена (Колизей PvP) и Лидерборд Гладиаторов: сражайся с героями других игроков! На Красных секторах бьёшь ты (работают твои чары и твоя Счастливая пятёрка), на Чёрных — бьёт соперник (работают его чары и его Счастливая пятёрка). Зеро — твой супер-крит ×2, Единица — супер-крит врага ×2.',
+      '⚡ Идеальное Парирование в PvE: если на рулетке выпадает число, которое одновременно является коронным ударом Босса и твоим Счастливым числом, атака босса полностью отменяется, а ты наносишь ответный сокрушительный контрудар!'
+    ]
+  });
+
+  // Добавляем вкладки Башни и Арены в раздел «Приключения»
+  if(HUB_TABS && Array.isArray(HUB_TABS.adv)){
+    if(!HUB_TABS.adv.some(function(t){ return t.id === 'tower'; })){
+      HUB_TABS.adv.splice(1, 0, {id:'tower', label:'Башня 🗼'}, {id:'arena', label:'Арена ⚔️'});
+    }
+  }
+
+  // Надёжная синхронизация данных V29 в game.earned (в RTDB) и в v20Data (в localStorage/Firestore)
+  function ensureV29State(){
+    if(!v20Data.tower || typeof v20Data.tower !== 'object'){
+      v20Data.tower = {
+        on: false, floor: 1, maxFloor: 0, day: minerDay(), entriesToday: 0,
+        p: 100, ph: 100, pa: 10, m: 50, mh: 50, foeIdx: 0, dealt: 0, taken: 0,
+        dustBag: 0, curses: []
+      };
+    }
+    if(!Array.isArray(v20Data.tower.curses)) v20Data.tower.curses = [];
+    if(v20Data.tower.day !== minerDay()){
+      v20Data.tower.day = minerDay();
+      v20Data.tower.entriesToday = 0;
+    }
+
+    if(!v20Data.arena || typeof v20Data.arena !== 'object'){
+      v20Data.arena = {
+        on: false, mmr: 1000, wins: 0, losses: 0, medals: 0,
+        day: minerDay(), fightsToday: 0, p: 100, ph: 100, pa: 10,
+        m: 100, mh: 100, opp: null, log: ''
+      };
+    }
+    if(v20Data.arena.day !== minerDay()){
+      v20Data.arena.day = minerDay();
+      v20Data.arena.fightsToday = 0;
+    }
+
+    if(game && game.earned && typeof game.earned === 'object'){
+      var rtdbMmr = -1, rtdbTwMax = -1, rtdbMedals = -1;
+      Object.keys(game.earned).forEach(function(k){
+        if(!game.earned[k]) return;
+        if(/^ar_mmr_\d+$/.test(k)) rtdbMmr = Math.max(rtdbMmr, parseInt(k.slice(7), 10));
+        else if(/^tw_max_\d+$/.test(k)) rtdbTwMax = Math.max(rtdbTwMax, parseInt(k.slice(7), 10));
+        else if(/^ar_med_\d+$/.test(k)) rtdbMedals = Math.max(rtdbMedals, parseInt(k.slice(7), 10));
+      });
+      if(rtdbMmr > 0 && v20Data.arena.mmr === 1000 && v20Data.arena.wins === 0 && v20Data.arena.losses === 0){
+        v20Data.arena.mmr = rtdbMmr;
+      }
+      if(rtdbTwMax > (v20Data.tower.maxFloor || 0)) v20Data.tower.maxFloor = rtdbTwMax;
+      if(rtdbMedals > (v20Data.arena.medals || 0)) v20Data.arena.medals = rtdbMedals;
+    }
+  }
+
+  function syncV29MarkersToRTDB(){
+    if(!game) return;
+    ensureV29State();
+    if(!game.earned || typeof game.earned !== 'object') game.earned = {newbie: true};
+    Object.keys(game.earned).forEach(function(k){
+      if(/^ar_mmr_\d+$/.test(k) || /^tw_max_\d+$/.test(k) || /^ar_med_\d+$/.test(k)){
+        delete game.earned[k];
+      }
+    });
+    game.earned['ar_mmr_' + Math.max(100, Math.floor(Number(v20Data.arena.mmr) || 1000))] = true;
+    game.earned['tw_max_' + Math.max(0, Math.floor(Number(v20Data.tower.maxFloor) || 0))] = true;
+    game.earned['ar_med_' + Math.max(0, Math.floor(Number(v20Data.arena.medals) || 0))] = true;
+  }
+
+  function towerOnV29(){
+    return !!(v20Data && v20Data.tower && v20Data.tower.on);
+  }
+  function arenaOnV29(){
+    return !!(v20Data && v20Data.arena && v20Data.arena.on);
+  }
+
+  // Расширяем проверки активного боя, чтобы в Башне и на Арене нельзя было переодеваться или торговать
+  var _origIsInActiveCombatV29 = isInActiveCombatV20;
+  isInActiveCombatV20 = function(){
+    if(towerOnV29() || arenaOnV29()) return true;
+    return _origIsInActiveCombatV29();
+  };
+
+  // Сохранение и загрузка V29 в localStorage и Firestore
+  var _origLoadV20LocalV29 = loadV20Local;
+  loadV20Local = function(){
+    _origLoadV20LocalV29();
+    try{
+      var raw = localStorage.getItem(v20StorageKey());
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && typeof parsed === 'object'){
+          if(parsed.tower && typeof parsed.tower === 'object') v20Data.tower = parsed.tower;
+          if(parsed.arena && typeof parsed.arena === 'object') v20Data.arena = parsed.arena;
+        }
+      }
+    }catch(e){}
+    ensureV29State();
+  };
+
+  var _origSaveV20ToFirestoreV29 = saveV20ToFirestore;
+  saveV20ToFirestore = function(){
+    ensureV29State();
+    syncV29MarkersToRTDB();
+    _origSaveV20ToFirestoreV29();
+    var db = initFirestoreV20();
+    if(!db || !sess || !sess.uid || !game) return;
+    var stNow = stats(game);
+    var eqEnch = getEquippedEnchants(game);
+    db.collection('players').doc(String(sess.uid)).set({
+      tower: v20Data.tower,
+      arena: {
+        mmr: v20Data.arena.mmr || 1000,
+        wins: v20Data.arena.wins || 0,
+        losses: v20Data.arena.losses || 0,
+        medals: v20Data.arena.medals || 0,
+        day: v20Data.arena.day || minerDay(),
+        fightsToday: v20Data.arena.fightsToday || 0
+      },
+      arenaSnapshot: {
+        uid: String(sess.uid),
+        name: String(nick || sess.name || 'Игрок').slice(0, 18),
+        level: Number(game.level) || 1,
+        rank: maxRank(game),
+        race: game.race || 'human',
+        cls: game.cls || 'warrior',
+        subcls: v20Data.subcls || '',
+        title: game.title || 'newbie',
+        hp: stNow.hp,
+        atk: stNow.atk,
+        crit: eqEnch.crit || 0,
+        vamp: eqEnch.vamp || 0,
+        thorns: eqEnch.thorns || 0,
+        lucky5: Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [],
+        gear: equipped(),
+        mmr: Number(v20Data.arena.mmr) || 1000
+      }
+    }, {merge: true}).catch(function(){});
+  };
+
+  // =========================================================================
+  // 1. МАГИЧЕСКИЙ ТИГЕЛЬ (КРАФТ СЛУЧАЙНЫХ ВЕЩЕЙ СВОЕГО КЛАССА И РАНГА ТОЛЬКО ЗА ПЫЛЬ)
+  // =========================================================================
+  var CRUCIBLE_DUST_PER_RANK = 150;
+  var lastCrucibleDropText = '';
+
+  function rollCrucibleItemForClassV29(rank, cls){
+    var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
+    // Используем веса с бонусом как у Элиты, но БЕЗ Реликвий (только до Divine)
+    var weights = lootWeights(r, true, true).filter(function(pair){ return pair[0] !== 'relic'; });
+    var totalW = 0;
+    weights.forEach(function(pair){ totalW += pair[1]; });
+    var roll = Math.random() * (totalW || 100), acc = 0, chosenRar = 'common';
+    for(var i = 0; i < weights.length; i++){
+      acc += weights[i][1];
+      if(roll <= acc){ chosenRar = weights[i][0]; break; }
+    }
+
+    var pool = Object.keys(ITEMS).filter(function(id){
+      if(id === 'mystery_egg') return false;
+      var it = ITEMS[id];
+      if(!it || !it.drop || it.r === 'relic' || it.r !== chosenRar) return false;
+      if(r < 10 && (it.slot === 'ring' || it.slot === 'amulet')) return false;
+      return (!it.cls || it.cls === cls);
+    });
+
+    if(!pool.length){
+      pool = Object.keys(ITEMS).filter(function(id){
+        var it = ITEMS[id];
+        return it && it.drop && it.r !== 'relic' && (!it.cls || it.cls === cls) && (r >= 10 || (it.slot !== 'ring' && it.slot !== 'amulet'));
+      });
+    }
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }
+
+  function craftInCrucibleV29(){
+    if(!canUseTownServicesV20() || !canSell()) return;
+    if(!game || !gameLoaded || !game.cls){
+      toast('Сначала выберите класс в Магазине!');
+      return;
+    }
+    var curRank = maxRank(game);
+    var costDust = curRank * CRUCIBLE_DUST_PER_RANK;
+    if((Number(game.dust) || 0) < costDust){
+      toast('✨ Недостаточно Магической пыли! Нужно: ' + costDust + ' ✨.');
+      return;
+    }
+    var itemId = rollCrucibleItemForClassV29(curRank, game.cls);
+    if(!itemId || !ITEMS[itemId]){
+      toast('Не удалось выковать предмет.');
+      return;
+    }
+    // Анти-абуз F5: сразу списываем пыль, кладём предмет и сохраняем
+    game.dust = Math.max(0, (Number(game.dust) || 0) - costDust);
+    game.inv.push(itemId);
+    var it = ITEMS[itemId];
+    lastCrucibleDropText = '🔮 Выковано: <b>' + escapeHtmlV20(it.name) + '</b> ' + rarPill(it.r) + ' (' + escapeHtmlV20(itemLine(itemId)) + ')';
+    $('dot').hidden = false;
+    saveGame();
+    renderCoins();
+    renderChar();
+    renderForge();
+    toast('🔮 Магический Тигель создал: «' + it.name + '» (' + RARITY[it.r].name + ')!');
+  }
+
+  var _origRenderForgeV29 = renderForge;
+  renderForge = function(){
+    _origRenderForgeV29();
+    var box = $('forgeBody');
+    if(!box || !game) return;
+
+    var oldCrucible = $('v29CrucibleCard');
+    if(oldCrucible) oldCrucible.remove();
+
+    var curRank = maxRank(game);
+    var costDust = curRank * CRUCIBLE_DUST_PER_RANK;
+    var myDust = Number(game.dust) || 0;
+    var canCraft = !isInActiveCombatV20() && !isInExpeditionV20() && canSell() && Boolean(game.cls) && (myDust >= costDust);
+
+    var weights = lootWeights(curRank, true, true).filter(function(pair){ return pair[0] !== 'relic' && pair[1] > 0; });
+    var oddsHtml = weights.map(function(x){
+      return rarPill(x[0]).replace('</span>', ' ' + x[1] + '%</span>');
+    }).join(' ');
+
+    var card = document.createElement('div');
+    card.id = 'v29CrucibleCard';
+    card.className = 'card crucibleCard';
+    card.style.marginTop = '12px';
+    card.innerHTML = '<h3>🔮 Магический Тигель · Крафт за Пыль</h3>'
+      + '<p>Сплавь чистую Магическую пыль ✨ в случайный предмет <b>строго твоего класса (' + (game.cls && CLASSES[game.cls] ? CLASSES[game.cls].name : 'выбери класс') + ')</b>! Шансы редкости автоматически подстраиваются под твой максимальный открытый ранг: <b>' + rankName(curRank) + '</b> (Реликвии Боссов в Тигеле не куются).</p>'
+      + '<div class="odds">' + oddsHtml + '</div>'
+      + '<p>Стоимость ковки на ' + curRank + '-м ранге: <b>' + costDust + ' ✨ Магической пыли</b> (у тебя: <b>' + myDust + ' ✨</b>).</p>'
+      + (lastCrucibleDropText ? '<div class="forgePreview" style="border-color:#a855f7">' + lastCrucibleDropText + '</div>' : '')
+      + '<div class="forgeButtons">'
+      + '<button type="button" id="btnCrucibleCraftV29"' + (canCraft ? '' : ' disabled') + '>'
+      + (!game.cls ? 'Сначала выбери класс' : (myDust < costDust ? 'Не хватает ' + (costDust - myDust) + ' ✨ пыли' : 'Выковать предмет за ' + costDust + ' ✨'))
+      + '</button></div>';
+
+    box.insertBefore(card, box.firstChild);
+    var btnC = $('btnCrucibleCraftV29');
+    if(btnC) btnC.onclick = craftInCrucibleV29;
+  };
+
+  // =========================================================================
+  // 2. ИДЕАЛЬНОЕ ПАРИРОВАНИЕ В PVE (КОГДА ЧИСЛО УЛЬТЫ БОССА СОВПАДАЕТ СО СЧАСТЛИВОЙ ПЯТЁРКОЙ)
+  // =========================================================================
+  var _origStrikeCoreBaseBeforeParryV29 = strikeCoreBase;
+  strikeCoreBase = function(f, mo, st, n){
+    var sub = findSubclassV20(v20Data.subcls);
+    var activeLucky = Array.isArray(v20Data.lucky5) ? v20Data.lucky5.slice() : [];
+    if(dgOn() && v20Data.exp && v20Data.exp.anvilBuff === 'lucky' && Array.isArray(v20Data.exp.anvilLucky2)){
+      activeLucky = activeLucky.concat(v20Data.exp.anvilLucky2);
+    }
+    var bossData = EXP_BOSSES_V20.find(function(b){ return b.id === (mo && mo.id); });
+    if(!bossData && mo && Array.isArray(mo.skillNums)) bossData = mo;
+
+    var isBossSkillNum = Boolean(bossData && Array.isArray(bossData.skillNums) && bossData.skillNums.indexOf(n) !== -1);
+    var isPlayerLuckyNum = Boolean(activeLucky.indexOf(n) !== -1 && (sub || (dgOn() && v20Data.exp && v20Data.exp.anvilBuff === 'lucky')));
+
+    // Если число одновременно активирует ульту Босса И Счастливое число игрока — срабатывает ИДЕАЛЬНОЕ ПАРИРОВАНИЕ!
+    if(isBossSkillNum && isPlayerLuckyNum && n > 1){
+      var savedSkills = bossData.skillNums;
+      try {
+        // Временно отключаем ульту босса, чтобы выполнилась Счастливая пятёрка игрока
+        bossData.skillNums = [];
+        var baseText = _origStrikeCoreBaseBeforeParryV29(f, mo, st, n);
+        var counterDmg = Math.max(1, Math.round(mo.dmg * 1.5));
+        f.m = Math.max(0, f.m - counterDmg);
+        f.dealt = (Number(f.dealt) || 0) + counterDmg;
+        if(typeof spawnFloatingText === 'function') spawnFloatingText('ПАРИРОВАНИЕ! -' + counterDmg, false, 'crit');
+        return '⚡ ИДЕАЛЬНОЕ ПАРИРОВАНИЕ НА ЧИСЛЕ ' + n + '! Ты отразил коронный удар «' + (bossData.skillName || 'Удар Босса') + '» обратно во врага (-' + counterDmg + ' HP)! ' + baseText;
+      } finally {
+        bossData.skillNums = savedSkills;
+      }
+    }
+    return _origStrikeCoreBaseBeforeParryV29(f, mo, st, n);
+  };
+
+  // =========================================================================
+  // 3. БАШНЯ ИСПЫТАНИЙ: БИОМ «ЗАТОПЛЕННЫЙ БАСТИОН РЫБОЛЮДЕЙ» + ФАРМ ПЫЛИ
+  // =========================================================================
+  var TOWER_FISHMEN_MOBS = [
+    {id:'fish_scout',  name:'Мурлок-Волнорез',       hp:46, dmg:7,  rule:'красное или чётное число',        hit:function(n){return n>0&&(color(n)==='red'||n%2===0);}},
+    {id:'fish_shaman', name:'Глубинный Жрец Прилива',hp:54, dmg:8,  rule:'нечётное число (кроме 1)',        hit:function(n){return n>1&&n%2===1;}},
+    {id:'fish_guard',  name:'Панцирный Мирмидон',    hp:68, dmg:9,  rule:'число от 1 до 18',                hit:function(n){return n>=1&&n<=18;}},
+    {id:'fish_siren',  name:'Сирена Абиссали',       hp:52, dmg:10, rule:'число от 13 до 36',               hit:function(n){return n>=13&&n<=36;}},
+    {id:'fish_brute',  name:'Краб-Джаггернаут',      hp:82, dmg:10, rule:'чёрное или число кратное 3',      hit:function(n){return n>0&&(color(n)==='black'||n%3===0);}}
+  ];
+
+  var TOWER_FISHMEN_BOSSES = [
+    {id:'fish_boss_leviathan', name:'Владыка Глубин Левиафан', hp:115, dmg:13, skillNums:[6,16,26], skillName:'Разлом Бездны',  rule:'чётное или число от 20 до 36 (Числа босса: 6, 16, 26 — цунами ×1.5 урона)', hit:function(n){return n>0&&(n%2===0||n>=20);}},
+    {id:'fish_boss_kraken',    name:'Император Кракен',        hp:125, dmg:12, skillNums:[8,18,28], skillName:'Хватка Щупалец', rule:'красное или число от 1 до 15 (Числа босса: 8, 18, 28 — удушение ×1.5 урона)', hit:function(n){return n>0&&(color(n)==='red'||n<=15);}}
+  ];
+  EXP_BOSSES_V20.push(TOWER_FISHMEN_BOSSES[0], TOWER_FISHMEN_BOSSES[1]);
+
+  var TOWER_CURSES_POOL = [
+    {id:'curse_vamp',  name:'Солёная Кровь',    desc:'Эффективность вампиризма снижена на 35%'},
+    {id:'curse_ crush',name:'Давление Бездны',  desc:'Монстры Башни наносят на 12% больше урона'},
+    {id:'curse_armor', name:'Мокрая Чешуя',     desc:'Монстры Башни получают на 10% меньше урона'}
+  ];
+
+  // SVG-арты для рыболюдей
+  var _origMonsterSvgV29 = monsterSvg;
+  monsterSvg = function(id){
+    if(String(id).indexOf('fish_') === 0){
+      var isBoss = String(id).indexOf('fish_boss_') === 0;
+      var bg1 = isBoss ? '#0284c7' : '#0d9488';
+      var bg2 = isBoss ? '#0f172a' : '#042f2e';
+      var finCol = isBoss ? '#38bdf8' : '#2dd4bf';
+      var eyeCol = isBoss ? '#fde047' : '#f43f5e';
+      return '<svg viewBox="0 0 100 100" aria-hidden="true">'
+        + '<rect width="100" height="100" fill="' + bg2 + '"/>'
+        + '<circle cx="50" cy="50" r="44" fill="' + bg1 + '" opacity="0.35"/>'
+        + '<path d="M50 10 L36 28 L64 28 Z M14 48 L30 38 L28 62 Z M86 48 L70 38 L72 62 Z" fill="' + finCol + '" stroke="#0f172a" stroke-width="2.2" stroke-linejoin="round"/>'
+        + '<ellipse cx="50" cy="56" rx="28" ry="26" fill="' + bg1 + '" stroke="#0f172a" stroke-width="2.5"/>'
+        + '<path d="M28 62 Q50 74 72 62" fill="none" stroke="#0f172a" stroke-width="3"/>'
+        + '<path d="M35 64 L38 56 L42 65 M48 66 L50 57 L52 66 M58 65 L62 56 L65 64" fill="#f8fafc" stroke="#0f172a" stroke-width="1.2"/>'
+        + '<circle cx="37" cy="46" r="6.5" fill="' + eyeCol + '" stroke="#0f172a" stroke-width="2"/>'
+        + '<circle cx="63" cy="46" r="6.5" fill="' + eyeCol + '" stroke="#0f172a" stroke-width="2"/>'
+        + '<circle cx="37" cy="46" r="2.3" fill="#0f172a"/><circle cx="63" cy="46" r="2.3" fill="#0f172a"/>'
+        + (isBoss ? '<path d="M30 24 L38 10 L50 20 L62 10 L70 24 Z" fill="#f59e0b" stroke="#0f172a" stroke-width="2"/>' : '')
+        + '</svg>';
+    }
+    return _origMonsterSvgV29(id);
+  };
+
+  // Формула усиления монстров Башни: Эффективный ранг + экспоненциальный Мутаген Башни
+  function getTowerMultiplierV29(floor){
+    var f = Math.max(1, Number(floor) || 1);
+    return Number((1 + f * 0.045 + f * f * 0.0018).toFixed(3));
+  }
+
+  function makeTowerFoeV29(floor, foeIdx){
+    var f = Math.max(1, Math.floor(Number(floor) || 1));
+    var effRank = Math.max(1, Math.min(20, Math.ceil(f / 5)));
+    var isBossFloor = (f % 10 === 0);
+    var base = isBossFloor
+      ? TOWER_FISHMEN_BOSSES[(Math.floor(f / 10) - 1) % TOWER_FISHMEN_BOSSES.length]
+      : TOWER_FISHMEN_MOBS[Math.abs(Number(foeIdx) || 0) % TOWER_FISHMEN_MOBS.length];
+
+    var m = makeMonster(base, effRank, isBossFloor, isBossFloor, true);
+    var tMult = getTowerMultiplierV29(f);
+    m.hp  = Math.max(20, Math.round(m.hp * tMult));
+    m.dmg = Math.max(2,  Math.round(m.dmg * (1 + (tMult - 1) * 0.72)));
+    m.name = (isBossFloor ? '👑 Босс ' + f + ' эт.: ' : '🌊 Этаж ' + f + ': ') + base.name;
+    if(base.skillNums){ m.skillNums = base.skillNums; m.skillName = base.skillName; }
+    return m;
+  }
+
+  function getTowerDustRewardV29(floor){
+    var f = Math.max(1, Math.floor(Number(floor) || 1));
+    if(f % 10 === 0) return f * 12; // Босс каждые 10 этажей даёт куш пыли
+    return f * 2 + Math.floor(f / 5) * 3;
+  }
+
+  function getTowerEntryStoneCostV29(){
+    ensureV29State();
+    return Math.max(0, Number(v20Data.tower.entriesToday) || 0); // 0 камней за 1-й вход, 1 за 2-й, 2 за 3-й...
+  }
+
+  function startTowerRunV29(){
+    if(!game || !gameLoaded || merchantBusy) return;
+    if(!game.cls){ toast('Сначала выберите класс в Магазине!'); return; }
+    if((game.fight && game.fight.on) || dgOn() || towerOnV29() || arenaOnV29()){
+      toast('Сначала завершите текущий бой или поход!');
+      return;
+    }
+    ensureV29State();
+    var stoneCost = getTowerEntryStoneCostV29();
+    if((Number(game.stones) || 0) < stoneCost){
+      toast('🪨 Не хватает Камней улучшения для входа! Нужно: ' + stoneCost + ' 🪨.');
+      return;
+    }
+    if(stoneCost > 0) game.stones -= stoneCost;
+
+    var st = stats(game);
+    var startHp = v20Data.nearDeath ? 1 : st.hp;
+    var firstIdx = Math.floor(Math.random() * TOWER_FISHMEN_MOBS.length);
+    var firstFoe = makeTowerFoeV29(1, firstIdx);
+
+    v20Data.tower.on = true;
+    v20Data.tower.floor = 1;
+    v20Data.tower.entriesToday = (Number(v20Data.tower.entriesToday) || 0) + 1;
+    v20Data.tower.p = startHp;
+    v20Data.tower.ph = startHp;
+    v20Data.tower.pa = st.atk;
+    v20Data.tower.foeIdx = firstIdx;
+    v20Data.tower.m = firstFoe.hp;
+    v20Data.tower.mh = firstFoe.hp;
+    v20Data.tower.dealt = 0;
+    v20Data.tower.taken = 0;
+    v20Data.tower.dustBag = 0;
+    v20Data.tower.curses = [];
+
+    var sh = (!v20Data.nearDeath) ? window.calcMageShieldV22(game, st.hp) : 0;
+    window.mageMaxBattleShield = sh;
+    window.mageCurrentBattleShield = sh;
+
+    fightLog = '🗼 Ты вошёл в Башню Испытаний (Биом: Затопленный Бастион Рыболюдей). Этаж 1: ' + firstFoe.name + '! Авто-лечения между этажами нет.';
+    fightMsg = ''; fightChest = false;
+    saveV20Local(); saveV20ToFirestore(); saveGame();
+    updateLockedTabsV20();
+    renderCoins(); renderFight(); renderTowerV29();
+    showTab('game');
+  }
+
+  function leaveTowerSafeV29(){
+    if(!towerOnV29()) return;
+    ensureV29State();
+    var tw = v20Data.tower;
+    var dustEarned = Math.max(0, Math.floor(Number(tw.dustBag) || 0));
+    var reachedFloor = Math.max(0, (Number(tw.floor) || 1) - 1);
+    if(dustEarned > 0){
+      game.dust = Math.min(1000000, (Number(game.dust) || 0) + dustEarned);
+    }
+    if(reachedFloor > (tw.maxFloor || 0)) tw.maxFloor = reachedFloor;
+    tw.on = false;
+    window.mageMaxBattleShield = 0;
+    window.mageCurrentBattleShield = 0;
+    syncV29MarkersToRTDB();
+    saveV20Local(); saveV20ToFirestore(); saveGame();
+    updateLockedTabsV20();
+    fightMsg = '🗼 Ты покинул Башню Испытаний с добычей! Пройдено этажей: ' + reachedFloor + '. Забрано Магической пыли: +' + dustEarned + ' ✨!';
+    fightChest = (dustEarned > 0);
+    renderCoins(); renderFight(); renderTowerV29();
+    toast('🗼 Вы забрали из Башни +' + dustEarned + ' ✨ Магической пыли!');
+  }
+
+  function towerStrikeV29(n){
+    if(!towerOnV29()) return;
+    ensureV29State();
+    var tw = v20Data.tower;
+    var foe = makeTowerFoeV29(tw.floor, tw.foeIdx);
+    var st = {hp: tw.ph, atk: tw.pa};
+
+    // Применяем проклятия Башни (каждые 10 этажей добавляется проклятие)
+    var hasCrush = tw.curses.indexOf('curse_ crush') !== -1;
+    var hasArmor = tw.curses.indexOf('curse_armor') !== -1;
+    var hasVampCurse = tw.curses.indexOf('curse_vamp') !== -1;
+    if(hasCrush) foe.dmg = Math.max(1, Math.round(foe.dmg * 1.12));
+    if(hasArmor) st.atk = Math.max(1, Math.round(st.atk * 0.90));
+
+    var beforeP = tw.p;
+    tw.buddy = minerActive(game);
+    fightLog = strikeCore(tw, foe, st, n);
+
+    // Если активно проклятие Солёной Крови — урезаем полученный вампиризм на 35%
+    if(hasVampCurse && tw.p > beforeP){
+      var healDiff = tw.p - beforeP;
+      var penaltyHeal = Math.floor(healDiff * 0.35);
+      tw.p = Math.max(beforeP, tw.p - penaltyHeal);
+    }
+
+    if(tw.m <= 0){
+      var clearedFloor = tw.floor;
+      var dustGain = getTowerDustRewardV29(clearedFloor);
+      var coinGain = Math.max(10, clearedFloor * 15);
+      var xpGain = game.level >= LEVEL_CAP ? 0 : Math.round(25 * Math.pow(Math.min(20, Math.ceil(clearedFloor / 5)), 1.35));
+
+      tw.dustBag = (Number(tw.dustBag) || 0) + dustGain;
+      game.coins += coinGain;
+      var up = gainXP(xpGain);
+      if(clearedFloor > (tw.maxFloor || 0)) tw.maxFloor = clearedFloor;
+
+      // Каждые 10 этажей накладывается новое Проклятие Башни
+      var curseMsg = '';
+      if(clearedFloor % 10 === 0 && tw.curses.length < TOWER_CURSES_POOL.length){
+        var nextCurse = TOWER_CURSES_POOL[tw.curses.length];
+        if(nextCurse){
+          tw.curses.push(nextCurse.id);
+          curseMsg = ' ⚠️ Проклятие Башни: «' + nextCurse.name + '» (' + nextCurse.desc + ')!';
+        }
+      }
+
+      tw.floor = clearedFloor + 1;
+      tw.foeIdx = Math.floor(Math.random() * TOWER_FISHMEN_MOBS.length);
+      var nextFoe = makeTowerFoeV29(tw.floor, tw.foeIdx);
+      tw.m = nextFoe.hp;
+      tw.mh = nextFoe.hp;
+
+      fightLog += ' 🏆 Этаж ' + clearedFloor + ' зачищен! В чашу Башни: +' + dustGain + ' ✨ пыли (всего: ' + tw.dustBag + ' ✨), +' + coinGain + ' монет, +' + xpGain + ' XP.' + up + curseMsg + ' Впереди Этаж ' + tw.floor + ': ' + nextFoe.name + '!';
+      syncV29MarkersToRTDB();
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      renderCoins(); renderProgress(); renderTowerV29();
+    } else if(tw.p <= 0){
+      // При гибели в Башне статус «При смерти» НЕ накладывается, а игрок сохраняет 50% нафармленной пыли!
+      var keptDust = Math.floor((Number(tw.dustBag) || 0) * 0.50);
+      if(keptDust > 0){
+        game.dust = Math.min(1000000, (Number(game.dust) || 0) + keptDust);
+      }
+      var finalFloor = Math.max(0, tw.floor - 1);
+      if(finalFloor > (tw.maxFloor || 0)) tw.maxFloor = finalFloor;
+      tw.on = false;
+      window.mageMaxBattleShield = 0;
+      window.mageCurrentBattleShield = 0;
+      syncV29MarkersToRTDB();
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      updateLockedTabsV20();
+      fightMsg = fightLog + ' 💀 Ты пал на ' + tw.floor + '-м этаже Башни! Спасено 50% чаши Башни: +' + keptDust + ' ✨ Магической пыли (статус «При смерти» в Башне не накладывается).';
+      fightChest = false;
+      renderCoins(); renderProgress(); renderTowerV29();
+    } else {
+      saveV20Local();
+    }
+  }
+
+  function renderTowerFightV29(box){
+    ensureV29State();
+    var tw = v20Data.tower;
+    var foe = makeTowerFoeV29(tw.floor, tw.foeIdx);
+    var pm = Math.max(0, Math.min(100, Math.round(tw.m / foe.hp * 100)));
+    var pp = Math.max(0, Math.min(100, Math.round(tw.p / tw.ph * 100)));
+    box.hidden = false;
+    box.className = (tw.floor % 10 === 0) ? 'fight elite' : 'fight';
+    box.innerHTML = '<div class="fhead"><div class="mon">' + monsterSvg(foe.id) + '</div><div style="flex:1;min-width:0"><div class="rn">' + foe.name + ' (Множитель ×' + getTowerMultiplierV29(tw.floor) + ')</div><div class="rd">Бьёшь, если выпало: ' + foe.rule + '. Чаша пыли: <b style="color:#a855f7">' + (tw.dustBag || 0) + ' ✨</b></div></div></div>'
+      + '<div><div class="hpl"><span>' + foe.name + '</span><span>' + tw.m + ' / ' + foe.hp + '</span></div><div class="bar m"><i style="width:' + pm + '%"></i></div></div>'
+      + '<div><div class="hpl"><span>Ты (Без авто-лечения)</span><span>' + tw.p + ' / ' + tw.ph + '</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
+      + '<div class="flog">' + fightLog + '</div>'
+      + '<button type="button" id="btnTowerCollectLeave" class="ghost">Забрать ' + (tw.dustBag || 0) + ' ✨ и уйти</button>';
+    var lv = $('btnTowerCollectLeave');
+    if(lv) lv.onclick = function(){
+      confirmBox('Завершить штурм Башни на ' + tw.floor + '-м этаже и забрать все ' + (tw.dustBag || 0) + ' ✨ Магической пыли?', 'Забрать и выйти', leaveTowerSafeV29);
+    };
+  }
+
+  function renderTowerV29(){
+    var box = $('towerBody');
+    if(!box || !game) return;
+    ensureV29State();
+    var tw = v20Data.tower;
+    var stoneCost = getTowerEntryStoneCostV29();
+    var myStones = Number(game.stones) || 0;
+    var busy = !!(game.fight && game.fight.on) || dgOn() || arenaOnV29();
+
+    var h = '<div class="card towerCard"><h3>🗼 Башня Испытаний · Затопленный Бастион</h3>';
+    h += '<div class="towerBiomeBanner">'
+      + '<div><b>🌊 Регион: Рыболюди Абиссали</b><br><span style="color:var(--muted)">Твой рекорд: <b>' + (tw.maxFloor || 0) + ' этаж</b> · Попыток сегодня: <b>' + (tw.entriesToday || 0) + '</b></span></div>'
+      + '<span class="rar" style="background:#0284c7">Фарм Пыли ✨</span>'
+      + '</div>';
+
+    if(!tw.on){
+      h += '<p>• <b>Бесконечный подъём:</b> с каждым этажом монстры усиливаются по формуле <code>1 + 0.045·Этаж + 0.0018·Этаж²</code>.<br>'
+        + '• <b>Никакого авто-лечения:</b> здоровье между этажами не восстанавливается (работают только вампиризм, пассивки и боевые зелья).<br>'
+        + '• <b>Горы Магической пыли ✨:</b> каждый этаж даёт растущую награду пыли, а каждый 10-й этаж — Босс Рыболюдей с <b>×12 пыли</b>! Ты можешь остановиться и забрать 100% чаши в любой момент (при гибели сохраняется 50% чаши, статус «При смерти» не накладывается).<br>'
+        + '• <b>Плата за вход:</b> 1-й вход в сутки — <b>Бесплатно</b>, последующие входы требуют Камни улучшения (сейчас: <b>' + (stoneCost === 0 ? 'Бесплатно' : stoneCost + ' 🪨') + '</b>).</p>';
+
+      var canStart = gameLoaded && Boolean(game.cls) && !busy && (myStones >= stoneCost);
+      var btnTxt = !game.cls ? 'Сначала выбери класс' : (busy ? 'Заверши текущий бой/поход' : (myStones < stoneCost ? 'Нужно ' + stoneCost + ' 🪨 камней' : (stoneCost === 0 ? 'Войти в Башню (Бесплатно)' : 'Войти в Башню за ' + stoneCost + ' 🪨')));
+      h += '<button type="button" id="btnStartTowerV29"' + (canStart ? '' : ' disabled') + '>' + btnTxt + '</button>';
+    } else {
+      var curFoe = makeTowerFoeV29(tw.floor, tw.foeIdx);
+      h += '<p>Сейчас идёт штурм: <b>Этаж ' + tw.floor + '</b> (' + curFoe.name + ', множитель силы <b>×' + getTowerMultiplierV29(tw.floor) + '</b>).<br>'
+        + 'Твоё здоровье: <b>' + tw.p + ' / ' + tw.ph + ' HP</b> · Накоплено в чаше: <b style="color:#a855f7">' + (tw.dustBag || 0) + ' ✨ пыли</b>.</p>';
+      if(tw.curses && tw.curses.length){
+        h += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+        tw.curses.forEach(function(cid){
+          var cObj = TOWER_CURSES_POOL.find(function(x){ return x.id === cid; });
+          if(cObj) h += '<span class="towerCurseBadge">☠️ ' + cObj.name + ': ' + cObj.desc + '</span>';
+        });
+        h += '</div>';
+      }
+      h += '<div class="forgeButtons">'
+        + '<button type="button" id="btnGoTowerCombat">Перейти к бою (Крутить колесо)</button>'
+        + '<button type="button" id="btnLeaveTowerMain" class="ghost">Забрать ' + (tw.dustBag || 0) + ' ✨ и уйти</button>'
+        + '</div>';
+    }
+    h += '</div>';
+    box.innerHTML = h;
+
+    var stBtn = $('btnStartTowerV29'); if(stBtn) stBtn.onclick = startTowerRunV29;
+    var goBtn = $('btnGoTowerCombat'); if(goBtn) goBtn.onclick = function(){ showTab('game'); };
+    var lvBtn = $('btnLeaveTowerMain'); if(lvBtn) lvBtn.onclick = function(){
+      confirmBox('Забрать ' + (tw.dustBag || 0) + ' ✨ Магической пыли и завершить подъём на ' + tw.floor + '-м этаже?', 'Забрать', leaveTowerSafeV29);
+    };
+  }
+
+  // =========================================================================
+  // 4. АРЕНА (АСИНХРОННОЕ PVP ПО ЦВЕТАМ РУЛЕТКИ + ТАБЛИЦА ЛИДЕРОВ MMR)
+  // =========================================================================
+  var arenaOpponentsPoolV29 = [];
+  var arenaLoadingOpps = false;
+
+  function generateBotGladiatorV29(index){
+    var myRank = game ? maxRank(game) : 1;
+    var mySt = game ? stats(game) : {hp: 120, atk: 12};
+    var names = ['Валькирия Севера', 'Мордред Тёмный', 'Альтаир Кровавый', 'Игнис Пепельный', 'Сильвана Ветрокрылая', 'Гаррош Крушитель'];
+    var classes = ['warrior', 'archer', 'mage'];
+    var races = ['human', 'orc', 'demon', 'elf', 'drake', 'undead'];
+    var scale = 0.88 + index * 0.12;
+    var c = classes[index % classes.length];
+    var subList = SUBCLASSES_V20[c] || [];
+    var pickedSub = (myRank >= 10 && subList.length) ? subList[index % subList.length].id : '';
+    return {
+      uid: 'bot_' + index,
+      name: names[(index + myRank) % names.length],
+      level: Math.max(1, (game ? game.level : 1) + (index - 1) * 2),
+      rank: myRank,
+      race: races[(index + myRank) % races.length],
+      cls: c,
+      subcls: pickedSub,
+      title: 'veteran',
+      hp: Math.max(80, Math.round(mySt.hp * scale)),
+      atk: Math.max(6, Math.round(mySt.atk * scale)),
+      crit: 6 + index * 4,
+      vamp: 4 + index * 3,
+      thorns: index === 2 ? 12 : 0,
+      lucky5: rollLuckyFiveV20(),
+      gear: gearOf(c),
+      mmr: Math.max(800, (v20Data.arena.mmr || 1000) + (index - 1) * 45)
+    };
+  }
+
+  function loadArenaOpponentsV29(){
+    if(arenaLoadingOpps) return;
+    arenaLoadingOpps = true;
+    ensureV29State();
+    var myRank = game ? maxRank(game) : 1;
+
+    token().then(function(t){
+      return fetch(DB_URL + '/users.json?orderBy=%22game%2Fspins%22&limitToLast=35&auth=' + encodeURIComponent(t));
+    }).then(function(r){ return r.json(); }).then(function(obj){
+      var candidates = [];
+      if(obj && !obj.error){
+        Object.keys(obj).forEach(function(uidKey){
+          if(sess && uidKey === sess.uid) return;
+          var u = obj[uidKey] || {}, g = u.game || {};
+          if(!g || !g.cls) return;
+          var oppRank = maxRank(g);
+          var st = _origStatsBeforeV20(g);
+          var eqEnch = _origGetEquippedEnchantsV19(g);
+          var oppMmr = 1000;
+          if(g.earned && typeof g.earned === 'object'){
+            Object.keys(g.earned).forEach(function(ek){
+              if(g.earned[ek] && /^ar_mmr_\d+$/.test(ek)) oppMmr = parseInt(ek.slice(7), 10);
+            });
+          }
+          var rSeed = rng(hashStr('arena_l5:' + uidKey));
+          var l5 = [];
+          while(l5.length < 5){
+            var rn = 2 + Math.floor(rSeed() * 35);
+            if(l5.indexOf(rn) === -1) l5.push(rn);
+          }
+          candidates.push({
+            uid: uidKey,
+            name: u.name || 'Гладиатор',
+            level: Number(g.level) || 1,
+            rank: oppRank,
+            race: g.race || 'human',
+            cls: g.cls || 'warrior',
+            subcls: '',
+            title: g.title || 'newbie',
+            hp: Math.max(100, st.hp),
+            atk: Math.max(6, st.atk),
+            crit: Math.min(35, eqEnch.crit || 5),
+            vamp: Math.min(30, eqEnch.vamp || 0),
+            thorns: Math.min(40, eqEnch.thorns || 0),
+            lucky5: l5,
+            gear: gearFromGame(g),
+            mmr: oppMmr,
+            rankDiff: Math.abs(oppRank - myRank)
+          });
+        });
+      }
+      candidates.sort(function(a, b){ return a.rankDiff - b.rankDiff || (Math.random() - 0.5); });
+      var picked = candidates.slice(0, 3);
+      while(picked.length < 3){
+        picked.push(generateBotGladiatorV29(picked.length));
+      }
+      arenaOpponentsPoolV29 = picked;
+    }).catch(function(){
+      arenaOpponentsPoolV29 = [generateBotGladiatorV29(0), generateBotGladiatorV29(1), generateBotGladiatorV29(2)];
+    }).then(function(){
+      arenaLoadingOpps = false;
+      if(curTab === 'arena') renderArenaV29();
+    });
+  }
+
+  var ARENA_DAILY_FREE_LIMIT = 5;
+  var ARENA_EXTRA_DUST_COST = 150;
+
+  function startArenaMatchV29(oppIdx){
+    if(!game || !gameLoaded || merchantBusy) return;
+    if(!game.cls){ toast('Сначала выберите класс в Магазине!'); return; }
+    if((game.fight && game.fight.on) || dgOn() || towerOnV29() || arenaOnV29()){
+      toast('Сначала завершите текущий бой или поход!');
+      return;
+    }
+    ensureV29State();
+    var ar = v20Data.arena;
+    varopp = arenaOpponentsPoolV29[oppIdx];
+    if(!varopp) return;
+
+    if(ar.fightsToday >= ARENA_DAILY_FREE_LIMIT){
+      if((Number(game.dust) || 0) < ARENA_EXTRA_DUST_COST){
+        toast('✨ Бесплатные бои на сегодня (5/5) исчерпаны! Дополнительный бой стоит ' + ARENA_EXTRA_DUST_COST + ' ✨ пыли.');
+        return;
+      }
+      game.dust -= ARENA_EXTRA_DUST_COST;
+    }
+
+    var mySt = stats(game);
+    ar.on = true;
+    ar.fightsToday = (Number(ar.fightsToday) || 0) + 1;
+    // На Арене всегда полное виртуальное здоровье (статус «При смерти» не мешает и не накладывается)
+    ar.p = mySt.hp;
+    ar.ph = mySt.hp;
+    ar.pa = mySt.atk;
+    ar.opp = JSON.parse(JSON.stringify(varopp));
+    ar.m = ar.opp.hp;
+    ar.mh = ar.opp.hp;
+
+    window.mageMaxBattleShield = window.calcMageShieldV22(game, mySt.hp);
+    window.mageCurrentBattleShield = window.mageMaxBattleShield;
+
+    fightLog = '⚔️ ДУЭЛЬ НА АРЕНЕ: Ты против гладиатора «' + ar.opp.name + '» (' + ar.opp.mmr + ' MMR)! Красное/Зеро — твой удар, Чёрное/Единица — удар соперника!';
+    fightMsg = ''; fightChest = false;
+    saveV20Local(); saveV20ToFirestore(); saveGame();
+    updateLockedTabsV20();
+    renderCoins(); renderFight(); renderArenaV29();
+    showTab('game');
+  }
+
+  function arenaStrikeV29(n){
+    if(!arenaOnV29()) return;
+    ensureV29State();
+    var ar = v20Data.arena;
+    var opp = ar.opp;
+    if(!opp){ ar.on = false; return; }
+
+    var myEnch = getEquippedEnchants(game);
+    var mySub = findSubclassV20(v20Data.subcls);
+    var myLucky = Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : [];
+    var oppLucky = Array.isArray(opp.lucky5) ? opp.lucky5 : [];
+    var c = color(n);
+
+    // 1. ЗЕРО (0) -> ТВОЙ СУПЕР-КРИТ x2
+    if(n === 0){
+      var d0 = ar.pa * 2;
+      ar.m = Math.max(0, ar.m - d0);
+      var v0 = myEnch.vamp > 0 ? Math.max(1, Math.round(d0 * myEnch.vamp / 100)) : 0;
+      if(v0) ar.p = Math.min(ar.ph, ar.p + v0);
+      fightLog = '🟢 ЗЕРО (0)! Твой сокрушительный супер-крит (×2): ' + opp.name + ' теряет ' + d0 + ' HP!' + (v0 ? ' Вампиризм +' + v0 + ' HP.' : '');
+    }
+    // 2. ЕДИНИЦА (1) -> СУПЕР-КРИТ ПРОТИВНИКА x2
+    else if(n === 1){
+      var od1 = opp.atk * 2;
+      if(window.mageCurrentBattleShield > 0){
+        var abs1 = Math.min(od1, window.mageCurrentBattleShield);
+        window.mageCurrentBattleShield -= abs1;
+        od1 -= abs1;
+      }
+      ar.p = Math.max(0, ar.p - od1);
+      fightLog = '💀 ЕДИНИЦА (1)! Супер-крит соперника (×2): ' + opp.name + ' наносит тебе ' + od1 + ' урона!';
+    }
+    // 3. КРАСНЫЙ СЕКТОР -> АТАКУЕШЬ ТЫ (проверяется ТОЛЬКО твоя Счастливая пятёрка)
+    else if(c === 'red'){
+      var isMyUlt = (myLucky.indexOf(n) !== -1);
+      var isMyCrit = !isMyUlt && (myEnch.crit > 0 && Math.random() * 100 < myEnch.crit);
+      var mult = isMyUlt ? 2.4 : (isMyCrit ? 1.75 : 1.0);
+      var dmg = Math.max(1, Math.round(ar.pa * mult));
+      ar.m = Math.max(0, ar.m - dmg);
+
+      var vp = myEnch.vamp > 0 ? Math.max(1, Math.round(dmg * myEnch.vamp / 100)) : 0;
+      if(vp) ar.p = Math.min(ar.ph, ar.p + vp);
+
+      var oppTh = opp.thorns > 0 ? Math.min(ar.p - 1, Math.max(1, Math.round(dmg * opp.thorns / 100))) : 0;
+      if(oppTh > 0) ar.p -= oppTh;
+
+      fightLog = '🔴 Выпало ' + n + ' (Красное — Твой ход): '
+        + (isMyUlt ? '🌟 ТВОЯ УЛЬТА СЧАСТЛИВОГО ЧИСЛА (×2.4)! ' : (isMyCrit ? '💥 КРИТ! ' : ''))
+        + opp.name + ' теряет ' + dmg + ' HP.'
+        + (vp ? ' Вампиризм +' + vp + ' HP.' : '')
+        + (oppTh > 0 ? ' Шипы врага вернули ' + oppTh + ' урона.' : '');
+    }
+    // 4. ЧЁРНЫЙ СЕКТОР -> АТАКУЕТ ПРОТИВНИК (проверяется ТОЛЬКО Счастливая пятёрка противника)
+    else {
+      var isOppUlt = (oppLucky.indexOf(n) !== -1);
+      var isOppCrit = !isOppUlt && ((opp.crit || 0) > 0 && Math.random() * 100 < opp.crit);
+      var oMult = isOppUlt ? 2.2 : (isOppCrit ? 1.65 : 1.0);
+      var oDmg = Math.max(1, Math.round(opp.atk * oMult));
+
+      if(window.mageCurrentBattleShield > 0){
+        var abs = Math.min(oDmg, window.mageCurrentBattleShield);
+        window.mageCurrentBattleShield -= abs;
+        oDmg -= abs;
+      }
+      ar.p = Math.max(0, ar.p - oDmg);
+
+      var oVp = (opp.vamp || 0) > 0 ? Math.max(1, Math.round(oDmg * opp.vamp / 100)) : 0;
+      if(oVp && ar.m > 0) ar.m = Math.min(ar.mh, ar.m + oVp);
+
+      var myTh = myEnch.thorns > 0 ? Math.min(ar.m, Math.max(1, Math.round(oDmg * myEnch.thorns / 100))) : 0;
+      if(myTh > 0) ar.m -= myTh;
+
+      fightLog = '⚫ Выпало ' + n + ' (Чёрное — Ход соперника): '
+        + (isOppUlt ? '⚠️ УЛЬТА СОПЕРНИКА НА ЧИСЛЕ ' + n + ' (×2.2)! ' : (isOppCrit ? '💥 Крит врага! ' : ''))
+        + opp.name + ' наносит тебе ' + oDmg + ' урона.'
+        + (oVp ? ' Враг исцелил +' + oVp + ' HP.' : '')
+        + (myTh > 0 ? ' Твои Шипы вернули ' + myTh + ' урона!' : '');
+    }
+
+    // Проверка победы или поражения на Арене
+    if(ar.m <= 0){
+      ar.m = 0; ar.on = false;
+      window.mageMaxBattleShield = 0; window.mageCurrentBattleShield = 0;
+      var mmrGain = Math.max(12, Math.min(40, Math.round(25 + ((opp.mmr || 1000) - (ar.mmr || 1000)) * 0.04)));
+      var dustReward = 35 + maxRank(game) * 8;
+      var coinReward = 150 + maxRank(game) * 45;
+      ar.mmr = (Number(ar.mmr) || 1000) + mmrGain;
+      ar.wins = (Number(ar.wins) || 0) + 1;
+      ar.medals = (Number(ar.medals) || 0) + 1;
+      game.dust = Math.min(1000000, (Number(game.dust) || 0) + dustReward);
+      game.coins += coinReward;
+
+      syncV29MarkersToRTDB();
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      updateLockedTabsV20();
+      loadArenaOpponentsV29();
+      fightMsg = fightLog + ' 🏆 ПОБЕДА НА АРЕНЕ! Рейтинг: +' + mmrGain + ' MMR (теперь ' + ar.mmr + ' MMR). Награда: +' + dustReward + ' ✨ пыли, +' + coinReward + ' монет и +1 🏅 Медаль Гладиатора!';
+      fightChest = true;
+      renderCoins(); renderArenaV29();
+      toast('🏆 Победа на Арене! +' + mmrGain + ' MMR и +' + dustReward + ' ✨ пыли!');
+    } else if(ar.p <= 0){
+      ar.p = 0; ar.on = false;
+      window.mageMaxBattleShield = 0; window.mageCurrentBattleShield = 0;
+      var mmrLoss = 15;
+      ar.mmr = Math.max(100, (Number(ar.mmr) || 1000) - mmrLoss);
+      ar.losses = (Number(ar.losses) || 0) + 1;
+
+      syncV29MarkersToRTDB();
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      updateLockedTabsV20();
+      fightMsg = fightLog + ' 🏳️ Поражение на Арене от «' + opp.name + '». Рейтинг: −' + mmrLoss + ' MMR (теперь ' + ar.mmr + ' MMR). Твоё основное здоровье и монеты в полной безопасности!';
+      fightChest = false;
+      renderCoins(); renderArenaV29();
+    } else {
+      saveV20Local();
+    }
+  }
+
+  function renderArenaFightV29(box){
+    ensureV29State();
+    var ar = v20Data.arena, opp = ar.opp;
+    if(!opp){ box.hidden = true; return; }
+    var pm = Math.max(0, Math.min(100, Math.round(ar.m / ar.mh * 100)));
+    var pp = Math.max(0, Math.min(100, Math.round(ar.p / ar.ph * 100)));
+    box.hidden = false;
+    box.className = 'fight elite';
+    box.innerHTML = '<div class="fhead"><div class="mon">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</div><div style="flex:1;min-width:0"><div class="rn">⚔️ Арена: ' + escapeHtmlV20(opp.name) + ' (' + opp.mmr + ' MMR)</div><div class="rd">🔴 Красное / 🟢 0 = бьёшь ТЫ · ⚫ Чёрное / 💀 1 = бьёт ВРАГ.<br>Счастливые числа врага (только на чёрном): <b>' + (opp.lucky5 || []).join(', ') + '</b></div></div></div>'
+      + '<div><div class="hpl"><span>' + escapeHtmlV20(opp.name) + '</span><span>' + ar.m + ' / ' + ar.mh + '</span></div><div class="bar m"><i style="width:' + pm + '%"></i></div></div>'
+      + '<div><div class="hpl"><span>Ты</span><span>' + ar.p + ' / ' + ar.ph + '</span></div><div class="bar p"><i style="width:' + pp + '%"></i></div></div>'
+      + '<div class="flog">' + fightLog + '</div>';
+  }
+
+  function renderArenaV29(){
+    var box = $('arenaBody');
+    if(!box || !game) return;
+    ensureV29State();
+    var ar = v20Data.arena;
+    if(!arenaOpponentsPoolV29.length && !arenaLoadingOpps){
+      loadArenaOpponentsV29();
+    }
+    var busy = !!(game.fight && game.fight.on) || dgOn() || towerOnV29();
+
+    var h = '<div class="card arenaCard"><h3>⚔️ Колизей Гладиаторов (PvP Арена)</h3>';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;background:var(--bg);border-radius:12px;border:1px solid var(--line)">'
+      + '<div>🏆 Твой рейтинг: <b style="color:var(--gold);font-size:17px">' + (ar.mmr || 1000) + ' MMR</b></div>'
+      + '<div style="font-size:13px;color:var(--muted)">Побед: <b>' + (ar.wins || 0) + '</b> · Поражений: <b>' + (ar.losses || 0) + '</b> · Медалей: <b>' + (ar.medals || 0) + ' 🏅</b></div>'
+      + '</div>';
+
+    h += '<div class="arenaRuleBox">'
+      + '<div class="arenaRuleCell"><b style="color:#ef4444">🔴 Красные сектора + 🟢 Зеро:</b><br>Твоя очередь атаки! Срабатывают твои чары и твоя Счастливая пятёрка (Зеро бьёт ×2).</div>'
+      + '<div class="arenaRuleCell"><b style="color:#a855f7">⚫ Чёрные сектора + 💀 Единица:</b><br>Очередь соперника! Срабатывают его чары и его Счастливая пятёрка (Единица бьёт ×2).</div>'
+      + '</div>';
+
+    if(ar.on && ar.opp){
+      h += '<p>⚔️ Сейчас ты ведёшь поединок против <b>' + escapeHtmlV20(ar.opp.name) + '</b>! Перейди на вкладку «Рулетка», чтобы крутить колесо.</p>'
+        + '<button type="button" id="btnGoArenaFightV29">К поединку на Рулетке</button>';
+    } else {
+      var freeLeft = Math.max(0, ARENA_DAILY_FREE_LIMIT - (ar.fightsToday || 0));
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+        + '<span style="font-size:13px;color:var(--muted)">Бесплатных боёв сегодня: <b>' + freeLeft + ' / ' + ARENA_DAILY_FREE_LIMIT + '</b>' + (freeLeft === 0 ? ' (доп. бой: ' + ARENA_EXTRA_DUST_COST + ' ✨)' : '') + '</span>'
+        + '<button type="button" id="btnRefreshArenaOpps" class="ghost" style="padding:6px 14px;font-size:13px">🔄 Обновить соперников</button>'
+        + '</div>';
+
+      h += '<div class="arenaOppGrid">';
+      arenaOpponentsPoolV29.forEach(function(opp, idx){
+        var cName = (opp.cls && CLASSES[opp.cls]) ? CLASSES[opp.cls].name : 'Воин';
+        h += '<div class="arenaOppCard">'
+          + '<div class="arenaOppLeft">'
+          + '<span class="av">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</span>'
+          + '<div>'
+          + '<div class="rn">' + escapeHtmlV20(opp.name) + ' <span class="tt">' + opp.mmr + ' MMR</span></div>'
+          + '<div class="rd">' + cName + ' · Ранг ' + opp.rank + ' · ❤️ ' + opp.hp + ' HP · ⚔️ ' + opp.atk + ' урон · 💥 ' + (opp.crit || 0) + '% крит</div>'
+          + '</div></div>'
+          + '<button type="button" data-arena-fight="' + idx + '" style="padding:8px 16px;font-size:14px"' + (!gameLoaded || !game.cls || busy ? ' disabled' : '') + '>Вызвать ⚔️</button>'
+          + '</div>';
+      });
+      h += '</div>';
+
+      // Наградная лавка за Медали Гладиатора
+      var canTradeMedal = !busy && (ar.medals || 0) >= 3;
+      h += '<div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+        + '<span style="font-size:13px">🏅 Трофейная лавка Колизея: обменяй <b>3 🏅 Медали</b> на <b>2 🪨 Камня заточки + 250 ✨ пыли</b></span>'
+        + '<button type="button" id="btnTradeArenaMedals" class="ghost" style="padding:6px 14px;font-size:13px"' + (canTradeMedal ? '' : ' disabled') + '>Обменять (3 🏅)</button>'
+        + '</div>';
+    }
+    h += '</div>';
+    box.innerHTML = h;
+
+    var goBtn = $('btnGoArenaFightV29'); if(goBtn) goBtn.onclick = function(){ showTab('game'); };
+    var refBtn = $('btnRefreshArenaOpps'); if(refBtn) refBtn.onclick = function(){ loadArenaOpponentsV29(); toast('🔄 Список соперников обновлён!'); };
+    var trBtn = $('btnTradeArenaMedals');
+    if(trBtn) trBtn.onclick = function(){
+      if((v20Data.arena.medals || 0) < 3) return;
+      v20Data.arena.medals -= 3;
+      game.stones = Math.min(1000000, (Number(game.stones) || 0) + 2);
+      game.dust = Math.min(1000000, (Number(game.dust) || 0) + 250);
+      syncV29MarkersToRTDB();
+      saveV20Local(); saveV20ToFirestore(); saveGame();
+      renderCoins(); renderArenaV29();
+      toast('🏅 Медали обменяны! Получено +2 🪨 Камня и +250 ✨ Магической пыли!');
+    };
+    box.querySelectorAll('[data-arena-fight]').forEach(function(b){
+      b.onclick = function(){ startArenaMatchV29(Number(this.getAttribute('data-arena-fight'))); };
+    });
+  }
+
+  // Подключаем удары и отрисовку Башни и Арены к основному циклу Рулетки
+  var _origOnSpinV29 = onSpin;
+  onSpin = function(n){
+    var wasTower = towerOnV29();
+    var wasArena = arenaOnV29();
+    if(wasTower || wasArena){
+      // Чтобы во время Башни или Арены не сработала случайная засада в _origOnSpinV29, временно поднимаем флаг
+      var oldAmbush = AMBUSH_CHANCE;
+      AMBUSH_CHANCE = 0;
+      try {
+        _origOnSpinV29(n);
+      } finally {
+        AMBUSH_CHANCE = oldAmbush;
+      }
+      if(wasTower) towerStrikeV29(n);
+      if(wasArena) arenaStrikeV29(n);
+      renderCoins(); renderFight(); renderEvent(); saveGame(); renderChar();
+      return;
+    }
+    _origOnSpinV29(n);
+  };
+
+  var _origRenderFightV29 = renderFight;
+  renderFight = function(){
+    var box = $('fight');
+    if(box && game){
+      if(towerOnV29()){
+        renderTowerFightV29(box);
+        injectMageShieldBarUI(box);
+        return;
+      }
+      if(arenaOnV29()){
+        renderArenaFightV29(box);
+        injectMageShieldBarUI(box);
+        return;
+      }
+    }
+    _origRenderFightV29();
+  };
+
+  // Поддержка вкладок tower и arena в навигации showTab
+  var _origShowTabBeforeV29 = showTab;
+  showTab = function(which){
+    if($('towerPane')) $('towerPane').hidden = true;
+    if($('arenaPane')) $('arenaPane').hidden = true;
+
+    _origShowTabBeforeV29(which);
+
+    if(which === 'tower' || which === 'arena'){
+      curTab = which;
+      curHub = 'adv';
+      $('gamePane').hidden = true;
+      if($('towerPane')){
+        $('towerPane').hidden = (which !== 'tower');
+        $('towerPane').style.display = (which === 'tower') ? 'flex' : 'none';
+      }
+      if($('arenaPane')){
+        $('arenaPane').hidden = (which !== 'arena');
+        $('arenaPane').style.display = (which === 'arena') ? 'flex' : 'none';
+      }
+      if($('mainHubs')){
+        $('mainHubs').querySelectorAll('button').forEach(function(b){
+          b.className = 'tab' + (b.getAttribute('data-hub') === 'adv' ? ' on' : '');
+        });
+      }
+      renderSwipeMenu('adv');
+      if(which === 'tower') renderTowerV29();
+      if(which === 'arena') renderArenaV29();
+      updateFloatWheelState();
+    }
+  };
+
+  // Расширяем таблицу Лидеров новой вкладкой «Гладиаторы ⚔️» (рейтинг Арены MMR)
+  var _origLoadBoardV29 = loadBoard;
+  loadBoard = function(){
+    if($('bmSpins')) $('bmSpins').className = 'tab' + (boardMode === 'spins' ? ' on' : '');
+    if($('bmCoins')) $('bmCoins').className = 'tab' + (boardMode === 'coins' ? ' on' : '');
+    if($('bmArena')) $('bmArena').className = 'tab' + (boardMode === 'arena' ? ' on' : '');
+
+    if(boardMode !== 'arena'){
+      _origLoadBoardV29();
+      return;
+    }
+
+    $('boardTitle').textContent = 'Рейтинг Гладиаторов Арены (MMR)';
+    var box = $('board');
+    refreshOnlinePresenceMapV20();
+    token().then(function(t){
+      return fetch(DB_URL + '/users.json?orderBy=%22game%2Fspins%22&limitToLast=30&auth=' + encodeURIComponent(t));
+    }).then(function(r){ return r.json(); }).then(function(obj){
+      if(!obj || obj.error){
+        box.innerHTML = '<div class="bempty">Не удалось загрузить рейтинг Арены.</div>';
+        return;
+      }
+      var rows = Object.keys(obj).map(function(k){
+        var u = obj[k] || {}, g = u.game || {};
+        var mmr = 1000;
+        if(g.earned && typeof g.earned === 'object'){
+          Object.keys(g.earned).forEach(function(ek){
+            if(g.earned[ek] && /^ar_mmr_\d+$/.test(ek)) mmr = parseInt(ek.slice(7), 10);
+          });
+        }
+        if(sess && k === sess.uid && v20Data && v20Data.arena){
+          mmr = Number(v20Data.arena.mmr) || mmr;
+        }
+        return {
+          uid: k,
+          name: u.name || 'Игрок',
+          spins: Number(g.spins) || 0,
+          coins: Number(g.coins) || 0,
+          mmr: mmr,
+          title: g.title,
+          race: g.race,
+          cls: g.cls,
+          gear: gearFromGame(g),
+          cw: Number(g.cowardUntil) || 0,
+          red: Number(g.red) || 0,
+          black: Number(g.black) || 0,
+          zero: Number(g.zero) || 0,
+          wheelSkin: g.wheelSkin
+        };
+      }).filter(function(x){ return x.spins > 0 || x.mmr !== 1000; }).sort(function(x, y){ return y.mmr - x.mmr || (y.spins - x.spins); });
+
+      box.innerHTML = '';
+      if(!rows.length){
+        box.innerHTML = '<div class="bempty">Пока никто не сражался на Арене.</div>';
+        return;
+      }
+      rows.forEach(function(x, i){
+        var row = document.createElement('div');
+        row.className = 'brow' + ((sess && x.uid === sess.uid) ? ' me' : '');
+        var rk = document.createElement('div'); rk.className = 'rk' + (i < 3 ? ' top' : ''); rk.textContent = String(i + 1);
+        var av = document.createElement('span'); av.className = 'av'; av.innerHTML = avatar(x.uid, x.title, x.race, x.gear || x.cls);
+        var nm = document.createElement('div'); nm.className = 'bn';
+        var online = isPlayerOnlineV20(x.uid);
+        var dot = document.createElement('span');
+        dot.className = 'online-dot ' + (online ? 'is-online' : 'is-offline');
+        nm.appendChild(dot);
+        nm.appendChild(document.createTextNode(nameOf(x.name, x.cw)));
+        var tn = titleName(x.title);
+        if(tn){ var tt = document.createElement('span'); tt.className = 'tt'; tt.textContent = tn; nm.appendChild(tt); }
+        var sc = document.createElement('div'); sc.className = 'bs';
+        sc.appendChild(document.createTextNode(String(x.mmr) + ' '));
+        var sm = document.createElement('small'); sm.textContent = 'MMR'; sc.appendChild(sm);
+        row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
+        row.setAttribute('role', 'button'); row.tabIndex = 0;
+        row.addEventListener('click', function(){ showProfile(x); });
+        box.appendChild(row);
+      });
+    }).catch(function(){});
+  };
+
+  if($('bmArena')){
+    $('bmArena').addEventListener('click', function(){
+      boardMode = 'arena';
+      loadBoard();
+    });
+  }
+  if($('bmSpins')){
+    $('bmSpins').addEventListener('click', function(){
+      if($('bmArena')) $('bmArena').className = 'tab';
+    });
+  }
+  if($('bmCoins')){
+    $('bmCoins').addEventListener('click', function(){
+      if($('bmArena')) $('bmArena').className = 'tab';
+    });
+  }
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 29 ================== */
   })();
 </script>
 </body>
