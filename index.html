@@ -2163,11 +2163,15 @@ html, body {
     var c = JSON.parse(JSON.stringify(src));
     delete c.subcls; delete c.lucky5; delete c.prestige; delete c.nearDeath; delete c.potions;
     delete c.pets; delete c.incubator; delete c.activeCompanion; delete c.activePetUuid;
-    delete c.hwEvent; delete c.dg;
+    delete c.hwEvent; delete c.dg; delete c.awakening; delete c.tower; delete c.arena;
     if(c.fight && typeof c.fight === 'object'){
       delete c.fight.trapped;
       delete c.fight.startTime;
       delete c.fight.usedPots;
+      delete c.fight.btTier;
+      if(c.fight.kind === 'breakthrough' || c.fight.kind === 'ascension' || c.fight.kind === 'raid'){
+        c.fight.kind = 'event';
+      }
     }
     return c;
   }
@@ -8935,7 +8939,7 @@ function startFirestoreListenersV20(){
     };
   }
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 21 ================== */
-  restore();
+  /* restore() перенесён в самый конец скрипта после загрузки всех модулей V22–V31 */
 
   /* ================== МЕГА-ПАТЧ V22 (ВСЕ 7 ПУНКТОВ + ФИКС ВЕЧНОГО ОБНОВЛЕНИЯ) ================== */
   APP_V = Number((document.querySelector('meta[name="app-version"]')||{}).content) || 27;
@@ -14639,16 +14643,17 @@ function startFirestoreListenersV20(){
       activeLucky = activeLucky.concat(v20Data.exp.anvilLucky2);
     }
 
-    // Временно подменяем v20Data.lucky5 на реально открытые по Буквенному Рангу числа (1..5 + резонанс)
     var savedLucky5 = v20Data.lucky5 ? v20Data.lucky5.slice() : [];
+    var savedSubcls = v20Data.subcls;
     var origHit = mo.hit;
     var origMoDmg = mo.dmg;
     var modSt = {hp: st.hp, atk: st.atk};
 
     try {
       v20Data.lucky5 = activeLucky;
+      // Гарантируем, что findSubclassV20(v20Data.subcls) вернёт активный класс из AWAKEN_CORES_V31
+      if(coreObj) v20Data.subcls = coreObj.id;
 
-      // Стаки Рассечения Мечника и метка Оккультиста
       if(battleAwakenStateV31.swordsmanStacks > 0){
         modSt.atk = Math.round(modSt.atk * (1 + battleAwakenStateV31.swordsmanStacks * 0.12));
       }
@@ -14660,7 +14665,6 @@ function startFirestoreListenersV20(){
         modSt.atk = Math.round(modSt.atk * 1.15);
       }
 
-      // Озноб Ледяной стихии или Каменная твердыня снижают урон врага
       if(battleAwakenStateV31.iceChillNext){
         mo.dmg = Math.max(1, Math.round(mo.dmg * 0.60));
       }
@@ -14668,21 +14672,34 @@ function startFirestoreListenersV20(){
         mo.dmg = Math.max(1, Math.round(mo.dmg * (1 - (4 + T * 1.5) / 100)));
       }
 
-      // Астральная стихия: сектора 26 и 32 всегда попадают по врагу!
-      if(aw.elem === 'astral' && (n === 26 || n === 32)){
-        mo.hit = function(x){ return x === 26 || x === 32 || origHit(x); };
-        modSt.atk = Math.round(modSt.atk * (1.25 + T * 0.03));
+      var isLuckyHit = (n > 1 && activeLucky.indexOf(n) !== -1);
+      var isAstralHit = (aw.elem === 'astral' && (n === 26 || n === 32));
+
+      // Если выпало число Ульты класса или число Астральной стихии — гарантируем попадание по врагу!
+      if(isLuckyHit || isAstralHit){
+        mo.hit = function(x){ return x === n || origHit(x); };
+        if(isAstralHit && !isLuckyHit){
+          modSt.atk = Math.round(modSt.atk * (1.25 + T * 0.03));
+        }
       }
 
       var beforeP = f.p;
       var beforeM = f.m;
-      var isLuckyHit = (n > 1 && activeLucky.indexOf(n) !== -1);
       var text = _origStrikeCoreBaseV31(f, mo, modSt, n);
+
+      // Если базовый движок проигнорировал isLuckyHit (например, потому что число было в skillNums босса или ещё где-то),
+      // принудительно применяем урон и эффект Ульты класса!
+      if(isLuckyHit && coreObj && f.m >= beforeM){
+        var ultMult = Number(coreObj.ultMult) || 2.5;
+        var forcedDmg = Math.max(1, Math.round(modSt.atk * ultMult));
+        f.m = Math.max(0, f.m - forcedDmg);
+        f.dealt = (Number(f.dealt) || 0) + forcedDmg;
+        text = '🌟 УЛЬТА КЛАССА НА ЧИСЛЕ ' + n + '! [' + coreObj.name + ' · ' + coreObj.skill + '] наносит ' + forcedDmg + ' урона (×' + ultMult + ')!';
+      }
 
       var playerHitEnemy = (f.m < beforeM);
       var enemyHitPlayer = (f.p < beforeP);
 
-      // Если враг ударил, а у нас активен Шаг в тень Фантома или Теневое/Фантомное уклонение
       if(enemyHitPlayer){
         var takenNow = beforeP - f.p;
         var extraDodgeChance = (aw.core === 'phantom' ? 8 : 0) + (aw.elem === 'shadow' ? Math.round(5 + T * 1.1) : 0);
@@ -14704,7 +14721,6 @@ function startFirestoreListenersV20(){
         battleAwakenStateV31.iceChillNext = false;
       }
 
-      // Спецэффекты новых Ультимейтов при выпадении Счастливого числа
       if(isLuckyHit && playerHitEnemy && coreObj){
         if(coreObj.id === 'swordsman' && battleAwakenStateV31.swordsmanStacks < 3){
           battleAwakenStateV31.swordsmanStacks++;
@@ -14731,7 +14747,6 @@ function startFirestoreListenersV20(){
         }
       }
 
-      // Пассивные эффекты Стихии при попадании игрока
       if(playerHitEnemy && f.m > 0){
         if(aw.elem === 'fire'){
           var burnDmg = Math.min(modSt.atk * 3, Math.max(1, Math.round(f.m * (1.5 + T * 0.4) / 100)));
@@ -14754,7 +14769,6 @@ function startFirestoreListenersV20(){
         }
       }
 
-      // Ядовитая стихия при промахе (кроме 1)
       if(!playerHitEnemy && n !== 1 && aw.elem === 'poison' && f.m > 0){
         var poisDmg = Math.max(1, Math.round(mo.hp * (1.0 + T * 0.35) / 100));
         f.m = Math.max(0, f.m - poisDmg);
@@ -14762,7 +14776,6 @@ function startFirestoreListenersV20(){
         text += ' ☠️ Токсин разъел врага на −' + poisDmg + ' HP!';
       }
 
-      // Хроно-стихия: спасение от смертельного удара 1 раз за бой
       if(f.p <= 0 && aw.elem === 'chrono' && !battleAwakenStateV31.chronoSavedThisFight && !v20Data.nearDeath){
         if(Math.random() * 100 < (6 + T)){
           battleAwakenStateV31.chronoSavedThisFight = true;
@@ -14774,6 +14787,7 @@ function startFirestoreListenersV20(){
       return text;
     } finally {
       v20Data.lucky5 = savedLucky5;
+      v20Data.subcls = savedSubcls;
       mo.hit = origHit;
       mo.dmg = origMoDmg;
     }
@@ -15183,6 +15197,141 @@ function startFirestoreListenersV20(){
     }
     return snap;
   };
+
+  // =========================================================================
+  // 9. УСКОРЕНИЕ ЗАПУСКА И МГНОВЕННЫЙ ВХОД (TURBO LOGIN & DEBOUNCED FIRESTORE)
+  // =========================================================================
+  // Убираем 5-секундную блокировку входа из-за ожидания sdkReady и распараллеливаем запросы
+  submit = function(mode){
+    setErr('');
+    if(!configured()){setErr('В файле config.js не заполнен API_KEY');return;}
+    var name = nickIn.value.replace(/\s+/g,' ').trim(), pass = passIn.value;
+    if(name.length < 2 || name.length > 15){setErr('Имя: от 2 до 15 символов');return;}
+    if(pass.length < 6){setErr('Пароль: не короче 6 символов');return;}
+    setBusy(true);
+    var email = emailFor(name);
+    authCall(mode === 'signUp' ? 'signUp' : 'signInWithPassword', {email: email, password: pass, returnSecureToken: true})
+      .then(function(d){
+        if(d.error) throw (d.error.message || 'ERROR');
+        sess = {
+          uid: d.localId,
+          idToken: d.idToken,
+          refreshToken: d.refreshToken,
+          name: name,
+          exp: Date.now() + (Number(d.expiresIn) || 3600) * 1000
+        };
+        persist();
+        // Запускаем авторизацию Firebase SDK параллельно в фоне, не задерживая вход игрока!
+        sdkSignIn(email, pass);
+        return ensureProfile(name);
+      })
+      .then(function(n){
+        sess.name = n;
+        try { localStorage.setItem('roulette_cached_name_' + sess.uid, n); } catch(e){}
+        start();
+      })
+      .catch(function(e){ sess = null; setErr(msgFor(String(e))); })
+      .then(function(){ setBusy(false); });
+  };
+
+  restore = function(){
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem('roulette_sess') || 'null'); } catch(e){}
+    if(!s || !s.refreshToken || !configured()) return;
+    sess = {refreshToken: s.refreshToken, exp: 0};
+    setBusy(true);
+    refresh()
+      .then(function(){
+        var cachedName = '';
+        try { cachedName = localStorage.getItem('roulette_cached_name_' + sess.uid) || ''; } catch(e){}
+        if(cachedName){
+          // Мгновенно возвращаем кэшированное имя и обновляем его в фоне
+          ensureProfile(null).then(function(n){
+            if(sess){ sess.name = n; nick = n; if($('me')) $('me').textContent = 'ты: ' + n; }
+          }).catch(function(){});
+          return cachedName;
+        }
+        return ensureProfile(null);
+      })
+      .then(function(n){
+        sess.name = n;
+        try { localStorage.setItem('roulette_cached_name_' + sess.uid, n); } catch(e){}
+        // Не блокируем вход на 5 секунд ожиданием sdkReady — запускаем игру сразу!
+        sdkReady();
+        start();
+      })
+      .catch(function(){ sess = null; })
+      .then(function(){ setBusy(false); });
+  };
+
+  // Распараллеливаем claimSession() и loadGame() при старте сессии, чтобы убрать лишний сетевой круг
+  var _origLoadGameFastV31 = loadGame;
+  loadGame = function(){
+    var p = _origLoadGameFastV31();
+    return Promise.resolve(p).then(function(res){
+      if(game && gameLoaded){
+        ensureAwakeningStateV31();
+        ensureV29State();
+        renderProgress();
+        renderCoins();
+      }
+      return res;
+    });
+  };
+
+  start = function(){
+    uid = sess.uid;
+    nick = sess.name;
+    loadV20Local();
+    if(typeof loadV21Local === 'function') loadV21Local();
+    $('login').hidden = true;
+    $('app').hidden = false;
+    $('me').textContent = 'ты: ' + nick;
+    passIn.value = '';
+    game = null;
+    gameLoaded = false;
+    showTab('game');
+    $('coinBox').hidden = false;
+    $('newsOpen').hidden = false;
+    shownCoins = -1;
+    renderCoins();
+    renderEvent();
+    draw();
+    lastSig = '';
+    chatMap = {};
+    chatLast = '';
+    renderChat();
+
+    // Параллельно запускаем захват сессии и загрузку сохранения игрока (в 2 раза быстрее!)
+    claimSession();
+    loadGame();
+
+    // Откладываем тяжёлые фоновые запросы (чат, Firestore, Рейд) на 500 мс после входа, чтобы интерфейс открылся мгновенно
+    setTimeout(function(){
+      if(!sess) return;
+      load();
+      startFirestoreListenersV20();
+      renderCoins();
+      renderNearDeathBannerV20();
+    }, 500);
+  };
+
+  // Дебаунс записи в Firestore (объединяем тройные вызовы V20+V28+V29+V31 в один пакет раз в 1.5 сек)
+  var _fsSaveTimerV31 = 0;
+  var _rawSaveV20ToFirestoreChainV31 = saveV20ToFirestore;
+  saveV20ToFirestore = function(){
+    ensureAwakeningStateV31();
+    ensureV29State();
+    syncV31MarkersToRTDB();
+    syncV29MarkersToRTDB();
+    clearTimeout(_fsSaveTimerV31);
+    _fsSaveTimerV31 = setTimeout(function(){
+      _rawSaveV20ToFirestoreChainV31();
+    }, 1200);
+  };
+
+  // Запускаем авто-вход ровно один раз, когда ВСЕ модули V1–V31 полностью инициализированы!
+  restore();
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 31 ================== */
   })();
 </script>
