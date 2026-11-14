@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="30">
-<title>Рулетка с чатом · Версия 30</title>
+<meta name="app-version" content="31">
+<title>Рулетка с чатом · Версия 31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;700&display=swap">
@@ -1148,6 +1148,103 @@ html, body {
   background: var(--bg);
   border: 1px solid var(--line);
 }
+
+/* === UPDATE 31: СИСТЕМА ПРОБУЖДЕНИЯ СУДЬБЫ И БУКВЕННЫЕ РАНГИ === */
+.awakenAltarCard {
+  border: 2px solid var(--gold) !important;
+  background: linear-gradient(180deg, rgba(224, 181, 80, 0.12), transparent);
+}
+.awakenSlotsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin: 6px 0;
+}
+@media(max-width: 500px) {
+  .awakenSlotsGrid { grid-template-columns: 1fr; }
+}
+.awakenSlotBox {
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  text-align: center;
+  position: relative;
+}
+.awakenSlotBox.locked {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 12px rgba(224, 181, 80, 0.25);
+}
+.awakenSlotLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.awakenSlotVal {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 19px;
+  line-height: 1.2;
+}
+.awakenSlotDesc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.awakenLockBtn {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+  width: 100%;
+}
+.awakenTitleBanner {
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.awakenResonanceBadge {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8892f, #f59e0b);
+  color: #1b1405;
+  font-size: 11px;
+  font-weight: 800;
+}
+.breakthroughBanner {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(234, 179, 8, 0.16), rgba(239, 68, 68, 0.16));
+  border: 2px solid var(--gold);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+.letterRankBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 9px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+  margin-right: 4px;
+}
 </style>
 
 </head>
@@ -1363,7 +1460,7 @@ html, body {
   <div class="mbox"><p id="mText"></p><div class="mbtns"><button id="mNo" class="ghost">Отмена</button><button id="mYes">Да</button></div></div>
 </div>
 
-<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 30</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
+<div class="modal" id="newsModal" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle"><div class="mbox"><h2 id="newsTitle">Что нового · Версия 31</h2><div id="newsContent" tabindex="0"></div><div id="newsGiftArea"></div><button id="newsClose">Понятно, играть</button></div></div>
 <div class="modal" id="pmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="pbox"></div></div>
 <div class="modal" id="cmodal" hidden role="dialog" aria-modal="true"><div class="mbox" id="cbox"></div></div>
 <div class="modal" id="kmodal" hidden role="dialog" aria-modal="true"><div class="mbox"><p>Этот аккаунт открыт в другой вкладке или на другом устройстве. Здесь игра отключена, чтобы прогресс не перезаписался.</p><button id="takeOver">Играть здесь</button></div></div>
@@ -14005,6 +14102,1088 @@ function startFirestoreListenersV20(){
     });
   }
   /* ================== КОНЕЦ МОДУЛЯ UPDATE 29–30 ================== */
+
+  /* ================== МОДУЛЬ UPDATE 31: СИСТЕМА ПРОБУЖДЕНИЯ СУДЬБЫ (3 СЛОТА + БУКВЕННЫЕ РАНГИ F–EX + БОССЫ ПРОРЫВА) ================== */
+  RELEASE_ID = 31;
+  RELEASE_NOTES.unshift({
+    title: 'Версия 31 · Пробуждение Судьбы, Буквенные Ранги F–EX и Боссы Прорыва',
+    lines: [
+      '🔮 Тройная Система Пробуждения: класс формируется из 3 случайных позиций — Стихия (растущая пассивка) + Класс (база, тип брони и ульта) + Ступень Сосуда (Пыль, Пепел, Искра, Пламя, Звезда, Сверхновая, Абсолют). Весь титул класса окрашивается в цвет его Ступени!',
+      '⚡ Скрытый Резонанс Судьбы: если Стихия и Класс идеально сочетаются друг с другом, герой получает +15% ко всем характеристикам и +1 дополнительное Счастливое число на рулетке.',
+      '🅰️ Буквенные Ранги (F, E, D, C, B, A, S, SS, SSS, EX) и Боссы Прорыва: каждые 10 уровней герой упирается в потолок ранга и должен одолеть Стража Врат 1 на 1, чтобы прорваться на следующую ступень и усилить свою Стихию!',
+      '💎 Камни Пробуждения и ⚓ Якоря Души: редкие Камни Пробуждения позволяют сбросить уровень до 1 (F-Ранг) и заново пробудить класс (вся экипировка при этом снимается в инвентарь). Престиж на 100-м уровне дарит +1 Камень Пробуждения, убирает из пула «Пыль» и открывает Якоря Души для заморозки лучших слотов при реролле!'
+    ]
+  });
+
+  // 1. Шкала Буквенных Рангов (F .. EX) каждые 10 уровней
+  var LETTER_RANKS_V31 = [
+    {idx:0, code:'F',   name:'F-Ранг',   minLv:1,  maxLv:10, color:'#6b7280', luckyCount:1, bossName:'Страж Врат: Каменный Колосс',  bossBase:'golem'},
+    {idx:1, code:'E',   name:'E-Ранг',   minLv:11, maxLv:20, color:'#4b5563', luckyCount:2, bossName:'Страж Врат: Вожак Оборотней',  bossBase:'werewolf'},
+    {idx:2, code:'D',   name:'D-Ранг',   minLv:21, maxLv:30, color:'#2f8f4e', luckyCount:2, bossName:'Страж Врат: Костяной Жнец',    bossBase:'reaper'},
+    {idx:3, code:'C',   name:'C-Ранг',   minLv:31, maxLv:40, color:'#0d9488', luckyCount:3, bossName:'Страж Врат: Циклоп Разрушитель',bossBase:'cyclops'},
+    {idx:4, code:'B',   name:'B-Ранг',   minLv:41, maxLv:50, color:'#2a6fd6', luckyCount:3, bossName:'Страж Врат: Рыцарь Чёрного Солнца',bossBase:'knight'},
+    {idx:5, code:'A',   name:'A-Ранг',   minLv:51, maxLv:60, color:'#6366f1', luckyCount:4, bossName:'Страж Врат: Архилич Погибели', bossBase:'lich'},
+    {idx:6, code:'S',   name:'S-Ранг',   minLv:61, maxLv:70, color:'#7e3fc4', luckyCount:5, bossName:'Страж Врат: Минотавр Лабиринта',bossBase:'minotaur'},
+    {idx:7, code:'SS',  name:'SS-Ранг',  minLv:71, maxLv:80, color:'#b8610a', luckyCount:5, bossName:'Страж Врат: Ифрит Пламени',    bossBase:'djinn'},
+    {idx:8, code:'SSS', name:'SSS-Ранг', minLv:81, maxLv:90, color:'#c026d3', luckyCount:5, bossName:'Страж Врат: Владыка Бездны',   bossBase:'demon'},
+    {idx:9, code:'EX',  name:'EX-Ранг',  minLv:91, maxLv:100,color:'#e0b100', luckyCount:5, bossName:'Хранитель Предела Абсолюта',   bossBase:'demon'}
+  ];
+
+  function getLetterRankInfoV31(level){
+    var lv = Math.max(1, Math.min(100, Math.floor(Number(level) || 1)));
+    var idx = Math.min(9, Math.floor((lv - 1) / 10));
+    return LETTER_RANKS_V31[idx] || LETTER_RANKS_V31[0];
+  }
+
+  // Переименовываем 20 рангов подземелий во Врата F .. EX+
+  var GATE_RANK_LABELS_V31 = [
+    'Врата F-ранга',   'Врата F+ ранга',
+    'Врата E-ранга',   'Врата E+ ранга',
+    'Врата D-ранга',   'Врата D+ ранга',
+    'Врата C-ранга',   'Врата C+ ранга',
+    'Врата B-ранга',   'Врата B+ ранга',
+    'Врата A-ранга',   'Врата A+ ранга',
+    'Врата S-ранга',   'Врата S+ ранга',
+    'Врата SS-ранга',  'Врата SS+ ранга',
+    'Врата SSS-ранга', 'Врата SSS+ ранга',
+    'Врата EX-ранга',  'Врата EX+ ранга'
+  ];
+  rankName = function(rank){
+    var r = Math.max(1, Math.min(20, Math.floor(Number(rank) || 1)));
+    return GATE_RANK_LABELS_V31[r - 1] + ' · ур. ' + rankLevel(r) + '+';
+  };
+
+  // 2. Слот 1: 13 Стихий (Префиксы)
+  var AWAKEN_ELEMENTS_V31 = [
+    {id:'dull',    name:'Тусклый',   w:14, desc:function(T){ return 'Слабая стихия: +' + (5 + T * 2) + '% к золоту с монстров.'; }},
+    {id:'rusty',   name:'Ржавый',    w:12, desc:function(T){ return 'Нестабильная мощь: +' + (8 + T) + '% к базовой атаке, но −10% к лечению и вампиризму.'; }},
+    {id:'stone',   name:'Каменный',  w:10, desc:function(T){ return 'Твердыня: снижает входящий урон от обычных ударов врагов на ' + Math.round(4 + T * 1.5) + '%.'; }},
+    {id:'fire',    name:'Огненный',  w:9,  desc:function(T){ return 'Ожог: каждое попадание сжигает доп. ' + (1.5 + T * 0.4).toFixed(1) + '% от текущего HP врага.'; }},
+    {id:'ice',     name:'Ледяной',   w:9,  desc:function(T){ return 'Обморожение: ' + Math.round(8 + T * 1.2) + '% шанс при ударе ослабить следующую атаку врага на 40%.'; }},
+    {id:'storm',   name:'Грозовой',  w:8,  desc:function(T){ return 'Цепная молния: +' + (4 + T) + '% к шансу крита и +' + (10 + T * 3) + '% к критическому урону.'; }},
+    {id:'poison',  name:'Ядовитый',  w:8,  desc:function(T){ return 'Токсин: даже при промахе (кроме 1) враг теряет ' + (1.0 + T * 0.35).toFixed(1) + '% макс. HP.'; }},
+    {id:'blood',   name:'Кровавый',  w:7,  desc:function(T){ return 'Жажда крови: +' + Math.round(4 + T * 1.2) + '% встроенного вампиризма поверх капа чар.'; }},
+    {id:'shadow',  name:'Теневой',   w:7,  desc:function(T){ return 'Покров тьмы: +' + Math.round(5 + T * 1.1) + '% шанс уклониться и нанести ответный укол на 50% атаки.'; }},
+    {id:'holy',    name:'Святой',    w:6,  desc:function(T){ return 'Очищение: щит на старте боя (' + Math.round(10 + T * 2.5) + '% макс. HP) и +15% урона по Боссам.'; }},
+    {id:'astral',  name:'Астральный',w:5,  desc:function(T){ return 'Искажение: сектора 26 и 32 (соседи Зеро) всегда бьют врага критом ×' + (1.75 + T * 0.05).toFixed(2) + '.'; }},
+    {id:'chrono',  name:'Хроно-',    w:3,  desc:function(T){ return 'Петля времени: ' + (6 + T) + '% шанс отмотать смертельный удар, оставив 25% HP (1 раз за бой).'; }},
+    {id:'void',    name:'Пустотный', w:2,  desc:function(T){ return 'Аннигиляция: каждый удар наносит +' + (12 + T * 3) + '% чистого урона сквозь любую броню.'; }}
+  ];
+
+  // 3. Слот 2: 12 Классов (Ядро, тип снаряжения и Ульта Счастливых чисел)
+  var AWAKEN_CORES_V31 = [
+    {id:'swordsman',  name:'Мечник',          gearType:'warrior', hp:30, atk:4,  w:10, skill:'Рассечение',        ultMult:2.5, desc:'Тяжёлая броня. Ульта (Счастливое число): удар ×2.5 урона и +12% к атаке до конца боя (до 3 раз).'},
+    {id:'paladin',    name:'Паладин',         gearType:'warrior', hp:55, atk:2,  w:9,  skill:'Кара Света',        ultMult:2.2, desc:'Тяжёлая броня. Ульта: удар светом ×2.2 урона и святое исцеление на 20% от макс. HP.'},
+    {id:'berserk',    name:'Берсерк',         gearType:'warrior', hp:20, atk:7,  w:8,  skill:'Кровавое Безумие',  ultMult:2.9, desc:'Тяжёлая броня. Бьёт до +35% сильнее при низком HP. Ульта: удар ×2.9 и отхил 15% макс. HP.'},
+    {id:'juggernaut', name:'Джаггернаут',     gearType:'warrior', hp:75, atk:1,  w:7,  skill:'Поступь Колосса',   ultMult:2.1, desc:'Тяжёлая броня, +15% Шипов. Ульта: удар ×2.1 + дополнительный урон в 12% от твоего макс. HP.'},
+    {id:'ranger',     name:'Следопыт',        gearType:'archer',  hp:25, atk:5,  w:10, skill:'Шквал стрел',       ultMult:2.7, desc:'Лёгкая броня. Ульта: выпускает 3 стрелы подряд (суммарно ×2.7 урона и двойной триггер стихии).'},
+    {id:'assassin',   name:'Ассасин',         gearType:'archer',  hp:10, atk:8,  w:8,  skill:'Удар в спину',      ultMult:3.1, desc:'Лёгкая броня, +8% к шансу крита. Ульта: смертельный выпад из тени на ×3.1 урона.'},
+    {id:'inquisitor', name:'Инквизитор',      gearType:'archer',  hp:30, atk:5,  w:8,  skill:'Серебряный капкан', ultMult:2.35,desc:'Лёгкая броня. Ульта: удар ×2.35 урона и ослабление атаки врага на 20% до конца боя.'},
+    {id:'phantom',    name:'Фантом',          gearType:'archer',  hp:15, atk:6,  w:7,  skill:'Шаг в тень',        ultMult:2.45,desc:'Лёгкая броня, +8% уклонения. Ульта: удар ×2.45 и 100% уклонение от следующей атаки врага.'},
+    {id:'archmage',   name:'Архимаг',         gearType:'mage',    hp:15, atk:7,  w:9,  skill:'Метеоритный шторм', ultMult:2.85,desc:'Магические ткани, +15% к силе всех чар. Ульта: обрушивает метеорит на ×2.85 урона.'},
+    {id:'necromancer',name:'Некромант',       gearType:'mage',    hp:30, atk:5,  w:8,  skill:'Жатва душ',         ultMult:2.4, desc:'Магические ткани, +8% вампиризма. Ульта: удар ×2.4 и исцеление на 50% от нанесённого урона.'},
+    {id:'occultist',  name:'Оккультист',      gearType:'mage',    hp:25, atk:6,  w:8,  skill:'Пакт Бездны',       ultMult:2.55,desc:'Магические ткани. Ульта: удар ×2.55 и метка уязвимости (+20% урона по врагу до конца боя).'},
+    {id:'runelord',   name:'Повелитель Рун',  gearType:'mage',    hp:40, atk:4,  w:8,  skill:'Рунный Барьер',     ultMult:2.25,desc:'Магические ткани. Ульта: удар ×2.25 и наложение Магического Щита на 20% от макс. HP.'}
+  ];
+
+  // 4. Слот 3: 7 Ступеней Сосуда (Редкость и цвет названия класса)
+  var AWAKEN_VESSELS_V31 = [
+    {id:'dust',      name:'Пыли',       rar:'common',    color:'#6b7280', mult:0.85, w0:38,  wPrest:0,   desc:'Множитель характеристик ×0.85 (−15% к HP и Атаке).'},
+    {id:'ash',       name:'Пепла',      rar:'uncommon',  color:'#2f8f4e', mult:1.00, w0:30,  wPrest:38,  desc:'Стандартный сосуд: множитель характеристик ×1.00.'},
+    {id:'spark',     name:'Искры',      rar:'rare',      color:'#2a6fd6', mult:1.15, w0:18,  wPrest:32,  desc:'Пробуждённый сосуд: множитель характеристик ×1.15 (+15% к HP и Атаке).'},
+    {id:'flame',     name:'Пламени',    rar:'epic',      color:'#7e3fc4', mult:1.35, w0:9,   wPrest:18,  desc:'Пылающий сосуд: множитель характеристик ×1.35 (+35% к HP и Атаке).'},
+    {id:'star',      name:'Звезды',     rar:'legendary', color:'#b8610a', mult:1.60, w0:3.8, wPrest:8.5, desc:'Астральный сосуд: множитель характеристик ×1.60 (+60% к HP и Атаке).'},
+    {id:'supernova', name:'Сверхновой', rar:'mythic',    color:'#c026d3', mult:1.95, w0:1.0, wPrest:2.8, desc:'Мифический сосуд: множитель характеристик ×1.95 (+95% к HP и Атаке).'},
+    {id:'absolute',  name:'Абсолюта',   rar:'divine',    color:'#e0b100', mult:2.40, w0:0.2, wPrest:0.7, desc:'Первородный сосуд: множитель характеристик ×2.40 (+140% к HP и Атаке)!'}
+  ];
+
+  // Скрытый Резонанс Судьбы (лучшие лорные сочетания Стихии и Класса)
+  var AWAKEN_RESONANCE_MAP_V31 = {
+    swordsman:   ['fire', 'storm', 'chrono'],
+    paladin:     ['holy', 'stone', 'fire'],
+    berserk:     ['blood', 'fire', 'storm'],
+    juggernaut:  ['stone', 'ice', 'holy'],
+    ranger:      ['storm', 'poison', 'astral'],
+    assassin:    ['shadow', 'poison', 'blood'],
+    inquisitor:  ['holy', 'fire', 'shadow'],
+    phantom:     ['shadow', 'ice', 'chrono'],
+    archmage:    ['fire', 'storm', 'astral'],
+    necromancer: ['blood', 'void', 'shadow'],
+    occultist:   ['void', 'blood', 'astral'],
+    runelord:    ['ice', 'stone', 'chrono']
+  };
+
+  function findAwakenElemV31(id){ return AWAKEN_ELEMENTS_V31.find(function(x){ return x.id === id; }) || null; }
+  function findAwakenCoreV31(id){ return AWAKEN_CORES_V31.find(function(x){ return x.id === id; }) || null; }
+  function findAwakenVesselV31(id){ return AWAKEN_VESSELS_V31.find(function(x){ return x.id === id; }) || null; }
+
+  function hasAwakenResonanceV31(elemId, coreId){
+    var list = AWAKEN_RESONANCE_MAP_V31[coreId];
+    return Boolean(list && list.indexOf(elemId) !== -1);
+  }
+
+  function ensureAwakeningStateV31(){
+    if(!v20Data.awakening || typeof v20Data.awakening !== 'object'){
+      v20Data.awakening = {
+        elem: '', core: '', vessel: '',
+        stones: 0,
+        locks: {elem: false, core: false, vessel: false},
+        breakthroughDone: {},
+        tower50Claimed: false,
+        tower100Claimed: false
+      };
+    }
+    var aw = v20Data.awakening;
+    if(typeof aw.stones !== 'number' || !Number.isFinite(aw.stones)) aw.stones = 0;
+    aw.stones = Math.max(0, Math.floor(aw.stones));
+    if(!aw.locks || typeof aw.locks !== 'object') aw.locks = {elem: false, core: false, vessel: false};
+    if(!aw.breakthroughDone || typeof aw.breakthroughDone !== 'object') aw.breakthroughDone = {};
+
+    // Одноразовая гидратация маркеров V31 из game.earned (RTDB)
+    if(game && game.earned && typeof game.earned === 'object' && !v20Data._v31Hydrated){
+      v20Data._v31Hydrated = true;
+      var eElem = '', eCore = '', eVessel = '', eStones = -1;
+      Object.keys(game.earned).forEach(function(k){
+        if(!game.earned[k]) return;
+        if(k.indexOf('aw31_e_') === 0) eElem = k.slice(7);
+        else if(k.indexOf('aw31_c_') === 0) eCore = k.slice(7);
+        else if(k.indexOf('aw31_v_') === 0) eVessel = k.slice(7);
+        else if(/^aw31_st_\d+$/.test(k)) eStones = Math.max(eStones, parseInt(k.slice(8), 10));
+        else if(/^aw31_bt_\d+$/.test(k)) aw.breakthroughDone[parseInt(k.slice(8), 10)] = true;
+        else if(k === 'aw31_t50') aw.tower50Claimed = true;
+        else if(k === 'aw31_t100') aw.tower100Claimed = true;
+      });
+      if(!aw.elem && findAwakenElemV31(eElem)) aw.elem = eElem;
+      if(!aw.core && findAwakenCoreV31(eCore)) aw.core = eCore;
+      if(!aw.vessel && findAwakenVesselV31(eVessel)) aw.vessel = eVessel;
+      if(eStones >= 0 && !aw.stones) aw.stones = eStones;
+    }
+
+    // Если игрок уже пробуждён — синхронизируем game.cls с gearType его класса и его lucky5
+    var coreObj = findAwakenCoreV31(aw.core);
+    if(coreObj && game){
+      game.cls = coreObj.gearType;
+      v20Data.subcls = coreObj.id; // для совместимости со старыми проверками
+      if(!Array.isArray(v20Data.lucky5) || v20Data.lucky5.length < 5){
+        v20Data.lucky5 = rollLuckyFiveV20();
+      }
+    }
+    return aw;
+  }
+
+  // Регистрируем все 12 классов в SUBCLASSES_V20, чтобы findSubclassV20() всегда находил активное ядро!
+  AWAKEN_CORES_V31.forEach(function(c){
+    var branch = SUBCLASSES_V20[c.gearType];
+    if(Array.isArray(branch) && !branch.some(function(x){ return x.id === c.id; })){
+      branch.push({
+        id: c.id,
+        name: c.name,
+        hpPct: 0,
+        atkPct: 0,
+        skill: c.skill,
+        desc: c.desc
+      });
+    }
+  });
+
+  function syncV31MarkersToRTDB(){
+    if(!game) return;
+    var aw = ensureAwakeningStateV31();
+    if(!game.earned || typeof game.earned !== 'object') game.earned = {newbie: true};
+    Object.keys(game.earned).forEach(function(k){
+      if(k.indexOf('aw31_') === 0) delete game.earned[k];
+    });
+    if(aw.elem)   game.earned['aw31_e_' + aw.elem] = true;
+    if(aw.core)   game.earned['aw31_c_' + aw.core] = true;
+    if(aw.vessel) game.earned['aw31_v_' + aw.vessel] = true;
+    game.earned['aw31_st_' + Math.max(0, Math.floor(Number(aw.stones) || 0))] = true;
+    Object.keys(aw.breakthroughDone || {}).forEach(function(t){
+      if(aw.breakthroughDone[t]) game.earned['aw31_bt_' + t] = true;
+    });
+    if(aw.tower50Claimed)  game.earned['aw31_t50'] = true;
+    if(aw.tower100Claimed) game.earned['aw31_t100'] = true;
+  }
+
+  // Сохранение и загрузка состояния Пробуждения в localStorage и Firestore
+  var _origLoadV20LocalV31 = loadV20Local;
+  loadV20Local = function(){
+    _origLoadV20LocalV31();
+    try {
+      var raw = localStorage.getItem(v20StorageKey());
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && parsed.awakening && typeof parsed.awakening === 'object'){
+          v20Data.awakening = parsed.awakening;
+        }
+      }
+    } catch(e){}
+    ensureAwakeningStateV31();
+  };
+
+  var _origSaveV20ToFirestoreV31 = saveV20ToFirestore;
+  saveV20ToFirestore = function(){
+    ensureAwakeningStateV31();
+    syncV31MarkersToRTDB();
+    _origSaveV20ToFirestoreV31();
+  };
+
+  // Сколько счастливых чисел активно на текущем Буквенном Ранге (1 на F .. 5 на S..EX, +1 при Резонансе)
+  function getActiveLuckyNumbersV31(g, awObj, fullPool){
+    var targetG = g || game;
+    var aw = awObj || (v20Data && v20Data.awakening) || {};
+    var pool = Array.isArray(fullPool) ? fullPool : (v20Data && Array.isArray(v20Data.lucky5) ? v20Data.lucky5 : []);
+    if(!aw.core && !(v20Data && v20Data.subcls)) return [];
+    var lInfo = getLetterRankInfoV31(targetG ? targetG.level : 1);
+    var count = lInfo.luckyCount || 1;
+    var out = pool.slice(0, count);
+    if(hasAwakenResonanceV31(aw.elem, aw.core)){
+      // Детерминированное 6-е резонансное число
+      var seedNum = 2 + (hashStr('res_lucky:' + aw.elem + ':' + aw.core + ':' + (pool[0] || 7)) % 35);
+      while(out.indexOf(seedNum) !== -1){
+        seedNum = 2 + ((seedNum + 3) % 35);
+      }
+      out.push(seedNum);
+    }
+    return out;
+  }
+
+  // Полное форматированное имя Пробуждённого Класса и его цвет
+  function getAwakenedClassDisplayV31(g, awObj){
+    var targetG = g || game;
+    var aw = awObj || (v20Data && v20Data.awakening) || {};
+    var lInfo = getLetterRankInfoV31(targetG ? targetG.level : 1);
+    var elem = findAwakenElemV31(aw.elem);
+    var core = findAwakenCoreV31(aw.core);
+    var vessel = findAwakenVesselV31(aw.vessel);
+    if(!elem || !core || !vessel){
+      var fallbackName = (targetG && targetG.cls && CLASSES[targetG.cls]) ? CLASSES[targetG.cls].name : 'Не пробуждён';
+      return {
+        awakened: false,
+        letterCode: lInfo.code,
+        letterName: lInfo.name,
+        letterColor: lInfo.color,
+        fullTitle: '[' + lInfo.name + '] ' + fallbackName,
+        shortTitle: fallbackName,
+        color: '#6b7280',
+        mult: 1.0,
+        resonance: false
+      };
+    }
+    var shortTitle = elem.name + (elem.name.slice(-1) === '-' ? '' : ' ') + core.name + ' ' + vessel.name;
+    var prest = (targetG === game && v20Data) ? (Number(v20Data.prestige) || 0) : 0;
+    var prestRoman = prest > 0 ? (' ★' + prest) : '';
+    return {
+      awakened: true,
+      letterCode: lInfo.code,
+      letterName: lInfo.name,
+      letterColor: lInfo.color,
+      fullTitle: '[' + lInfo.name + prestRoman + '] ' + shortTitle,
+      shortTitle: shortTitle,
+      color: vessel.color,
+      mult: vessel.mult,
+      resonance: hasAwakenResonanceV31(elem.id, core.id),
+      elem: elem,
+      core: core,
+      vessel: vessel
+    };
+  }
+
+  // Генераторы рулетки для каждого из 3 слотов
+  function rollWeightedFromPoolV31(pool, weightKey){
+    var total = 0;
+    pool.forEach(function(item){ total += Number(item[weightKey || 'w']) || 0; });
+    var r = Math.random() * (total || 1), acc = 0;
+    for(var i = 0; i < pool.length; i++){
+      acc += Number(pool[i][weightKey || 'w']) || 0;
+      if(r <= acc) return pool[i];
+    }
+    return pool[0];
+  }
+
+  function maxAwakenLocksAllowedV31(){
+    var prest = Number(v20Data && v20Data.prestige) || 0;
+    if(prest >= 3) return 2;
+    if(prest >= 1) return 1;
+    return 0;
+  }
+
+  function countActiveAwakenLocksV31(){
+    var aw = ensureAwakeningStateV31();
+    if(!aw.core) return 0;
+    var c = 0;
+    if(aw.locks.elem) c++;
+    if(aw.locks.core) c++;
+    if(aw.locks.vessel) c++;
+    return c;
+  }
+
+  function toggleAwakenSlotLockV31(slotKey){
+    if(!game || !gameLoaded || merchantBusy) return;
+    var aw = ensureAwakeningStateV31();
+    if(!aw.core){
+      toast('Сначала пройдите первое Пробуждение!');
+      return;
+    }
+    var maxL = maxAwakenLocksAllowedV31();
+    if(maxL <= 0){
+      toast('⚓ Якоря Души для заморозки слотов открываются с 1-го Престижа (на 100 уровне EX-Ранга)!');
+      return;
+    }
+    if(aw.locks[slotKey]){
+      aw.locks[slotKey] = false;
+    } else {
+      if(countActiveAwakenLocksV31() >= maxL){
+        toast('⚓ Доступно Якорей Души: ' + maxL + ' (на 3-м Престиже откроется 2 Якоря). Сначала снимите замок с другого слота.');
+        return;
+      }
+      aw.locks[slotKey] = true;
+    }
+    saveV20Local();
+    renderShop();
+    renderChar();
+  }
+
+  // Главная функция Пробуждения (Первое — бесплатно, Повторное — за Камни Пробуждения со сбросом до 1 ур. F-Ранга)
+  function performAwakeningRollV31(){
+    if(!canUseTownServicesV20() || !canSell()) return;
+    if(!game || !gameLoaded || merchantBusy) return;
+    var aw = ensureAwakeningStateV31();
+    var isFirst = !aw.core;
+    var locksCount = isFirst ? 0 : countActiveAwakenLocksV31();
+    var stoneCost = isFirst ? 0 : Math.max(1, locksCount);
+
+    if(!isFirst && aw.stones < stoneCost){
+      toast('💎 Недостаточно Камней Пробуждения! Нужно: ' + stoneCost + ' 💎 (добываются за Престиж, 50/100 этаж Башни и в Рейде).');
+      return;
+    }
+
+    var doRoll = function(){
+      if(!isFirst){
+        aw.stones = Math.max(0, aw.stones - stoneCost);
+        // Сброс ранга до 1 уровня (F-Ранг) и автоматическое снятие всей экипировки в инвентарь
+        game.level = 1;
+        game.xp = 0;
+        game.rank = 1;
+        game.unlockedRank = 1;
+        aw.breakthroughDone = {};
+        game.eq = {};
+        game.eqCopies = {};
+      }
+
+      var prest = Number(v20Data.prestige) || 0;
+      if(isFirst || !aw.locks.elem){
+        aw.elem = rollWeightedFromPoolV31(AWAKEN_ELEMENTS_V31, 'w').id;
+      }
+      if(isFirst || !aw.locks.core){
+        aw.core = rollWeightedFromPoolV31(AWAKEN_CORES_V31, 'w').id;
+      }
+      if(isFirst || !aw.locks.vessel){
+        aw.vessel = rollWeightedFromPoolV31(AWAKEN_VESSELS_V31, prest > 0 ? 'wPrest' : 'w0').id;
+      }
+
+      var coreObj = findAwakenCoreV31(aw.core) || AWAKEN_CORES_V31[0];
+      game.cls = coreObj.gearType;
+      v20Data.subcls = coreObj.id;
+      v20Data.lucky5 = rollLuckyFiveV20();
+
+      // Выдаём стартовое снаряжение нового архетипа, если его ещё нет в инвентаре
+      var starterGear = gearOf(game.cls);
+      for(var sl in starterGear){
+        var gid = starterGear[sl];
+        if(game.inv.indexOf(gid) === -1){
+          game.inv.push(gid);
+        }
+        if(!game.eq[sl]){
+          game.eq[sl] = gid;
+          game.eqCopies[sl] = game.inv.indexOf(gid);
+        }
+      }
+
+      v20Data._v31Hydrated = true;
+      syncV31MarkersToRTDB();
+      syncV20DataToGame();
+      saveV20Local();
+      saveV20ToFirestore();
+      saveGame();
+      renderCoins();
+      renderProgress();
+      renderChar();
+      renderShop();
+
+      var disp = getAwakenedClassDisplayV31(game, aw);
+      toast('🔮 Пробуждение свершилось: ' + disp.fullTitle + (disp.resonance ? ' [⚡ РЕЗОНАНС СУДЬБЫ!]' : '') + '!');
+    };
+
+    if(isFirst){
+      doRoll();
+    } else {
+      confirmBox(
+        'Использовать ' + stoneCost + ' 💎 Камень Пробуждения? Твой уровень сбросится до 1-го (F-Ранг), вся надетая экипировка снимется в инвентарь, а незаблокированные слоты Судьбы прокрутятся заново!',
+        'Пробудиться заново!',
+        doRoll
+      );
+    }
+  }
+
+  // 5. Интеграция статов Пробуждения (Ядро + Множитель Сосуда + Резонанс + Ржавый префикс) в stats()
+  var _origStatsBeforeV31 = stats;
+  stats = function(source){
+    var g = source || game;
+    var st = _origStatsBeforeV31(g);
+    if(!g) return st;
+
+    var aw = (g === game) ? ensureAwakeningStateV31() : null;
+    if(!aw && g.earned){
+      var tmpE = '', tmpC = '', tmpV = '';
+      Object.keys(g.earned).forEach(function(k){
+        if(!g.earned[k]) return;
+        if(k.indexOf('aw31_e_') === 0) tmpE = k.slice(7);
+        else if(k.indexOf('aw31_c_') === 0) tmpC = k.slice(7);
+        else if(k.indexOf('aw31_v_') === 0) tmpV = k.slice(7);
+      });
+      if(tmpC) aw = {elem: tmpE, core: tmpC, vessel: tmpV};
+    }
+    if(!aw || !aw.core) return st;
+
+    var coreObj = findAwakenCoreV31(aw.core);
+    var vesselObj = findAwakenVesselV31(aw.vessel) || AWAKEN_VESSELS_V31[1];
+    var lInfo = getLetterRankInfoV31(g.level || 1);
+    var T = lInfo.idx || 0;
+
+    if(coreObj){
+      var baseCls = CLASS_BASE[coreObj.gearType] || {hp:0, atk:0};
+      st.hp  += (coreObj.hp  - (baseCls.hp  || 0));
+      st.atk += (coreObj.atk - (baseCls.atk || 0));
+    }
+    if(aw.elem === 'rusty'){
+      st.atk = Math.round(st.atk * (1 + (8 + T) / 100));
+    }
+    if(hasAwakenResonanceV31(aw.elem, aw.core)){
+      st.hp  = Math.round(st.hp  * 1.15);
+      st.atk = Math.round(st.atk * 1.15);
+    }
+    if(vesselObj && vesselObj.mult){
+      st.hp  = Math.max(50, Math.round(st.hp  * vesselObj.mult));
+      st.atk = Math.max(4,  Math.round(st.atk * vesselObj.mult));
+    }
+    return st;
+  };
+
+  // Интеграция бонусов чар от Грозовой/Кровавой стихии и классов Ассасин/Некромант/Джаггернаут/Архимаг
+  var _origGetEquippedEnchantsV31 = getEquippedEnchants;
+  getEquippedEnchants = function(g){
+    var target = g || game;
+    var res = _origGetEquippedEnchantsV31(target);
+    var aw = (target === game) ? ensureAwakeningStateV31() : null;
+    if(!aw || !aw.core) return res;
+    var lInfo = getLetterRankInfoV31(target ? target.level : 1);
+    var T = lInfo.idx || 0;
+
+    if(aw.core === 'archmage'){
+      res.crit   = Math.round(res.crit   * 1.15);
+      res.vamp   = Math.round(res.vamp   * 1.15);
+      res.thorns = Math.round(res.thorns * 1.15);
+      res.gold   = Math.round(res.gold   * 1.15);
+    }
+    if(aw.core === 'assassin')    res.crit   = Math.min(60, res.crit   + 8);
+    if(aw.core === 'necromancer') res.vamp   = Math.min(55, res.vamp   + 8);
+    if(aw.core === 'juggernaut')  res.thorns = Math.min(75, res.thorns + 15);
+
+    if(aw.elem === 'storm') res.crit = Math.min(65, res.crit + 4 + T);
+    if(aw.elem === 'blood') res.vamp = Math.min(65, res.vamp + Math.round(4 + T * 1.2));
+    if(aw.elem === 'dull')  res.gold = Math.min(80, res.gold + 5 + T * 2);
+    return res;
+  };
+
+  // 6. Боевые механики Стихий и 12 Классов в PvE
+  var battleAwakenStateV31 = {
+    swordsmanStacks: 0,
+    phantomDodgeNext: false,
+    occultistCurseTurns: 0,
+    iceChillNext: false,
+    chronoSavedThisFight: false
+  };
+
+  function resetBattleAwakenStateV31(){
+    battleAwakenStateV31.swordsmanStacks = 0;
+    battleAwakenStateV31.phantomDodgeNext = false;
+    battleAwakenStateV31.occultistCurseTurns = 0;
+    battleAwakenStateV31.iceChillNext = false;
+    battleAwakenStateV31.chronoSavedThisFight = false;
+  }
+
+  // Святой щит на старте любого боя, если у героя Святая стихия
+  var _origCalcMageShieldV31 = window.calcMageShieldV22;
+  window.calcMageShieldV22 = function(g, maxHp){
+    var baseSh = (typeof _origCalcMageShieldV31 === 'function') ? _origCalcMageShieldV31(g, maxHp) : 0;
+    var aw = (g === game) ? ensureAwakeningStateV31() : null;
+    if(aw && aw.elem === 'holy'){
+      var T = getLetterRankInfoV31(g ? g.level : 1).idx || 0;
+      baseSh += Math.max(5, Math.round(maxHp * (10 + T * 2.5) / 100));
+    }
+    return baseSh;
+  };
+
+  var _origStrikeCoreBaseV31 = strikeCoreBase;
+  strikeCoreBase = function(f, mo, st, n){
+    var aw = ensureAwakeningStateV31();
+    if(!aw || !aw.core){
+      return _origStrikeCoreBaseV31(f, mo, st, n);
+    }
+
+    var lInfo = getLetterRankInfoV31(game ? game.level : 1);
+    var T = lInfo.idx || 0;
+    var coreObj = findAwakenCoreV31(aw.core);
+    var activeLucky = getActiveLuckyNumbersV31(game, aw, v20Data.lucky5);
+    if(dgOn() && v20Data.exp && v20Data.exp.anvilBuff === 'lucky' && Array.isArray(v20Data.exp.anvilLucky2)){
+      activeLucky = activeLucky.concat(v20Data.exp.anvilLucky2);
+    }
+
+    // Временно подменяем v20Data.lucky5 на реально открытые по Буквенному Рангу числа (1..5 + резонанс)
+    var savedLucky5 = v20Data.lucky5 ? v20Data.lucky5.slice() : [];
+    var origHit = mo.hit;
+    var origMoDmg = mo.dmg;
+    var modSt = {hp: st.hp, atk: st.atk};
+
+    try {
+      v20Data.lucky5 = activeLucky;
+
+      // Стаки Рассечения Мечника и метка Оккультиста
+      if(battleAwakenStateV31.swordsmanStacks > 0){
+        modSt.atk = Math.round(modSt.atk * (1 + battleAwakenStateV31.swordsmanStacks * 0.12));
+      }
+      if(battleAwakenStateV31.occultistCurseTurns > 0){
+        modSt.atk = Math.round(modSt.atk * 1.20);
+        battleAwakenStateV31.occultistCurseTurns--;
+      }
+      if(aw.elem === 'holy' && (mo.boss || mo.elite)){
+        modSt.atk = Math.round(modSt.atk * 1.15);
+      }
+
+      // Озноб Ледяной стихии или Каменная твердыня снижают урон врага
+      if(battleAwakenStateV31.iceChillNext){
+        mo.dmg = Math.max(1, Math.round(mo.dmg * 0.60));
+      }
+      if(aw.elem === 'stone'){
+        mo.dmg = Math.max(1, Math.round(mo.dmg * (1 - (4 + T * 1.5) / 100)));
+      }
+
+      // Астральная стихия: сектора 26 и 32 всегда попадают по врагу!
+      if(aw.elem === 'astral' && (n === 26 || n === 32)){
+        mo.hit = function(x){ return x === 26 || x === 32 || origHit(x); };
+        modSt.atk = Math.round(modSt.atk * (1.25 + T * 0.03));
+      }
+
+      var beforeP = f.p;
+      var beforeM = f.m;
+      var isLuckyHit = (n > 1 && activeLucky.indexOf(n) !== -1);
+      var text = _origStrikeCoreBaseV31(f, mo, modSt, n);
+
+      var playerHitEnemy = (f.m < beforeM);
+      var enemyHitPlayer = (f.p < beforeP);
+
+      // Если враг ударил, а у нас активен Шаг в тень Фантома или Теневое/Фантомное уклонение
+      if(enemyHitPlayer){
+        var takenNow = beforeP - f.p;
+        var extraDodgeChance = (aw.core === 'phantom' ? 8 : 0) + (aw.elem === 'shadow' ? Math.round(5 + T * 1.1) : 0);
+        if(battleAwakenStateV31.phantomDodgeNext){
+          battleAwakenStateV31.phantomDodgeNext = false;
+          f.p = beforeP;
+          f.taken = Math.max(0, (f.taken || 0) - takenNow);
+          enemyHitPlayer = false;
+          text += ' 👻 Шаг в тень Фантома: 100% уклонение от атаки врага!';
+        } else if(extraDodgeChance > 0 && Math.random() * 100 < extraDodgeChance){
+          f.p = beforeP;
+          f.taken = Math.max(0, (f.taken || 0) - takenNow);
+          enemyHitPlayer = false;
+          var shadowStrike = Math.max(1, Math.round(modSt.atk * 0.50));
+          f.m = Math.max(0, f.m - shadowStrike);
+          f.dealt += shadowStrike;
+          text += ' 🌑 Покров Тьмы: уклонение и ответный укол (−' + shadowStrike + ' HP)!';
+        }
+        battleAwakenStateV31.iceChillNext = false;
+      }
+
+      // Спецэффекты новых Ультимейтов при выпадении Счастливого числа
+      if(isLuckyHit && playerHitEnemy && coreObj){
+        if(coreObj.id === 'swordsman' && battleAwakenStateV31.swordsmanStacks < 3){
+          battleAwakenStateV31.swordsmanStacks++;
+          text += ' ⚔️ Рассечение (+' + (battleAwakenStateV31.swordsmanStacks * 12) + '% к атаке)!';
+        } else if(coreObj.id === 'juggernaut'){
+          var juggBonus = Math.max(2, Math.round((f.ph || st.hp) * 0.12));
+          f.m = Math.max(0, f.m - juggBonus);
+          f.dealt += juggBonus;
+          text += ' 🛡️ Поступь Колосса добавила ' + juggBonus + ' урона от макс. HP!';
+        } else if(coreObj.id === 'inquisitor'){
+          currentFightTrapped = true;
+          text += ' 🪤 Серебряный капкан ослабил атаку врага на 20%!';
+        } else if(coreObj.id === 'phantom'){
+          battleAwakenStateV31.phantomDodgeNext = true;
+          text += ' 👻 Шаг в тень: следующая атака врага промахнётся!';
+        } else if(coreObj.id === 'occultist'){
+          battleAwakenStateV31.occultistCurseTurns = 3;
+          text += ' 👁️ Пакт Бездны: враг получает +20% урона следующие 3 хода!';
+        } else if(coreObj.id === 'runelord' && !v20Data.nearDeath){
+          var runeSh = Math.max(5, Math.round((f.ph || st.hp) * 0.20));
+          window.mageMaxBattleShield = Math.max(window.mageMaxBattleShield || 0, (window.mageCurrentBattleShield || 0) + runeSh);
+          window.mageCurrentBattleShield = (window.mageCurrentBattleShield || 0) + runeSh;
+          text += ' 💠 Рунный Барьер (+' + runeSh + ' щита)!';
+        }
+      }
+
+      // Пассивные эффекты Стихии при попадании игрока
+      if(playerHitEnemy && f.m > 0){
+        if(aw.elem === 'fire'){
+          var burnDmg = Math.min(modSt.atk * 3, Math.max(1, Math.round(f.m * (1.5 + T * 0.4) / 100)));
+          f.m = Math.max(0, f.m - burnDmg);
+          f.dealt += burnDmg;
+          text += ' 🔥 Ожог −' + burnDmg + ' HP.';
+        } else if(aw.elem === 'void'){
+          var voidDmg = Math.max(1, Math.round(modSt.atk * (12 + T * 3) / 100));
+          f.m = Math.max(0, f.m - voidDmg);
+          f.dealt += voidDmg;
+          text += ' 🌌 Пустота −' + voidDmg + ' чистого урона.';
+        } else if(aw.elem === 'ice' && Math.random() * 100 < (8 + T * 1.2)){
+          battleAwakenStateV31.iceChillNext = true;
+          text += ' ❄️ Враг обморожен (−40% его следующего удара)!';
+        } else if(aw.elem === 'storm' && text.indexOf('КРИТ') !== -1){
+          var stormExtra = Math.max(1, Math.round(modSt.atk * (10 + T * 3) / 100));
+          f.m = Math.max(0, f.m - stormExtra);
+          f.dealt += stormExtra;
+          text += ' ⚡ Грозовой разряд −' + stormExtra + ' HP!';
+        }
+      }
+
+      // Ядовитая стихия при промахе (кроме 1)
+      if(!playerHitEnemy && n !== 1 && aw.elem === 'poison' && f.m > 0){
+        var poisDmg = Math.max(1, Math.round(mo.hp * (1.0 + T * 0.35) / 100));
+        f.m = Math.max(0, f.m - poisDmg);
+        f.dealt += poisDmg;
+        text += ' ☠️ Токсин разъел врага на −' + poisDmg + ' HP!';
+      }
+
+      // Хроно-стихия: спасение от смертельного удара 1 раз за бой
+      if(f.p <= 0 && aw.elem === 'chrono' && !battleAwakenStateV31.chronoSavedThisFight && !v20Data.nearDeath){
+        if(Math.random() * 100 < (6 + T)){
+          battleAwakenStateV31.chronoSavedThisFight = true;
+          f.p = Math.max(1, Math.round((f.ph || st.hp) * 0.25));
+          text += ' ⏳ ПЕТЛЯ ВРЕМЕНИ! Хроно-стихия отмотала гибель назад, вернув ' + f.p + ' HP!';
+        }
+      }
+
+      return text;
+    } finally {
+      v20Data.lucky5 = savedLucky5;
+      mo.hit = origHit;
+      mo.dmg = origMoDmg;
+    }
+  };
+
+  // 7. Блокировка уровня на порогах 10, 20, ..., 90 до победы над Боссом Прорыва!
+  gainXP = function(amount){
+    if(!game || game.level >= LEVEL_CAP) return '';
+    var aw = ensureAwakeningStateV31();
+    var before = game.level;
+    game.xp += Math.max(0, Math.floor(amount));
+
+    while(game.level < LEVEL_CAP && game.xp >= xpNeed(game.level)){
+      // Проверяем, не упёрся ли герой в границу Буквенного Ранга (10, 20, 30, ..., 90)
+      if(game.level % 10 === 0){
+        var tier = Math.floor(game.level / 10);
+        if(!aw.breakthroughDone[tier]){
+          game.xp = xpNeed(game.level);
+          renderProgress();
+          return (game.level > before ? ' Уровень повышен: ' + before + ' → ' + game.level + '!' : '') + ' ⚡ Достигнут предел ' + getLetterRankInfoV31(game.level).name + 'а! Пройди Испытание Прорыва во вкладке «Герой»!';
+        }
+      }
+      game.xp -= xpNeed(game.level);
+      game.level++;
+    }
+    if(game.level >= LEVEL_CAP) game.xp = 0;
+    renderProgress();
+    return game.level > before ? ' Уровень повышен: ' + before + ' → ' + game.level + '!' : '';
+  };
+
+  function isBreakthroughRequiredV31(){
+    if(!game || game.level >= LEVEL_CAP) return false;
+    if(game.level % 10 !== 0) return false;
+    var aw = ensureAwakeningStateV31();
+    var tier = Math.floor(game.level / 10);
+    return !aw.breakthroughDone[tier] && game.xp >= xpNeed(game.level);
+  }
+
+  // Запуск боя с Боссом Прорыва (на 10..90 ур.) или Боссом Возвышения (на 100 ур. для Престижа)
+  function startBreakthroughBossV31(isAscension){
+    if(!game || !gameLoaded || merchantBusy) return;
+    if((game.fight && game.fight.on) || dgOn() || towerOnV29() || arenaOnV29()){
+      toast('Сначала завершите текущий бой или поход!');
+      return;
+    }
+    var aw = ensureAwakeningStateV31();
+    if(!aw.core && !game.cls){
+      toast('Сначала пройдите Пробуждение класса!');
+      return;
+    }
+    resetBattleAwakenStateV31();
+    var st = stats(game);
+    var curRank = maxRank(game);
+    var lInfo = getLetterRankInfoV31(game.level);
+    var baseMon = DG_MONSTERS.find(function(m){ return m.id === lInfo.bossBase; }) || MONSTERS.find(function(m){ return m.id === lInfo.bossBase; }) || DG_MONSTERS[0];
+    var mo = makeMonster(baseMon, curRank, true, true, false);
+    var startHp = v20Data.nearDeath ? 1 : st.hp;
+
+    var sh = (!v20Data.nearDeath) ? window.calcMageShieldV22(game, st.hp) : 0;
+    window.mageMaxBattleShield = sh;
+    window.mageCurrentBattleShield = sh;
+
+    game.fight = {
+      s: slotNow(),
+      kind: isAscension ? 'ascension' : 'breakthrough',
+      btTier: Math.floor(game.level / 10),
+      mid: 0,
+      elite: true,
+      deadline: Date.now() + 60 * 60000,
+      r: curRank,
+      m: mo.hp,
+      p: startHp,
+      ph: startHp,
+      pa: st.atk,
+      buddy: minerActive(game),
+      on: true,
+      skip: false,
+      dealt: 0,
+      taken: 0
+    };
+    fightLog = (isAscension ? '👑 ИСПЫТАНИЕ ВОЗВЫШЕНИЯ (EX-РАНГ): ' : '⚡ ИСПЫТАНИЕ ПРОРЫВА (' + lInfo.name + ' → ' + LETTER_RANKS_V31[Math.min(9, lInfo.idx + 1)].name + '): ')
+      + lInfo.bossName + ' (' + mo.hp + ' HP)! При поражении штрафа монет нет.';
+    fightMsg = '';
+    fightChest = false;
+    saveGame();
+    renderProgress();
+    renderFight();
+    showTab('game');
+    toast('⚔️ Бой со Стражем Врат начался! Крути колесо!');
+  }
+
+  var _origFoeOfFightV31 = foeOfFight;
+  foeOfFight = function(f){
+    if(f && (f.kind === 'breakthrough' || f.kind === 'ascension')){
+      var lInfo = LETTER_RANKS_V31[Math.min(9, Math.max(0, (Number(f.btTier) || 1) - 1))] || LETTER_RANKS_V31[0];
+      var baseMon = DG_MONSTERS.find(function(m){ return m.id === lInfo.bossBase; }) || MONSTERS.find(function(m){ return m.id === lInfo.bossBase; }) || DG_MONSTERS[0];
+      var m = makeMonster(baseMon, f.r || 1, true, true, false);
+      m.name = (f.kind === 'ascension' ? '👑 ' : '⚡ ') + lInfo.bossName;
+      return m;
+    }
+    return _origFoeOfFightV31(f);
+  };
+
+  var _origFightStrikeV31 = fightStrike;
+  fightStrike = function(n){
+    var f = game && game.fight;
+    if(f && f.on && (f.kind === 'breakthrough' || f.kind === 'ascension')){
+      var mo = foeOfFight(f), st = battleStats(f);
+      fightLog = strikeCore(f, mo, st, n);
+
+      if(f.m <= 0){
+        f.m = 0; f.on = false; f.skip = false;
+        window.mageMaxBattleShield = 0; window.mageCurrentBattleShield = 0;
+        var aw = ensureAwakeningStateV31();
+
+        if(f.kind === 'ascension'){
+          // Победа над Боссом Возвышения 100 уровня -> Престиж + 1 Камень Пробуждения + Якорь Души!
+          v20Data.prestige = Math.min(50, (Number(v20Data.prestige) || 0) + 1);
+          aw.stones = (Number(aw.stones) || 0) + 1;
+          aw.breakthroughDone = {};
+          game.level = 1;
+          game.xp = 0;
+          game.rank = 1;
+          game.unlockedRank = 1;
+          game.eq = {};
+          game.eqCopies = {};
+          // Надеваем стартовые вещи архетипа
+          var cg = gearOf(game.cls);
+          for(var sl in cg){
+            var idx = game.inv.indexOf(cg[sl]);
+            if(idx >= 0){ game.eq[sl] = cg[sl]; game.eqCopies[sl] = idx; }
+          }
+          v20Data._v31Hydrated = true;
+          syncV31MarkersToRTDB();
+          syncV20DataToGame();
+          saveV20Local(); saveV20ToFirestore(); saveGame();
+          fightMsg = fightLog + ' 👑 ВОЗВЫШЕНИЕ СВЕРШИЛОСЬ! Достигнут Престиж ' + v20Data.prestige + ' (+80 HP, +18 Атаки навсегда)! Получен +1 💎 Камень Пробуждения и открыт ⚓ Якорь Души для заморозки слотов класса!';
+          fightChest = true;
+          renderCoins(); renderProgress(); renderChar();
+          toast('👑 Престиж ' + v20Data.prestige + ' получен! +1 💎 Камень Пробуждения!');
+        } else {
+          // Победа над Боссом Прорыва -> переход на новую букву ранга!
+          var tier = Number(f.btTier) || Math.floor(game.level / 10);
+          aw.breakthroughDone[tier] = true;
+          game.xp = 0;
+          if(game.level < LEVEL_CAP) game.level++;
+          var newLetter = getLetterRankInfoV31(game.level);
+          var dustBonus = tier * 40;
+          game.dust = Math.min(1000000, (Number(game.dust) || 0) + dustBonus);
+          v20Data._v31Hydrated = true;
+          syncV31MarkersToRTDB();
+          saveV20Local(); saveV20ToFirestore(); saveGame();
+          fightMsg = fightLog + ' ⚡ ПРОРЫВ СВЕРШИЛСЯ! Ты перешёл в «' + newLetter.name + '» (Уровень ' + game.level + ')! Сила твоей Стихии возросла, открыты новые Врата и получено +' + dustBonus + ' ✨ пыли!';
+          fightChest = true;
+          renderCoins(); renderProgress(); renderChar();
+          toast('⚡ Прорыв выполнен! Теперь ты ' + newLetter.name + '!');
+        }
+        return;
+      } else if(f.p <= 0){
+        f.p = 0; f.on = false; f.skip = false;
+        window.mageMaxBattleShield = 0; window.mageCurrentBattleShield = 0;
+        fightMsg = fightLog + ' 🛡️ Страж Врат оказался сильнее. Штрафа монет и статуса «При смерти» за Испытание Прорыва нет — укрепи снаряжение и попробуй снова!';
+        fightChest = false;
+        saveGame(); renderProgress(); renderFight();
+        return;
+      }
+      return;
+    }
+    _origFightStrikeV31(n);
+  };
+
+  // Награждение 💎 Камнем Пробуждения за 50-й и 100-й этажи Башни Испытаний и шанс в Рейде
+  var _origTowerStrikeV31 = towerStrikeV29;
+  towerStrikeV29 = function(n){
+    var prevFloor = (v20Data && v20Data.tower) ? v20Data.tower.floor : 1;
+    _origTowerStrikeV31(n);
+    var aw = ensureAwakeningStateV31();
+    if(v20Data && v20Data.tower && v20Data.tower.floor > prevFloor){
+      if(prevFloor === 50 && !aw.tower50Claimed){
+        aw.tower50Claimed = true;
+        aw.stones = (Number(aw.stones) || 0) + 1;
+        v20Data._v31Hydrated = true;
+        syncV31MarkersToRTDB(); saveV20Local(); saveV20ToFirestore(); saveGame();
+        toast('💎 Покорён 50-й этаж Башни! Получен +1 Камень Пробуждения!');
+      } else if(prevFloor === 100 && !aw.tower100Claimed){
+        aw.tower100Claimed = true;
+        aw.stones = (Number(aw.stones) || 0) + 1;
+        v20Data._v31Hydrated = true;
+        syncV31MarkersToRTDB(); saveV20Local(); saveV20ToFirestore(); saveGame();
+        toast('💎 Покорён 100-й этаж Башни! Получен +1 Камень Пробуждения!');
+      }
+    }
+  };
+
+  var _origClaimRaidRewardsV31 = window.claimRaidRewards;
+  window.claimRaidRewards = function(){
+    var d = new Date();
+    var claimKey = 'raid_reward_' + d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    var hadClaimed = Boolean(game && game.earned && game.earned[claimKey]);
+    _origClaimRaidRewardsV31();
+    setTimeout(function(){
+      if(!hadClaimed && game && game.earned && game.earned[claimKey]){
+        var aw = ensureAwakeningStateV31();
+        if(Math.random() < 0.05){
+          aw.stones = (Number(aw.stones) || 0) + 1;
+          v20Data._v31Hydrated = true;
+          syncV31MarkersToRTDB(); saveV20Local(); saveV20ToFirestore(); saveGame();
+          toast('💎 Невероятная удача! Из Мирового Босса выпал редкий Камень Пробуждения!');
+        }
+      }
+    }, 1200);
+  };
+
+  // 8. Отрисовка Алтаря Пробуждения в Магазине и карточки Судьбы / Босса Прорыва в Герое
+  function buildAwakeningAltarHtmlV31(){
+    var aw = ensureAwakeningStateV31();
+    var disp = getAwakenedClassDisplayV31(game, aw);
+    var lInfo = getLetterRankInfoV31(game ? game.level : 1);
+    var T = lInfo.idx || 0;
+    var isFirst = !aw.core;
+    var maxLocks = maxAwakenLocksAllowedV31();
+    var curLocks = countActiveAwakenLocksV31();
+    var stoneCost = isFirst ? 0 : Math.max(1, curLocks);
+    var blocked = isInActiveCombatV20() || isInExpeditionV20() || !canSell();
+
+    var h = '<div class="card awakenAltarCard"><h3>🔮 Алтарь Пробуждения Судьбы</h3>';
+    h += '<p>Твой класс формируется из <b>3 случайных позиций</b>: <b>Стихия</b> (растущая от буквенного ранга пассивка) + <b>Класс</b> (базовые статы, тип брони и Ульта Счастливых чисел) + <b>Ступень Сосуда</b> (цвет титула и глобальный множитель характеристик от ×0.85 до ×2.40).</p>';
+
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px">'
+      + '<span>💎 Камни Пробуждения: <b style="color:#38bdf8;font-size:15px">' + aw.stones + ' шт.</b></span>'
+      + '<span>⚓ Якоря Души (Престиж ' + (v20Data.prestige || 0) + '): <b>' + curLocks + ' / ' + maxLocks + ' замков</b></span>'
+      + '</div>';
+
+    h += '<div class="awakenTitleBanner" style="border-color:' + disp.color + ';color:' + disp.color + '">'
+      + '<span class="letterRankBadge" style="background:' + disp.letterColor + '">' + disp.letterName + '</span> '
+      + escapeHtmlV20(disp.shortTitle)
+      + (disp.resonance ? '<br><span class="awakenResonanceBadge">⚡ Скрытый Резонанс Судьбы (+15% статов и +1 Счастливое число)</span>' : '')
+      + '</div>';
+
+    if(disp.awakened){
+      h += '<div class="awakenSlotsGrid">'
+        // Слот 1: Стихия
+        + '<div class="awakenSlotBox' + (aw.locks.elem ? ' locked' : '') + '">'
+        + '<div class="awakenSlotLabel">1. Стихия (Префикс)</div>'
+        + '<div class="awakenSlotVal">' + disp.elem.name + '</div>'
+        + '<div class="awakenSlotDesc">' + disp.elem.desc(T) + '</div>'
+        + '<button type="button" class="ghost awakenLockBtn" data-aw-lock="elem"' + (blocked ? ' disabled' : '') + '>' + (aw.locks.elem ? '🔒 Заморожено' : '🔓 Заморозить') + '</button>'
+        + '</div>'
+        // Слот 2: Класс
+        + '<div class="awakenSlotBox' + (aw.locks.core ? ' locked' : '') + '">'
+        + '<div class="awakenSlotLabel">2. Класс (' + CLASSES[disp.core.gearType].name + ')</div>'
+        + '<div class="awakenSlotVal">' + disp.core.name + '</div>'
+        + '<div class="awakenSlotDesc">' + disp.core.desc + '</div>'
+        + '<button type="button" class="ghost awakenLockBtn" data-aw-lock="core"' + (blocked ? ' disabled' : '') + '>' + (aw.locks.core ? '🔒 Заморожено' : '🔓 Заморозить') + '</button>'
+        + '</div>'
+        // Слот 3: Ступень Сосуда
+        + '<div class="awakenSlotBox' + (aw.locks.vessel ? ' locked' : '') + '" style="border-color:' + disp.color + '">'
+        + '<div class="awakenSlotLabel">3. Ступень Сосуда</div>'
+        + '<div class="awakenSlotVal" style="color:' + disp.color + '">' + disp.vessel.name + ' (×' + disp.vessel.mult.toFixed(2) + ')</div>'
+        + '<div class="awakenSlotDesc">' + disp.vessel.desc + '</div>'
+        + '<button type="button" class="ghost awakenLockBtn" data-aw-lock="vessel"' + (blocked ? ' disabled' : '') + '>' + (aw.locks.vessel ? '🔒 Заморожено' : '🔓 Заморозить') + '</button>'
+        + '</div>'
+        + '</div>';
+    }
+
+    var canRoll = !blocked && (isFirst || aw.stones >= stoneCost);
+    var btnLabel = isFirst
+      ? '✨ Пройти Первое Пробуждение (Бесплатно)'
+      : (aw.stones < stoneCost
+          ? 'Нужно ' + stoneCost + ' 💎 Камней Пробуждения (у тебя ' + aw.stones + ')'
+          : '🔄 Пробудиться заново за ' + stoneCost + ' 💎 (Сброс в F-Ранг)');
+    h += '<button type="button" id="btnDoAwakenRollV31"' + (canRoll ? '' : ' disabled') + '>' + btnLabel + '</button>';
+    h += '<p style="font-size:12px;color:var(--muted)">💎 Камни Пробуждения добываются: за взятие Престижа на 100 ур. (гарантированно +1 💎), за первое покорение 50-го и 100-го этажей Башни Испытаний и с шансом из Мирового Босса (Рейда).</p>';
+    h += '</div>';
+    return h;
+  }
+
+  var _origRenderShopV31 = renderShop;
+  renderShop = function(){
+    _origRenderShopV31();
+    var box = $('shopBody');
+    if(!box || !game) return;
+    // Заменяем старую карточку покупки 3 классов на Алтарь Пробуждения Судьбы
+    var cards = box.querySelectorAll('.card');
+    if(cards.length >= 3){
+      cards[cards.length - 1].outerHTML = buildAwakeningAltarHtmlV31();
+    } else {
+      var wrap = document.createElement('div');
+      wrap.innerHTML = buildAwakeningAltarHtmlV31();
+      box.appendChild(wrap.firstChild);
+    }
+    var rollBtn = $('btnDoAwakenRollV31');
+    if(rollBtn) rollBtn.onclick = performAwakeningRollV31;
+    box.querySelectorAll('[data-aw-lock]').forEach(function(b){
+      b.onclick = function(){ toggleAwakenSlotLockV31(this.getAttribute('data-aw-lock')); };
+    });
+  };
+
+  var _origRenderProgressV31 = renderProgress;
+  renderProgress = function(){
+    _origRenderProgressV31();
+    if(!game) return;
+    var lInfo = getLetterRankInfoV31(game.level);
+    var lvlEl = $('levelLabel');
+    if(lvlEl){
+      lvlEl.innerHTML = '<span class="letterRankBadge" style="background:' + lInfo.color + '">' + lInfo.name + '</span> Ур. ' + game.level + ' (Врата ' + game.unlockedRank + '/20)';
+    }
+
+    var btBox = $('v31BreakthroughBox');
+    if(btBox) btBox.remove();
+
+    var needBt = isBreakthroughRequiredV31();
+    var canAscend = (game.level >= LEVEL_CAP);
+    if((needBt || canAscend) && $('xpBar') && $('xpBar').parentNode){
+      var div = document.createElement('div');
+      div.id = 'v31BreakthroughBox';
+      div.className = 'breakthroughBanner';
+      var busy = isInActiveCombatV20() || isInExpeditionV20();
+      if(canAscend){
+        div.innerHTML = '<div><b>👑 Достигнут предел EX-Ранга (100 уровень)!</b><br><span style="font-size:12px;color:var(--muted)">Одолей Хранителя Предела, чтобы совершить Возвышение (Престиж ' + ((v20Data.prestige||0)+1) + '), получить +80 HP, +18 Атаки, +1 💎 Камень Пробуждения и открыть ⚓ Якорь Души!</span></div>'
+          + '<button type="button" id="btnStartAscensionBossV31"' + (busy ? ' disabled' : '') + '>👑 Вызвать Босса Возвышения (Престиж)</button>';
+      } else {
+        var nextLetter = LETTER_RANKS_V31[Math.min(9, lInfo.idx + 1)];
+        div.innerHTML = '<div><b>⚡ Порог ' + lInfo.name + 'а достигнут (Уровень ' + game.level + ')!</b><br><span style="font-size:12px;color:var(--muted)">Чтобы перейти в <b>' + nextLetter.name + '</b>, усилить пассивку Стихии и продолжить прокачку, победи босса: <b>' + lInfo.bossName + '</b>!</span></div>'
+          + '<button type="button" id="btnStartBreakthroughBossV31"' + (busy ? ' disabled' : '') + '>⚔️ Начать Испытание Прорыва (' + nextLetter.name + ')</button>';
+      }
+      $('xpBar').parentNode.insertBefore(div, $('xpBar').nextSibling);
+      var b1 = $('btnStartBreakthroughBossV31');
+      if(b1) b1.onclick = function(){ startBreakthroughBossV31(false); };
+      var b2 = $('btnStartAscensionBossV31');
+      if(b2) b2.onclick = function(){ startBreakthroughBossV31(true); };
+    }
+  };
+
+  var _origRenderCharV31 = renderChar;
+  renderChar = function(){
+    _origRenderCharV31();
+    if(!game) return;
+    var aw = ensureAwakeningStateV31();
+    var disp = getAwakenedClassDisplayV31(game, aw);
+    var lInfo = getLetterRankInfoV31(game.level);
+    var T = lInfo.idx || 0;
+
+    // Окрашиваем плашку класса под персонажем в цвет Ступени Сосуда
+    var ct = $('charClass');
+    if(ct){
+      ct.textContent = disp.fullTitle;
+      ct.style.background = disp.color;
+    }
+
+    // Обновляем карточку специализации и Счастливых чисел (с учётом открытых слотов по Буквенному Рангу)
+    var evoBox = $('v20EvolutionCard');
+    if(evoBox){
+      var activeNums = getActiveLuckyNumbersV31(game, aw, v20Data.lucky5);
+      var eh = '';
+      if(disp.awakened){
+        eh += '<div class="v19PassiveCard" style="max-width:100%;margin-bottom:8px;border-color:' + disp.color + '">'
+          + '<span class="letterRankBadge" style="background:' + disp.letterColor + '">' + disp.letterName + '</span> '
+          + '<b style="color:' + disp.color + ';font-size:15px">' + escapeHtmlV20(disp.shortTitle) + '</b>'
+          + ' (Сосуд ×' + disp.vessel.mult.toFixed(2) + ' · Архетип брони: ' + CLASSES[disp.core.gearType].name + ')'
+          + (disp.resonance ? '<br><span class="awakenResonanceBadge">⚡ Резонанс Судьбы: +15% ко всем статам и +1 Счастливое число!</span>' : '')
+          + '<div style="margin-top:6px;text-align:left;font-size:12px">'
+          + '• <b>Стихия (' + disp.elem.name + '):</b> ' + disp.elem.desc(T) + '<br>'
+          + '• <b>Класс (' + disp.core.name + ' · ' + disp.core.skill + '):</b> ' + disp.core.desc + '<br>'
+          + '• <b>Камней Пробуждения:</b> <b style="color:#38bdf8">' + aw.stones + ' 💎</b> (смена класса в Магазине → Расы и Классы)'
+          + '</div>'
+          + '<div style="margin-top:6px;font-weight:700;color:var(--gold)">🎯 Активные Счастливые числа на ' + disp.letterName + 'е (' + activeNums.length + ' шт.):</div>'
+          + '<div class="luckyFiveWrap">' + activeNums.map(function(num){ return '<span class="luckyBall">' + num + '</span>'; }).join('') + '</div>'
+          + '</div>';
+      } else {
+        eh += '<div class="card" style="border-color:var(--gold);margin-bottom:8px;text-align:center">'
+          + '<h3>🔮 Пробуждение Судьбы доступно!</h3>'
+          + '<p>Пройди бесплатную Инициацию, чтобы получить свою Стихию, Класс и Ступень Сосуда!</p>'
+          + '<button type="button" id="btnCharQuickAwakenV31">Пройти Пробуждение (Бесплатно)</button>'
+          + '</div>';
+      }
+      evoBox.innerHTML = eh;
+      var qa = $('btnCharQuickAwakenV31');
+      if(qa) qa.onclick = performAwakeningRollV31;
+    }
+  };
+
+  // Обновляем отображение снимка соперника на Арене с поддержкой полного цветного титула Пробуждения
+  var _origBuildFullPlayerCombatSnapshotV31 = buildFullPlayerCombatSnapshotV30;
+  buildFullPlayerCombatSnapshotV30 = function(uidKey, nameStr, gObj, firestoreSnap){
+    var snap = _origBuildFullPlayerCombatSnapshotV31(uidKey, nameStr, gObj, firestoreSnap);
+    var g = gObj || {};
+    var earned = (g.earned && typeof g.earned === 'object') ? g.earned : {};
+    var eElem = '', eCore = '', eVessel = '';
+    Object.keys(earned).forEach(function(k){
+      if(!earned[k]) return;
+      if(k.indexOf('aw31_e_') === 0) eElem = k.slice(7);
+      else if(k.indexOf('aw31_c_') === 0) eCore = k.slice(7);
+      else if(k.indexOf('aw31_v_') === 0) eVessel = k.slice(7);
+    });
+    if(eCore && findAwakenCoreV31(eCore)){
+      var disp = getAwakenedClassDisplayV31(g, {elem: eElem, core: eCore, vessel: eVessel});
+      snap.subcls = eCore;
+      snap.subName = disp.fullTitle;
+      snap.subSkill = disp.core ? disp.core.skill : snap.subSkill;
+      snap.awakenColor = disp.color;
+      // Активные счастливые числа соперника по его Буквенному Рангу (если у него открыты числа)
+      var rawL5 = (snap.lucky5 && snap.lucky5.length) ? snap.lucky5 : [];
+      if(rawL5.length){
+        snap.lucky5 = getActiveLuckyNumbersV31(g, {elem: eElem, core: eCore, vessel: eVessel}, rawL5);
+      }
+    }
+    return snap;
+  };
+  /* ================== КОНЕЦ МОДУЛЯ UPDATE 31 ================== */
   })();
 </script>
 </body>
