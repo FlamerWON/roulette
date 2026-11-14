@@ -14268,7 +14268,18 @@ function startFirestoreListenersV20(){
     if(coreObj && game){
       game.cls = coreObj.gearType;
       v20Data.subcls = coreObj.id; // для совместимости со старыми проверками
-      if(!Array.isArray(v20Data.lucky5) || v20Data.lucky5.length < 5){
+      
+      // Восстанавливаем Счастливую Пятёрку из маркеров Firebase (были сохранены как v30_l5_...)
+      if(game.earned && (!Array.isArray(v20Data.lucky5) || v20Data.lucky5.length < 5) && !v20Data._inCombatTempLucky){
+        Object.keys(game.earned).forEach(function(k){
+          if(k.indexOf('v30_l5_') === 0){
+             var parts = k.slice(7).split('_').map(Number);
+             if(parts.length === 5) v20Data.lucky5 = parts;
+          }
+        });
+      }
+      
+      if(!Array.isArray(v20Data.lucky5) || (v20Data.lucky5.length < 5 && !v20Data._inCombatTempLucky)){
         v20Data.lucky5 = rollLuckyFiveV20();
       }
     }
@@ -14650,8 +14661,8 @@ function startFirestoreListenersV20(){
     var modSt = {hp: st.hp, atk: st.atk};
 
     try {
-      v20Data.lucky5 = activeLucky;
-      // Гарантируем, что findSubclassV20(v20Data.subcls) вернёт активный класс из AWAKEN_CORES_V31
+      v20Data._inCombatTempLucky = true; // Блокируем перегенерацию в ensureAwakeningState
+      v20Data.lucky5 = []; // ПУСТОЙ МАССИВ, чтобы старый движок V20 не перехватил Ульту и мы могли нанести свой урон V31!
       if(coreObj) v20Data.subcls = coreObj.id;
 
       if(battleAwakenStateV31.swordsmanStacks > 0){
@@ -14687,14 +14698,25 @@ function startFirestoreListenersV20(){
       var beforeM = f.m;
       var text = _origStrikeCoreBaseV31(f, mo, modSt, n);
 
-      // Если базовый движок проигнорировал isLuckyHit (например, потому что число было в skillNums босса или ещё где-то),
-      // принудительно применяем урон и эффект Ульты класса!
-      if(isLuckyHit && coreObj && f.m >= beforeM){
+      // Так как мы стёрли lucky5 для движка V20, он посчитал это Обычным Ударом.
+      // Теперь мы ОТКАТЫВАЕМ обычный урон и наносим ИСТИННЫЙ УРОН УЛЬТЫ V31!
+      if(isLuckyHit && coreObj){
+        var v20Dmg = beforeM - f.m;
+        f.m = beforeM;
+        f.dealt = Math.max(0, (Number(f.dealt) || 0) - v20Dmg);
+        f.p = beforeP; // Откатываем вампиризм V20
+
         var ultMult = Number(coreObj.ultMult) || 2.5;
         var forcedDmg = Math.max(1, Math.round(modSt.atk * ultMult));
         f.m = Math.max(0, f.m - forcedDmg);
         f.dealt = (Number(f.dealt) || 0) + forcedDmg;
-        text = '🌟 УЛЬТА КЛАССА НА ЧИСЛЕ ' + n + '! [' + coreObj.name + ' · ' + coreObj.skill + '] наносит ' + forcedDmg + ' урона (×' + ultMult + ')!';
+
+        var eqEnch = getEquippedEnchants(game);
+        var lVampPct = eqEnch.vamp + (coreObj.id === 'necromancer' ? 50 : 0);
+        var lVp = lVampPct > 0 ? Math.max(1, Math.round(forcedDmg * (lVampPct / 100))) : 0;
+        if(lVp && !v20Data.nearDeath) f.p = Math.min((f.ph || st.hp), f.p + lVp);
+
+        text = '🌟 УЛЬТА КЛАССА НА ЧИСЛЕ ' + n + '! [' + coreObj.name + ' · ' + coreObj.skill + '] наносит ' + forcedDmg + ' урона (×' + ultMult + ')!' + (lVp && !v20Data.nearDeath ? ' Вампиризм +' + lVp + ' HP.' : '');
       }
 
       var playerHitEnemy = (f.m < beforeM);
@@ -14786,6 +14808,7 @@ function startFirestoreListenersV20(){
 
       return text;
     } finally {
+      v20Data._inCombatTempLucky = false;
       v20Data.lucky5 = savedLucky5;
       v20Data.subcls = savedSubcls;
       mo.hit = origHit;
