@@ -14738,7 +14738,8 @@ function startFirestoreListenersV20(){
         f.dealt = Math.max(0, (Number(f.dealt) || 0) - v20Dmg);
         f.p = beforeP; // Откатываем вампиризм V20
 
-        var ultMult = Number(coreObj.ultMult) || 2.5;
+        var archUltBonus = (coreObj.gearType === 'mage') ? 1.08 : 1.0;
+        var ultMult = (Number(coreObj.ultMult) || 2.5) * archUltBonus;
         var forcedDmg = Math.max(1, Math.round(modSt.atk * ultMult));
         f.m = Math.max(0, f.m - forcedDmg);
         f.dealt = (Number(f.dealt) || 0) + forcedDmg;
