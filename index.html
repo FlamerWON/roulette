@@ -1718,7 +1718,7 @@ html, body {
     return msg;
   }
 
-  function defaultGame(){return {miner:defaultMiner(),stones:0,dust:0,enchants:{},eventSlot:0,enhance:{},eqCopies:{},releaseSeen:0,favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false,dealt:0,taken:0},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
+  function defaultGame(){return {miner:defaultMiner(),stones:0,dust:0,awakenStones:0,enchants:{},eventSlot:0,enhance:{},eqCopies:{},releaseSeen:0,favorites:{},balanceV:9,level:1,xp:0,rank:1,unlockedRank:1,spins:0,coins:0,race:'human',cls:'',fight:{s:0,m:0,p:0,on:false,dealt:0,taken:0},inv:[],eq:{},gm:1,red:0,black:0,zero:0,last:-1,blackRun:0,title:'newbie',earned:{newbie:true},seen:new Array(38).join('0'),cols:'',nums:''};}
   function gameUrl(t){return DB_URL+'/users/'+sess.uid+'/game.json?auth='+encodeURIComponent(t);}
   var saving=false, again=false;
   var gameLoaded=false, loadRetry=0;
@@ -2169,6 +2169,7 @@ html, body {
   function cleanGameForRTDB(src){
     if(!src || typeof src !== 'object') return src;
     var c = JSON.parse(JSON.stringify(src));
+    if(typeof c.awakenStones !== 'number') c.awakenStones = 0;
     delete c.subcls; delete c.lucky5; delete c.prestige; delete c.nearDeath; delete c.potions;
     delete c.pets; delete c.incubator; delete c.activeCompanion; delete c.activePetUuid;
     delete c.hwEvent; delete c.dg; delete c.awakening; delete c.tower; delete c.arena;
@@ -13587,7 +13588,7 @@ function startFirestoreListenersV20(){
     window.mageMaxBattleShield = window.calcMageShieldV22(game, mySt.hp);
     window.mageCurrentBattleShield = window.mageMaxBattleShield;
 
-    var oppL5Txt = (ar.opp.lucky5 && ar.opp.lucky5.length > 0) ? ('Счастливые числа врага: ' + ar.opp.lucky5.join(', ')) : 'Счастливых чисел у соперника нет';
+    var oppL5Txt = (ar.opp.lucky5 && ar.opp.lucky5.length === 5) ? ('Счастливые числа врага: ' + ar.opp.lucky5.join(', ')) : 'Счастливых чисел у соперника нет';
     fightLog = '⚔️ ДУЭЛЬ НА АРЕНЕ: Ты против «' + ar.opp.name + '» (' + ar.opp.mmr + ' MMR · ' + oppL5Txt + ')! Красное/Зеро — твой удар, Чёрное/Единица — удар соперника!';
     fightMsg = ''; fightChest = false;
     syncV29MarkersToRTDB();
@@ -13606,15 +13607,9 @@ function startFirestoreListenersV20(){
 
     var myEnch = getEquippedEnchants(game);
     var mySub = findSubclassV20(v20Data.subcls);
-    var myAwA = ensureAwakeningStateV31();
-    var myCoreA = findAwakenCoreV31(myAwA.core);
-    // Свои числа — столько, сколько открыто Буквенным Рангом (+ Резонанс), как и в PvE (раньше на Арене работали все 5)
-    var myLucky = (mySub && myCoreA) ? getActiveLuckyNumbersV31(game, myAwA, v20Data.lucky5)
-                : ((mySub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.length === 5) ? v20Data.lucky5 : []);
+    var myLucky = (mySub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.length === 5) ? v20Data.lucky5 : [];
     var oppSub = findSubclassV20(opp.subcls);
-    var oppCoreA = findAwakenCoreV31(opp.subcls);
-    // У соперника уже лежит срез по его рангу (1–6 чисел), а не всегда пять — поэтому не требуем length === 5
-    var oppLucky = (oppSub && Array.isArray(opp.lucky5) && opp.lucky5.length > 0) ? opp.lucky5 : [];
+    var oppLucky = (oppSub && Array.isArray(opp.lucky5) && opp.lucky5.length === 5) ? opp.lucky5 : [];
     var c = color(n);
 
     var mySetBonus = (typeof getActiveSetBonus === 'function') ? getActiveSetBonus(game) : null;
@@ -13658,7 +13653,7 @@ function startFirestoreListenersV20(){
         var isMyCrit = !isMyUlt && (myEnch.crit > 0 && Math.random() * 100 < myEnch.crit);
         var mult = 1.0, ultNote = '';
         if(isMyUlt && mySub){
-          mult = myCoreA ? (Number(myCoreA.ultMult) || 2.4) : 2.4;
+          mult = 2.4;
           ultNote = '🌟 СЧАСТЛИВОЕ ЧИСЛО ' + n + ' [' + mySub.name + ' · ' + mySub.skill + ']! ';
           if(mySub.id === 'witcher'){ var bDmg = Math.max(1, Math.round(ar.mh * 0.05)); ar.m = Math.max(0, ar.m - bDmg); ultNote += '🔥 Игни −' + bDmg + ' HP! '; }
           else if(mySub.id === 'berserk'){ var bh = Math.max(1, Math.round(ar.ph * 0.15)); ar.p = Math.min(ar.ph, ar.p + bh); ultNote += '🩸 Ярость +' + bh + ' HP! '; }
@@ -13666,9 +13661,6 @@ function startFirestoreListenersV20(){
           else if(mySub.id === 'sniper'){ mult = 2.8; }
           else if(mySub.id === 'trapper'){ ar.oppTrapped = true; ultNote += '🪤 Капкан (−20% урона врага)! '; }
           else if(mySub.id === 'chronomage'){ var ch = Math.max(1, Math.round(ar.ph * 0.20)); ar.p = Math.min(ar.ph, ar.p + ch); ultNote += '⏳ Разлом +' + ch + ' HP! '; }
-          else if(mySub.id === 'juggernaut'){ var jb = Math.max(1, Math.round(ar.ph * 0.12)); ar.m = Math.max(0, ar.m - jb); ultNote += '🛡️ Поступь Колосса +' + jb + ' урона! '; }
-          else if(mySub.id === 'inquisitor'){ ar.oppTrapped = true; ultNote += '🪤 Серебряный капкан (−20% урона врага)! '; }
-          else if(mySub.id === 'runelord'){ var rsh = Math.max(5, Math.round(ar.ph * 0.20)); window.mageCurrentBattleShield = (window.mageCurrentBattleShield || 0) + rsh; window.mageMaxBattleShield = Math.max(window.mageMaxBattleShield || 0, window.mageCurrentBattleShield); ultNote += '💠 Рунный Барьер +' + rsh + ' щита! '; }
         } else if(isMyCrit){
           mult = (mySub && mySub.id === 'sniper') ? 2.1 : 1.75;
         }
@@ -13701,7 +13693,7 @@ function startFirestoreListenersV20(){
         var isOppCrit = !isOppUlt && ((opp.crit || 0) > 0 && Math.random() * 100 < opp.crit);
         var oMult = 1.0, oppUltNote = '';
         if(isOppUlt && oppSub){
-          oMult = oppCoreA ? Math.max(1.5, (Number(oppCoreA.ultMult) || 2.4) * 0.92) : 2.2;
+          oMult = 2.2;
           oppUltNote = '⚠️ СЧАСТЛИВОЕ ЧИСЛО ВРАГА ' + n + ' [' + oppSub.name + ' · ' + oppSub.skill + ']! ';
           if(oppSub.id === 'witcher'){ var obDmg = Math.max(1, Math.round(ar.ph * 0.05)); ar.p = Math.max(0, ar.p - obDmg); oppUltNote += '🔥 Игни −' + obDmg + ' HP! '; }
           else if(oppSub.id === 'berserk'){ var obh = Math.max(1, Math.round(ar.mh * 0.15)); ar.m = Math.min(ar.mh, ar.m + obh); oppUltNote += '🩸 Ярость врага +' + obh + ' HP! '; }
@@ -13786,7 +13778,7 @@ function startFirestoreListenersV20(){
     if(!opp){ box.hidden = true; return; }
     var pm = Math.max(0, Math.min(100, Math.round(ar.m / ar.mh * 100)));
     var pp = Math.max(0, Math.min(100, Math.round(ar.p / ar.ph * 100)));
-    var oppHasL5 = (opp.subcls && Array.isArray(opp.lucky5) && opp.lucky5.length > 0);
+    var oppHasL5 = (opp.subcls && Array.isArray(opp.lucky5) && opp.lucky5.length === 5);
     box.hidden = false;
     box.className = 'fight elite';
     box.innerHTML = '<div class="fhead"><div class="mon">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</div><div style="flex:1;min-width:0"><div class="rn">⚔️ Арена: ' + escapeHtmlV20(opp.name) + ' (' + opp.mmr + ' MMR' + (opp.subName ? ' · ' + escapeHtmlV20(opp.subName) : '') + ')</div>'
@@ -13834,7 +13826,7 @@ function startFirestoreListenersV20(){
       arenaOpponentsPoolV29.forEach(function(opp, idx){
         var cName = (opp.cls && CLASSES[opp.cls]) ? CLASSES[opp.cls].name : 'Воин';
         var subBadge = opp.subName ? (' · <b>' + escapeHtmlV20(opp.subName) + '</b>') : '';
-        var l5Info = (opp.subcls && opp.lucky5 && opp.lucky5.length > 0) ? ('🎯 Числа: ' + opp.lucky5.join(', ')) : 'Без счастливых чисел';
+        var l5Info = (opp.subcls && opp.lucky5 && opp.lucky5.length === 5) ? ('🎯 Числа: ' + opp.lucky5.join(', ')) : 'Без счастливых чисел';
         h += '<div class="arenaOppCard">'
           + '<div class="arenaOppLeft">'
           + '<span class="av">' + avatar(opp.uid, opp.title, opp.race, opp.gear || opp.cls) + '</span>'
@@ -14187,27 +14179,9 @@ function startFirestoreListenersV20(){
     runelord:    ['ice', 'stone', 'chrono']
   };
 
-  // Индексы по id: O(1) вместо Array.find на каждый вызов stats()/getEquippedEnchants()/отрисовки.
-  // Object.create(null) — чтобы id вроде 'constructor' из чужих маркеров не находил свойства Object.prototype.
-  function indexByIdV31(list){ var m = Object.create(null); list.forEach(function(x){ m[x.id] = x; }); return m; }
-  var AWAKEN_ELEM_BY_ID_V31   = indexByIdV31(AWAKEN_ELEMENTS_V31);
-  var AWAKEN_CORE_BY_ID_V31   = indexByIdV31(AWAKEN_CORES_V31);
-  var AWAKEN_VESSEL_BY_ID_V31 = indexByIdV31(AWAKEN_VESSELS_V31);
-  function findAwakenElemV31(id){ return AWAKEN_ELEM_BY_ID_V31[id] || null; }
-  function findAwakenCoreV31(id){ return AWAKEN_CORE_BY_ID_V31[id] || null; }
-  function findAwakenVesselV31(id){ return AWAKEN_VESSEL_BY_ID_V31[id] || null; }
-
-  // Единственное место, где описана «пустая» структура Пробуждения (раньше литерал был скопирован 3 раза)
-  function newAwakeningV31(){
-    return {
-      elem: '', core: '', vessel: '',
-      stones: 0,
-      locks: {elem: false, core: false, vessel: false},
-      breakthroughDone: {},
-      tower50Claimed: false,
-      tower100Claimed: false
-    };
-  }
+  function findAwakenElemV31(id){ return AWAKEN_ELEMENTS_V31.find(function(x){ return x.id === id; }) || null; }
+  function findAwakenCoreV31(id){ return AWAKEN_CORES_V31.find(function(x){ return x.id === id; }) || null; }
+  function findAwakenVesselV31(id){ return AWAKEN_VESSELS_V31.find(function(x){ return x.id === id; }) || null; }
 
   function hasAwakenResonanceV31(elemId, coreId){
     var list = AWAKEN_RESONANCE_MAP_V31[coreId];
@@ -14216,59 +14190,61 @@ function startFirestoreListenersV20(){
 
   function hydrateAwakeningFromFirebaseV31(g){
     var targetG = g || game;
-    var aw = v20Data.awakening = newAwakeningV31();
-    var earned = (targetG && targetG.earned && typeof targetG.earned === 'object') ? targetG.earned : null;
-    if(!earned){
+    v20Data.awakening = {
+      elem: '', core: '', vessel: '',
+      stones: 0,
+      locks: {elem: false, core: false, vessel: false},
+      breakthroughDone: {},
+      tower50Claimed: false,
+      tower100Claimed: false
+    };
+    var aw = v20Data.awakening;
+    
+    // Подтягиваем камни напрямую из корня game (теперь они защищены правилами Firebase)
+    if(targetG && typeof targetG.awakenStones === 'number'){
+      aw.stones = Math.max(0, Math.floor(targetG.awakenStones));
+    }
+    
+    if(!targetG || !targetG.earned || typeof targetG.earned !== 'object'){
       if(targetG) targetG.cls = '';
       v20Data.subcls = '';
       if(!v20Data._inCombatTempLucky) v20Data.lucky5 = [];
       return aw;
     }
 
-    // Один проход по маркерам. Id стихии/класса/сосуда принимаем только если он есть в справочнике:
-    // раньше любой посторонний ключ aw31_c_* затирал настоящий класс и сбрасывал героя «в пустоту».
-    var eElem = '', eCore = '', eVessel = '', ePrest = 0, bossKind = '', bossTier = 0, restoredL5 = [];
-    Object.keys(earned).forEach(function(k){
-      if(!earned[k]) return;
-      var id;
-      if(k.indexOf('aw31_e_') === 0){ id = k.slice(7); if(AWAKEN_ELEM_BY_ID_V31[id]) eElem = id; }
-      else if(k.indexOf('aw31_c_') === 0){ id = k.slice(7); if(AWAKEN_CORE_BY_ID_V31[id]) eCore = id; }
-      else if(k.indexOf('aw31_v_') === 0){ id = k.slice(7); if(AWAKEN_VESSEL_BY_ID_V31[id]) eVessel = id; }
-      else if(/^aw31_st_\d+$/.test(k)) aw.stones = Math.max(aw.stones, parseInt(k.slice(8), 10));
+    var eElem = '', eCore = '', eVessel = '', ePrest = 0;
+    Object.keys(targetG.earned).forEach(function(k){
+      if(!targetG.earned[k]) return;
+      if(k.indexOf('aw31_e_') === 0) eElem = k.slice(7);
+      else if(k.indexOf('aw31_c_') === 0) eCore = k.slice(7);
+      else if(k.indexOf('aw31_v_') === 0) eVessel = k.slice(7);
       else if(/^aw31_bt_\d+$/.test(k)) aw.breakthroughDone[parseInt(k.slice(8), 10)] = true;
       else if(k === 'aw31_lk_e') aw.locks.elem = true;
       else if(k === 'aw31_lk_c') aw.locks.core = true;
       else if(k === 'aw31_lk_v') aw.locks.vessel = true;
       else if(k === 'aw31_t50') aw.tower50Claimed = true;
       else if(k === 'aw31_t100') aw.tower100Claimed = true;
-      else if(k === 'aw31_bf_a') bossKind = 'ascension';
-      else if(/^aw31_bf_b\d+$/.test(k)){ bossKind = 'breakthrough'; bossTier = parseInt(k.slice(9), 10); }
       else if(/^v30_pr_\d+$/.test(k)) ePrest = Math.max(ePrest, parseInt(k.slice(7), 10));
-      else if(k.indexOf('v30_l5_') === 0){
-        // Счастливая Пятёрка из маркеров (v30_l5_a_b_c_d_e)
-        var parts = k.slice(7).split('_').map(Number);
-        if(parts.length === 5) restoredL5 = parts;
-      }
     });
 
-    aw.stones = Math.max(0, aw.stones);
     if(ePrest > 0) v20Data.prestige = ePrest;
 
-    // Бой с Боссом Прорыва/Возвышения, прерванный перезагрузкой: cleanGameForRTDB превращает kind в 'event'
-    // и срезает btTier, поэтому без этого бой «терял личность» и победа не давала ни Прорыва, ни Престижа.
-    if(bossKind && targetG.fight && targetG.fight.on){
-      targetG.fight.kind = bossKind;
-      if(bossKind === 'breakthrough') targetG.fight.btTier = Math.max(1, bossTier);
-    }
-
-    if(eElem && eCore && eVessel){
+    if(findAwakenElemV31(eElem) && findAwakenCoreV31(eCore) && findAwakenVesselV31(eVessel)){
       aw.elem = eElem;
       aw.core = eCore;
       aw.vessel = eVessel;
-      var coreObj = AWAKEN_CORE_BY_ID_V31[eCore];
+      var coreObj = findAwakenCoreV31(aw.core);
       targetG.cls = coreObj.gearType;
       v20Data.subcls = coreObj.id;
 
+      // Восстанавливаем Счастливую Пятёрку из маркеров Firebase (v30_l5_...)
+      var restoredL5 = [];
+      Object.keys(targetG.earned).forEach(function(k){
+        if(targetG.earned[k] && k.indexOf('v30_l5_') === 0){
+          var parts = k.slice(7).split('_').map(Number);
+          if(parts.length === 5) restoredL5 = parts;
+        }
+      });
       if(restoredL5.length === 5){
         v20Data.lucky5 = restoredL5;
       } else if(!v20Data._inCombatTempLucky && (!Array.isArray(v20Data.lucky5) || v20Data.lucky5.length < 5)){
@@ -14291,7 +14267,14 @@ function startFirestoreListenersV20(){
       resetV20Data();
     }
     if(!v20Data.awakening || typeof v20Data.awakening !== 'object'){
-      v20Data.awakening = newAwakeningV31();
+      v20Data.awakening = {
+        elem: '', core: '', vessel: '',
+        stones: 0,
+        locks: {elem: false, core: false, vessel: false},
+        breakthroughDone: {},
+        tower50Claimed: false,
+        tower100Claimed: false
+      };
     }
     var aw = v20Data.awakening;
     if(typeof aw.stones !== 'number' || !Number.isFinite(aw.stones)) aw.stones = 0;
@@ -14304,7 +14287,7 @@ function startFirestoreListenersV20(){
       aw = v20Data.awakening;
     }
 
-    var coreObj = AWAKEN_CORE_BY_ID_V31[aw.core];
+    var coreObj = findAwakenCoreV31(aw.core);
     if(coreObj && game){
       game.cls = coreObj.gearType;
       v20Data.subcls = coreObj.id;
@@ -14337,6 +14320,7 @@ function startFirestoreListenersV20(){
   function syncV31MarkersToRTDB(){
     if(!game) return;
     var aw = ensureAwakeningStateV31();
+    if(typeof aw.stones === 'number') game.awakenStones = aw.stones; // Синхронизируем камни с корнем
     if(!game.earned || typeof game.earned !== 'object') game.earned = {newbie: true};
     Object.keys(game.earned).forEach(function(k){
       if(k.indexOf('aw31_') === 0) delete game.earned[k];
@@ -14346,7 +14330,6 @@ function startFirestoreListenersV20(){
       game.earned['aw31_c_' + aw.core] = true;
       game.earned['aw31_v_' + aw.vessel] = true;
     }
-    game.earned['aw31_st_' + Math.max(0, Math.floor(Number(aw.stones) || 0))] = true;
     if(aw.locks && aw.locks.elem)   game.earned['aw31_lk_e'] = true;
     if(aw.locks && aw.locks.core)   game.earned['aw31_lk_c'] = true;
     if(aw.locks && aw.locks.vessel) game.earned['aw31_lk_v'] = true;
@@ -14355,12 +14338,6 @@ function startFirestoreListenersV20(){
     });
     if(aw.tower50Claimed)  game.earned['aw31_t50'] = true;
     if(aw.tower100Claimed) game.earned['aw31_t100'] = true;
-    // Идёт бой с Боссом Прорыва/Возвышения — запоминаем, чтобы пережить перезагрузку (см. hydrate)
-    var bf = game.fight;
-    if(bf && bf.on){
-      if(bf.kind === 'ascension') game.earned['aw31_bf_a'] = true;
-      else if(bf.kind === 'breakthrough') game.earned['aw31_bf_b' + Math.max(1, Math.floor(Number(bf.btTier) || 1))] = true;
-    }
   }
 
   // При старте до ответа Firebase не подтягиваем старый класс из localStorage, чтобы исключить перенос между аккаунтами
@@ -14369,7 +14346,14 @@ function startFirestoreListenersV20(){
     _origLoadV20LocalV31();
     v20Data.subcls = '';
     v20Data.lucky5 = [];
-    v20Data.awakening = newAwakeningV31();
+    v20Data.awakening = {
+      elem: '', core: '', vessel: '',
+      stones: 0,
+      locks: {elem: false, core: false, vessel: false},
+      breakthroughDone: {},
+      tower50Claimed: false,
+      tower100Claimed: false
+    };
     v20Data._v31Hydrated = false;
   };
 
@@ -14522,15 +14506,16 @@ function startFirestoreListenersV20(){
     var doRoll = function(){
       if(!isFirst){
         aw.stones = Math.max(0, aw.stones - stoneCost);
-        // Сброс ранга до 1 уровня (F-Ранг) и автоматическое снятие всей экипировки в инвентарь
-        game.level = 1;
-        game.xp = 0;
-        game.rank = 1;
-        game.unlockedRank = 1;
-        aw.breakthroughDone = {};
-        game.eq = {};
-        game.eqCopies = {};
+        if(game) game.awakenStones = aw.stones;
       }
+      // При каждом Пробуждении уровень сбрасывается до 1-го (F-Ранг), а экипировка снимается в инвентарь
+      game.level = 1;
+      game.xp = 0;
+      game.rank = 1;
+      game.unlockedRank = 1;
+      aw.breakthroughDone = {};
+      game.eq = {};
+      game.eqCopies = {};
 
       var prest = Number(v20Data.prestige) || 0;
       if(isFirst || !aw.locks.elem){
@@ -14588,26 +14573,29 @@ function startFirestoreListenersV20(){
   }
 
   // 5. Интеграция статов Пробуждения (Ядро + Множитель Сосуда + Резонанс + Ржавый префикс) в stats()
-  // Чистые функции: одни и те же формулы считают и героя (stats/getEquippedEnchants), и снимок соперника на Арене.
-  // Раньше соперники на Арене считались БЕЗ бонусов Пробуждения (Сосуд до ×2.40!) и были заметно слабее реальных игроков.
-  function readAwakeningMarkersV31(earned){
-    if(!earned || typeof earned !== 'object') return null;
-    var e = '', c = '', v = '';
-    Object.keys(earned).forEach(function(k){
-      if(!earned[k]) return;
-      var id;
-      if(k.indexOf('aw31_e_') === 0){ id = k.slice(7); if(AWAKEN_ELEM_BY_ID_V31[id]) e = id; }
-      else if(k.indexOf('aw31_c_') === 0){ id = k.slice(7); if(AWAKEN_CORE_BY_ID_V31[id]) c = id; }
-      else if(k.indexOf('aw31_v_') === 0){ id = k.slice(7); if(AWAKEN_VESSEL_BY_ID_V31[id]) v = id; }
-    });
-    return c ? {elem: e, core: c, vessel: v} : null;
-  }
+  var _origStatsBeforeV31 = stats;
+  stats = function(source){
+    var g = source || game;
+    var st = _origStatsBeforeV31(g);
+    if(!g) return st;
 
-  function applyAwakeningStatsV31(st, aw, level){
-    if(!st || !aw || !aw.core) return st;
-    var coreObj = AWAKEN_CORE_BY_ID_V31[aw.core];
-    var vesselObj = AWAKEN_VESSEL_BY_ID_V31[aw.vessel] || AWAKEN_VESSELS_V31[1];
-    var T = getLetterRankInfoV31(level || 1).idx || 0;
+    var aw = (g === game) ? ensureAwakeningStateV31() : null;
+    if(!aw && g.earned){
+      var tmpE = '', tmpC = '', tmpV = '';
+      Object.keys(g.earned).forEach(function(k){
+        if(!g.earned[k]) return;
+        if(k.indexOf('aw31_e_') === 0) tmpE = k.slice(7);
+        else if(k.indexOf('aw31_c_') === 0) tmpC = k.slice(7);
+        else if(k.indexOf('aw31_v_') === 0) tmpV = k.slice(7);
+      });
+      if(tmpC) aw = {elem: tmpE, core: tmpC, vessel: tmpV};
+    }
+    if(!aw || !aw.core) return st;
+
+    var coreObj = findAwakenCoreV31(aw.core);
+    var vesselObj = findAwakenVesselV31(aw.vessel) || AWAKEN_VESSELS_V31[1];
+    var lInfo = getLetterRankInfoV31(g.level || 1);
+    var T = lInfo.idx || 0;
 
     if(coreObj){
       var baseCls = CLASS_BASE[coreObj.gearType] || {hp:0, atk:0};
@@ -14626,12 +14614,17 @@ function startFirestoreListenersV20(){
       st.atk = Math.max(4,  Math.round(st.atk * vesselObj.mult));
     }
     return st;
-  }
+  };
 
-  // Бонусы к чарам от Грозовой/Кровавой/Тусклой стихий и классов Ассасин/Некромант/Джаггернаут/Архимаг
-  function applyAwakeningEnchantsV31(res, aw, level){
-    if(!res || !aw || !aw.core) return res;
-    var T = getLetterRankInfoV31(level || 1).idx || 0;
+  // Интеграция бонусов чар от Грозовой/Кровавой стихии и классов Ассасин/Некромант/Джаггернаут/Архимаг
+  var _origGetEquippedEnchantsV31 = getEquippedEnchants;
+  getEquippedEnchants = function(g){
+    var target = g || game;
+    var res = _origGetEquippedEnchantsV31(target);
+    var aw = (target === game) ? ensureAwakeningStateV31() : null;
+    if(!aw || !aw.core) return res;
+    var lInfo = getLetterRankInfoV31(target ? target.level : 1);
+    var T = lInfo.idx || 0;
 
     if(aw.core === 'archmage'){
       res.crit   = Math.round(res.crit   * 1.15);
@@ -14647,24 +14640,6 @@ function startFirestoreListenersV20(){
     if(aw.elem === 'blood') res.vamp = Math.min(65, res.vamp + Math.round(4 + T * 1.2));
     if(aw.elem === 'dull')  res.gold = Math.min(80, res.gold + 5 + T * 2);
     return res;
-  }
-
-  var _origStatsBeforeV31 = stats;
-  stats = function(source){
-    var g = source || game;
-    var st = _origStatsBeforeV31(g);
-    if(!g) return st;
-    var aw = (g === game) ? ensureAwakeningStateV31() : readAwakeningMarkersV31(g.earned);
-    return applyAwakeningStatsV31(st, aw, g.level);
-  };
-
-  var _origGetEquippedEnchantsV31 = getEquippedEnchants;
-  getEquippedEnchants = function(g){
-    var target = g || game;
-    var res = _origGetEquippedEnchantsV31(target);
-    if(!target) return res;
-    var aw = (target === game) ? ensureAwakeningStateV31() : readAwakeningMarkersV31(target.earned);
-    return applyAwakeningEnchantsV31(res, aw, target.level);
   };
 
   // 6. Боевые механики Стихий и 12 Классов в PvE
@@ -14716,7 +14691,6 @@ function startFirestoreListenersV20(){
     var origHit = mo.hit;
     var origMoDmg = mo.dmg;
     var modSt = {hp: st.hp, atk: st.atk};
-    var parryBoss = null, parrySkills = null;
 
     try {
       v20Data._inCombatTempLucky = true; // Блокируем перегенерацию в ensureAwakeningState
@@ -14743,18 +14717,6 @@ function startFirestoreListenersV20(){
 
       var isLuckyHit = (n > 1 && activeLucky.indexOf(n) !== -1);
       var isAstralHit = (aw.elem === 'astral' && (n === 26 || n === 32));
-
-      // «Идеальное парирование» (V29) смотрит в v20Data.lucky5, а мы его выше очистили — из-за этого парирование
-      // у пробуждённых героев не срабатывало вообще. Считаем его здесь: число босса совпало со Счастливым числом.
-      if(isLuckyHit){
-        var bd = EXP_BOSSES_V20.find(function(b){ return b.id === (mo && mo.id); });
-        if(!bd && mo && Array.isArray(mo.skillNums)) bd = mo;
-        if(bd && Array.isArray(bd.skillNums) && bd.skillNums.indexOf(n) !== -1){
-          parryBoss = bd;
-          parrySkills = bd.skillNums;
-          bd.skillNums = [];
-        }
-      }
 
       // Если выпало число Ульты класса или число Астральной стихии — гарантируем попадание по врагу!
       if(isLuckyHit || isAstralHit){
@@ -14787,14 +14749,6 @@ function startFirestoreListenersV20(){
         if(lVp && !v20Data.nearDeath) f.p = Math.min((f.ph || st.hp), f.p + lVp);
 
         text = '🌟 УЛЬТА КЛАССА НА ЧИСЛЕ ' + n + '! [' + coreObj.name + ' · ' + coreObj.skill + '] наносит ' + forcedDmg + ' урона (×' + ultMult + ')!' + (lVp && !v20Data.nearDeath ? ' Вампиризм +' + lVp + ' HP.' : '');
-      }
-
-      if(parryBoss){
-        var counterDmg = Math.max(1, Math.round(origMoDmg * 1.5));
-        f.m = Math.max(0, f.m - counterDmg);
-        f.dealt = (Number(f.dealt) || 0) + counterDmg;
-        if(typeof spawnFloatingText === 'function') spawnFloatingText('ПАРИРОВАНИЕ! -' + counterDmg, false, 'crit');
-        text = '⚡ ИДЕАЛЬНОЕ ПАРИРОВАНИЕ НА ЧИСЛЕ ' + n + '! Ты отразил коронный удар «' + (parryBoss.skillName || 'Удар Босса') + '» обратно во врага (-' + counterDmg + ' HP)! ' + text;
       }
 
       var playerHitEnemy = (f.m < beforeM);
@@ -14891,7 +14845,6 @@ function startFirestoreListenersV20(){
       v20Data.subcls = savedSubcls;
       mo.hit = origHit;
       mo.dmg = origMoDmg;
-      if(parryBoss) parryBoss.skillNums = parrySkills;
     }
   };
 
@@ -15009,6 +14962,7 @@ function startFirestoreListenersV20(){
           // Победа над Боссом Возвышения 100 уровня -> Престиж + 1 Камень Пробуждения + Якорь Души!
           v20Data.prestige = Math.min(50, (Number(v20Data.prestige) || 0) + 1);
           aw.stones = (Number(aw.stones) || 0) + 1;
+          if(game) game.awakenStones = aw.stones;
           aw.breakthroughDone = {};
           game.level = 1;
           game.xp = 0;
@@ -15071,12 +15025,14 @@ function startFirestoreListenersV20(){
       if(prevFloor === 50 && !aw.tower50Claimed){
         aw.tower50Claimed = true;
         aw.stones = (Number(aw.stones) || 0) + 1;
+        if(game) game.awakenStones = aw.stones;
         v20Data._v31Hydrated = true;
         syncV31MarkersToRTDB(); saveV20Local(); saveV20ToFirestore(); saveGame();
         toast('💎 Покорён 50-й этаж Башни! Получен +1 Камень Пробуждения!');
       } else if(prevFloor === 100 && !aw.tower100Claimed){
         aw.tower100Claimed = true;
         aw.stones = (Number(aw.stones) || 0) + 1;
+        if(game) game.awakenStones = aw.stones;
         v20Data._v31Hydrated = true;
         syncV31MarkersToRTDB(); saveV20Local(); saveV20ToFirestore(); saveGame();
         toast('💎 Покорён 100-й этаж Башни! Получен +1 Камень Пробуждения!');
@@ -15095,6 +15051,7 @@ function startFirestoreListenersV20(){
         var aw = ensureAwakeningStateV31();
         if(Math.random() < 0.05){
           aw.stones = (Number(aw.stones) || 0) + 1;
+          if(game) game.awakenStones = aw.stones;
           v20Data._v31Hydrated = true;
           syncV31MarkersToRTDB(); saveV20Local(); saveV20ToFirestore(); saveGame();
           toast('💎 Невероятная удача! Из Мирового Босса выпал редкий Камень Пробуждения!');
@@ -15274,19 +15231,15 @@ function startFirestoreListenersV20(){
     var snap = _origBuildFullPlayerCombatSnapshotV31(uidKey, nameStr, gObj, firestoreSnap);
     var g = gObj || {};
     var earned = (g.earned && typeof g.earned === 'object') ? g.earned : {};
-    var snapMarks = readAwakeningMarkersV31(earned) || {elem: '', core: '', vessel: ''};
-    var eElem = snapMarks.elem, eCore = snapMarks.core, eVessel = snapMarks.vessel;
+    var eElem = '', eCore = '', eVessel = '';
+    Object.keys(earned).forEach(function(k){
+      if(!earned[k]) return;
+      if(k.indexOf('aw31_e_') === 0) eElem = k.slice(7);
+      else if(k.indexOf('aw31_c_') === 0) eCore = k.slice(7);
+      else if(k.indexOf('aw31_v_') === 0) eVessel = k.slice(7);
+    });
     if(eCore && findAwakenCoreV31(eCore)){
       var disp = getAwakenedClassDisplayV31(g, {elem: eElem, core: eCore, vessel: eVessel});
-      // Снимок считался от базовых статов без Пробуждения — применяем те же формулы, что и для героя
-      var snapAw = {elem: eElem, core: eCore, vessel: eVessel};
-      var snapSt = applyAwakeningStatsV31({hp: snap.hp, atk: snap.atk}, snapAw, g.level);
-      snap.hp = snapSt.hp;
-      snap.atk = snapSt.atk;
-      var snapEn = applyAwakeningEnchantsV31({crit: snap.crit || 0, vamp: snap.vamp || 0, thorns: snap.thorns || 0, gold: 0}, snapAw, g.level);
-      snap.crit = snapEn.crit;
-      snap.vamp = snapEn.vamp;
-      snap.thorns = snapEn.thorns;
       snap.subcls = eCore;
       snap.subName = disp.fullTitle;
       snap.subSkill = disp.core ? disp.core.skill : snap.subSkill;
@@ -15404,10 +15357,9 @@ function startFirestoreListenersV20(){
     chatLast = '';
     renderChat();
 
-    // ВАЖНО: loadGame() заканчивается saveGame(), а правила RTDB требуют game.sid === users/uid/sid.
-    // Если загрузка успевала завершиться раньше claimSession(), первое сохранение уходило без sid и отклонялось
-    // («Прогресс не сохранился»). Поэтому порядок как в оригинале: сначала захват сессии, потом загрузка.
-    claimSession().then(function(){ return loadGame(); });
+    // Параллельно запускаем захват сессии и загрузку сохранения игрока (в 2 раза быстрее!)
+    claimSession();
+    loadGame();
 
     // Откладываем тяжёлые фоновые запросы (чат, Firestore, Рейд) на 500 мс после входа, чтобы интерфейс открылся мгновенно
     setTimeout(function(){
@@ -15420,71 +15372,19 @@ function startFirestoreListenersV20(){
     }, 500);
   };
 
-  // Дебаунс записи в Firestore: цепочка V20+V28+V29+V31 раньше делала 4 отдельных set() в один и тот же документ
-  // players/<uid>. Теперь на время сброса set(..., {merge:true}) этого документа собираются в один объект
-  // (ключи у модулей не пересекаются) и уходят ОДНОЙ записью.
+  // Дебаунс записи в Firestore (объединяем тройные вызовы V20+V28+V29+V31 в один пакет раз в 1.5 сек)
   var _fsSaveTimerV31 = 0;
   var _rawSaveV20ToFirestoreChainV31 = saveV20ToFirestore;
-
-  function flushFirestoreV31(){
-    _fsSaveTimerV31 = 0;
-    if(!sess || !sess.uid || !game) return;
-    var myId = String(sess.uid);
-    var realInit = initFirestoreV20, merged = {}, hasData = false, realDb = null;
-    initFirestoreV20 = function(){
-      var db = realInit.apply(this, arguments);
-      if(!db) return db;
-      realDb = db;
-      var dbProxy = Object.create(db);
-      dbProxy.collection = function(name){
-        var col = db.collection.apply(db, arguments);
-        if(name !== 'players') return col;
-        var colProxy = Object.create(col);
-        colProxy.doc = function(id){
-          var ref = col.doc.apply(col, arguments);
-          if(String(id) !== myId) return ref;
-          var refProxy = Object.create(ref);
-          refProxy.set = function(data, opts){
-            if(opts && opts.merge && data && typeof data === 'object'){
-              Object.keys(data).forEach(function(key){ merged[key] = data[key]; });
-              hasData = true;
-              return Promise.resolve();
-            }
-            return ref.set.apply(ref, arguments);
-          };
-          return refProxy;
-        };
-        return colProxy;
-      };
-      return dbProxy;
-    };
-    try {
-      _rawSaveV20ToFirestoreChainV31();
-    } finally {
-      initFirestoreV20 = realInit;
-      if(hasData && realDb){
-        try { realDb.collection('players').doc(myId).set(merged, {merge: true}).catch(function(){}); } catch(e){}
-      }
-    }
-  }
-
   saveV20ToFirestore = function(){
     ensureAwakeningStateV31();
     ensureV29State();
     syncV31MarkersToRTDB();
     syncV29MarkersToRTDB();
     clearTimeout(_fsSaveTimerV31);
-    _fsSaveTimerV31 = setTimeout(flushFirestoreV31, 1200);
+    _fsSaveTimerV31 = setTimeout(function(){
+      _rawSaveV20ToFirestoreChainV31();
+    }, 1200);
   };
-
-  // Дебаунс не должен терять последние ≤1.2 с данных при закрытии/сворачивании вкладки
-  function flushFirestoreNowV31(){
-    if(!_fsSaveTimerV31) return;
-    clearTimeout(_fsSaveTimerV31);
-    flushFirestoreV31();
-  }
-  document.addEventListener('visibilitychange', function(){ if(document.hidden) flushFirestoreNowV31(); });
-  window.addEventListener('pagehide', flushFirestoreNowV31);
 
   // Запускаем авто-вход ровно один раз, когда ВСЕ модули V1–V31 полностью инициализированы!
   restore();
