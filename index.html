@@ -9497,16 +9497,7 @@ function startFirestoreListenersV20(){
 
   // --- ФИКС ИМЕННЫХ КОМПЛЕКТОВ (СТАТЫ 2/3/4 ВЕЩИ) И МАГИЧЕСКОГО БАРЬЕРА МАГА (ЗАВИСИТ ОТ 2/3/4 ВЕЩЕЙ) ---
   // Вычисляем % классовой защиты (у Воина блок, у Лучника уворот, у Мага щит) в зависимости от редкости И числа вещей (2, 3 или 4)!
-  window.getClassSetDefPctV22 = function(b, cls){
-    if(!b || b.type === 'relic' || b.count < 2) return 0;
-    var baseVal = { 'common': 3, 'uncommon': 5, 'rare': 8, 'epic': 12, 'legendary': 16, 'mythic': 22, 'divine': 25 }[b.rarity] || 0;
-    if(!baseVal) return 0;
-    // Масштабирование от собранности комплекта: 2 вещи = x1.0, 3 вещи = x1.35, 4 вещи = x1.75
-    var countScale = (b.count >= 4) ? 1.75 : ((b.count === 3) ? 1.35 : 1.0);
-    var val = Math.round(baseVal * countScale);
-    if(cls === 'mage') return val + (b.count >= 4 ? 10 : (b.count === 3 ? 7 : 5));
-    return val;
-  };
+  window.getClassSetDefPctV22 = function(b, cls){ return 0; };
 
   // Применяем бонус комплекта (+% к HP и Урону от 2/3/4 вещей + бонус 2 вещей Реликвий) реально в stats()!
   var _origStatsBeforeSetFixV22 = stats;
@@ -9542,20 +9533,8 @@ function startFirestoreListenersV20(){
     if(sbBox && game && typeof window.getActiveSetBonus === 'function'){
       var b = window.getActiveSetBonus(game);
       if(b && b.type !== 'relic'){
-        var defPct = window.getClassSetDefPctV22(b, game.cls);
-        var defDesc = '';
-        if(defPct > 0){
-          if(game.cls === 'warrior') defDesc = '🛡️ Глухая оборона (' + b.count + '/4 шт.): блокирует <b>' + defPct + '%</b> урона монстра.';
-          else if(game.cls === 'archer') defDesc = '🏹 Ловкость (' + b.count + '/4 шт.): <b>' + defPct + '%</b> шанс уклониться от атаки.';
-          else if(game.cls === 'mage'){
-            var stNow = stats(game);
-            var shVal = window.calcMageShieldV22(game, stNow.hp);
-            defDesc = '✨ Магический Барьер (' + b.count + '/4 шт.): даёт щит <b>+' + defPct + '% макс. HP (+' + shVal + ' HP)</b> в начале каждого боя!';
-          }
-        }
         sbBox.innerHTML = '🔮 <b>' + b.name + '</b> (' + b.count + '/4 шт.)<br>'
-          + 'Резонанс заточки: <b>+' + b.minLv + '</b> · Бонус комплекта: <b style="color:var(--green)">+' + b.pctBonus + '% к HP и Урону</b>.'
-          + (defDesc ? '<br><span style="color:var(--gold)">' + defDesc + '</span>' : '');
+          + 'Резонанс заточки: <b>+' + b.minLv + '</b> · Бонус комплекта: <b style="color:var(--green)">+' + b.pctBonus + '% к HP и Урону</b>.';
       }
     }
   };
@@ -14580,6 +14559,12 @@ function startFirestoreListenersV20(){
     if(!g) return st;
 
     var aw = (g === game) ? ensureAwakeningStateV31() : null;
+    if(aw && aw.core){
+      var coreArch = findAwakenCoreV31(aw.core);
+      if(coreArch && coreArch.gearType === 'warrior'){
+        st.hp = Math.round(st.hp * 1.08); // Тяжёлая броня
+      }
+    }
     if(!aw && g.earned){
       var tmpE = '', tmpC = '', tmpV = '';
       Object.keys(g.earned).forEach(function(k){
@@ -14625,6 +14610,10 @@ function startFirestoreListenersV20(){
     if(!aw || !aw.core) return res;
     var lInfo = getLetterRankInfoV31(target ? target.level : 1);
     var T = lInfo.idx || 0;
+    var coreArch = findAwakenCoreV31(aw.core);
+    if(coreArch && coreArch.gearType === 'archer'){
+      res.crit = Math.min(50, (res.crit || 0) + 6); // Лёгкая броня
+    }
 
     if(aw.core === 'archmage'){
       res.crit   = Math.round(res.crit   * 1.15);
