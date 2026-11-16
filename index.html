@@ -1787,7 +1787,11 @@ html, body {
         if(game.dg&&typeof game.dg==='object'&&game.dg.on&&game.dg.st>=0&&game.dg.st<3){ game.dg.skip=!!game.dg.skip;if(!Number.isFinite(game.dg.dealt))game.dg.dealt=0;if(!Number.isFinite(game.dg.taken))game.dg.taken=0; } else { delete game.dg; }
         game.inv=Array.isArray(game.inv)?game.inv:[]; filterInventory(game,function(id){return !!ITEMS[id];});
         if(!game.eq||typeof game.eq!=='object') game.eq={};
-        // стартовое снаряжение класса всегда должно лежать в инвентаре; чего нет, то добавляем и надеваем
+        v20Data._v31Hydrated = false;
+        v20Data._v29Hydrated = false;
+        if(typeof hydrateAwakeningFromFirebaseV31 === 'function') hydrateAwakeningFromFirebaseV31(game);
+        if(typeof ensureV29State === 'function') ensureV29State();
+        // стартовое снаряжение пробуждённого класса всегда должно лежать в инвентаре; чего нет, то добавляем и надеваем
         var cg=gearOf(game.cls), added=false;
         for(var csl in cg){
           if(game.inv.indexOf(cg[csl])<0){ game.inv.push(cg[csl]); if(!game.eq[csl]) game.eq[csl]=cg[csl]; added=true; }
@@ -1796,8 +1800,12 @@ html, body {
         checkAbandon(); renderChar(); renderCoins(); renderFight(); renderEvent();
         gameLoaded=true; renderProgress(); saveGame(); maybeNews();
       }else if(g===null){
-        // в базе правда пусто: новый аккаунт
-        game=defaultGame(); initV11(game); syncV20DataToGame(); gameLoaded=true; renderChar(); renderCoins(); maybeNews(); return saveGame();
+        // в базе правда пусто: новый аккаунт (полностью чистый, без класса до Пробуждения)
+        resetV20Data();
+        game=defaultGame();
+        if(typeof hydrateAwakeningFromFirebaseV31 === 'function') hydrateAwakeningFromFirebaseV31(game);
+        if(typeof ensureV29State === 'function') ensureV29State();
+        initV11(game); syncV20DataToGame(); gameLoaded=true; renderChar(); renderCoins(); maybeNews(); return saveGame();
       }else{
         loadFailed();
       }
@@ -2333,13 +2341,6 @@ html, body {
       renderShop(); renderChar();
     },reduceMotion?50:1000);
   }
-  function buyClass(id){
-    if(!game||!gameLoaded||merchantBusy||game.cls||(Number(game.coins)||0)<CLASS_PRICE||!CLASSES[id]) return;
-    game.coins-=CLASS_PRICE; game.cls=id;
-    var cg=gearOf(id);
-    for(var sl in cg){ game.inv.push(cg[sl]); game.eq[sl]=cg[sl];game.eqCopies[sl]=game.inv.length-1; }
-    saveGame(); renderCoins(); renderShop(); renderChar();
-  }
   function itemLine(id){
     var it=ITEMS[id], p=[];
     if(it.hp) p.push('здоровье +'+it.hp);
@@ -2370,16 +2371,6 @@ html, body {
       h+='<div class="rrow"><div><div class="rn">'+r.name+' '+rarPill(r.r)+(cur?' <span class="rar" style="background:#1b1b18">Сейчас</span>':'')+'</div><div class="rd">'+r.desc+'. Бонус: '+bonusLine(RACE_BONUS[r.r])+'</div></div></div>';
     });
     h+='</div>';
-    h+='<div class="card"><h3>Классы</h3><p>Класс можно купить один раз за всю игру, потом его не поменять. Вместе с ним ты получаешь снаряжение обычного уровня.</p><span class="price">'+coinSvg()+CLASS_PRICE+'</span>';
-    for(var cid in CLASSES){
-      var c=CLASSES[cid], g=c.gear, lab, dis=true;
-      if(game.cls===cid) lab='Выбран';
-      else if(game.cls) lab='Недоступно';
-      else if(coins<CLASS_PRICE) lab='Не хватает '+(CLASS_PRICE-coins);
-      else {lab='Купить'; dis=false;}
-      h+='<div class="rrow'+((game.cls&&game.cls!==cid)?' locked':'')+'"><div><div class="rn">'+c.name+'</div><div class="rd">База: '+bonusLine(CLASS_BASE[cid])+'. Снаряжение: '+itemLine(g.head)+'; '+itemLine(g.arms)+'</div></div><button data-class="'+cid+'"'+(dis?' disabled':'')+'>'+lab+'</button></div>';
-    }
-    h+='</div>';
     box.innerHTML=h;
     
     // Вызовы для обновления всех под-вкладок без зацикливания
@@ -2389,13 +2380,6 @@ html, body {
     if(typeof applySpoilers === 'function') applySpoilers($('shopPane'));
     
     var ob=$('openChest'); if(ob) ob.addEventListener('click',openChest);
-    var btns=box.querySelectorAll('button[data-class]');
-    for(var j=0;j<btns.length;j++){
-      btns[j].addEventListener('click',function(e){
-        var id=e.currentTarget.getAttribute('data-class');
-        confirmBox('Класс можно купить только один раз за всю игру, поменять его потом нельзя. Купить класс «'+CLASSES[id].name+'» за '+CLASS_PRICE+' монет?','Купить',function(){buyClass(id);});
-      });
-    }
   }
   $('shopBody').style.display='flex'; $('shopBody').style.flexDirection='column'; $('shopBody').style.gap='14px';
 
@@ -4541,7 +4525,7 @@ function load(){
   msgIn.addEventListener('keydown',function(e){if(e.key==='Enter') sendMsg();});
 
   renderChat();
-  initRaidSync();
+  // initRaidSync(); перенесён в start() чтобы дождаться авторизации Firebase
   setInterval(load,2500);
   document.addEventListener('visibilitychange',load);
   /* Visible-tab clock is not an offline clock. Never derive earnings from wall-clock gaps. */
@@ -6190,6 +6174,10 @@ function load(){
   };
 
   function resetV20Data(){
+    v20Data._uid = (sess && sess.uid) ? String(sess.uid) : '';
+    v20Data._v29Hydrated = false;
+    v20Data._v31Hydrated = false;
+    v20Data._inCombatTempLucky = false;
     v20Data.subcls = '';
     v20Data.lucky5 = [];
     v20Data.prestige = 0;
@@ -6201,6 +6189,16 @@ function load(){
     v20Data.activeCompanion = 'miner';
     v20Data.activePetUuid = '';
     v20Data.hwEvent = null;
+    v20Data.tower = null;
+    v20Data.arena = null;
+    v20Data.awakening = {
+      elem: '', core: '', vessel: '',
+      stones: 0,
+      locks: {elem: false, core: false, vessel: false},
+      breakthroughDone: {},
+      tower50Claimed: false,
+      tower100Claimed: false
+    };
   }
 
   function syncV20DataToGame() {
@@ -6216,6 +6214,8 @@ function load(){
     game.activePetUuid = v20Data.activePetUuid;
     if (v20Data.hwEvent) game.hwEvent = v20Data.hwEvent;
     if (typeof syncHalloweenWithRTDB === 'function') syncHalloweenWithRTDB(game);
+    if (typeof syncV31MarkersToRTDB === 'function') syncV31MarkersToRTDB();
+    if (typeof syncV29MarkersToRTDB === 'function') syncV29MarkersToRTDB();
     v20Data.hwEvent = game.hwEvent;
   }
 
@@ -7614,31 +7614,8 @@ function load(){
     });
   };
 
-  // --- 9. БЛОКИРОВКА СМЕНЫ БРОНИ В БОЮ/ЭКСПЕДИЦИИ + ЭВОЛЮЦИЯ КЛАССА В ПРОФИЛЕ ---
-  function evolveClassV20(subId){
-    if(!canUseTownServicesV20()) return;
-    if(!game || !gameLoaded || merchantBusy || game.level < 100 || !game.cls) return;
-    var sub = findSubclassV20(subId);
-    if(!sub) return;
-    confirmBox(
-      'Совершить Эволюцию класса в «' + sub.name + '»? Ваш уровень сбросится со 100 до 1, вы получите постоянный бонус Престижа (+80 HP, +18 урона), пассивку «' + sub.skill + '» и свою уникальную «Счастливую пятёрку» чисел!',
-      'Возвыситься!',
-      function(){
-        game.level = 1;
-        game.xp = 0;
-        v20Data.subcls = sub.id;
-        v20Data.prestige = Math.min(50, (Number(v20Data.prestige)||0) + 1);
-        v20Data.lucky5 = rollLuckyFiveV20();
-        syncV20DataToGame();
-        saveV20Local();
-        saveV20ToFirestore();
-        saveGame();
-        renderChar();
-        renderShop();
-        toast('👑 Эволюция завершена! Вы стали «' + sub.name + '»! Счастливая пятёрка: ' + v20Data.lucky5.join(', '));
-      }
-    );
-  }
+  // --- 9. БЛОКИРОВКА СМЕНЫ БРОНИ В БОЮ/ЭКСПЕДИЦИИ (СТАРАЯ ЭВОЛЮЦИЯ КЛАССА УДАЛЕНА В ПОЛЬЗУ ПРОБУЖДЕНИЯ V31) ---
+  function evolveClassV20(){}
 
   var _origRenderCharBeforeV20 = renderChar;
   renderChar = function(){
@@ -7688,32 +7665,7 @@ function load(){
         $('charPane').prepend(evoBox);
       }
     }
-    if(evoBox){
-      var eh = '';
-      if(sub && Array.isArray(v20Data.lucky5) && v20Data.lucky5.length){
-        eh += '<div class="v19PassiveCard" style="max-width:100%;margin-bottom:8px;border-color:#9b5de5">'
-          + '👑 Специализация <b>«' + sub.name + '»</b> (' + sub.skill + '):<br>' + sub.desc
-          + '<div style="margin-top:6px;font-weight:700;color:var(--gold)">🎯 Твоя «Счастливая пятёрка» чисел на рулетке:</div>'
-          + '<div class="luckyFiveWrap">' + v20Data.lucky5.map(function(num){ return '<span class="luckyBall">' + num + '</span>'; }).join('') + '</div>'
-          + '</div>';
-      }
-      if(game.level >= 100 && game.cls && SUBCLASSES_V20[game.cls]){
-        var branches = SUBCLASSES_V20[game.cls];
-        eh += '<div class="card" style="border-color:var(--gold);margin-bottom:8px">'
-          + '<h3>👑 Эволюция класса (100 уровень достигнут!)</h3>'
-          + '<p>Сбрось уровень до 1-го, получи постоянную мощь Престижа (+80 HP, +18 атаки), выбери элитный подкласс и получи 5 счастливых чисел (от 2 до 36) для активации ультимативных ударов в бою:</p>'
-          + '<div style="display:flex;flex-direction:column;gap:8px">';
-        branches.forEach(function(br){
-          eh += '<div class="rrow"><div><div class="rn">' + br.name + ' · <span style="color:var(--gold)">' + br.skill + '</span></div><div class="rd">' + br.desc + '</div></div>'
-            + '<button type="button" data-evolve="' + br.id + '"' + ((isInActiveCombatV20()||isInExpeditionV20())?' disabled':'') + '>Выбрать</button></div>';
-        });
-        eh += '</div></div>';
-      }
-      evoBox.innerHTML = eh;
-      evoBox.querySelectorAll('[data-evolve]').forEach(function(b){
-        b.onclick = function(){ evolveClassV20(this.getAttribute('data-evolve')); };
-      });
-    }
+    if(evoBox){ evoBox.innerHTML = ''; }
     renderNearDeathBannerV20();
     updateLockedTabsV20();
   };
@@ -7902,18 +7854,29 @@ function startFirestoreListenersV20(){
     
     // СНАЧАЛА ЧИТАЕМ ИЗ БАЗЫ, ЧТОБЫ НЕ ЗАТЕРЕТЬ ДАННЫЕ С НОВОГО УСТРОЙСТВА!
     myRef.get().then(function(doc){
+      if(!sess || String(sess.uid) !== myRef.id) return;
       if(doc.exists){
         var d = doc.data() || {};
-        if(typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
-        if(Array.isArray(d.lucky5) && d.lucky5.length) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
-        if(d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
-        if(typeof d.nearDeath === 'boolean') v20Data.nearDeath = d.nearDeath;
-        if(typeof d.potions === 'number') v20Data.potions = Math.min(10000, Math.floor(d.potions));
-        if(Array.isArray(d.pets) && d.pets.length > (v20Data.pets ? v20Data.pets.length : 0)) v20Data.pets = d.pets;
-        if(d.incubator && typeof d.incubator === 'object' && (!v20Data.incubator || !v20Data.incubator.started)) v20Data.incubator = d.incubator;
-        if(d.activeCompanion === 'miner' || d.activeCompanion === 'pet') v20Data.activeCompanion = d.activeCompanion;
-        if(typeof d.activePetUuid === 'string' && d.activePetUuid) v20Data.activePetUuid = d.activePetUuid;
-        if(d.hwEvent && typeof d.hwEvent === 'object'){
+        // Восстанавливаем данные Пробуждения из Firestore только если в RTDB уже есть этот класс или прогресс
+        if(d.awakening && typeof d.awakening === 'object' && d.awakening.core && typeof findAwakenCoreV31 === 'function' && findAwakenCoreV31(d.awakening.core)){
+          if(game && gameLoaded && v20Data.awakening && !v20Data.awakening.core && (game.spins > 0 || (game.earned && game.earned['aw31_c_' + d.awakening.core]))){
+            v20Data.awakening = Object.assign(v20Data.awakening, d.awakening);
+            if(Array.isArray(d.lucky5) && d.lucky5.length === 5) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
+            if(d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
+            ensureAwakeningStateV31();
+            syncV31MarkersToRTDB();
+            saveGame();
+            renderChar();
+            if(curTab === 'shop') renderShop();
+          }
+        }
+        if(typeof d.nearDeath === 'boolean' && game && game.spins > 0) v20Data.nearDeath = d.nearDeath;
+        if(typeof d.potions === 'number' && game && game.spins > 0) v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        if(Array.isArray(d.pets) && game && game.spins > 0 && d.pets.length > (v20Data.pets ? v20Data.pets.length : 0)) v20Data.pets = d.pets;
+        if(d.incubator && typeof d.incubator === 'object' && game && game.spins > 0 && (!v20Data.incubator || !v20Data.incubator.started)) v20Data.incubator = d.incubator;
+        if((d.activeCompanion === 'miner' || d.activeCompanion === 'pet') && game && game.spins > 0) v20Data.activeCompanion = d.activeCompanion;
+        if(typeof d.activePetUuid === 'string' && d.activePetUuid && game && game.spins > 0) v20Data.activePetUuid = d.activePetUuid;
+        if(d.hwEvent && typeof d.hwEvent === 'object' && game && game.spins > 0){
           var curQ = (v20Data.hwEvent && Number(v20Data.hwEvent.questIndex)) || 0;
           var curP = (v20Data.hwEvent && Number(v20Data.hwEvent.progress)) || 0;
           var remQ = Number(d.hwEvent.questIndex) || 0;
@@ -7924,21 +7887,17 @@ function startFirestoreListenersV20(){
         }
         if(game){ syncV20DataToGame(); syncHalloweenWithRTDB(game); if(curTab === 'events') renderHalloweenEventUI(); }
         saveV20Local();
-      } else {
-        // Если профиля в Firestore ещё нет, сохраняем текущий локальный (или пустой)
+      } else if(game && gameLoaded){
         saveV20ToFirestore();
       }
       
       // ПОСЛЕ ПЕРВОГО ЧТЕНИЯ ЗАПУСКАЕМ СЛУШАТЕЛЬ
       if(sellerGoldUnsubV20) sellerGoldUnsubV20();
       sellerGoldUnsubV20 = myRef.onSnapshot(function(docSnap){
-        if(!docSnap.exists || !game) return;
+        if(!docSnap.exists || !game || !sess || String(sess.uid) !== myRef.id) return;
         var d = docSnap.data() || {};
-        if(!v20Data.subcls && typeof d.subcls === 'string' && findSubclassV20(d.subcls)) v20Data.subcls = d.subcls;
-        if(!v20Data.lucky5.length && Array.isArray(d.lucky5)) v20Data.lucky5 = sanitizeLuckyFiveV20(d.lucky5);
-        if(!v20Data.prestige && d.prestige) v20Data.prestige = Math.min(50, Math.max(0, Number(d.prestige) || 0));
-        if(typeof d.nearDeath === 'boolean' && d.nearDeath) v20Data.nearDeath = true;
-        if(typeof d.potions === 'number' && d.potions > v20Data.potions) v20Data.potions = Math.min(10000, Math.floor(d.potions));
+        if(typeof d.nearDeath === 'boolean' && d.nearDeath && game.spins > 0) v20Data.nearDeath = true;
+        if(typeof d.potions === 'number' && d.potions > v20Data.potions && game.spins > 0) v20Data.potions = Math.min(10000, Math.floor(d.potions));
         saveV20Local();
 
         if(d.pendingMarketGold && d.pendingMarketGold > 0 && !claimingMarketGoldBusy){
@@ -8376,6 +8335,8 @@ function startFirestoreListenersV20(){
       game.v=APP_V; if(mySid) game.sid=mySid; else delete game.sid;
       
       if(typeof syncHalloweenWithRTDB === 'function') syncHalloweenWithRTDB(game);
+      if(typeof syncV31MarkersToRTDB === 'function') syncV31MarkersToRTDB();
+      if(typeof syncV29MarkersToRTDB === 'function') syncV29MarkersToRTDB();
       // СОЗДАЕМ КЛОН ДЛЯ FIREBASE И УДАЛЯЕМ НОВЫЕ ПОЛЯ, ЧТОБЫ ПРАВИЛА (RULES) НЕ ОТКЛОНИЛИ ЗАПРОС (401 Permission Denied)
       var clone = cleanGameForRTDB(game);
       
@@ -14226,7 +14187,80 @@ function startFirestoreListenersV20(){
     return Boolean(list && list.indexOf(elemId) !== -1);
   }
 
+  function hydrateAwakeningFromFirebaseV31(g){
+    var targetG = g || game;
+    v20Data.awakening = {
+      elem: '', core: '', vessel: '',
+      stones: 0,
+      locks: {elem: false, core: false, vessel: false},
+      breakthroughDone: {},
+      tower50Claimed: false,
+      tower100Claimed: false
+    };
+    var aw = v20Data.awakening;
+    if(!targetG || !targetG.earned || typeof targetG.earned !== 'object'){
+      if(targetG) targetG.cls = '';
+      v20Data.subcls = '';
+      if(!v20Data._inCombatTempLucky) v20Data.lucky5 = [];
+      return aw;
+    }
+
+    var eElem = '', eCore = '', eVessel = '', eStones = 0, ePrest = 0;
+    Object.keys(targetG.earned).forEach(function(k){
+      if(!targetG.earned[k]) return;
+      if(k.indexOf('aw31_e_') === 0) eElem = k.slice(7);
+      else if(k.indexOf('aw31_c_') === 0) eCore = k.slice(7);
+      else if(k.indexOf('aw31_v_') === 0) eVessel = k.slice(7);
+      else if(/^aw31_st_\d+$/.test(k)) eStones = Math.max(eStones, parseInt(k.slice(8), 10));
+      else if(/^aw31_bt_\d+$/.test(k)) aw.breakthroughDone[parseInt(k.slice(8), 10)] = true;
+      else if(k === 'aw31_lk_e') aw.locks.elem = true;
+      else if(k === 'aw31_lk_c') aw.locks.core = true;
+      else if(k === 'aw31_lk_v') aw.locks.vessel = true;
+      else if(k === 'aw31_t50') aw.tower50Claimed = true;
+      else if(k === 'aw31_t100') aw.tower100Claimed = true;
+      else if(/^v30_pr_\d+$/.test(k)) ePrest = Math.max(ePrest, parseInt(k.slice(7), 10));
+    });
+
+    aw.stones = Math.max(0, eStones);
+    if(ePrest > 0) v20Data.prestige = ePrest;
+
+    if(findAwakenElemV31(eElem) && findAwakenCoreV31(eCore) && findAwakenVesselV31(eVessel)){
+      aw.elem = eElem;
+      aw.core = eCore;
+      aw.vessel = eVessel;
+      var coreObj = findAwakenCoreV31(aw.core);
+      targetG.cls = coreObj.gearType;
+      v20Data.subcls = coreObj.id;
+
+      // Восстанавливаем Счастливую Пятёрку из маркеров Firebase (v30_l5_...)
+      var restoredL5 = [];
+      Object.keys(targetG.earned).forEach(function(k){
+        if(targetG.earned[k] && k.indexOf('v30_l5_') === 0){
+          var parts = k.slice(7).split('_').map(Number);
+          if(parts.length === 5) restoredL5 = parts;
+        }
+      });
+      if(restoredL5.length === 5){
+        v20Data.lucky5 = restoredL5;
+      } else if(!v20Data._inCombatTempLucky && (!Array.isArray(v20Data.lucky5) || v20Data.lucky5.length < 5)){
+        v20Data.lucky5 = rollLuckyFiveV20();
+      }
+    } else {
+      // На аккаунте в Firebase нет пробуждённого класса — сбрасываем класс в пустоту до первого Пробуждения
+      targetG.cls = '';
+      v20Data.subcls = '';
+      if(!v20Data._inCombatTempLucky) v20Data.lucky5 = [];
+    }
+    v20Data._v31Hydrated = true;
+    v20Data._uid = (sess && sess.uid) ? String(sess.uid) : '';
+    return aw;
+  }
+
   function ensureAwakeningStateV31(){
+    var curUid = (sess && sess.uid) ? String(sess.uid) : '';
+    if(curUid && v20Data._uid && v20Data._uid !== curUid){
+      resetV20Data();
+    }
     if(!v20Data.awakening || typeof v20Data.awakening !== 'object'){
       v20Data.awakening = {
         elem: '', core: '', vessel: '',
@@ -14243,45 +14277,22 @@ function startFirestoreListenersV20(){
     if(!aw.locks || typeof aw.locks !== 'object') aw.locks = {elem: false, core: false, vessel: false};
     if(!aw.breakthroughDone || typeof aw.breakthroughDone !== 'object') aw.breakthroughDone = {};
 
-    // Одноразовая гидратация маркеров V31 из game.earned (RTDB)
-    if(game && game.earned && typeof game.earned === 'object' && !v20Data._v31Hydrated){
-      v20Data._v31Hydrated = true;
-      var eElem = '', eCore = '', eVessel = '', eStones = -1;
-      Object.keys(game.earned).forEach(function(k){
-        if(!game.earned[k]) return;
-        if(k.indexOf('aw31_e_') === 0) eElem = k.slice(7);
-        else if(k.indexOf('aw31_c_') === 0) eCore = k.slice(7);
-        else if(k.indexOf('aw31_v_') === 0) eVessel = k.slice(7);
-        else if(/^aw31_st_\d+$/.test(k)) eStones = Math.max(eStones, parseInt(k.slice(8), 10));
-        else if(/^aw31_bt_\d+$/.test(k)) aw.breakthroughDone[parseInt(k.slice(8), 10)] = true;
-        else if(k === 'aw31_t50') aw.tower50Claimed = true;
-        else if(k === 'aw31_t100') aw.tower100Claimed = true;
-      });
-      if(!aw.elem && findAwakenElemV31(eElem)) aw.elem = eElem;
-      if(!aw.core && findAwakenCoreV31(eCore)) aw.core = eCore;
-      if(!aw.vessel && findAwakenVesselV31(eVessel)) aw.vessel = eVessel;
-      if(eStones >= 0 && !aw.stones) aw.stones = eStones;
+    if(game && !v20Data._v31Hydrated){
+      hydrateAwakeningFromFirebaseV31(game);
+      aw = v20Data.awakening;
     }
 
-    // Если игрок уже пробуждён — синхронизируем game.cls с gearType его класса и его lucky5
     var coreObj = findAwakenCoreV31(aw.core);
     if(coreObj && game){
       game.cls = coreObj.gearType;
-      v20Data.subcls = coreObj.id; // для совместимости со старыми проверками
-      
-      // Восстанавливаем Счастливую Пятёрку из маркеров Firebase (были сохранены как v30_l5_...)
-      if(game.earned && (!Array.isArray(v20Data.lucky5) || v20Data.lucky5.length < 5) && !v20Data._inCombatTempLucky){
-        Object.keys(game.earned).forEach(function(k){
-          if(k.indexOf('v30_l5_') === 0){
-             var parts = k.slice(7).split('_').map(Number);
-             if(parts.length === 5) v20Data.lucky5 = parts;
-          }
-        });
-      }
-      
+      v20Data.subcls = coreObj.id;
       if(!Array.isArray(v20Data.lucky5) || (v20Data.lucky5.length < 5 && !v20Data._inCombatTempLucky)){
         v20Data.lucky5 = rollLuckyFiveV20();
       }
+    } else if(game && !aw.core){
+      game.cls = '';
+      v20Data.subcls = '';
+      if(!v20Data._inCombatTempLucky) v20Data.lucky5 = [];
     }
     return aw;
   }
@@ -14308,10 +14319,15 @@ function startFirestoreListenersV20(){
     Object.keys(game.earned).forEach(function(k){
       if(k.indexOf('aw31_') === 0) delete game.earned[k];
     });
-    if(aw.elem)   game.earned['aw31_e_' + aw.elem] = true;
-    if(aw.core)   game.earned['aw31_c_' + aw.core] = true;
-    if(aw.vessel) game.earned['aw31_v_' + aw.vessel] = true;
+    if(aw.elem && aw.core && aw.vessel){
+      game.earned['aw31_e_' + aw.elem] = true;
+      game.earned['aw31_c_' + aw.core] = true;
+      game.earned['aw31_v_' + aw.vessel] = true;
+    }
     game.earned['aw31_st_' + Math.max(0, Math.floor(Number(aw.stones) || 0))] = true;
+    if(aw.locks && aw.locks.elem)   game.earned['aw31_lk_e'] = true;
+    if(aw.locks && aw.locks.core)   game.earned['aw31_lk_c'] = true;
+    if(aw.locks && aw.locks.vessel) game.earned['aw31_lk_v'] = true;
     Object.keys(aw.breakthroughDone || {}).forEach(function(t){
       if(aw.breakthroughDone[t]) game.earned['aw31_bt_' + t] = true;
     });
@@ -14319,20 +14335,21 @@ function startFirestoreListenersV20(){
     if(aw.tower100Claimed) game.earned['aw31_t100'] = true;
   }
 
-  // Сохранение и загрузка состояния Пробуждения в localStorage и Firestore
+  // При старте до ответа Firebase не подтягиваем старый класс из localStorage, чтобы исключить перенос между аккаунтами
   var _origLoadV20LocalV31 = loadV20Local;
   loadV20Local = function(){
     _origLoadV20LocalV31();
-    try {
-      var raw = localStorage.getItem(v20StorageKey());
-      if(raw){
-        var parsed = JSON.parse(raw);
-        if(parsed && parsed.awakening && typeof parsed.awakening === 'object'){
-          v20Data.awakening = parsed.awakening;
-        }
-      }
-    } catch(e){}
-    ensureAwakeningStateV31();
+    v20Data.subcls = '';
+    v20Data.lucky5 = [];
+    v20Data.awakening = {
+      elem: '', core: '', vessel: '',
+      stones: 0,
+      locks: {elem: false, core: false, vessel: false},
+      breakthroughDone: {},
+      tower50Claimed: false,
+      tower100Claimed: false
+    };
+    v20Data._v31Hydrated = false;
   };
 
   var _origSaveV20ToFirestoreV31 = saveV20ToFirestore;
@@ -14340,6 +14357,12 @@ function startFirestoreListenersV20(){
     ensureAwakeningStateV31();
     syncV31MarkersToRTDB();
     _origSaveV20ToFirestoreV31();
+    var db = initFirestoreV20();
+    if(db && sess && sess.uid && game && v20Data.awakening){
+      db.collection('players').doc(String(sess.uid)).set({
+        awakening: v20Data.awakening
+      }, {merge: true}).catch(function(){});
+    }
   };
 
   // Сколько счастливых чисел активно на текущем Буквенном Ранге (1 на F .. 5 на S..EX, +1 при Резонансе)
@@ -14453,7 +14476,10 @@ function startFirestoreListenersV20(){
       }
       aw.locks[slotKey] = true;
     }
+    syncV31MarkersToRTDB();
     saveV20Local();
+    saveV20ToFirestore();
+    saveGame();
     renderShop();
     renderChar();
   }
@@ -15093,15 +15119,11 @@ function startFirestoreListenersV20(){
     _origRenderShopV31();
     var box = $('shopBody');
     if(!box || !game) return;
-    // Заменяем старую карточку покупки 3 классов на Алтарь Пробуждения Судьбы
-    var cards = box.querySelectorAll('.card');
-    if(cards.length >= 3){
-      cards[cards.length - 1].outerHTML = buildAwakeningAltarHtmlV31();
-    } else {
-      var wrap = document.createElement('div');
-      wrap.innerHTML = buildAwakeningAltarHtmlV31();
-      box.appendChild(wrap.firstChild);
-    }
+    var oldAltar = box.querySelector('.awakenAltarCard');
+    if(oldAltar) oldAltar.remove();
+    var wrap = document.createElement('div');
+    wrap.innerHTML = buildAwakeningAltarHtmlV31();
+    box.appendChild(wrap.firstChild);
     var rollBtn = $('btnDoAwakenRollV31');
     if(rollBtn) rollBtn.onclick = performAwakeningRollV31;
     box.querySelectorAll('[data-aw-lock]').forEach(function(b){
@@ -15336,6 +15358,7 @@ function startFirestoreListenersV20(){
       startFirestoreListenersV20();
       renderCoins();
       renderNearDeathBannerV20();
+      if(typeof initRaidSync === 'function') initRaidSync();
     }, 500);
   };
 
